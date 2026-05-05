@@ -1,67 +1,61 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IPricingTier } from '../../interfaces/i-pricing-tier.interface';
+import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive';
 
 @Component({
   selector: 'ca-pricing',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ScrollRevealDirective],
   templateUrl: './pricing.component.html',
   styleUrl: './pricing.component.scss'
 })
 export class PricingComponent {
-  readonly tiers: IPricingTier[] = [
+  plans = [
     {
-      id: 'standard',
-      name: 'Standard Automation',
-      setupFee: 2000,
-      monthlyFrom: 4000,
-      description: 'Ideal for straightforward workflow automations with no AI agent required. Clean integrations, fast setup, immediate results.',
+      name: 'Starter',
+      price: '2,000',
+      period: 'once-off',
+      desc: 'One automation workflow. Perfect for testing what automation can do for your business.',
+      featured: false,
       features: [
-        'Custom n8n workflow automation',
-        'Integration with your existing tools',
-        'No AI agent required',
-        'Full technical setup & testing',
-        '24/7 automation uptime',
-        '24hr support included',
-        'Unlimited changes & adjustments'
+        '1 custom workflow',
+        'Up to 3 integrations',
+        'Full documentation',
+        '30-day support included',
+        'You own the workflow',
       ],
-      highlight: false
+      cta: { label: 'Get Started', href: '/contact-us/' }
     },
     {
-      id: 'ai-agent',
-      name: 'AI Agent Package',
-      setupFee: 2000,
-      monthlyFrom: 6000,
-      description: 'Includes a fully trained AI agent (WhatsApp, receptionist, or custom) integrated into your business workflow. The most popular package.',
+      name: 'Growth',
+      price: '5,500',
+      period: 'once-off',
+      desc: 'Your full automation stack. Multiple workflows, AI agents, and a month of support included free.',
+      featured: true,
       features: [
-        'Everything in Standard',
-        'Custom AI Agent (WhatsApp or voice)',
-        'Business knowledge base integration',
-        'Real-time client interaction',
-        'Upgradeable to multi-function agent',
-        'Agent triggers other automations',
-        'Priority support'
+        'Up to 5 custom workflows',
+        'Unlimited integrations',
+        'AI agent setup (GPT)',
+        '1st month support free',
+        'Priority build turnaround',
+        'Full documentation',
       ],
-      highlight: true,
-      badge: 'Most Popular'
+      cta: { label: 'Book a Consultation', href: '/contact-us/' }
     },
     {
-      id: 'enterprise',
-      name: 'Enterprise \/Complex',
-      setupFee: 2000,
-      monthlyFrom: 8000,
-      description: 'For high-intensity workflows, complex multi-system integrations, or high token/execution requirements. Custom scoped to your operation.',
+      name: 'Retainer',
+      price: '1,200',
+      period: '/month',
+      desc: 'Ongoing maintenance, monitoring, and new automations as your business grows.',
+      featured: false,
       features: [
-        'Everything in AI Agent',
-        'High-volume execution support',
-        'Multi-system cross-platform workflows',
-        'Complex logic & branching flows',
-        'Custom development if required',
-        'Dedicated setup consultation',
-        'Tailored SLA agreement'
+        'Unlimited workflow updates',
+        'New automations monthly',
+        '24hr support response',
+        'Monthly performance report',
+        'Cancel anytime',
       ],
-      highlight: false
+      cta: { label: 'Add to Any Plan', href: '/contact-us/' }
     }
   ];
 }

@@ -102,77 +102,73 @@ a, button, [role='button'], [role='link'] {
 }
 
 // ============================================================
-// SCROLL REVEAL
-// IMPORTANT: Default state is VISIBLE (opacity:1, transform:none).
-// The [caScrollReveal] directive adds .reveal in JS *before* adding
-// .is-revealed via IntersectionObserver. Keeping the default visible
-// ensures content never gets stuck invisible if the observer fires late
-// or the directive isn't applied. Option 2 (keyframe animations per
-// component) will replace this system for hero and above-fold content.
+// SCROLL REVEAL — used ONLY by [caScrollReveal] directive
+//
+// The directive adds .reveal to targets in JS (ngAfterViewInit),
+// THEN IntersectionObserver adds .is-revealed when in viewport.
+// Never hardcode .reveal in templates — content will be invisible.
+// Hero uses CSS @keyframes directly (no observer needed).
 // ============================================================
 
 .reveal {
-  opacity: 1;
-  transform: none;
+  opacity: 0;
+  transform: translateY(24px);
   transition:
     opacity  0.55s cubic-bezier(0.16, 1, 0.3, 1),
     transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
 
-  // Observer has fired — element is in view (no-op since default is visible)
   &.is-revealed {
     opacity: 1;
-    transform: none;
+    transform: translateY(0);
   }
 }
 
-// Staggered children — also default visible
 .reveal-child {
-  opacity: 1;
-  transform: none;
+  opacity: 0;
+  transform: translateY(20px);
   transition:
     opacity  0.45s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--stagger-i, 0) * 80ms),
     transform 0.45s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--stagger-i, 0) * 80ms);
 
   &.is-revealed {
     opacity: 1;
-    transform: none;
+    transform: translateY(0);
   }
 }
 
 .reveal-fade {
-  opacity: 1;
+  opacity: 0;
   transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms);
   &.is-revealed { opacity: 1; }
 }
 
 .reveal-left {
-  opacity: 1;
-  transform: none;
+  opacity: 0;
+  transform: translateX(-32px);
   transition:
     opacity   0.55s cubic-bezier(0.16, 1, 0.3, 1),
     transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
-  &.is-revealed { opacity: 1; transform: none; }
+  &.is-revealed { opacity: 1; transform: translateX(0); }
 }
 
 .reveal-right {
-  opacity: 1;
-  transform: none;
+  opacity: 0;
+  transform: translateX(32px);
   transition:
     opacity   0.55s cubic-bezier(0.16, 1, 0.3, 1),
     transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
-  &.is-revealed { opacity: 1; transform: none; }
+  &.is-revealed { opacity: 1; transform: translateX(0); }
 }
 
 .reveal-scale {
-  opacity: 1;
-  transform: none;
+  opacity: 0;
+  transform: scale(0.96);
   transition:
     opacity   0.5s cubic-bezier(0.16, 1, 0.3, 1),
     transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  &.is-revealed { opacity: 1; transform: none; }
+  &.is-revealed { opacity: 1; transform: scale(1); }
 }
 
-// Reduced motion: already a no-op since defaults are visible, kept for clarity
 @media (prefers-reduced-motion: reduce) {
   .reveal, .reveal-child, .reveal-fade, .reveal-left, .reveal-right, .reveal-scale {
     opacity: 1 !important;

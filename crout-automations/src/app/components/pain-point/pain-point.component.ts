@@ -1,20 +1,21 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive';
 
 @Component({
   selector: 'ca-pain-point',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ScrollRevealDirective],
   templateUrl: './pain-point.component.html',
   styleUrl: './pain-point.component.scss'
 })
 export class PainPointComponent {
-  readonly pains = [
-    'Typing up the same quote manually for the 40th time this month',
-    'Chasing invoice payments because no one followed up automatically',
-    'A client WhatsApp sitting unanswered while you\'re on-site',
-    'Moving job card data from WhatsApp into a spreadsheet by hand',
-    'Sending month-end reports that take 3 hours to compile',
-    'Forgetting to follow up on a lead because you had no reminder'
+  pains = [
+    'Manually copying data between systems every day',
+    'Following up leads by hand — hours wasted on emails',
+    'Sending invoices and statements one by one',
+    'Chasing clients for payments with zero automation',
+    'No visibility into which tasks are done or pending',
+    'Staff doing copy-paste jobs that a workflow could handle in seconds',
   ];
 }

@@ -1,55 +1,37 @@
 <section class="pricing" id="pricing" aria-label="Pricing">
   <div class="pricing__container">
 
-    <div class="pricing__header reveal">
-      <span class="pricing__eyebrow">Transparent Pricing</span>
-      <h2 class="pricing__headline">
-        Real value. <span class="pricing__headline-accent">No surprises.</span>
-      </h2>
-      <p class="pricing__sub">
-        A once-off R2,000 setup fee gets you started. Your first month is completely free.
-        After that, a monthly subscription keeps everything running, maintained, and evolving.
-      </p>
+    <div class="pricing__header" caScrollReveal>
+      <span class="pricing__eyebrow">Pricing</span>
+      <h2 class="pricing__headline">Simple, <span class="pricing__headline-accent">transparent</span> pricing</h2>
+      <p class="pricing__sub">No hidden fees. No lock-in contracts. Cancel anytime.</p>
     </div>
 
-    <div class="pricing__free-banner reveal">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      <span><strong>First Month Free</strong> — R2,000 setup fee, then 30 days on us before your subscription starts.</span>
-    </div>
-
-    <div class="pricing__grid stagger-children">
-      @for (tier of tiers; track tier.id) {
-        <div class="pricing__card reveal" [class.pricing__card--highlight]="tier.highlight">
-          @if (tier.badge) {
-            <div class="pricing__badge">{{ tier.badge }}</div>
+    <div class="pricing__grid" caScrollReveal [staggerChildren]="true">
+      @for (plan of plans; track plan.name) {
+        <div class="pricing__card" [class.pricing__card--featured]="plan.featured">
+          @if (plan.featured) {
+            <div class="pricing__card-badge">Most Popular</div>
           }
-          <div class="pricing__card-name">{{ tier.name }}</div>
+          <h3 class="pricing__card-name">{{ plan.name }}</h3>
           <div class="pricing__card-price">
-            <span class="pricing__price-from">from</span>
-            <span class="pricing__price-amount">R{{ tier.monthlyFrom | number }}</span>
-            <span class="pricing__price-period">/mo</span>
+            <span class="pricing__card-currency">R</span>
+            <span class="pricing__card-amount">{{ plan.price }}</span>
+            <span class="pricing__card-period">{{ plan.period }}</span>
           </div>
-          <div class="pricing__card-setup">+ R{{ tier.setupFee | number }} once-off setup</div>
-          <p class="pricing__card-desc">{{ tier.description }}</p>
+          <p class="pricing__card-desc">{{ plan.desc }}</p>
           <ul class="pricing__card-features" role="list">
-            @for (feat of tier.features; track feat) {
-              <li>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                {{ feat }}
+            @for (feature of plan.features; track feature) {
+              <li class="pricing__card-feature">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                {{ feature }}
               </li>
             }
           </ul>
-          <a href="/contact-us/" class="pricing__card-cta" [class.pricing__card-cta--highlight]="tier.highlight">
-            Book a Free Consultation
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </a>
+          <a [href]="plan.cta.href" class="pricing__card-cta" [class.pricing__card-cta--primary]="plan.featured">{{ plan.cta.label }}</a>
         </div>
       }
     </div>
-
-    <p class="pricing__note reveal">
-      * Final pricing is scoped after your free consultation based on workflow complexity, execution requirements, and tools involved.
-    </p>
 
   </div>
 </section>

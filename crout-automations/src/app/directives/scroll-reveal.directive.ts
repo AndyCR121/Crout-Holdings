@@ -1,76 +1,74 @@
 import {
-  Directive, ElementRef, Input, OnInit, OnDestroy, inject, PLATFORM_ID
+  Directive,
+  ElementRef,
+  Input,
+  AfterViewInit,
+  OnDestroy,
+  NgZone,
 } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
 
-/**
- * [caScrollReveal] — IntersectionObserver-based scroll reveal.
- *
- * Usage:
- *   <div caScrollReveal>...</div>
- *   <div caScrollReveal [revealDelay]="200">...</div>        <!-- 200ms delay -->
- *   <ul caScrollReveal [staggerChildren]="true">...</ul>     <!-- staggers direct children -->
- *
- * The directive adds .is-revealed when the element enters the viewport.
- * Animation is defined entirely in CSS (_base.scss) so it respects prefers-reduced-motion.
- */
 @Directive({
   selector: '[caScrollReveal]',
-  standalone: true
+  standalone: true,
 })
-export class ScrollRevealDirective implements OnInit, OnDestroy {
-  @Input() revealDelay    = 0;     // ms offset before reveal
-  @Input() revealThreshold = 0.15; // 0–1: how much of the element must be visible
-  @Input() staggerChildren = false; // apply stagger-delay to direct children
+export class ScrollRevealDirective implements AfterViewInit, OnDestroy {
+  /** When true, staggers direct children instead of animating the host element */
+  @Input() staggerChildren = false;
 
-  private readonly el         = inject(ElementRef<HTMLElement>);
-  private readonly platformId = inject(PLATFORM_ID);
+  /** Base delay in ms before the first child animates */
+  @Input() revealDelay = 0;
+
   private observer!: IntersectionObserver;
+  private targets: HTMLElement[] = [];
 
-  ngOnInit(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
+  constructor(private el: ElementRef<HTMLElement>, private zone: NgZone) {}
 
-    // Respect prefers-reduced-motion — mark immediately, skip animation
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      this.reveal(this.el.nativeElement);
-      return;
-    }
+  ngAfterViewInit(): void {
+    this.zone.runOutsideAngular(() => {
+      // Collect the elements to animate
+      if (this.staggerChildren) {
+        this.targets = Array.from(
+          this.el.nativeElement.children
+        ) as HTMLElement[];
+      } else {
+        this.targets = [this.el.nativeElement];
+      }
 
-    const host = this.el.nativeElement;
-    host.classList.add('reveal');
-
-    if (this.staggerChildren) {
-      Array.from(host.children).forEach((child, i) => {
-        (child as HTMLElement).style.setProperty('--stagger-i', String(i));
-        (child as HTMLElement).classList.add('reveal-child');
+      // Mark targets as hidden before the observer fires
+      this.targets.forEach((el, i) => {
+        el.classList.add('reveal');
+        if (this.staggerChildren) {
+          el.style.setProperty('--stagger-i', String(i));
+        }
+        if (this.revealDelay) {
+          el.style.setProperty('--reveal-delay', `${this.revealDelay}ms`);
+        }
       });
-    }
 
-    this.observer = new IntersectionObserver(
-      entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            setTimeout(() => this.reveal(entry.target as HTMLElement), this.revealDelay);
-            this.observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: this.revealThreshold, rootMargin: '0px 0px -48px 0px' }
-    );
-
-    this.observer.observe(host);
-  }
-
-  private reveal(el: HTMLElement): void {
-    el.classList.add('is-revealed');
-    if (this.staggerChildren) {
-      Array.from(el.children).forEach(child =>
-        (child as HTMLElement).classList.add('is-revealed')
+      this.observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-revealed');
+              // Unobserve after reveal — animate once only
+              this.observer.unobserve(entry.target);
+            }
+          });
+        },
+        {
+          threshold: 0.12,
+          rootMargin: '0px 0px -48px 0px',
+        }
       );
-    }
+
+      this.targets.forEach((t) => this.observer.observe(t));
+    });
   }
 
   ngOnDestroy(): void {
-    this.observer?.disconnect();
+    if (this.observer) {
+      this.targets.forEach((t) => this.observer.unobserve(t));
+      this.observer.disconnect();
+    }
   }
 }

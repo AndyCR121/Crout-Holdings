@@ -1,7 +1,7 @@
-<section class="pain" aria-label="Common business pain points">
+<section class="pain" aria-label="Common business pain points" caScrollReveal>
   <div class="pain__container">
 
-    <div class="pain__left reveal">
+    <div class="pain__left">
       <span class="pain__eyebrow">Sound Familiar?</span>
       <h2 class="pain__headline">
         Still doing this
@@ -20,9 +20,9 @@
       </a>
     </div>
 
-    <ul class="pain__list stagger-children" role="list">
+    <ul class="pain__list" role="list" caScrollReveal [staggerChildren]="true">
       @for (pain of pains; track pain) {
-        <li class="pain__item reveal">
+        <li class="pain__item">
           <span class="pain__item-icon" aria-hidden="true">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </span>

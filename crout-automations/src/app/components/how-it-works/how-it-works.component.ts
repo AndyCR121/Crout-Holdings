@@ -1,39 +1,20 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IHowItWorksStep } from '../../interfaces/i-how-it-works-step.interface';
+import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive';
 
 @Component({
   selector: 'ca-how-it-works',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ScrollRevealDirective],
   templateUrl: './how-it-works.component.html',
   styleUrl: './how-it-works.component.scss'
 })
 export class HowItWorksComponent {
-  readonly steps: IHowItWorksStep[] = [
-    {
-      step: 1,
-      icon: 'calendar',
-      title: 'Book a Free Consultation',
-      description: 'We meet (online or in person) to understand your business, your current workflows, and where the time is being lost. No technical knowledge required from your side.'
-    },
-    {
-      step: 2,
-      icon: 'map',
-      title: 'We Design Your Automation',
-      description: 'We map out exactly which automations will have the biggest impact, confirm the tools involved, and send you a clear proposal with pricing and timelines.'
-    },
-    {
-      step: 3,
-      icon: 'code',
-      title: 'We Build & Test Everything',
-      description: 'Our team builds the entire workflow in n8n, trains any AI agents on your business, integrates with your existing tools, and tests end-to-end before go-live.'
-    },
-    {
-      step: 4,
-      icon: 'rocket',
-      title: 'Go Live — We Maintain It',
-      description: 'Your automation goes live. We monitor uptime, handle any changes or adjustments, and keep everything running smoothly. You focus on the work that actually needs you.'
-    }
+  steps = [
+    { number: '01', title: 'Discovery Call', copy: 'We spend 30 minutes understanding your biggest time-wasters and the tools you already use.' },
+    { number: '02', title: 'Workflow Design', copy: 'We map out the automation logic, integrations, and triggers — you approve before we build anything.' },
+    { number: '03', title: 'Build & Test', copy: 'Your workflow is built in n8n, connected to your real systems, and stress-tested before it goes live.' },
+    { number: '04', title: 'Go Live', copy: 'We deploy, monitor the first run with you, and hand over full documentation so you understand exactly what runs and when.' },
+    { number: '05', title: 'Ongoing Support', copy: 'Monthly retainer includes maintenance, updates, and adding new automations as your business grows.' },
   ];
 }
