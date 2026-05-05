@@ -29,7 +29,7 @@ export interface Service {
 })
 export class PricingComponent {
 
-  readonly PACKAGE_DISCOUNT = 0.25;
+  readonly PACKAGE_DISCOUNT = 0.15;
 
   services: Service[] = [
     {
@@ -98,7 +98,7 @@ export class PricingComponent {
     return svc.basePrice + svc.addOns.reduce((sum, a) => sum + a.price, 0);
   }
 
-  /** Bundle price = 25% off the full price */
+  /** Bundle price = 15% off the full price */
   bundleDiscountedPrice(svc: Service): number {
     return Math.round(this.bundleFullPrice(svc) * (1 - this.PACKAGE_DISCOUNT));
   }
