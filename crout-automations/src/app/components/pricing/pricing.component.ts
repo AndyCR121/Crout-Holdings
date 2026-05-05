@@ -31,6 +31,10 @@ export class PricingComponent {
 
   readonly PACKAGE_DISCOUNT = 0.25;
 
+  // Base service price that applies to the bundle
+  // (client must still choose one of the R6 000 services)
+  readonly BUNDLE_BASE_PRICE = 6000;
+
   services: Service[] = [
     {
       name: 'WhatsApp Agent',
@@ -91,16 +95,29 @@ export class PricingComponent {
     { name: 'Template/Forms Messaging', price: 500 },
   ];
 
-  get packageFullPrice(): number {
+  // Full add-ons total (no discount)
+  get packageAddOnsFullPrice(): number {
     return this.packageAddOns.reduce((sum, a) => sum + a.price, 0);
   }
 
-  get packageDiscountedPrice(): number {
-    return Math.round(this.packageFullPrice * (1 - this.PACKAGE_DISCOUNT));
+  // Add-ons total after 25% discount
+  get packageAddOnsDiscounted(): number {
+    return Math.round(this.packageAddOnsFullPrice * (1 - this.PACKAGE_DISCOUNT));
   }
 
+  // What you'd pay without the bundle deal (base + full add-ons)
+  get packageFullPrice(): number {
+    return this.BUNDLE_BASE_PRICE + this.packageAddOnsFullPrice;
+  }
+
+  // What you pay with the bundle deal (base unchanged + discounted add-ons)
+  get packageDiscountedPrice(): number {
+    return this.BUNDLE_BASE_PRICE + this.packageAddOnsDiscounted;
+  }
+
+  // Savings = discount on add-ons only
   get packageSaving(): number {
-    return this.packageFullPrice - this.packageDiscountedPrice;
+    return this.packageAddOnsFullPrice - this.packageAddOnsDiscounted;
   }
 
   formatPrice(n: number): string {
