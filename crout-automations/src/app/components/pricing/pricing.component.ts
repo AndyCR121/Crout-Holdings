@@ -42,8 +42,8 @@ export interface XeroSuiteItem {
 export class PricingComponent {
 
   readonly PACKAGE_DISCOUNT        = 0.15;
-  readonly SUITE_DISCOUNT_BASE     = 0.10;
-  readonly SUITE_DISCOUNT_WHATSAPP = 0.15;
+  readonly SUITE_DISCOUNT_BASE     = 0.15;  // without WhatsApp
+  readonly SUITE_DISCOUNT_WHATSAPP = 0.20;  // with WhatsApp
 
   xeroSuiteWhatsApp = false;
 
