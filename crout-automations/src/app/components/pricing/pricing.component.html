@@ -9,7 +9,6 @@
       </h2>
       <p class="pricing__sub">
         Every service starts at <strong>R6,000</strong> — then you only add what your business actually needs.
-        Take a full package and save <strong>25%</strong> on all add-ons.
       </p>
     </div>
 
@@ -44,7 +43,13 @@
 
           @if (svc.addOns.length > 0) {
             <div class="pricing__addons">
-              <p class="pricing__addons-label">Available Add-Ons</p>
+              <div class="pricing__addons-header">
+                <p class="pricing__addons-label">Available Add-Ons</p>
+                @if (svc.bundleDeal) {
+                  <span class="pricing__addons-bundle-badge">25% off all 4</span>
+                }
+              </div>
+
               <ul class="pricing__addons-list" role="list">
                 @for (addon of svc.addOns; track addon.name) {
                   <li class="pricing__addon-item">
@@ -53,6 +58,20 @@
                   </li>
                 }
               </ul>
+
+              @if (svc.bundleDeal) {
+                <div class="pricing__bundle-inline">
+                  <div class="pricing__bundle-inline-left">
+                    <strong>Take all 4 add-ons</strong>
+                    <span>Bundle price — 25% off add-ons</span>
+                  </div>
+                  <div class="pricing__bundle-inline-right">
+                    <span class="pricing__bundle-was">Was R{{ formatPrice(bundleAddOnsFullPrice) }}</span>
+                    <span class="pricing__bundle-now">R{{ formatPrice(bundleAddOnsDiscounted) }}</span>
+                    <span class="pricing__bundle-save">Save R{{ formatPrice(bundleSaving) }}</span>
+                  </div>
+                </div>
+              }
             </div>
           }
 
@@ -64,38 +83,7 @@
       }
     </div>
 
-    <!-- Package Deal Banner -->
-    <div class="pricing__package" caScrollReveal>
-      <div class="pricing__package-left">
-        <div class="pricing__package-badge">25% Off — Bundle Deal</div>
-        <h3 class="pricing__package-title">Take the full add-on package</h3>
-        <p class="pricing__package-desc">
-          Add all four add-ons to any service and pay only for what matters — at a discount.
-          Best value for businesses that want the complete automation suite.
-        </p>
-        <ul class="pricing__package-items" role="list">
-          @for (addon of packageAddOns; track addon.name) {
-            <li>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-              {{ addon.name }}
-            </li>
-          }
-        </ul>
-      </div>
-      <div class="pricing__package-right">
-        <div class="pricing__package-price">
-          <span class="pricing__package-was">Was R{{ formatPrice(packageFullPrice) }}</span>
-          <div class="pricing__package-now">
-            <span class="pricing__package-currency">R</span>
-            <span class="pricing__package-amount">{{ formatPrice(packageDiscountedPrice) }}</span>
-          </div>
-          <span class="pricing__package-saving">You save R{{ formatPrice(packageSaving) }}</span>
-        </div>
-        <a href="/contact-us/" class="pricing__package-cta">Get the Package</a>
-      </div>
-    </div>
-
-    <!-- Retainer Bolt-On -->
+    <!-- Monthly Retainer -->
     <div class="pricing__retainer" caScrollReveal>
       <div class="pricing__retainer-left">
         <span class="pricing__retainer-badge">Optional</span>

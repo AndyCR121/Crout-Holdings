@@ -11,10 +11,10 @@ export interface Service {
   name: string;
   popular?: boolean;
   basePrice: number;
-  basePriceLabel?: string;
   desc: string;
   includes: string[];
   addOns: AddOn[];
+  bundleDeal?: boolean;   // show inline 25% bundle promo on this card's add-ons
   ctaLabel: string;
   ctaHref: string;
   highlight?: boolean;
@@ -31,16 +31,13 @@ export class PricingComponent {
 
   readonly PACKAGE_DISCOUNT = 0.25;
 
-  // Base service price that applies to the bundle
-  // (client must still choose one of the R6 000 services)
-  readonly BUNDLE_BASE_PRICE = 6000;
-
   services: Service[] = [
     {
       name: 'WhatsApp Agent',
       popular: true,
       highlight: true,
       basePrice: 6000,
+      bundleDeal: true,
       desc: 'A flexible WhatsApp Agent that handles enquiries, automates quotes, creates job cards, and manages client comms — pick exactly what you need.',
       includes: [
         'Base WhatsApp Agent',
@@ -67,7 +64,10 @@ export class PricingComponent {
         'Smart Agent Management',
         'WhatsApp/Telegram Integration',
       ],
-      addOns: [],
+      addOns: [
+        { name: 'Xero Invoices', price: 800 },
+        { name: 'Invoice Follow-Ups [Xero]', price: 600 },
+      ],
       ctaLabel: 'Choose Plan',
       ctaHref: '/contact-us/',
     },
@@ -82,42 +82,30 @@ export class PricingComponent {
         'Template Based',
         'WhatsApp/Telegram Integration',
       ],
-      addOns: [],
+      addOns: [
+        { name: 'Custom Setup', price: 1000 },
+        { name: 'Payroll Excel Generation', price: 900 },
+      ],
       ctaLabel: 'Choose Plan',
       ctaHref: '/contact-us/',
     },
   ];
 
-  packageAddOns: AddOn[] = [
-    { name: 'Marketing Messaging', price: 800 },
-    { name: 'Automated Quoting [Xero]', price: 1200 },
-    { name: '5M+ Token Upgrade', price: 600 },
-    { name: 'Template/Forms Messaging', price: 500 },
-  ];
-
-  // Full add-ons total (no discount)
-  get packageAddOnsFullPrice(): number {
-    return this.packageAddOns.reduce((sum, a) => sum + a.price, 0);
+  // Bundle calcs are scoped to the WhatsApp Agent add-ons only
+  get whatsappAddOns(): AddOn[] {
+    return this.services.find(s => s.bundleDeal)?.addOns ?? [];
   }
 
-  // Add-ons total after 25% discount
-  get packageAddOnsDiscounted(): number {
-    return Math.round(this.packageAddOnsFullPrice * (1 - this.PACKAGE_DISCOUNT));
+  get bundleAddOnsFullPrice(): number {
+    return this.whatsappAddOns.reduce((sum, a) => sum + a.price, 0);
   }
 
-  // What you'd pay without the bundle deal (base + full add-ons)
-  get packageFullPrice(): number {
-    return this.BUNDLE_BASE_PRICE + this.packageAddOnsFullPrice;
+  get bundleAddOnsDiscounted(): number {
+    return Math.round(this.bundleAddOnsFullPrice * (1 - this.PACKAGE_DISCOUNT));
   }
 
-  // What you pay with the bundle deal (base unchanged + discounted add-ons)
-  get packageDiscountedPrice(): number {
-    return this.BUNDLE_BASE_PRICE + this.packageAddOnsDiscounted;
-  }
-
-  // Savings = discount on add-ons only
-  get packageSaving(): number {
-    return this.packageAddOnsFullPrice - this.packageAddOnsDiscounted;
+  get bundleSaving(): number {
+    return this.bundleAddOnsFullPrice - this.bundleAddOnsDiscounted;
   }
 
   formatPrice(n: number): string {
