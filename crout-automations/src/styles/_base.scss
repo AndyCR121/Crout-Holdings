@@ -1,22 +1,25 @@
 // ============================================================
-// CROUT AUTOMATIONS — Base Reset & Global Styles
+// BASE — Reset, typography defaults, scroll reveal, utilities
 // ============================================================
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
 html {
-  -moz-text-size-adjust: none;
-  -webkit-text-size-adjust: none;
-  text-size-adjust: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   scroll-behavior: smooth;
-  scroll-padding-top: var(--space-16);
+  scroll-padding-top: 80px; // offset for fixed nav
+  hanging-punctuation: first last;
+  -moz-text-size-adjust: none;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
 }
 
 body {
@@ -25,7 +28,7 @@ body {
   font-family: var(--font-body);
   font-size: var(--text-base);
   color: var(--color-text);
-  background-color: var(--color-bg);
+  background: var(--color-bg);
 }
 
 img, picture, video, canvas, svg {
@@ -34,14 +37,13 @@ img, picture, video, canvas, svg {
   height: auto;
 }
 
-ul[role="list"], ol[role="list"] { list-style: none; }
+ul[role='list'], ol[role='list'] { list-style: none; }
 
 input, button, textarea, select { font: inherit; color: inherit; }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display);
   text-wrap: balance;
-  line-height: 1.1;
+  line-height: 1.15;
 }
 
 p, li, figcaption {
@@ -50,88 +52,133 @@ p, li, figcaption {
 }
 
 ::selection {
-  background: var(--color-orange-highlight);
+  background: rgba(212, 112, 58, 0.2);
   color: var(--color-text);
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--color-orange);
   outline-offset: 3px;
   border-radius: var(--radius-sm);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
+button { cursor: pointer; background: none; border: none; }
+table  { border-collapse: collapse; width: 100%; }
 
-button {
-  cursor: pointer;
-  background: none;
-  border: none;
-}
-
-a, button, [role="button"] {
+a, button, [role='button'], [role='link'] {
   transition:
     color var(--transition-interactive),
     background var(--transition-interactive),
     border-color var(--transition-interactive),
-    box-shadow var(--transition-interactive),
-    transform var(--transition-interactive);
+    box-shadow var(--transition-interactive);
 }
 
 .sr-only {
   position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
 }
 
-// --- Scroll reveal animations ---
+// Skip link
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: var(--space-4);
+  background: var(--color-navy);
+  color: #fff;
+  padding: var(--space-3) var(--space-6);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  z-index: 200;
+  text-decoration: none;
+  transition: top 0.2s;
+
+  &:focus { top: 0; }
+}
+
+// ============================================================
+// SCROLL REVEAL
+// Applied by ScrollRevealDirective ([caScrollReveal])
+// ============================================================
+
 .reveal {
-  opacity: 1;
-}
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity  0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
 
-@supports (animation-timeline: scroll()) {
-  .reveal {
-    opacity: 0;
-    animation: reveal-fade linear both;
-    animation-timeline: view();
-    animation-range: entry 0% entry 80%;
-  }
-
-  .reveal-clip {
-    clip-path: inset(30% 0 0 0);
-    opacity: 0;
-    animation: reveal-up linear both;
-    animation-timeline: view();
-    animation-range: entry 0% entry 80%;
+  &.is-revealed {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@keyframes reveal-fade {
-  to { opacity: 1; }
+// Staggered children
+.reveal-child {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity  0.45s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--stagger-i, 0) * 80ms),
+    transform 0.45s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--stagger-i, 0) * 80ms);
+
+  &.is-revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-@keyframes reveal-up {
-  to { opacity: 1; clip-path: inset(0 0 0 0); }
+// Fade-in only variant (for hero trust bar, badges, etc.)
+.reveal-fade {
+  opacity: 0;
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms);
+
+  &.is-revealed { opacity: 1; }
 }
 
-// --- Stagger delays ---
-.stagger-children {
-  > *:nth-child(1) { animation-delay: 0ms; }
-  > *:nth-child(2) { animation-delay: 60ms; }
-  > *:nth-child(3) { animation-delay: 120ms; }
-  > *:nth-child(4) { animation-delay: 180ms; }
-  > *:nth-child(5) { animation-delay: 240ms; }
-  > *:nth-child(6) { animation-delay: 300ms; }
+// Slide from left
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-32px);
+  transition:
+    opacity   0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &.is-revealed { opacity: 1; transform: translateX(0); }
+}
+
+// Slide from right
+.reveal-right {
+  opacity: 0;
+  transform: translateX(32px);
+  transition:
+    opacity   0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &.is-revealed { opacity: 1; transform: translateX(0); }
+}
+
+// Scale in (for pricing cards, CTA)
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.96);
+  transition:
+    opacity   0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &.is-revealed { opacity: 1; transform: scale(1); }
+}
+
+// Reduced motion: skip all animation, reveal instantly
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .reveal-child, .reveal-fade, .reveal-left, .reveal-right, .reveal-scale {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }
