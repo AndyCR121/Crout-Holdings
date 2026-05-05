@@ -1,0 +1,114 @@
+.not-found {
+  min-height: calc(100dvh - 64px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
+  padding: var(--space-16) var(--space-6);
+
+  &__inner {
+    max-width: 480px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-5);
+  }
+
+  // --- 404 glyph ---
+  &__glyph {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+  }
+
+  &__four {
+    font-family: var(--font-display);
+    font-size: clamp(5rem, 15vw, 8rem);
+    font-weight: 900;
+    color: var(--color-surface-offset);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    user-select: none;
+  }
+
+  &__orb {
+    animation: floatOrb 4s ease-in-out infinite;
+    svg { display: block; }
+
+    // Inner dashes spin slowly
+    circle:nth-child(2) {
+      animation: spinDash 8s linear infinite;
+      transform-origin: 32px 32px;
+    }
+  }
+
+  // --- Text ---
+  &__heading {
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: 800;
+    color: var(--color-text);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  &__body {
+    font-size: var(--text-base);
+    color: var(--color-text-muted);
+    line-height: 1.7;
+    max-width: 40ch;
+  }
+
+  // --- Buttons ---
+  &__actions {
+    display: flex;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: var(--space-4);
+  }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    background var(--transition-interactive),
+    transform var(--transition-interactive),
+    box-shadow var(--transition-interactive);
+
+  &--primary {
+    background: var(--color-orange);
+    color: #fff;
+    &:hover {
+      background: var(--color-orange-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(212,112,58,0.3);
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: var(--color-text-muted);
+    border: 1.5px solid var(--color-border);
+    &:hover { color: var(--color-text); border-color: var(--color-text); }
+  }
+}
+
+@keyframes floatOrb {
+  0%, 100% { transform: translateY(0);     }
+  50%       { transform: translateY(-10px); }
+}
+
+@keyframes spinDash {
+  to { transform: rotate(360deg); }
+}
