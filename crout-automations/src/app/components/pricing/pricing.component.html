@@ -1,37 +1,129 @@
 <section class="pricing" id="pricing" aria-label="Pricing">
   <div class="pricing__container">
 
+    <!-- Header -->
     <div class="pricing__header" caScrollReveal>
       <span class="pricing__eyebrow">Pricing</span>
-      <h2 class="pricing__headline">Simple, <span class="pricing__headline-accent">transparent</span> pricing</h2>
-      <p class="pricing__sub">No hidden fees. No lock-in contracts. Cancel anytime.</p>
+      <h2 class="pricing__headline">
+        One service. <span class="pricing__headline-accent">One price.</span>
+      </h2>
+      <p class="pricing__sub">
+        Every service starts at <strong>R6,000</strong> — then you only add what your business actually needs.
+        Take a full package and save <strong>25%</strong> on all add-ons.
+      </p>
     </div>
 
+    <!-- Service Cards -->
     <div class="pricing__grid" caScrollReveal [staggerChildren]="true">
-      @for (plan of plans; track plan.name) {
-        <div class="pricing__card" [class.pricing__card--featured]="plan.featured">
-          @if (plan.featured) {
-            <div class="pricing__card-badge">Most Popular</div>
+      @for (svc of services; track svc.name) {
+        <div class="pricing__card" [class.pricing__card--highlight]="svc.highlight">
+
+          @if (svc.popular) {
+            <div class="pricing__badge">Popular</div>
           }
-          <h3 class="pricing__card-name">{{ plan.name }}</h3>
+
+          <h3 class="pricing__card-name">{{ svc.name }}</h3>
+
           <div class="pricing__card-price">
-            <span class="pricing__card-currency">R</span>
-            <span class="pricing__card-amount">{{ plan.price }}</span>
-            <span class="pricing__card-period">{{ plan.period }}</span>
+            <span class="pricing__price-from">from</span>
+            <span class="pricing__price-currency">R</span>
+            <span class="pricing__price-amount">{{ formatPrice(svc.basePrice) }}</span>
+            <span class="pricing__price-period">/ service</span>
           </div>
-          <p class="pricing__card-desc">{{ plan.desc }}</p>
+
+          <p class="pricing__card-desc">{{ svc.desc }}</p>
+
           <ul class="pricing__card-features" role="list">
-            @for (feature of plan.features; track feature) {
-              <li class="pricing__card-feature">
+            @for (item of svc.includes; track item) {
+              <li>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                {{ feature }}
+                {{ item }}
               </li>
             }
           </ul>
-          <a [href]="plan.cta.href" class="pricing__card-cta" [class.pricing__card-cta--primary]="plan.featured">{{ plan.cta.label }}</a>
+
+          @if (svc.addOns.length > 0) {
+            <div class="pricing__addons">
+              <p class="pricing__addons-label">Available Add-Ons</p>
+              <ul class="pricing__addons-list" role="list">
+                @for (addon of svc.addOns; track addon.name) {
+                  <li class="pricing__addon-item">
+                    <span class="pricing__addon-name">{{ addon.name }}</span>
+                    <span class="pricing__addon-price">+ R{{ formatPrice(addon.price) }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+
+          <a [href]="svc.ctaHref" class="pricing__card-cta" [class.pricing__card-cta--highlight]="svc.highlight">
+            {{ svc.ctaLabel }}
+          </a>
+
         </div>
       }
     </div>
+
+    <!-- Package Deal Banner -->
+    <div class="pricing__package" caScrollReveal>
+      <div class="pricing__package-left">
+        <div class="pricing__package-badge">25% Off — Bundle Deal</div>
+        <h3 class="pricing__package-title">Take the full add-on package</h3>
+        <p class="pricing__package-desc">
+          Add all four add-ons to any service and pay only for what matters — at a discount.
+          Best value for businesses that want the complete automation suite.
+        </p>
+        <ul class="pricing__package-items" role="list">
+          @for (addon of packageAddOns; track addon.name) {
+            <li>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              {{ addon.name }}
+            </li>
+          }
+        </ul>
+      </div>
+      <div class="pricing__package-right">
+        <div class="pricing__package-price">
+          <span class="pricing__package-was">Was R{{ formatPrice(packageFullPrice) }}</span>
+          <div class="pricing__package-now">
+            <span class="pricing__package-currency">R</span>
+            <span class="pricing__package-amount">{{ formatPrice(packageDiscountedPrice) }}</span>
+          </div>
+          <span class="pricing__package-saving">You save R{{ formatPrice(packageSaving) }}</span>
+        </div>
+        <a href="/contact-us/" class="pricing__package-cta">Get the Package</a>
+      </div>
+    </div>
+
+    <!-- Retainer Bolt-On -->
+    <div class="pricing__retainer" caScrollReveal>
+      <div class="pricing__retainer-left">
+        <span class="pricing__retainer-badge">Optional</span>
+        <h3 class="pricing__retainer-title">Monthly Retainer</h3>
+        <p class="pricing__retainer-desc">Keep your workflows running, updated, and growing. Cancel anytime.</p>
+        <ul class="pricing__retainer-features" role="list">
+          <li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Unlimited workflow updates</li>
+          <li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> New automations every month</li>
+          <li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> 24hr support response</li>
+          <li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Monthly performance report</li>
+          <li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Cancel anytime</li>
+        </ul>
+      </div>
+      <div class="pricing__retainer-right">
+        <div class="pricing__retainer-price">
+          <span class="pricing__retainer-currency">R</span>
+          <span class="pricing__retainer-amount">1,200</span>
+          <span class="pricing__retainer-period">/month</span>
+        </div>
+        <p class="pricing__retainer-note">Add to any service plan</p>
+        <a href="/contact-us/" class="pricing__retainer-cta">Add Retainer</a>
+      </div>
+    </div>
+
+    <p class="pricing__note">
+      All prices are ZAR and exclude VAT. Custom services available on request.
+      <a href="/contact-us/">Get in touch</a> for a tailored quote.
+    </p>
 
   </div>
 </section>

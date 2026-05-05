@@ -2,6 +2,24 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive';
 
+export interface AddOn {
+  name: string;
+  price: number;
+}
+
+export interface Service {
+  name: string;
+  popular?: boolean;
+  basePrice: number;
+  basePriceLabel?: string;
+  desc: string;
+  includes: string[];
+  addOns: AddOn[];
+  ctaLabel: string;
+  ctaHref: string;
+  highlight?: boolean;
+}
+
 @Component({
   selector: 'ca-pricing',
   standalone: true,
@@ -10,52 +28,82 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
   styleUrl: './pricing.component.scss'
 })
 export class PricingComponent {
-  plans = [
+
+  readonly PACKAGE_DISCOUNT = 0.25;
+
+  services: Service[] = [
     {
-      name: 'Starter',
-      price: '2,000',
-      period: 'once-off',
-      desc: 'One automation workflow. Perfect for testing what automation can do for your business.',
-      featured: false,
-      features: [
-        '1 custom workflow',
-        'Up to 3 integrations',
-        'Full documentation',
-        '30-day support included',
-        'You own the workflow',
+      name: 'WhatsApp Agent',
+      popular: true,
+      highlight: true,
+      basePrice: 6000,
+      desc: 'A flexible WhatsApp Agent that handles enquiries, automates quotes, creates job cards, and manages client comms — pick exactly what you need.',
+      includes: [
+        'Base WhatsApp Agent',
+        '2M Tokens included',
+        'Smart Client Support',
       ],
-      cta: { label: 'Get Started', href: '/contact-us/' }
+      addOns: [
+        { name: 'Marketing Messaging', price: 800 },
+        { name: 'Automated Quoting [Xero]', price: 1200 },
+        { name: '5M+ Token Upgrade', price: 600 },
+        { name: 'Template/Forms Messaging', price: 500 },
+      ],
+      ctaLabel: 'Choose Plan',
+      ctaHref: '/contact-us/',
     },
     {
-      name: 'Growth',
-      price: '5,500',
-      period: 'once-off',
-      desc: 'Your full automation stack. Multiple workflows, AI agents, and a month of support included free.',
-      featured: true,
-      features: [
-        'Up to 5 custom workflows',
-        'Unlimited integrations',
-        'AI agent setup (GPT)',
-        '1st month support free',
-        'Priority build turnaround',
-        'Full documentation',
+      name: 'Automated Quotes',
+      basePrice: 6000,
+      desc: 'End-to-end quote automation — triggered by email, webhook, or WhatsApp, linked to Xero, and approved by the right person automatically.',
+      includes: [
+        'Email/Webhook Trigger',
+        'Xero-Linked Quotes',
+        'Responsible Manager Confirmation',
+        'Smart Agent Management',
+        'WhatsApp/Telegram Integration',
       ],
-      cta: { label: 'Book a Consultation', href: '/contact-us/' }
+      addOns: [],
+      ctaLabel: 'Choose Plan',
+      ctaHref: '/contact-us/',
     },
     {
-      name: 'Retainer',
-      price: '1,200',
-      period: '/month',
-      desc: 'Ongoing maintenance, monitoring, and new automations as your business grows.',
-      featured: false,
-      features: [
-        'Unlimited workflow updates',
-        'New automations monthly',
-        '24hr support response',
-        'Monthly performance report',
-        'Cancel anytime',
+      name: 'Automated Job Cards',
+      basePrice: 6000,
+      desc: 'Auto-generate job cards from any trigger — email, webhook, or WhatsApp — synced with Trello and managed by AI agents.',
+      includes: [
+        'Email/Webhook/WhatsApp Trigger',
+        'Trello Integration',
+        'Smart Agent Management',
+        'Template Based',
+        'WhatsApp/Telegram Integration',
       ],
-      cta: { label: 'Add to Any Plan', href: '/contact-us/' }
-    }
+      addOns: [],
+      ctaLabel: 'Choose Plan',
+      ctaHref: '/contact-us/',
+    },
   ];
+
+  packageAddOns: AddOn[] = [
+    { name: 'Marketing Messaging', price: 800 },
+    { name: 'Automated Quoting [Xero]', price: 1200 },
+    { name: '5M+ Token Upgrade', price: 600 },
+    { name: 'Template/Forms Messaging', price: 500 },
+  ];
+
+  get packageFullPrice(): number {
+    return this.packageAddOns.reduce((sum, a) => sum + a.price, 0);
+  }
+
+  get packageDiscountedPrice(): number {
+    return Math.round(this.packageFullPrice * (1 - this.PACKAGE_DISCOUNT));
+  }
+
+  get packageSaving(): number {
+    return this.packageFullPrice - this.packageDiscountedPrice;
+  }
+
+  formatPrice(n: number): string {
+    return n.toLocaleString('en-ZA');
+  }
 }
