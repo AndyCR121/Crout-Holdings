@@ -15,7 +15,7 @@ html {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   scroll-behavior: smooth;
-  scroll-padding-top: 80px; // offset for fixed nav
+  scroll-padding-top: 80px;
   hanging-punctuation: first last;
   -moz-text-size-adjust: none;
   -webkit-text-size-adjust: none;
@@ -103,78 +103,76 @@ a, button, [role='button'], [role='link'] {
 
 // ============================================================
 // SCROLL REVEAL
-// Applied by ScrollRevealDirective ([caScrollReveal])
+// IMPORTANT: Default state is VISIBLE (opacity:1, transform:none).
+// The [caScrollReveal] directive adds .reveal in JS *before* adding
+// .is-revealed via IntersectionObserver. Keeping the default visible
+// ensures content never gets stuck invisible if the observer fires late
+// or the directive isn't applied. Option 2 (keyframe animations per
+// component) will replace this system for hero and above-fold content.
 // ============================================================
 
 .reveal {
-  opacity: 0;
-  transform: translateY(24px);
+  opacity: 1;
+  transform: none;
   transition:
     opacity  0.55s cubic-bezier(0.16, 1, 0.3, 1),
     transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
 
+  // Observer has fired — element is in view (no-op since default is visible)
   &.is-revealed {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
-// Staggered children
+// Staggered children — also default visible
 .reveal-child {
-  opacity: 0;
-  transform: translateY(20px);
+  opacity: 1;
+  transform: none;
   transition:
     opacity  0.45s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--stagger-i, 0) * 80ms),
     transform 0.45s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--stagger-i, 0) * 80ms);
 
   &.is-revealed {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
-// Fade-in only variant (for hero trust bar, badges, etc.)
 .reveal-fade {
-  opacity: 0;
+  opacity: 1;
   transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms);
-
   &.is-revealed { opacity: 1; }
 }
 
-// Slide from left
 .reveal-left {
-  opacity: 0;
-  transform: translateX(-32px);
+  opacity: 1;
+  transform: none;
   transition:
     opacity   0.55s cubic-bezier(0.16, 1, 0.3, 1),
     transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
-
-  &.is-revealed { opacity: 1; transform: translateX(0); }
+  &.is-revealed { opacity: 1; transform: none; }
 }
 
-// Slide from right
 .reveal-right {
-  opacity: 0;
-  transform: translateX(32px);
+  opacity: 1;
+  transform: none;
   transition:
     opacity   0.55s cubic-bezier(0.16, 1, 0.3, 1),
     transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
-
-  &.is-revealed { opacity: 1; transform: translateX(0); }
+  &.is-revealed { opacity: 1; transform: none; }
 }
 
-// Scale in (for pricing cards, CTA)
 .reveal-scale {
-  opacity: 0;
-  transform: scale(0.96);
+  opacity: 1;
+  transform: none;
   transition:
     opacity   0.5s cubic-bezier(0.16, 1, 0.3, 1),
     transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-
-  &.is-revealed { opacity: 1; transform: scale(1); }
+  &.is-revealed { opacity: 1; transform: none; }
 }
 
-// Reduced motion: skip all animation, reveal instantly
+// Reduced motion: already a no-op since defaults are visible, kept for clarity
 @media (prefers-reduced-motion: reduce) {
   .reveal, .reveal-child, .reveal-fade, .reveal-left, .reveal-right, .reveal-scale {
     opacity: 1 !important;
