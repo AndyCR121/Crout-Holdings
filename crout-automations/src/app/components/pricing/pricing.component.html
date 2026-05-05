@@ -8,7 +8,7 @@
         One service. <span class="pricing__headline-accent">One price.</span>
       </h2>
       <p class="pricing__sub">
-        Every service starts at <strong>R6,000</strong> — then you only add what your business actually needs.
+        Every service starts at <strong>R6,000</strong> &mdash; then you only add what your business actually needs.
       </p>
     </div>
 
@@ -55,7 +55,7 @@
 
               @if (svc.bundleDeal) {
                 <div class="pricing__bundle">
-                  <div class="pricing__bundle-tag">25% Off — Bundle Deal</div>
+                  <div class="pricing__bundle-tag">{{ PACKAGE_DISCOUNT * 100 | number:'1.0-0' }}% Off &mdash; Bundle Deal</div>
                   <p class="pricing__bundle-title">Take all {{ svc.addOns.length }} add-ons</p>
                   <div class="pricing__bundle-row">
                     <span class="pricing__bundle-label">Full price</span>
