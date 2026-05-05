@@ -43,13 +43,7 @@
 
           @if (svc.addOns.length > 0) {
             <div class="pricing__addons">
-              <div class="pricing__addons-header">
-                <p class="pricing__addons-label">Available Add-Ons</p>
-                @if (svc.bundleDeal) {
-                  <span class="pricing__addons-bundle-badge">25% off all 4</span>
-                }
-              </div>
-
+              <p class="pricing__addons-label">Available Add-Ons</p>
               <ul class="pricing__addons-list" role="list">
                 @for (addon of svc.addOns; track addon.name) {
                   <li class="pricing__addon-item">
@@ -60,15 +54,20 @@
               </ul>
 
               @if (svc.bundleDeal) {
-                <div class="pricing__bundle-inline">
-                  <div class="pricing__bundle-inline-left">
-                    <strong>Take all 4 add-ons</strong>
-                    <span>Bundle price — 25% off add-ons</span>
+                <div class="pricing__bundle">
+                  <div class="pricing__bundle-tag">25% Off — Bundle Deal</div>
+                  <p class="pricing__bundle-title">Take all 4 add-ons</p>
+                  <div class="pricing__bundle-row">
+                    <span class="pricing__bundle-label">Full price</span>
+                    <span class="pricing__bundle-full">R{{ formatPrice(bundleFullPrice) }}</span>
                   </div>
-                  <div class="pricing__bundle-inline-right">
-                    <span class="pricing__bundle-was">Was R{{ formatPrice(bundleAddOnsFullPrice) }}</span>
-                    <span class="pricing__bundle-now">R{{ formatPrice(bundleAddOnsDiscounted) }}</span>
-                    <span class="pricing__bundle-save">Save R{{ formatPrice(bundleSaving) }}</span>
+                  <div class="pricing__bundle-row">
+                    <span class="pricing__bundle-label">Bundle price</span>
+                    <span class="pricing__bundle-now">R{{ formatPrice(bundleDiscountedPrice) }}</span>
+                  </div>
+                  <div class="pricing__bundle-row pricing__bundle-row--save">
+                    <span class="pricing__bundle-label">You save</span>
+                    <span class="pricing__bundle-save">R{{ formatPrice(bundleSaving) }}</span>
                   </div>
                 </div>
               }

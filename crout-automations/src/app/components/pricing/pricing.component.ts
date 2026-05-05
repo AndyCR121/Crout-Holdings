@@ -14,7 +14,7 @@ export interface Service {
   desc: string;
   includes: string[];
   addOns: AddOn[];
-  bundleDeal?: boolean;   // show inline 25% bundle promo on this card's add-ons
+  bundleDeal?: boolean;
   ctaLabel: string;
   ctaHref: string;
   highlight?: boolean;
@@ -91,21 +91,25 @@ export class PricingComponent {
     },
   ];
 
-  // Bundle calcs are scoped to the WhatsApp Agent add-ons only
-  get whatsappAddOns(): AddOn[] {
-    return this.services.find(s => s.bundleDeal)?.addOns ?? [];
+  // WhatsApp Agent add-ons only
+  private get waService(): Service {
+    return this.services.find(s => s.bundleDeal)!;
   }
 
-  get bundleAddOnsFullPrice(): number {
-    return this.whatsappAddOns.reduce((sum, a) => sum + a.price, 0);
+  // Full price = base R6k + all add-ons at full price
+  get bundleFullPrice(): number {
+    const addOnsTotal = this.waService.addOns.reduce((sum, a) => sum + a.price, 0);
+    return this.waService.basePrice + addOnsTotal;
   }
 
-  get bundleAddOnsDiscounted(): number {
-    return Math.round(this.bundleAddOnsFullPrice * (1 - this.PACKAGE_DISCOUNT));
+  // Bundle price = 25% off the FULL price (base + add-ons)
+  get bundleDiscountedPrice(): number {
+    return Math.round(this.bundleFullPrice * (1 - this.PACKAGE_DISCOUNT));
   }
 
+  // Saving = difference
   get bundleSaving(): number {
-    return this.bundleAddOnsFullPrice - this.bundleAddOnsDiscounted;
+    return this.bundleFullPrice - this.bundleDiscountedPrice;
   }
 
   formatPrice(n: number): string {
