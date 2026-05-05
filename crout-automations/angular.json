@@ -43,13 +43,21 @@
               "sourceMap": true
             },
             "elements": {
-              "outputPath": "dist/crout-elements",
+              "outputPath": {
+                "base": "dist/crout-elements",
+                "browser": ""
+              },
               "index": false,
               "browser": "src/elements/main.ts",
+              "polyfills": ["zone.js"],
               "outputHashing": "none",
               "optimization": true,
               "sourceMap": false,
-              "extractLicenses": false
+              "extractLicenses": false,
+              "budgets": [
+                { "type": "initial", "maximumWarning": "2MB", "maximumError": "5MB" },
+                { "type": "anyComponentStyle", "maximumWarning": "16kB", "maximumError": "32kB" }
+              ]
             }
           },
           "defaultConfiguration": "production"
