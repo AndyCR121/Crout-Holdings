@@ -1,0 +1,90 @@
+<footer class="footer" role="contentinfo">
+  <div class="footer__container">
+
+    <div class="footer__brand">
+      <!-- Logo -->
+      <a href="/" class="footer__logo" aria-label="Crout Automations">
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="#D4703A"/>
+          <path d="M22 11a8 8 0 100 10" stroke="#fff" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <circle cx="24" cy="16" r="2" fill="#fff" opacity="0.85"/>
+        </svg>
+        <span>Crout <strong>Automations</strong></span>
+      </a>
+      <p class="footer__tagline">
+        Custom automation workflows for South African businesses.
+        Built on n8n. Maintained by us. Running 24/7.
+      </p>
+      <div class="footer__badges">
+        <span class="footer__badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          South African Business
+        </span>
+        <span class="footer__badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          24/7 Uptime
+        </span>
+      </div>
+    </div>
+
+    <div class="footer__col">
+      <h3 class="footer__col-heading">Services</h3>
+      <ul role="list">
+        @for (item of services; track item.href) {
+          <li><a [href]="item.href" class="footer__link">{{ item.label }}</a></li>
+        }
+      </ul>
+    </div>
+
+    <div class="footer__col">
+      <h3 class="footer__col-heading">Company</h3>
+      <ul role="list">
+        @for (item of company; track item.href) {
+          <li>
+            <a
+              [href]="item.href"
+              class="footer__link"
+              [attr.target]="item.external ? '_blank' : null"
+              [attr.rel]="item.external ? 'noopener noreferrer' : null">
+              {{ item.label }}
+              @if (item.external) {
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+              }
+            </a>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <div class="footer__col">
+      <h3 class="footer__col-heading">Contact</h3>
+      <ul role="list" class="footer__contact">
+        <li>
+          <a href="mailto:info@crout-holdings.com" class="footer__link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>
+            info&#64;crout-holdings.com
+          </a>
+        </li>
+        <li>
+          <span class="footer__text">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10A15.3 15.3 0 018 12a15.3 15.3 0 014-10z"/></svg>
+            Bloemfontein, South Africa
+          </span>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="footer__bottom">
+    <div class="footer__bottom-inner">
+      <p class="footer__copy">
+        &copy; {{ currentYear }} Crout Automations, a division of Crout Holdings PTY LTD.
+        All rights reserved.
+      </p>
+      <p class="footer__built">
+        Built with Angular &amp; n8n
+      </p>
+    </div>
+  </div>
+</footer>
