@@ -5,17 +5,26 @@
  * Build command:
  *   ng build --configuration elements
  *
- * Drop-in WordPress usage:
- *   <script src="crout-automations.js"></script>
+ * Output:  dist/crout-elements/
+ *   - main.js        (all components bundled, no hashing)
+ *
+ * WordPress usage — in your Elementor page / theme:
+ *   <script defer src="/wp-content/themes/your-theme/crout-elements/main.js"></script>
  *   <ca-hero></ca-hero>
+ *   <ca-pain-point></ca-pain-point>
+ *   <ca-services-overview></ca-services-overview>
+ *   <ca-how-it-works></ca-how-it-works>
+ *   <ca-why-crout></ca-why-crout>
  *   <ca-pricing></ca-pricing>
- *   ... etc
+ *   <ca-cta-banner></ca-cta-banner>
+ *
+ * NOTE: <ca-nav> and <ca-footer> are intentionally excluded.
+ * They live in wordpress-theme/ and are handled by the WP theme layer.
  */
 import { createApplication } from '@angular/platform-browser';
 import { createCustomElement } from '@angular/elements';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
-import { NavComponent } from '../app/components/nav/nav.component';
 import { HeroComponent } from '../app/components/hero/hero.component';
 import { PainPointComponent } from '../app/components/pain-point/pain-point.component';
 import { ServicesOverviewComponent } from '../app/components/services-overview/services-overview.component';
@@ -23,7 +32,6 @@ import { HowItWorksComponent } from '../app/components/how-it-works/how-it-works
 import { WhyCroutComponent } from '../app/components/why-crout/why-crout.component';
 import { PricingComponent } from '../app/components/pricing/pricing.component';
 import { CtaBannerComponent } from '../app/components/cta-banner/cta-banner.component';
-import { FooterComponent } from '../app/components/footer/footer.component';
 
 (async () => {
   const app = await createApplication({
@@ -33,7 +41,6 @@ import { FooterComponent } from '../app/components/footer/footer.component';
   });
 
   const elements: [string, any][] = [
-    ['ca-nav',               NavComponent],
     ['ca-hero',              HeroComponent],
     ['ca-pain-point',        PainPointComponent],
     ['ca-services-overview', ServicesOverviewComponent],
@@ -41,7 +48,6 @@ import { FooterComponent } from '../app/components/footer/footer.component';
     ['ca-why-crout',         WhyCroutComponent],
     ['ca-pricing',           PricingComponent],
     ['ca-cta-banner',        CtaBannerComponent],
-    ['ca-footer',            FooterComponent],
   ];
 
   for (const [tag, component] of elements) {
