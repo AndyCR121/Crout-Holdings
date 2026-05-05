@@ -1,0 +1,257 @@
+<ca-nav />
+
+<main class="contact-page">
+
+  <!-- Page header -->
+  <section class="contact-hero">
+    <div class="contact-hero__inner">
+      <p class="contact-hero__label">Get in touch</p>
+      <h1 class="contact-hero__heading">Let's automate your business</h1>
+      <p class="contact-hero__sub">
+        Tell us what's slowing you down. We'll map out a custom n8n workflow
+        and come back with a clear scope and price — no fluff.
+      </p>
+    </div>
+  </section>
+
+  <!-- Main layout: form + sidebar -->
+  <section class="contact-body">
+    <div class="contact-body__inner">
+
+      <!-- ===== FORM CARD ===== -->
+      <div class="contact-form-card">
+
+        @switch (formState()) {
+
+          <!-- SUCCESS -->
+          @case ('success') {
+            <div class="form-feedback form-feedback--success" role="status">
+              <div class="form-feedback__icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="9 12 11 14 15 10"/>
+                </svg>
+              </div>
+              <h2>We've got your message</h2>
+              <p>Expect a reply within one business day. We'll reach out via email or WhatsApp — whichever works best for you.</p>
+              <button class="btn btn--primary" (click)="reset()">Send another message</button>
+            </div>
+          }
+
+          <!-- ERROR -->
+          @case ('error') {
+            <div class="form-feedback form-feedback--error" role="alert">
+              <div class="form-feedback__icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+              </div>
+              <h2>Something went wrong</h2>
+              <p>{{ errorMessage() }}</p>
+              <div class="form-feedback__actions">
+                <button class="btn btn--primary" (click)="reset()">Try again</button>
+                <a href="mailto:info@crout-holdings.com" class="btn btn--ghost">Email us directly</a>
+              </div>
+            </div>
+          }
+
+          <!-- IDLE + LOADING -->
+          @default {
+            <form
+              class="contact-form"
+              [class.contact-form--loading]="formState() === 'loading'"
+              (ngSubmit)="submit()"
+              novalidate
+              aria-label="Contact form">
+
+              <div class="form-row">
+                <!-- Name -->
+                <div class="form-group" [class.form-group--error]="form.get('name')?.touched && form.get('name')?.invalid">
+                  <label for="name" class="form-label">Full name <span aria-hidden="true">*</span></label>
+                  <input
+                    id="name"
+                    type="text"
+                    class="form-input"
+                    formControlName="name"
+                    [formControl]="$any(form.get('name'))"
+                    autocomplete="name"
+                    placeholder="Jane Smith"
+                    aria-required="true"
+                    [attr.aria-describedby]="err('name') ? 'name-error' : null"/>
+                  @if (err('name')) {
+                    <span id="name-error" class="form-error" role="alert">{{ err('name') }}</span>
+                  }
+                </div>
+
+                <!-- Email -->
+                <div class="form-group" [class.form-group--error]="form.get('email')?.touched && form.get('email')?.invalid">
+                  <label for="email" class="form-label">Email <span aria-hidden="true">*</span></label>
+                  <input
+                    id="email"
+                    type="email"
+                    class="form-input"
+                    formControlName="email"
+                    [formControl]="$any(form.get('email'))"
+                    autocomplete="email"
+                    placeholder="jane@yourbusiness.co.za"
+                    aria-required="true"
+                    [attr.aria-describedby]="err('email') ? 'email-error' : null"/>
+                  @if (err('email')) {
+                    <span id="email-error" class="form-error" role="alert">{{ err('email') }}</span>
+                  }
+                </div>
+              </div>
+
+              <div class="form-row">
+                <!-- Phone -->
+                <div class="form-group" [class.form-group--error]="form.get('phone')?.touched && form.get('phone')?.invalid">
+                  <label for="phone" class="form-label">Phone <span class="form-label__optional">(optional)</span></label>
+                  <input
+                    id="phone"
+                    type="tel"
+                    class="form-input"
+                    formControlName="phone"
+                    [formControl]="$any(form.get('phone'))"
+                    autocomplete="tel"
+                    placeholder="082 123 4567"
+                    [attr.aria-describedby]="err('phone') ? 'phone-error' : null"/>
+                  @if (err('phone')) {
+                    <span id="phone-error" class="form-error" role="alert">{{ err('phone') }}</span>
+                  }
+                </div>
+
+                <!-- Business -->
+                <div class="form-group">
+                  <label for="business" class="form-label">Business name <span class="form-label__optional">(optional)</span></label>
+                  <input
+                    id="business"
+                    type="text"
+                    class="form-input"
+                    formControlName="business"
+                    [formControl]="$any(form.get('business'))"
+                    autocomplete="organization"
+                    placeholder="Acme Plumbing"/>
+                </div>
+              </div>
+
+              <!-- Service selector -->
+              <div class="form-group" [class.form-group--error]="form.get('service')?.touched && form.get('service')?.invalid">
+                <label for="service" class="form-label">Which service interests you? <span aria-hidden="true">*</span></label>
+                <select
+                  id="service"
+                  class="form-select"
+                  formControlName="service"
+                  [formControl]="$any(form.get('service'))"
+                  aria-required="true"
+                  [attr.aria-describedby]="err('service') ? 'service-error' : null">
+                  <option value="" disabled>Select a service&hellip;</option>
+                  @for (svc of services; track svc) {
+                    <option [value]="svc">{{ svc }}</option>
+                  }
+                </select>
+                @if (err('service')) {
+                  <span id="service-error" class="form-error" role="alert">{{ err('service') }}</span>
+                }
+              </div>
+
+              <!-- Message -->
+              <div class="form-group" [class.form-group--error]="form.get('message')?.touched && form.get('message')?.invalid">
+                <div class="form-label-row">
+                  <label for="message" class="form-label">Tell us about your business <span aria-hidden="true">*</span></label>
+                  <span class="form-char-count" [class.form-char-count--warn]="charCount > 900">{{ charCount }}/1000</span>
+                </div>
+                <textarea
+                  id="message"
+                  class="form-textarea"
+                  formControlName="message"
+                  [formControl]="$any(form.get('message'))"
+                  rows="5"
+                  placeholder="What manual tasks are eating your time? What does your current workflow look like? The more context, the better."
+                  aria-required="true"
+                  [attr.aria-describedby]="err('message') ? 'message-error' : null">
+                </textarea>
+                @if (err('message')) {
+                  <span id="message-error" class="form-error" role="alert">{{ err('message') }}</span>
+                }
+              </div>
+
+              <!-- Submit -->
+              <button
+                type="submit"
+                class="btn btn--primary btn--submit"
+                [disabled]="formState() === 'loading'"
+                [class.btn--loading]="formState() === 'loading'"
+                aria-live="polite">
+                @if (formState() === 'loading') {
+                  <span class="btn__spinner" aria-hidden="true"></span>
+                  Sending&hellip;
+                } @else {
+                  Book a Free Consultation
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                }
+              </button>
+
+              <p class="form-disclaimer">
+                No spam. No obligations. We reply within one business day.
+              </p>
+
+            </form>
+          }
+        }
+      </div>
+
+      <!-- ===== SIDEBAR ===== -->
+      <aside class="contact-sidebar" aria-label="Contact information">
+        <div class="sidebar-card">
+          <h2 class="sidebar-card__heading">Why book a consultation?</h2>
+          <ul class="sidebar-list" role="list">
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              We map your exact workflow before writing a single line
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              Fixed-price quotes — no surprise invoices
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              Builds typically live in 2–4 weeks
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              Ongoing support included on retainer plans
+            </li>
+          </ul>
+        </div>
+
+        <div class="sidebar-card sidebar-card--contact">
+          <h2 class="sidebar-card__heading">Prefer to reach out directly?</h2>
+          <a href="mailto:info@crout-holdings.com" class="sidebar-contact-link">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>
+            info&#64;crout-holdings.com
+          </a>
+          <p class="sidebar-location">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10A15.3 15.3 0 018 12a15.3 15.3 0 014-10z"/></svg>
+            Bloemfontein, Free State, South Africa
+          </p>
+        </div>
+
+        <div class="sidebar-card sidebar-card--response">
+          <div class="response-time">
+            <div class="response-time__dot" aria-hidden="true"></div>
+            <div>
+              <p class="response-time__label">Typical response time</p>
+              <p class="response-time__value">&lt; 1 business day</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+  </section>
+
+</main>
+
+<ca-footer />

@@ -1,0 +1,36 @@
+<ca-nav />
+
+<main class="not-found" role="main">
+  <div class="not-found__inner">
+
+    <!-- Animated 404 glyph -->
+    <div class="not-found__glyph" aria-hidden="true">
+      <span class="not-found__four">4</span>
+      <div class="not-found__orb">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="28" stroke="rgba(212,112,58,0.25)" stroke-width="2"/>
+          <circle cx="32" cy="32" r="18" stroke="rgba(212,112,58,0.4)" stroke-width="1.5" stroke-dasharray="4 4"/>
+          <circle cx="32" cy="32" r="6" fill="#D4703A"/>
+        </svg>
+      </div>
+      <span class="not-found__four">4</span>
+    </div>
+
+    <h1 class="not-found__heading">Page not found</h1>
+    <p class="not-found__body">
+      The page you're looking for doesn't exist or has been moved.
+      Let's get you back on track.
+    </p>
+
+    <div class="not-found__actions">
+      <a routerLink="/" class="btn btn--primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Go home
+      </a>
+      <a routerLink="/contact-us" class="btn btn--ghost">Contact us</a>
+    </div>
+
+  </div>
+</main>
+
+<ca-footer />
