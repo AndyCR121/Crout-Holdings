@@ -1,7 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { FormValidatorService } from '../../services/form-validator.service';
 import { WebhookService } from '../../services/webhook.service';
 
@@ -10,7 +9,7 @@ type FormState = 'idle' | 'loading' | 'success' | 'error';
 @Component({
   selector: 'ca-contact',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './contact.component.html',
   styleUrl: './contact.component.scss'
 })
