@@ -15,73 +15,70 @@
     <!-- Service Cards -->
     <div class="pricing__grid" caScrollReveal [staggerChildren]="true">
       @for (svc of services; track svc.name) {
-      <div class="pricing__card" [class.pricing__card--highlight]="svc.highlight">
+        <div class="pricing__card" [class.pricing__card--highlight]="svc.highlight">
 
-        @if (svc.popular) {
-        <div class="pricing__badge">Popular</div>
-        }
-
-        <h3 class="pricing__card-name">{{ svc.name }}</h3>
-
-        <div class="pricing__card-price">
-          <span class="pricing__price-from">from</span>
-          <span class="pricing__price-currency">R</span>
-          <span class="pricing__price-amount">{{ formatPrice(svc.basePrice) }}</span>
-          <span class="pricing__price-period">/ service</span>
-        </div>
-
-        <p class="pricing__card-desc">{{ svc.desc }}</p>
-
-        <ul class="pricing__card-features" role="list">
-          @for (item of svc.includes; track item) {
-          <li>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              aria-hidden="true">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-            {{ item }}
-          </li>
+          @if (svc.popular) {
+            <div class="pricing__badge">Popular</div>
           }
-        </ul>
 
-        @if (svc.addOns.length > 0) {
-        <div class="pricing__addons">
-          <p class="pricing__addons-label">Available Add-Ons</p>
-          <ul class="pricing__addons-list" role="list">
-            @for (addon of svc.addOns; track addon.name) {
-            <li class="pricing__addon-item">
-              <span class="pricing__addon-name">{{ addon.name }}</span>
-              <span class="pricing__addon-price">+ R{{ formatPrice(addon.price) }}</span>
-            </li>
+          <h3 class="pricing__card-name">{{ svc.name }}</h3>
+
+          <div class="pricing__card-price">
+            <span class="pricing__price-from">from</span>
+            <span class="pricing__price-currency">R</span>
+            <span class="pricing__price-amount">{{ formatPrice(svc.basePrice) }}</span>
+            <span class="pricing__price-period">/ service</span>
+          </div>
+
+          <p class="pricing__card-desc">{{ svc.desc }}</p>
+
+          <ul class="pricing__card-features" role="list">
+            @for (item of svc.includes; track item) {
+              <li>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                {{ item }}
+              </li>
             }
           </ul>
 
-          @if (svc.bundleDeal) {
-          <div class="pricing__bundle">
-            <div class="pricing__bundle-tag">25% Off — Bundle Deal</div>
-            <p class="pricing__bundle-title">Take all 4 add-ons</p>
-            <div class="pricing__bundle-row">
-              <span class="pricing__bundle-label">Full price </span>
-              <span class="pricing__bundle-full">R{{ formatPrice(bundleFullPrice) }}</span>
+          @if (svc.addOns.length > 0) {
+            <div class="pricing__addons">
+              <p class="pricing__addons-label">Available Add-Ons</p>
+              <ul class="pricing__addons-list" role="list">
+                @for (addon of svc.addOns; track addon.name) {
+                  <li class="pricing__addon-item">
+                    <span class="pricing__addon-name">{{ addon.name }}</span>
+                    <span class="pricing__addon-price">+ R{{ formatPrice(addon.price) }}</span>
+                  </li>
+                }
+              </ul>
+
+              @if (svc.bundleDeal) {
+                <div class="pricing__bundle">
+                  <div class="pricing__bundle-tag">25% Off — Bundle Deal</div>
+                  <p class="pricing__bundle-title">Take all {{ svc.addOns.length }} add-ons</p>
+                  <div class="pricing__bundle-row">
+                    <span class="pricing__bundle-label">Full price</span>
+                    <span class="pricing__bundle-full">R{{ formatPrice(bundleFullPrice(svc)) }}</span>
+                  </div>
+                  <div class="pricing__bundle-row">
+                    <span class="pricing__bundle-label">Bundle price</span>
+                    <span class="pricing__bundle-now">R{{ formatPrice(bundleDiscountedPrice(svc)) }}</span>
+                  </div>
+                  <div class="pricing__bundle-row pricing__bundle-row--save">
+                    <span class="pricing__bundle-label">You save</span>
+                    <span class="pricing__bundle-save">R{{ formatPrice(bundleSaving(svc)) }}</span>
+                  </div>
+                </div>
+              }
             </div>
-            <div class="pricing__bundle-row">
-              <span class="pricing__bundle-label">Bundle price </span>
-              <span class="pricing__bundle-now">R{{ formatPrice(bundleDiscountedPrice) }}</span>
-            </div>
-            <div class="pricing__bundle-row pricing__bundle-row--save">
-              <span class="pricing__bundle-label">You save </span>
-              <span class="pricing__bundle-save">R{{ formatPrice(bundleSaving) }}</span>
-            </div>
-          </div>
           }
+
+          <a [href]="svc.ctaHref" class="pricing__card-cta" [class.pricing__card-cta--highlight]="svc.highlight">
+            {{ svc.ctaLabel }}
+          </a>
+
         </div>
-        }
-
-        <a [href]="svc.ctaHref" class="pricing__card-cta" [class.pricing__card-cta--highlight]="svc.highlight">
-          {{ svc.ctaLabel }}
-        </a>
-
-      </div>
       }
     </div>
 
@@ -92,26 +89,11 @@
         <h3 class="pricing__retainer-title">Monthly Retainer</h3>
         <p class="pricing__retainer-desc">Keep your workflows running, updated, and growing. Cancel anytime.</p>
         <ul class="pricing__retainer-features" role="list">
-          <li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              aria-hidden="true">
-              <polyline points="20 6 9 17 4 12" />
-            </svg> Unlimited workflow updates</li>
-          <li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              aria-hidden="true">
-              <polyline points="20 6 9 17 4 12" />
-            </svg> New automations every month</li>
-          <li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              aria-hidden="true">
-              <polyline points="20 6 9 17 4 12" />
-            </svg> 24hr support response</li>
-          <li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              aria-hidden="true">
-              <polyline points="20 6 9 17 4 12" />
-            </svg> Monthly performance report</li>
-          <li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              aria-hidden="true">
-              <polyline points="20 6 9 17 4 12" />
-            </svg> Cancel anytime</li>
+          <li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Unlimited workflow updates</li>
+          <li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> New automations every month</li>
+          <li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> 24hr support response</li>
+          <li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Monthly performance report</li>
+          <li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Cancel anytime</li>
         </ul>
       </div>
       <div class="pricing__retainer-right">

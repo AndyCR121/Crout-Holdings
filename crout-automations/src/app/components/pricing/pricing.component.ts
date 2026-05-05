@@ -10,6 +10,7 @@ export interface AddOn {
 export interface Service {
   name: string;
   popular?: boolean;
+  highlight?: boolean;
   basePrice: number;
   desc: string;
   includes: string[];
@@ -17,7 +18,6 @@ export interface Service {
   bundleDeal?: boolean;
   ctaLabel: string;
   ctaHref: string;
-  highlight?: boolean;
 }
 
 @Component({
@@ -56,6 +56,7 @@ export class PricingComponent {
     {
       name: 'Automated Quotes',
       basePrice: 6000,
+      bundleDeal: true,
       desc: 'End-to-end quote automation — triggered by email, webhook, or WhatsApp, linked to Xero, and approved by the right person automatically.',
       includes: [
         'Email/Webhook Trigger',
@@ -74,6 +75,7 @@ export class PricingComponent {
     {
       name: 'Automated Job Cards',
       basePrice: 6000,
+      bundleDeal: true,
       desc: 'Auto-generate job cards from any trigger — email, webhook, or WhatsApp — synced with Trello and managed by AI agents.',
       includes: [
         'Email/Webhook/WhatsApp Trigger',
@@ -91,25 +93,19 @@ export class PricingComponent {
     },
   ];
 
-  // WhatsApp Agent add-ons only
-  private get waService(): Service {
-    return this.services.find(s => s.bundleDeal)!;
+  /** Full price for a service = base + all add-ons */
+  bundleFullPrice(svc: Service): number {
+    return svc.basePrice + svc.addOns.reduce((sum, a) => sum + a.price, 0);
   }
 
-  // Full price = base R6k + all add-ons at full price
-  get bundleFullPrice(): number {
-    const addOnsTotal = this.waService.addOns.reduce((sum, a) => sum + a.price, 0);
-    return this.waService.basePrice + addOnsTotal;
+  /** Bundle price = 25% off the full price */
+  bundleDiscountedPrice(svc: Service): number {
+    return Math.round(this.bundleFullPrice(svc) * (1 - this.PACKAGE_DISCOUNT));
   }
 
-  // Bundle price = 25% off the FULL price (base + add-ons)
-  get bundleDiscountedPrice(): number {
-    return Math.round(this.bundleFullPrice * (1 - this.PACKAGE_DISCOUNT));
-  }
-
-  // Saving = difference
-  get bundleSaving(): number {
-    return this.bundleFullPrice - this.bundleDiscountedPrice;
+  /** Saving = full − discounted */
+  bundleSaving(svc: Service): number {
+    return this.bundleFullPrice(svc) - this.bundleDiscountedPrice(svc);
   }
 
   formatPrice(n: number): string {
