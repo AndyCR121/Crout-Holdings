@@ -59,9 +59,10 @@
 
   &__headline-accent { color: var(--color-orange); }
 
+  // ✅ Updated: full white, not faded
   &__sub {
     font-size: var(--text-base);
-    color: rgba(255,255,255,0.6);
+    color: #fff;
     max-width: 56ch;
     margin-inline: auto;
     line-height: 1.7;
