@@ -82,6 +82,76 @@
       }
     </div>
 
+    <!-- ===== Xero Suite Package ===== -->
+    <div class="pricing__suite" caScrollReveal>
+      <div class="pricing__suite-inner">
+
+        <!-- Left: Info -->
+        <div class="pricing__suite-left">
+          <div class="pricing__suite-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Full Suite &mdash; {{ SUITE_DISCOUNT * 100 | number:'1.0-0' }}% Off
+          </div>
+
+          <h3 class="pricing__suite-title">Xero Suite Package</h3>
+          <p class="pricing__suite-desc">
+            Everything your business needs to automate quoting, invoicing, payroll and project management &mdash; fully integrated with Xero. Add the WhatsApp Agent for a complete end-to-end communication layer.
+          </p>
+
+          <!-- Line items -->
+          <ul class="pricing__suite-items" role="list">
+            @for (item of xeroSuiteItems; track item.label) {
+              @if (!item.optional) {
+                <li class="pricing__suite-item">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span>{{ item.label }}</span>
+                  <span class="pricing__suite-item-price">R{{ formatPrice(item.price) }}</span>
+                </li>
+              }
+            }
+            <!-- Optional WhatsApp toggle row -->
+            <li class="pricing__suite-item pricing__suite-item--optional" [class.pricing__suite-item--active]="xeroSuiteWhatsApp">
+              <button
+                class="pricing__suite-toggle"
+                [attr.aria-pressed]="xeroSuiteWhatsApp"
+                aria-label="Toggle WhatsApp Agent Service"
+                (click)="toggleXeroWhatsApp()"
+              >
+                <span class="pricing__suite-toggle-track">
+                  <span class="pricing__suite-toggle-thumb"></span>
+                </span>
+              </button>
+              <span>WhatsApp Agent Service <em class="pricing__suite-optional-label">optional</em></span>
+              <span class="pricing__suite-item-price">+ R{{ formatPrice(6000) }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Right: Pricing block -->
+        <div class="pricing__suite-right">
+          <div class="pricing__suite-price-block">
+            <p class="pricing__suite-price-label">Full price</p>
+            <p class="pricing__suite-price-full">R{{ formatPrice(xeroSuiteFullPrice) }}</p>
+
+            <p class="pricing__suite-price-label" style="margin-top: 0.75rem">Suite price</p>
+            <div class="pricing__suite-price-now">
+              <span class="pricing__suite-price-currency">R</span>
+              <span class="pricing__suite-price-amount">{{ formatPrice(xeroSuiteDiscountedPrice) }}</span>
+            </div>
+
+            <div class="pricing__suite-price-saving">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              You save R{{ formatPrice(xeroSuiteSaving) }}
+            </div>
+          </div>
+
+          <a href="/contact-us/" class="pricing__suite-cta">Get the Suite</a>
+          <p class="pricing__suite-cta-note">Custom scoping call included</p>
+        </div>
+
+      </div>
+    </div>
+
     <!-- Monthly Retainer -->
     <div class="pricing__retainer" caScrollReveal>
       <div class="pricing__retainer-left">

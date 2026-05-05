@@ -20,6 +20,12 @@ export interface Service {
   ctaHref: string;
 }
 
+export interface XeroSuiteItem {
+  label: string;
+  price: number;
+  optional?: boolean;
+}
+
 @Component({
   selector: 'ca-pricing',
   standalone: true,
@@ -30,6 +36,10 @@ export interface Service {
 export class PricingComponent {
 
   readonly PACKAGE_DISCOUNT = 0.15;
+  readonly SUITE_DISCOUNT   = 0.20;
+
+  // Toggle state for optional WhatsApp Agent in Xero Suite
+  xeroSuiteWhatsApp = false;
 
   services: Service[] = [
     {
@@ -92,6 +102,34 @@ export class PricingComponent {
       ctaHref: '/contact-us/',
     },
   ];
+
+  // Xero Suite line items
+  readonly xeroSuiteItems: XeroSuiteItem[] = [
+    { label: 'Automated Quotes',              price: 6000 },
+    { label: 'Xero Invoices',                 price: 800  },
+    { label: 'Invoice Follow-Ups [Xero]',     price: 600  },
+    { label: 'Automated Job Cards',           price: 6000 },
+    { label: 'Payroll Excel Generation',      price: 900  },
+    { label: 'WhatsApp Agent Service',        price: 6000, optional: true },
+  ];
+
+  get xeroSuiteFullPrice(): number {
+    return this.xeroSuiteItems
+      .filter(i => !i.optional || this.xeroSuiteWhatsApp)
+      .reduce((sum, i) => sum + i.price, 0);
+  }
+
+  get xeroSuiteDiscountedPrice(): number {
+    return Math.round(this.xeroSuiteFullPrice * (1 - this.SUITE_DISCOUNT));
+  }
+
+  get xeroSuiteSaving(): number {
+    return this.xeroSuiteFullPrice - this.xeroSuiteDiscountedPrice;
+  }
+
+  toggleXeroWhatsApp(): void {
+    this.xeroSuiteWhatsApp = !this.xeroSuiteWhatsApp;
+  }
 
   /** Full price for a service = base + all add-ons */
   bundleFullPrice(svc: Service): number {
