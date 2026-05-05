@@ -20,10 +20,16 @@ export interface Service {
   ctaHref: string;
 }
 
+export interface XeroSuiteAddOn {
+  label: string;
+  price: number;
+}
+
 export interface XeroSuiteItem {
   label: string;
   price: number;
   optional?: boolean;
+  addOns?: XeroSuiteAddOn[];
 }
 
 @Component({
@@ -35,11 +41,10 @@ export interface XeroSuiteItem {
 })
 export class PricingComponent {
 
-  readonly PACKAGE_DISCOUNT       = 0.15;  // per-service add-on bundle
-  readonly SUITE_DISCOUNT_BASE    = 0.10;  // suite without WhatsApp
-  readonly SUITE_DISCOUNT_WHATSAPP = 0.15; // suite with WhatsApp
+  readonly PACKAGE_DISCOUNT        = 0.15;
+  readonly SUITE_DISCOUNT_BASE     = 0.10;
+  readonly SUITE_DISCOUNT_WHATSAPP = 0.15;
 
-  // Toggle state for optional WhatsApp Agent in Xero Suite
   xeroSuiteWhatsApp = false;
 
   services: Service[] = [
@@ -56,10 +61,10 @@ export class PricingComponent {
         'Smart Client Support',
       ],
       addOns: [
-        { name: 'Marketing Messaging', price: 800 },
-        { name: 'Automated Quoting [Xero]', price: 1200 },
-        { name: '5M+ Token Upgrade', price: 600 },
-        { name: 'Template/Forms Messaging', price: 500 },
+        { name: 'Marketing Messaging',        price: 800  },
+        { name: 'Automated Quoting [Xero]',   price: 1200 },
+        { name: '5M+ Token Upgrade',          price: 600  },
+        { name: 'Template/Forms Messaging',   price: 500  },
       ],
       ctaLabel: 'Choose Plan',
       ctaHref: '/contact-us/',
@@ -77,8 +82,8 @@ export class PricingComponent {
         'WhatsApp/Telegram Integration',
       ],
       addOns: [
-        { name: 'Xero Invoices', price: 800 },
-        { name: 'Invoice Follow-Ups [Xero]', price: 600 },
+        { name: 'Xero Invoices',              price: 800 },
+        { name: 'Invoice Follow-Ups [Xero]',  price: 600 },
       ],
       ctaLabel: 'Choose Plan',
       ctaHref: '/contact-us/',
@@ -96,22 +101,31 @@ export class PricingComponent {
         'WhatsApp/Telegram Integration',
       ],
       addOns: [
-        { name: 'Custom Setup', price: 1000 },
-        { name: 'Payroll Excel Generation', price: 900 },
+        { name: 'Custom Setup',               price: 1000 },
+        { name: 'Payroll Excel Generation',   price: 900  },
       ],
       ctaLabel: 'Choose Plan',
       ctaHref: '/contact-us/',
     },
   ];
 
-  // Xero Suite line items
   readonly xeroSuiteItems: XeroSuiteItem[] = [
     { label: 'Automated Quotes',          price: 6000 },
     { label: 'Xero Invoices',             price: 800  },
     { label: 'Invoice Follow-Ups [Xero]', price: 600  },
     { label: 'Automated Job Cards',       price: 6000 },
     { label: 'Payroll Excel Generation',  price: 900  },
-    { label: 'WhatsApp Agent Service',    price: 6000, optional: true },
+    {
+      label: 'WhatsApp Agent Service',
+      price: 6000,
+      optional: true,
+      addOns: [
+        { label: 'Marketing Messaging',       price: 800  },
+        { label: 'Automated Quoting [Xero]',  price: 1200 },
+        { label: '5M+ Token Upgrade',         price: 600  },
+        { label: 'Template/Forms Messaging',  price: 500  },
+      ],
+    },
   ];
 
   get suiteDiscount(): number {
@@ -121,9 +135,15 @@ export class PricingComponent {
   }
 
   get xeroSuiteFullPrice(): number {
-    return this.xeroSuiteItems
-      .filter(i => !i.optional || this.xeroSuiteWhatsApp)
-      .reduce((sum, i) => sum + i.price, 0);
+    let total = 0;
+    for (const item of this.xeroSuiteItems) {
+      if (item.optional && !this.xeroSuiteWhatsApp) continue;
+      total += item.price;
+      if (item.optional && this.xeroSuiteWhatsApp && item.addOns) {
+        total += item.addOns.reduce((s, a) => s + a.price, 0);
+      }
+    }
+    return total;
   }
 
   get xeroSuiteDiscountedPrice(): number {
@@ -138,17 +158,14 @@ export class PricingComponent {
     this.xeroSuiteWhatsApp = !this.xeroSuiteWhatsApp;
   }
 
-  /** Full price for a service = base + all add-ons */
   bundleFullPrice(svc: Service): number {
     return svc.basePrice + svc.addOns.reduce((sum, a) => sum + a.price, 0);
   }
 
-  /** Bundle price = 15% off the full price */
   bundleDiscountedPrice(svc: Service): number {
     return Math.round(this.bundleFullPrice(svc) * (1 - this.PACKAGE_DISCOUNT));
   }
 
-  /** Saving = full − discounted */
   bundleSaving(svc: Service): number {
     return this.bundleFullPrice(svc) - this.bundleDiscountedPrice(svc);
   }

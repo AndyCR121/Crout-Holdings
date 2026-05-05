@@ -100,11 +100,13 @@
 
           <!-- Line items -->
           <ul class="pricing__suite-items" role="list">
+
+            <!-- Core items -->
             @for (item of xeroSuiteItems; track item.label) {
               @if (!item.optional) {
                 <li class="pricing__suite-item">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                  <span>{{ item.label }}</span>
+                  <span class="pricing__suite-item-label">{{ item.label }}</span>
                   <span class="pricing__suite-item-price">R{{ formatPrice(item.price) }}</span>
                 </li>
               }
@@ -126,9 +128,24 @@
                   <span class="pricing__suite-toggle-thumb"></span>
                 </span>
               </button>
-              <span>WhatsApp Agent Service <em class="pricing__suite-optional-label">optional</em></span>
+              <span class="pricing__suite-item-label">
+                WhatsApp Agent Service
+                <em class="pricing__suite-optional-label">optional</em>
+              </span>
               <span class="pricing__suite-item-price">+ R{{ formatPrice(6000) }}</span>
             </li>
+
+            <!-- WhatsApp add-on sub-rows (visible when toggled on) -->
+            @if (xeroSuiteWhatsApp) {
+              @for (addon of xeroSuiteItems[5].addOns!; track addon.label) {
+                <li class="pricing__suite-item pricing__suite-item--addon">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span class="pricing__suite-item-label">{{ addon.label }}</span>
+                  <span class="pricing__suite-item-price pricing__suite-item-price--addon">+ R{{ formatPrice(addon.price) }}</span>
+                </li>
+              }
+            }
+
           </ul>
         </div>
 
