@@ -35,8 +35,9 @@ export interface XeroSuiteItem {
 })
 export class PricingComponent {
 
-  readonly PACKAGE_DISCOUNT = 0.15;
-  readonly SUITE_DISCOUNT   = 0.20;
+  readonly PACKAGE_DISCOUNT       = 0.15;  // per-service add-on bundle
+  readonly SUITE_DISCOUNT_BASE    = 0.10;  // suite without WhatsApp
+  readonly SUITE_DISCOUNT_WHATSAPP = 0.15; // suite with WhatsApp
 
   // Toggle state for optional WhatsApp Agent in Xero Suite
   xeroSuiteWhatsApp = false;
@@ -105,13 +106,19 @@ export class PricingComponent {
 
   // Xero Suite line items
   readonly xeroSuiteItems: XeroSuiteItem[] = [
-    { label: 'Automated Quotes',              price: 6000 },
-    { label: 'Xero Invoices',                 price: 800  },
-    { label: 'Invoice Follow-Ups [Xero]',     price: 600  },
-    { label: 'Automated Job Cards',           price: 6000 },
-    { label: 'Payroll Excel Generation',      price: 900  },
-    { label: 'WhatsApp Agent Service',        price: 6000, optional: true },
+    { label: 'Automated Quotes',          price: 6000 },
+    { label: 'Xero Invoices',             price: 800  },
+    { label: 'Invoice Follow-Ups [Xero]', price: 600  },
+    { label: 'Automated Job Cards',       price: 6000 },
+    { label: 'Payroll Excel Generation',  price: 900  },
+    { label: 'WhatsApp Agent Service',    price: 6000, optional: true },
   ];
+
+  get suiteDiscount(): number {
+    return this.xeroSuiteWhatsApp
+      ? this.SUITE_DISCOUNT_WHATSAPP
+      : this.SUITE_DISCOUNT_BASE;
+  }
 
   get xeroSuiteFullPrice(): number {
     return this.xeroSuiteItems
@@ -120,7 +127,7 @@ export class PricingComponent {
   }
 
   get xeroSuiteDiscountedPrice(): number {
-    return Math.round(this.xeroSuiteFullPrice * (1 - this.SUITE_DISCOUNT));
+    return Math.round(this.xeroSuiteFullPrice * (1 - this.suiteDiscount));
   }
 
   get xeroSuiteSaving(): number {

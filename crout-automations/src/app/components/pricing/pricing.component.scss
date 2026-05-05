@@ -327,7 +327,6 @@
     position: relative;
     overflow: hidden;
 
-    // Subtle ambient glow
     &::before {
       content: '';
       position: absolute;
@@ -386,7 +385,6 @@
     margin-bottom: var(--space-6);
   }
 
-  // Line items list
   &__suite-items {
     display: flex;
     flex-direction: column;
@@ -417,6 +415,7 @@
     }
 
     &--active {
+      border-style: solid;
       border-color: rgba(212,112,58,0.45);
       background: rgba(212,112,58,0.08);
       color: rgba(255,255,255,0.85);
@@ -439,7 +438,7 @@
     margin-left: auto;
   }
 
-  // Toggle switch
+  // ---- Toggle switch — keyed off .pricing__suite-toggle--on class ----
   &__suite-toggle {
     flex-shrink: 0;
     background: none;
@@ -461,7 +460,8 @@
     padding: 2px;
     transition: background var(--transition-interactive), border-color var(--transition-interactive);
 
-    [aria-pressed="true"] & {
+    // Activated state via parent button class
+    .pricing__suite-toggle--on & {
       background: var(--color-orange);
       border-color: var(--color-orange);
     }
@@ -472,14 +472,16 @@
     height: 14px;
     border-radius: var(--radius-full);
     background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     transition: transform var(--transition-interactive);
 
-    [aria-pressed="true"] & {
+    // Slide right when on
+    .pricing__suite-toggle--on & {
       transform: translateX(16px);
     }
   }
 
-  // Right: price block
+  // ---- Right price block ----
   &__suite-right {
     display: flex;
     flex-direction: column;
@@ -495,7 +497,7 @@
     background: rgba(255,255,255,0.06);
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: var(--radius-lg);
-    padding: var(--space-5) var(--space-5);
+    padding: var(--space-5);
     display: flex;
     flex-direction: column;
     gap: var(--space-1);

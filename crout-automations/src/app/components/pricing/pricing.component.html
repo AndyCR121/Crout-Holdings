@@ -90,7 +90,7 @@
         <div class="pricing__suite-left">
           <div class="pricing__suite-badge">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            Full Suite &mdash; {{ SUITE_DISCOUNT * 100 | number:'1.0-0' }}% Off
+            Full Suite &mdash; {{ suiteDiscount * 100 | number:'1.0-0' }}% Off
           </div>
 
           <h3 class="pricing__suite-title">Xero Suite Package</h3>
@@ -109,10 +109,15 @@
                 </li>
               }
             }
+
             <!-- Optional WhatsApp toggle row -->
-            <li class="pricing__suite-item pricing__suite-item--optional" [class.pricing__suite-item--active]="xeroSuiteWhatsApp">
+            <li
+              class="pricing__suite-item pricing__suite-item--optional"
+              [class.pricing__suite-item--active]="xeroSuiteWhatsApp"
+            >
               <button
                 class="pricing__suite-toggle"
+                [class.pricing__suite-toggle--on]="xeroSuiteWhatsApp"
                 [attr.aria-pressed]="xeroSuiteWhatsApp"
                 aria-label="Toggle WhatsApp Agent Service"
                 (click)="toggleXeroWhatsApp()"
