@@ -28,7 +28,7 @@ export class WhyCroutComponent {
       },
       {
         title: 'n8n — Not Zapier',
-        body: 'We use self-hosted n8n so your data stays in SA, costs stay low, and your workflows have no execution limits.',
+        body: 'We build with n8n — a powerful workflow tool with no execution limits and lower costs. We do not store or access your data. All workflows are POPIA-compliant and your data stays yours.',
         icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
       },
       {
