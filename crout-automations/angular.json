@@ -3,15 +3,19 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "crout-automations-home-page": {
+    "home": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
           "style": "scss",
           "standalone": true
         },
-        "@schematics/angular:directive": { "standalone": true },
-        "@schematics/angular:pipe": { "standalone": true }
+        "@schematics/angular:directive": {
+          "standalone": true
+        },
+        "@schematics/angular:pipe": {
+          "standalone": true
+        }
       },
       "root": "",
       "sourceRoot": "src",
@@ -20,20 +24,38 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/crout-automations-home-page",
+            "outputPath": "dist/home",
             "index": "src/index.html",
             "browser": "src/main.ts",
-            "polyfills": ["zone.js"],
+            "polyfills": [
+              "zone.js"
+            ],
             "tsConfig": "tsconfig.app.json",
-            "assets": [{ "glob": "**/*", "input": "src/assets", "output": "assets" }],
-            "styles": ["src/styles/styles.scss"],
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "assets"
+              }
+            ],
+            "styles": [
+              "src/styles/styles.scss"
+            ],
             "scripts": []
           },
           "configurations": {
             "production": {
               "budgets": [
-                { "type": "initial", "maximumWarning": "500kB", "maximumError": "1MB" },
-                { "type": "anyComponentStyle", "maximumWarning": "4kB", "maximumError": "8kB" }
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
               ],
               "outputHashing": "all"
             },
@@ -54,7 +76,9 @@
             "polyfills": "zone.js",
             "tsConfig": "tsconfig.app.json",
             "assets": [],
-            "styles": ["src/styles/styles.scss"],
+            "styles": [
+              "src/styles/styles.scss"
+            ],
             "scripts": [],
             "outputHashing": "none",
             "vendorChunk": false,
@@ -64,8 +88,16 @@
             "sourceMap": false,
             "extractLicenses": false,
             "budgets": [
-              { "type": "initial", "maximumWarning": "2MB", "maximumError": "5MB" },
-              { "type": "anyComponentStyle", "maximumWarning": "16kB", "maximumError": "32kB" }
+              {
+                "type": "initial",
+                "maximumWarning": "2MB",
+                "maximumError": "5MB"
+              },
+              {
+                "type": "anyComponentStyle",
+                "maximumWarning": "16kB",
+                "maximumError": "32kB"
+              }
             ]
           },
           "configurations": {
@@ -83,18 +115,33 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
-            "production": { "buildTarget": "crout-automations-home-page:build:production" },
-            "development": { "buildTarget": "crout-automations-home-page:build:development" }
+            "production": {
+              "buildTarget": "home:build:production"
+            },
+            "development": {
+              "buildTarget": "home:build:development"
+            }
           },
           "defaultConfiguration": "development"
         },
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
-            "polyfills": ["zone.js", "zone.js/testing"],
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ],
             "tsConfig": "tsconfig.spec.json",
-            "assets": [{ "glob": "**/*", "input": "src/assets", "output": "assets" }],
-            "styles": ["src/styles/styles.scss"],
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "assets"
+              }
+            ],
+            "styles": [
+              "src/styles/styles.scss"
+            ],
             "scripts": []
           }
         }
