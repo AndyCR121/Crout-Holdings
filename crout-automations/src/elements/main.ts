@@ -3,12 +3,15 @@
  * Each component is registered as a native Custom Element.
  *
  * Build command:
- *   ng build --configuration elements
+ *   ng build home --configuration elements
  *
- * Output:  dist/crout-elements/
+ * Output:  dist/home/
  *   - main.js        (all components bundled, no hashing)
+ *   - polyfills.js   (zone.js)
+ *   - styles.css
  *
  * WordPress usage — in your Elementor page / theme:
+ *   <script defer src="/wp-content/themes/your-theme/crout-elements/polyfills.js"></script>
  *   <script defer src="/wp-content/themes/your-theme/crout-elements/main.js"></script>
  *   <ca-hero></ca-hero>
  *   <ca-pain-point></ca-pain-point>
@@ -23,7 +26,7 @@
  */
 import { createApplication } from '@angular/platform-browser';
 import { createCustomElement } from '@angular/elements';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { provideAnimations } from '@angular/platform-browser/animations';
 
 import { HeroComponent } from '../app/components/hero/hero.component';
 import { PainPointComponent } from '../app/components/pain-point/pain-point.component';
@@ -36,7 +39,7 @@ import { CtaBannerComponent } from '../app/components/cta-banner/cta-banner.comp
 (async () => {
   const app = await createApplication({
     providers: [
-      provideAnimationsAsync()
+      provideAnimations()
     ]
   });
 
