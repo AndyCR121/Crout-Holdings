@@ -41,23 +41,41 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
-            },
-            "elements": {
-              "outputPath": {
-                "base": "dist/crout-elements",
-                "browser": ""
-              },
-              "index": false,
-              "browser": "src/elements/main.ts",
-              "polyfills": ["zone.js"],
-              "outputHashing": "none",
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "build-elements": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "dist/crout-elements",
+            "index": "src/index.html",
+            "main": "src/elements/main.ts",
+            "polyfills": "zone.js",
+            "tsConfig": "tsconfig.app.json",
+            "assets": [],
+            "styles": ["src/styles/styles.scss"],
+            "scripts": [],
+            "outputHashing": "none",
+            "vendorChunk": false,
+            "commonChunk": false,
+            "namedChunks": false,
+            "optimization": true,
+            "sourceMap": false,
+            "extractLicenses": false,
+            "budgets": [
+              { "type": "initial", "maximumWarning": "2MB", "maximumError": "5MB" },
+              { "type": "anyComponentStyle", "maximumWarning": "16kB", "maximumError": "32kB" }
+            ]
+          },
+          "configurations": {
+            "production": {
               "optimization": true,
+              "outputHashing": "none",
               "sourceMap": false,
-              "extractLicenses": false,
-              "budgets": [
-                { "type": "initial", "maximumWarning": "2MB", "maximumError": "5MB" },
-                { "type": "anyComponentStyle", "maximumWarning": "16kB", "maximumError": "32kB" }
-              ]
+              "vendorChunk": false,
+              "commonChunk": false,
+              "namedChunks": false
             }
           },
           "defaultConfiguration": "production"
