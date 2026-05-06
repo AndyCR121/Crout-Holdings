@@ -10,12 +10,8 @@
           "style": "scss",
           "standalone": true
         },
-        "@schematics/angular:directive": {
-          "standalone": true
-        },
-        "@schematics/angular:pipe": {
-          "standalone": true
-        }
+        "@schematics/angular:directive": { "standalone": true },
+        "@schematics/angular:pipe": { "standalone": true }
       },
       "root": "",
       "sourceRoot": "src",
@@ -27,35 +23,19 @@
             "outputPath": "dist/home",
             "index": "src/index.html",
             "browser": "src/main.ts",
-            "polyfills": [
-              "zone.js"
-            ],
+            "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
             "assets": [
-              {
-                "glob": "**/*",
-                "input": "src/assets",
-                "output": "assets"
-              }
+              { "glob": "**/*", "input": "src/assets", "output": "assets" }
             ],
-            "styles": [
-              "src/styles/styles.scss"
-            ],
+            "styles": ["src/styles/styles.scss"],
             "scripts": []
           },
           "configurations": {
             "production": {
               "budgets": [
-                {
-                  "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
-                },
-                {
-                  "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
-                }
+                { "type": "initial", "maximumWarning": "500kB", "maximumError": "1MB" },
+                { "type": "anyComponentStyle", "maximumWarning": "4kB", "maximumError": "8kB" }
               ],
               "outputHashing": "all"
             },
@@ -63,51 +43,30 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
-            }
-          },
-          "defaultConfiguration": "production"
-        },
-        "build-elements": {
-          "builder": "@angular-devkit/build-angular:browser",
-          "options": {
-            "outputPath": "dist/crout-elements",
-            "index": "src/index.html",
-            "main": "src/elements/main.ts",
-            "polyfills": "zone.js",
-            "tsConfig": "tsconfig.app.json",
-            "assets": [],
-            "styles": [
-              "src/styles/styles.scss"
-            ],
-            "scripts": [],
-            "outputHashing": "none",
-            "vendorChunk": false,
-            "commonChunk": false,
-            "namedChunks": false,
-            "optimization": true,
-            "sourceMap": false,
-            "extractLicenses": false,
-            "budgets": [
-              {
-                "type": "initial",
-                "maximumWarning": "2MB",
-                "maximumError": "5MB"
+            },
+            "elements": {
+              "outputPath": {
+                "base": "dist/home",
+                "browser": ""
               },
-              {
-                "type": "anyComponentStyle",
-                "maximumWarning": "16kB",
-                "maximumError": "32kB"
-              }
-            ]
-          },
-          "configurations": {
-            "production": {
-              "optimization": true,
+              "index": false,
+              "browser": "src/elements/main.ts",
+              "polyfills": ["zone.js"],
               "outputHashing": "none",
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": false
+                },
+                "fonts": false
+              },
               "sourceMap": false,
-              "vendorChunk": false,
-              "commonChunk": false,
-              "namedChunks": false
+              "extractLicenses": false,
+              "budgets": [
+                { "type": "initial", "maximumWarning": "2MB", "maximumError": "5MB" },
+                { "type": "anyComponentStyle", "maximumWarning": "16kB", "maximumError": "32kB" }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -115,33 +74,20 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
-            "production": {
-              "buildTarget": "home:build:production"
-            },
-            "development": {
-              "buildTarget": "home:build:development"
-            }
+            "production": { "buildTarget": "home:build:production" },
+            "development": { "buildTarget": "home:build:development" }
           },
           "defaultConfiguration": "development"
         },
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ],
+            "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "tsconfig.spec.json",
             "assets": [
-              {
-                "glob": "**/*",
-                "input": "src/assets",
-                "output": "assets"
-              }
+              { "glob": "**/*", "input": "src/assets", "output": "assets" }
             ],
-            "styles": [
-              "src/styles/styles.scss"
-            ],
+            "styles": ["src/styles/styles.scss"],
             "scripts": []
           }
         }
