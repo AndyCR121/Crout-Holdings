@@ -1,11 +1,11 @@
 {
-  "name": "crout-automations-home-page",
+  "name": "crout-automations",
   "version": "0.0.1",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "build:elements": "ng build home --configuration elements",
+    "build:elements": "ng build crout-automations --configuration elements",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },

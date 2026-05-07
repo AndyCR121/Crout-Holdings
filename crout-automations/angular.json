@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "home": {
+    "crout-automations": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -20,7 +20,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/home",
+            "outputPath": "dist/crout-automations",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": ["zone.js"],
@@ -46,7 +46,7 @@
             },
             "elements": {
               "outputPath": {
-                "base": "dist/home",
+                "base": "dist/crout-automations",
                 "browser": ""
               },
               "index": false,
@@ -74,8 +74,8 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
-            "production": { "buildTarget": "home:build:production" },
-            "development": { "buildTarget": "home:build:development" }
+            "production": { "buildTarget": "crout-automations:build:production" },
+            "development": { "buildTarget": "crout-automations:build:development" }
           },
           "defaultConfiguration": "development"
         },
