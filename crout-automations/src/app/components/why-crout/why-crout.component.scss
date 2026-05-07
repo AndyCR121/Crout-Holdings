@@ -23,7 +23,7 @@
   }
 
   &__container {
-    max-width: var(--content-wide);
+    width: var(--content-wide);
     margin-inline: auto;
     padding-inline: var(--space-6);
     position: relative;
@@ -32,7 +32,7 @@
 
   &__header {
     text-align: center;
-    max-width: var(--content-default);
+    width: var(--content-default);
     margin-inline: auto;
     margin-bottom: var(--space-12);
   }

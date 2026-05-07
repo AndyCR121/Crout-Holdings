@@ -17,7 +17,7 @@
   &__container {
     position: relative;
     z-index: 1;
-    max-width: var(--content-default);
+    width: var(--content-default);
     margin-inline: auto;
     padding-inline: var(--space-6);
     display: flex;
@@ -63,7 +63,6 @@
     justify-content: center;
   }
 
-  // ✅ Base button shared styles
   &__btn {
     display: inline-flex;
     align-items: center;
@@ -82,7 +81,6 @@
     &:hover { transform: translateY(-2px); }
     &:active { transform: translateY(0); }
 
-    // Primary — solid orange fill
     &--primary {
       background: var(--color-orange);
       color: #fff;
@@ -94,7 +92,6 @@
       }
     }
 
-    // Ghost — outlined, transparent
     &--ghost {
       background: transparent;
       color: var(--color-text);

@@ -55,10 +55,9 @@
   &__container {
     position: relative;
     z-index: 1;
-    max-width: var(--content-default);
+    width: var(--content-default);
     margin-inline: auto;
     padding: clamp(var(--space-24), 12vw, var(--space-32)) var(--space-6) var(--space-16);
-    width: 100%;
   }
 
   &__content {
