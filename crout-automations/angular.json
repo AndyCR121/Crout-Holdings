@@ -52,6 +52,9 @@
               "index": false,
               "browser": "src/elements/main.ts",
               "polyfills": ["zone.js"],
+              "assets": [
+                { "glob": "**/*", "input": "src/assets", "output": "assets" }
+              ],
               "outputHashing": "none",
               "optimization": {
                 "scripts": true,
