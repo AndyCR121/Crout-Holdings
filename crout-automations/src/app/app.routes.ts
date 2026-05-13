@@ -1,4 +1,13 @@
 import { Routes } from '@angular/router';
+import { environment } from '../environments/environment';
+
+const devRoutes: Routes = environment.production ? [] : [
+  {
+    path: 'privacy-policy',
+    loadComponent: () =>
+      import('./pages/privacy-policy/privacy-policy.page').then(m => m.PrivacyPolicyPageComponent)
+  }
+];
 
 export const routes: Routes = [
   {
@@ -20,11 +29,12 @@ export const routes: Routes = [
     data: {
       seo: {
         title: 'Contact Us — Book a Free Consultation',
-        description: 'Book a free consultation with Crout Automations. We\'ll map your workflow, scope the build, and give you a fixed-price quote. No obligations.',
+        description: 'Crout Automations builds custom n8n workflows for South African businesses. WhatsApp AI agents, quoting automation, job card systems, and more. Based in Bloemfontein.',
         canonical: '/contact-us'
       }
     }
   },
+  ...devRoutes,
   {
     path: '**',
     loadComponent: () =>
