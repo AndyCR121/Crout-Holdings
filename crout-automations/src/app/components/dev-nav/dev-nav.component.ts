@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'ca-dev-nav',
@@ -9,6 +8,4 @@ import { environment } from '../../../environments/environment';
   templateUrl: './dev-nav.component.html',
   styleUrl: './dev-nav.component.scss'
 })
-export class DevNavComponent {
-  readonly isDev = !environment.production;
-}
+export class DevNavComponent {}

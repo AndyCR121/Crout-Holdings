@@ -1,13 +1,4 @@
 import { Routes } from '@angular/router';
-import { environment } from '../environments/environment';
-
-const devRoutes: Routes = environment.production ? [] : [
-  {
-    path: 'privacy-policy',
-    loadComponent: () =>
-      import('./pages/privacy-policy/privacy-policy.page').then(m => m.PrivacyPolicyPageComponent)
-  }
-];
 
 export const routes: Routes = [
   {
@@ -34,7 +25,11 @@ export const routes: Routes = [
       }
     }
   },
-  ...devRoutes,
+  {
+    path: 'privacy-policy',
+    loadComponent: () =>
+      import('./pages/privacy-policy/privacy-policy.page').then(m => m.PrivacyPolicyPageComponent)
+  },
   {
     path: '**',
     loadComponent: () =>
