@@ -3,9 +3,9 @@
  * Each component is registered as a native Custom Element.
  *
  * Build command:
- *   ng build home --configuration elements
+ *   ng build crout-automations --configuration elements
  *
- * Output:  dist/home/
+ * Output:  dist/crout-automations/
  *   - main.js        (all components bundled, no hashing)
  *   - polyfills.js   (zone.js)
  *   - styles.css
@@ -20,6 +20,7 @@
  *   <ca-why-crout></ca-why-crout>
  *   <ca-pricing></ca-pricing>
  *   <ca-cta-banner></ca-cta-banner>
+ *   <ca-privacy-policy></ca-privacy-policy>
  *
  * NOTE: <ca-nav> and <ca-footer> are intentionally excluded.
  * They live in wordpress-theme/ and are handled by the WP theme layer.
@@ -35,6 +36,7 @@ import { HowItWorksComponent } from '../app/components/how-it-works/how-it-works
 import { WhyCroutComponent } from '../app/components/why-crout/why-crout.component';
 import { PricingComponent } from '../app/components/pricing/pricing.component';
 import { CtaBannerComponent } from '../app/components/cta-banner/cta-banner.component';
+import { PrivacyPolicyComponent } from '../app/components/privacy-policy/privacy-policy.component';
 
 (async () => {
   const app = await createApplication({
@@ -51,6 +53,7 @@ import { CtaBannerComponent } from '../app/components/cta-banner/cta-banner.comp
     ['ca-why-crout',         WhyCroutComponent],
     ['ca-pricing',           PricingComponent],
     ['ca-cta-banner',        CtaBannerComponent],
+    ['ca-privacy-policy',    PrivacyPolicyComponent],
   ];
 
   for (const [tag, component] of elements) {
