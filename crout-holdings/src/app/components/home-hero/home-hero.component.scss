@@ -9,15 +9,16 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  background-attachment: fixed;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  /* overflow: hidden removed — required for fixed parallax to work */
 
   &__overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.2);
     z-index: 1;
   }
 
@@ -64,14 +65,18 @@
   }
 }
 
+/* Mobile: fixed attachment is disabled on iOS Safari (background jumps).
+   Fall back to a JS-driven translateY parallax via a CSS custom property
+   set by the scroll listener in home-hero.component.ts */
+@media (hover: none) and (pointer: coarse) {
+  .hero {
+    background-attachment: scroll;
+    background-position: center calc(50% + var(--parallax-offset, 0px));
+    will-change: background-position;
+  }
+}
+
 @keyframes bounce {
-
-  0%,
-  100% {
-    transform: translateX(-50%) translateY(0);
-  }
-
-  50% {
-    transform: translateX(-50%) translateY(8px);
-  }
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%       { transform: translateX(-50%) translateY(8px); }
 }
