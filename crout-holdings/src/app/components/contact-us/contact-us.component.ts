@@ -1,6 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { environment } from '../../../environments/environment';
+
+// EmailJS is loaded via CDN in index.html — declare the global
+declare const emailjs: any;
 
 export type FormStatus = 'idle' | 'submitting' | 'success' | 'error';
 
@@ -11,18 +15,18 @@ export type FormStatus = 'idle' | 'submitting' | 'success' | 'error';
   templateUrl: './contact-us.component.html',
   styleUrl: './contact-us.component.scss'
 })
-export class ContactUsComponent {
+export class ContactUsComponent implements OnInit {
   status: FormStatus = 'idle';
 
   readonly categories = [
     { value: 'general',              label: 'General' },
     { value: 'support',              label: 'Support' },
     { value: 'sales',                label: 'Sales' },
-    { value: 'division-automations', label: 'Division — Automations' },
-    { value: 'division-security',    label: 'Division — Security' },
-    { value: 'division-properties',  label: 'Division — Properties' },
-    { value: 'division-auto',        label: 'Division — Auto' },
-    { value: 'division-saas',        label: 'Division — SAAS' },
+    { value: 'division-automations', label: 'Division \u2014 Automations' },
+    { value: 'division-security',    label: 'Division \u2014 Security' },
+    { value: 'division-properties',  label: 'Division \u2014 Properties' },
+    { value: 'division-auto',        label: 'Division \u2014 Auto' },
+    { value: 'division-saas',        label: 'Division \u2014 SAAS' },
   ];
 
   form: FormGroup;
@@ -35,6 +39,11 @@ export class ContactUsComponent {
       category: ['', Validators.required],
       message:  ['', [Validators.required, Validators.minLength(10)]],
     });
+  }
+
+  ngOnInit(): void {
+    // Initialise EmailJS with your public key
+    emailjs.init(environment.emailjs.publicKey);
   }
 
   get f() { return this.form.controls; }
@@ -52,24 +61,30 @@ export class ContactUsComponent {
 
     this.status = 'submitting';
 
-    /**
-     * TODO: replace this stub with your real submission logic.
-     * Options:
-     *   - WordPress AJAX / REST endpoint
-     *   - EmailJS  (emailjs.com)
-     *   - Formspree (formspree.io)
-     *   - Your own API
-     *
-     * Example (Formspree):
-     *   const res = await fetch('https://formspree.io/f/YOUR_ID', {
-     *     method: 'POST',
-     *     headers: { 'Content-Type': 'application/json' },
-     *     body: JSON.stringify(this.form.value)
-     *   });
-     *   this.status = res.ok ? 'success' : 'error';
-     */
-    await new Promise(r => setTimeout(r, 900)); // remove when wired up
-    this.status = 'success';
+    try {
+      const { name, email, company, category, message } = this.form.value;
+
+      // Map form values to EmailJS template variables
+      const templateParams = {
+        from_name:    name,
+        from_email:   email,
+        company:      company || 'N/A',
+        category:     this.categories.find(c => c.value === category)?.label ?? category,
+        message,
+        reply_to:     email,
+      };
+
+      await emailjs.send(
+        environment.emailjs.serviceId,
+        environment.emailjs.templateId,
+        templateParams
+      );
+
+      this.status = 'success';
+    } catch (err) {
+      console.error('EmailJS error:', err);
+      this.status = 'error';
+    }
   }
 
   reset(): void {
