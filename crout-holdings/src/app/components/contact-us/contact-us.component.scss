@@ -1,0 +1,282 @@
+:host { display: block; }
+
+.contact {
+  min-height: 100dvh;
+  background: #0d0d0d;
+  color: #f5f5f0;
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: clamp(3rem, 6vw, 8rem);
+  padding: clamp(4rem, 8vw, 8rem) clamp(1.5rem, 6vw, 6rem);
+  align-items: start;
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr;
+  }
+
+  &__left {
+    position: sticky;
+    top: clamp(4rem, 8vw, 8rem);
+  }
+
+  &__eyebrow {
+    display: block;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 1.25rem;
+  }
+
+  &__heading {
+    font-family: 'Cormorant Garamond', 'Georgia', serif;
+    font-size: clamp(2.75rem, 6vw, 5rem);
+    font-weight: 300;
+    line-height: 1.1;
+    color: #f5f5f0;
+    margin: 0 0 1.5rem;
+  }
+
+  &__sub {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: clamp(0.9rem, 1.2vw, 1rem);
+    line-height: 1.8;
+    color: rgba(245,245,240,0.55);
+    max-width: 40ch;
+    margin-bottom: 3rem;
+  }
+
+  &__info {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+
+    li {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+  }
+
+  &__info-label {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+  }
+
+  &__info-value {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 0.95rem;
+    color: #f5f5f0;
+    text-decoration: none;
+
+    &:hover { color: #ffffff; }
+  }
+
+  &__success {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 3rem;
+    background: #1a1a1a;
+    border: 1px solid rgba(255,255,255,0.07);
+
+    svg { color: #7ee8a2; }
+
+    h2 {
+      font-family: 'Cormorant Garamond', 'Georgia', serif;
+      font-size: 1.75rem;
+      font-weight: 300;
+      color: #f5f5f0;
+      margin: 0;
+    }
+
+    p {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 0.95rem;
+      color: rgba(245,245,240,0.6);
+      line-height: 1.7;
+      max-width: 42ch;
+      margin: 0;
+    }
+  }
+}
+
+/* ── Form ── */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  &__row {
+    display: grid;
+    gap: 1.5rem;
+
+    &--two {
+      grid-template-columns: 1fr 1fr;
+
+      @media (max-width: 600px) {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    &--error {
+      .form__input,
+      .form__select,
+      .form__textarea {
+        border-color: rgba(161, 44, 123, 0.6);
+      }
+    }
+  }
+
+  &__label {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(245,245,240,0.5);
+  }
+
+  &__optional {
+    font-size: 0.7rem;
+    color: rgba(245,245,240,0.3);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  &__input,
+  &__select,
+  &__textarea {
+    background: #1a1a1a;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #f5f5f0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 0.95rem;
+    padding: 0.85rem 1rem;
+    border-radius: 0;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.2s ease;
+    appearance: none;
+    -webkit-appearance: none;
+
+    &::placeholder { color: rgba(245,245,240,0.2); }
+
+    &:focus {
+      border-color: rgba(255,255,255,0.35);
+    }
+  }
+
+  &__textarea {
+    resize: vertical;
+    min-height: 140px;
+  }
+
+  /* Custom select wrapper */
+  &__select-wrap {
+    position: relative;
+
+    select { padding-right: 2.5rem; cursor: pointer; }
+
+    option {
+      background: #1a1a1a;
+      color: #f5f5f0;
+    }
+  }
+
+  &__select-arrow {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: rgba(245,245,240,0.4);
+  }
+
+  &__error {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 0.75rem;
+    color: #d163a7;
+  }
+
+  &__banner {
+    padding: 0.85rem 1rem;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 0.85rem;
+
+    &--error {
+      background: rgba(161,44,123,0.1);
+      border: 1px solid rgba(161,44,123,0.3);
+      color: #d163a7;
+    }
+  }
+}
+
+/* ── Buttons ── */
+.btn {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s ease, color 0.2s ease;
+
+  &--primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 160px;
+    height: 48px;
+    background: #f5f5f0;
+    color: #0d0d0d;
+    padding: 0 2rem;
+
+    &:hover:not(:disabled) { background: #ffffff; }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: #f5f5f0;
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 0.75rem 1.5rem;
+
+    &:hover { border-color: rgba(255,255,255,0.5); }
+  }
+
+  &__spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(13,13,13,0.3);
+    border-top-color: #0d0d0d;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
