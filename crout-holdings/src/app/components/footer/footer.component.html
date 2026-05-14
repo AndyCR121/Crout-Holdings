@@ -1,0 +1,51 @@
+<footer class="footer">
+  <div class="footer__inner">
+
+    <!-- Brand column -->
+    <div class="footer__brand">
+      <a href="/" class="footer__logo">
+        <img
+          [src]="assetsBase + 'Crout Crest Logo Transparent.png'"
+          alt="Crout Holdings"
+          width="52"
+          height="52"
+          loading="lazy"
+        />
+        <span class="footer__logo-text">Crout Holdings</span>
+      </a>
+      <p class="footer__tagline">
+        A proudly South African holding company operating across
+        automation, security, properties, auto, and SaaS.
+      </p>
+      <a [href]="contactUrl" class="footer__cta">Get in Touch</a>
+    </div>
+
+    <!-- Divisions -->
+    <div class="footer__col">
+      <p class="footer__col-heading">Divisions</p>
+      <ul class="footer__list">
+        @for (link of divisions; track link.href) {
+          <li><a [href]="link.href" class="footer__link">{{ link.label }}</a></li>
+        }
+      </ul>
+    </div>
+
+    <!-- Company -->
+    <div class="footer__col">
+      <p class="footer__col-heading">Company</p>
+      <ul class="footer__list">
+        @for (link of company; track link.href) {
+          <li><a [href]="link.href" class="footer__link">{{ link.label }}</a></li>
+        }
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="footer__bottom">
+    <p class="footer__legal">
+      &copy; {{ currentYear }} Crout Holdings PTY LTD &mdash; South Africa. All rights reserved.
+    </p>
+  </div>
+</footer>
