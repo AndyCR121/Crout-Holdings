@@ -12,14 +12,14 @@ export class HomeHeroComponent implements OnInit, OnDestroy {
   @Input() assetsBase: string = '/assets/';
 
   get heroBg(): string {
-    return `${this.assetsBase}crout-holdings-hero.jpg`;
+    return `${this.assetsBase}scottish-castle-generated.png`;
   }
 
   private heroEl!: HTMLElement;
   private rafId: number | null = null;
   private isMobile = false;
 
-  constructor(private elRef: ElementRef) {}
+  constructor(private elRef: ElementRef) { }
 
   ngOnInit(): void {
     this.isMobile = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
