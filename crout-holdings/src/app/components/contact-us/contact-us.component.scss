@@ -7,7 +7,8 @@
   display: grid;
   grid-template-columns: 1fr 1.4fr;
   gap: clamp(3rem, 6vw, 8rem);
-  padding: clamp(4rem, 8vw, 8rem) clamp(1.5rem, 6vw, 6rem);
+  /* top padding = nav height (68px) + section breathing room */
+  padding: calc(68px + clamp(3rem, 6vw, 6rem)) clamp(1.5rem, 6vw, 6rem) clamp(4rem, 8vw, 8rem);
   align-items: start;
 
   @media (max-width: 860px) {
@@ -16,10 +17,8 @@
 
   &__left {
     position: sticky;
-    top: clamp(4rem, 8vw, 8rem);
+    top: calc(68px + 2rem);
 
-    /* On small screens the columns stack — sticky causes the left panel
-       to overlap the form as the user scrolls. Disable it. */
     @media (max-width: 860px) {
       position: static;
       top: auto;
