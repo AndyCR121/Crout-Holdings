@@ -1,0 +1,27 @@
+.dev-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: #1a1a2e;
+  font-size: 0.8rem;
+
+  &__label {
+    color: #e94560;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+
+  a {
+    color: #a8b2d8;
+    text-decoration: none;
+
+    &.active { color: #64ffda; }
+    &:hover { color: #fff; }
+  }
+}
