@@ -33,6 +33,7 @@
     gap: var(--space-3, 0.75rem);
     text-decoration: none;
     justify-self: start;
+    grid-column: 1;
 
     &-img {
       width: 44px;
@@ -53,12 +54,15 @@
 
   // ── Desktop nav (centre slot) ──
   &__links {
+    grid-column: 2;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: var(--space-8, 2rem);
 
-    @media (max-width: 860px) { display: none; }
+    @media (max-width: 860px) {
+      display: none !important;
+    }
   }
 
   &__link {
@@ -74,8 +78,9 @@
     &:hover { color: #f5f5f0; }
   }
 
-  // ── CTA (right slot) ──
+  // ── CTA (right slot, desktop only) ──
   &__cta {
+    grid-column: 3;
     display: inline-flex;
     align-items: center;
     justify-self: end;
@@ -94,11 +99,14 @@
       border-color: rgba(245, 245, 240, 0.6);
     }
 
-    @media (max-width: 860px) { display: none; }
+    @media (max-width: 860px) {
+      display: none !important;
+    }
   }
 
-  // ── Hamburger ──
+  // ── Hamburger (mobile only, right slot) ──
   &__burger {
+    grid-column: 3;
     display: none;
     flex-direction: column;
     justify-content: center;
@@ -126,24 +134,37 @@
       span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
     }
 
-    @media (max-width: 860px) { display: flex; }
+    @media (max-width: 860px) {
+      display: flex !important;
+    }
   }
 
   // ── Mobile drawer ──
+  // Always rendered in the DOM — visibility controlled purely by
+  // max-height + overflow so WordPress global CSS cannot interfere.
   &__drawer {
-    display: none;
+    display: flex;          // always flex, never toggled
     flex-direction: column;
     background: #0d0d0d;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
-    padding: var(--space-6, 1.5rem);
+    padding: 0 var(--space-6, 1.5rem);
     gap: var(--space-1, 0.25rem);
-    max-height: 0;
     overflow: hidden;
-    transition: max-height 320ms ease;
+    max-height: 0;
+    transition: max-height 320ms ease, padding 320ms ease;
 
-    &--open { max-height: 400px; }
+    // Only visible on mobile
+    @media (min-width: 861px) {
+      max-height: 0 !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
 
-    @media (max-width: 860px) { display: flex; }
+    &--open {
+      max-height: 480px;
+      padding-top: var(--space-6, 1.5rem);
+      padding-bottom: var(--space-6, 1.5rem);
+    }
 
     &-link {
       font-size: var(--text-base, 1rem);
