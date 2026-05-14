@@ -29,9 +29,9 @@ export class DivisionCardsComponent {
     return [
       {
         name: 'Crout Automations',
-        bgImage: `${b}divisions/automations-bg.jpg`,
-        logo: `${b}divisions/automations-logo.png`,
-        siteUrl: 'https://crout-automations.com',
+        bgImage: `${b}n8n-workflow-generated.png`,
+        logo: `${b}Crout Automations Logo.png`,
+        siteUrl: 'https://automations.crout-holdings.com',
         available: true,
         services: [
           'Admin Workflow Automation',
@@ -44,7 +44,7 @@ export class DivisionCardsComponent {
       },
       {
         name: 'Crout Security',
-        bgImage: `${b}divisions/security-bg.jpg`,
+        bgImage: `${b}camera-generated.png`,
         logo: `${b}divisions/security-logo.png`,
         siteUrl: '#',
         available: false,
@@ -58,7 +58,7 @@ export class DivisionCardsComponent {
       },
       {
         name: 'Crout Properties',
-        bgImage: `${b}divisions/properties-bg.jpg`,
+        bgImage: `${b}home-generated.png`,
         logo: `${b}divisions/properties-logo.png`,
         siteUrl: '#',
         available: false,
@@ -72,7 +72,7 @@ export class DivisionCardsComponent {
       },
       {
         name: 'Crout Auto',
-        bgImage: `${b}divisions/auto-bg.jpg`,
+        bgImage: `${b}car-wash-generated.png`,
         logo: `${b}divisions/auto-logo.png`,
         siteUrl: '#',
         available: false,
@@ -87,7 +87,7 @@ export class DivisionCardsComponent {
       },
       {
         name: 'Crout SAAS',
-        bgImage: `${b}divisions/saas-bg.jpg`,
+        bgImage: `${b}code-generated.png`,
         logo: `${b}divisions/saas-logo.png`,
         siteUrl: '#',
         available: false,
