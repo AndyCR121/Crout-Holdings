@@ -16,6 +16,10 @@
         <a class="contact__info-value" href="mailto:info@crout-holdings.co.za">info&#64;crout-holdings.co.za</a>
       </li>
       <li>
+        <span class="contact__info-label">Whatsapp</span>
+        <a class="contact__info-value" href="https://wa.me/27646569894" target="_blank">(+27) 64 656 9894</a>
+      </li>
+      <li>
         <span class="contact__info-label">Based in</span>
         <span class="contact__info-value">South Africa</span>
       </li>
@@ -96,10 +100,7 @@
       </div>
 
       <!-- Submit — disabled while form is invalid OR while submitting -->
-      <button
-        class="btn btn--primary"
-        type="submit"
-        [disabled]="form.invalid || status === 'submitting'">
+      <button class="btn btn--primary" type="submit" [disabled]="form.invalid || status === 'submitting'">
         <span *ngIf="status !== 'submitting'">Send Message</span>
         <span *ngIf="status === 'submitting'" class="btn__spinner" aria-label="Sending"></span>
       </button>
