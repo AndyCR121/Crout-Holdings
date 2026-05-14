@@ -3,11 +3,11 @@
   <!-- Left: heading block -->
   <div class="contact__left">
     <span class="contact__eyebrow">Contact Us</span>
-    <h1 class="contact__heading">Let’s talk.</h1>
+    <h1 class="contact__heading">Let's talk.</h1>
     <p class="contact__sub">
-      Whether you’re a business looking for a solution, a potential partner,
+      Whether you're a business looking for a solution, a potential partner,
       or simply want to find out more about what Crout Holdings can do
-      for you — fill in the form and we’ll be in touch.
+      for you — fill in the form and we'll be in touch.
     </p>
 
     <ul class="contact__info">
@@ -32,7 +32,7 @@
         <path d="M8 12l3 3 5-5" />
       </svg>
       <h2>Message sent</h2>
-      <p>Thank you for reaching out. We’ll get back to you as soon as possible.</p>
+      <p>Thank you for reaching out. We'll get back to you as soon as possible.</p>
       <button class="btn btn--ghost" (click)="reset()">Send another message</button>
     </div>
 
@@ -86,7 +86,7 @@
       <div class="form__field" [class.form__field--error]="isInvalid('message')">
         <label class="form__label" for="ch-message">Message <span aria-hidden="true">*</span></label>
         <textarea id="ch-message" class="form__textarea" formControlName="message" rows="6"
-          placeholder="Tell us what you’re looking for..."></textarea>
+          placeholder="Tell us what you're looking for..."></textarea>
         <span class="form__error" *ngIf="isInvalid('message')">Please enter a message (min. 10 characters).</span>
       </div>
 
@@ -95,8 +95,11 @@
         Something went wrong. Please try again or email us directly.
       </div>
 
-      <!-- Submit -->
-      <button class="btn btn--primary" type="submit" [disabled]="status === 'submitting'">
+      <!-- Submit — disabled while form is invalid OR while submitting -->
+      <button
+        class="btn btn--primary"
+        type="submit"
+        [disabled]="form.invalid || status === 'submitting'">
         <span *ngIf="status !== 'submitting'">Send Message</span>
         <span *ngIf="status === 'submitting'" class="btn__spinner" aria-label="Sending"></span>
       </button>
