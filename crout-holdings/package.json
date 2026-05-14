@@ -5,7 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "build:elements": "ng build crout-holdings --configuration elements",
+    "build:elements": "ng build crout-holdings --configuration elements && node ../scripts/concat-elements.js crout-holdings",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
