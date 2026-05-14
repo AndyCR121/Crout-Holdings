@@ -17,6 +17,13 @@
   &__left {
     position: sticky;
     top: clamp(4rem, 8vw, 8rem);
+
+    /* On small screens the columns stack — sticky causes the left panel
+       to overlap the form as the user scrolls. Disable it. */
+    @media (max-width: 860px) {
+      position: static;
+      top: auto;
+    }
   }
 
   &__eyebrow {
