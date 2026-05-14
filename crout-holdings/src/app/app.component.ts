@@ -11,4 +11,4 @@ import { DevNavComponent } from './components/dev-nav/dev-nav.component';
     <router-outlet></router-outlet>
   `
 })
-export class AppComponent {}
+export class AppComponent { }
