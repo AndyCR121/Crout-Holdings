@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crout Holdings — Business Card</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #1a1a1a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 60px;
+      padding: 60px 24px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .label {
+      color: rgba(255,255,255,0.3);
+      font-size: 0.65rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    /* ── Card shared ── */
+    .card {
+      width: 85.6mm;   /* Standard CR80 business card */
+      height: 53.98mm;
+      border-radius: 3.5mm;
+      position: relative;
+      overflow: hidden;
+      /* Deep near-black with a very subtle warm tint */
+      background: #0d0d0b;
+      box-shadow:
+        0 2px 4px rgba(0,0,0,0.4),
+        0 12px 40px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    /* Subtle noise grain texture */
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      background-size: 150px 150px;
+      opacity: 0.35;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Thin gold border */
+    .card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 3.5mm;
+      border: 0.4px solid rgba(197,163,95,0.25);
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━
+       FRONT
+    ━━━━━━━━━━━━━━━━━━━━━━━━ */
+    .card--front {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-rows: 1fr auto;
+      padding: 6mm 6mm 5mm 6mm;
+      gap: 0;
+    }
+
+    /* Subtle diagonal gold gradient accent — top-left corner */
+    .card--front .accent {
+      position: absolute;
+      top: -20mm;
+      left: -10mm;
+      width: 40mm;
+      height: 40mm;
+      background: radial-gradient(ellipse at top left, rgba(197,163,95,0.12) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .front__brand {
+      grid-column: 1;
+      grid-row: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 2.5mm;
+      z-index: 2;
+    }
+
+    .front__logo {
+      width: 10mm;
+      height: 10mm;
+      object-fit: contain;
+      filter: brightness(0) invert(1) opacity(0.9);
+    }
+
+    .front__company {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 5.5pt;
+      font-weight: 400;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(245,242,235,0.85);
+      line-height: 1.3;
+      max-width: 38mm;
+    }
+
+    /* QR placeholder — top right */
+    .front__qr {
+      grid-column: 2;
+      grid-row: 1;
+      align-self: start;
+      justify-self: end;
+      z-index: 2;
+      width: 14mm;
+      height: 14mm;
+      border: 0.3mm solid rgba(197,163,95,0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1mm;
+      position: relative;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .front__qr svg {
+      width: 8mm;
+      height: 8mm;
+      opacity: 0.3;
+    }
+
+    .front__qr-label {
+      font-family: 'Inter', sans-serif;
+      font-size: 3pt;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(197,163,95,0.5);
+    }
+
+    /* QR corner decorators */
+    .front__qr::before,
+    .front__qr::after {
+      content: '';
+      position: absolute;
+      width: 2mm;
+      height: 2mm;
+      border-color: rgba(197,163,95,0.6);
+      border-style: solid;
+    }
+    .front__qr::before {
+      top: -0.3mm; left: -0.3mm;
+      border-width: 0.5mm 0 0 0.5mm;
+    }
+    .front__qr::after {
+      bottom: -0.3mm; right: -0.3mm;
+      border-width: 0 0.5mm 0.5mm 0;
+    }
+
+    /* Hairline divider */
+    .front__divider {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      height: 0.2px;
+      background: linear-gradient(90deg, rgba(197,163,95,0.5) 0%, rgba(197,163,95,0.1) 60%, transparent 100%);
+      margin-bottom: 3mm;
+      align-self: end;
+      z-index: 2;
+    }
+
+    .front__contact {
+      grid-column: 1 / -1;
+      grid-row: 3;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2mm;
+      z-index: 2;
+    }
+
+    .front__contact-item {
+      display: flex;
+      align-items: center;
+      gap: 1.8mm;
+      text-decoration: none;
+    }
+
+    .front__contact-icon {
+      width: 2.8mm;
+      height: 2.8mm;
+      flex-shrink: 0;
+      opacity: 0.5;
+    }
+
+    .front__contact-text {
+      font-family: 'Inter', sans-serif;
+      font-size: 4pt;
+      font-weight: 300;
+      letter-spacing: 0.04em;
+      color: rgba(245,242,235,0.65);
+    }
+
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━
+       BACK
+    ━━━━━━━━━━━━━━━━━━━━━━━━ */
+    .card--back {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 10mm;
+    }
+
+    /* Faint crest watermark centre-left */
+    .back__watermark {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-65%, -50%);
+      width: 28mm;
+      height: 28mm;
+      object-fit: contain;
+      filter: brightness(0) invert(1) opacity(0.03);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* NFC indicator — gold circle, right-centre */
+    .back__nfc {
+      position: relative;
+      z-index: 2;
+      width: 18mm;
+      height: 18mm;
+      flex-shrink: 0;
+    }
+
+    .back__nfc svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Print helper */
+    @media print {
+      body { background: white; gap: 20mm; padding: 10mm; }
+      .label { color: #999; }
+      .card {
+        box-shadow: none;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- FRONT -->
+  <div>
+    <p class="label">Front</p>
+    <div class="card card--front">
+      <div class="accent"></div>
+
+      <!-- Brand: logo + name -->
+      <div class="front__brand">
+        <img
+          class="front__logo"
+          src="https://raw.githubusercontent.com/AndyCR121/Crout-Holdings/Crout-Automations-Wordpress-Rework/crout-holdings/src/assets/Crout%20Crest%20Logo%20Transparent.png"
+          alt="Crout Holdings crest"
+          width="38" height="38"
+          loading="eager"
+        />
+        <span class="front__company">Crout Holdings<br>PTY Ltd</span>
+      </div>
+
+      <!-- QR placeholder -->
+      <div class="front__qr" role="img" aria-label="QR code placeholder">
+        <!-- Generic QR grid icon -->
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="3" width="7" height="7" rx="1" stroke="#c5a35f" stroke-width="1.5"/>
+          <rect x="5" y="5" width="3" height="3" fill="#c5a35f"/>
+          <rect x="14" y="3" width="7" height="7" rx="1" stroke="#c5a35f" stroke-width="1.5"/>
+          <rect x="16" y="5" width="3" height="3" fill="#c5a35f"/>
+          <rect x="3" y="14" width="7" height="7" rx="1" stroke="#c5a35f" stroke-width="1.5"/>
+          <rect x="5" y="16" width="3" height="3" fill="#c5a35f"/>
+          <rect x="14" y="14" width="3" height="3" fill="#c5a35f"/>
+          <rect x="19" y="14" width="2" height="2" fill="#c5a35f"/>
+          <rect x="14" y="19" width="2" height="2" fill="#c5a35f"/>
+          <rect x="17" y="17" width="4" height="4" fill="#c5a35f"/>
+        </svg>
+        <span class="front__qr-label">Scan</span>
+      </div>
+
+      <!-- Hairline divider -->
+      <div class="front__divider"></div>
+
+      <!-- Contact details -->
+      <div class="front__contact">
+        <!-- Email -->
+        <a class="front__contact-item" href="mailto:info@crout-holdings.com">
+          <svg class="front__contact-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="3" width="14" height="10" rx="1.5" stroke="#c5a35f" stroke-width="1.2"/>
+            <path d="M1 4.5L8 9.5L15 4.5" stroke="#c5a35f" stroke-width="1.2"/>
+          </svg>
+          <span class="front__contact-text">info@crout-holdings.com</span>
+        </a>
+        <!-- Website -->
+        <a class="front__contact-item" href="https://www.crout-holdings.com" target="_blank" rel="noopener noreferrer">
+          <svg class="front__contact-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="8" cy="8" r="6.5" stroke="#c5a35f" stroke-width="1.2"/>
+            <ellipse cx="8" cy="8" rx="2.8" ry="6.5" stroke="#c5a35f" stroke-width="1.2"/>
+            <line x1="1.5" y1="8" x2="14.5" y2="8" stroke="#c5a35f" stroke-width="1.2"/>
+          </svg>
+          <span class="front__contact-text">www.crout-holdings.com</span>
+        </a>
+        <!-- Phone -->
+        <a class="front__contact-item" href="tel:+27646569894">
+          <svg class="front__contact-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 2h3l1.5 3.5-1.75 1.25a8 8 0 003.5 3.5L10.5 8.5 14 10v3a1 1 0 01-1 1C5.163 14 2 7.163 2 3a1 1 0 011-1z" stroke="#c5a35f" stroke-width="1.2" stroke-linejoin="round"/>
+          </svg>
+          <span class="front__contact-text">064 656 9894</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- BACK -->
+  <div>
+    <p class="label">Back</p>
+    <div class="card card--back">
+
+      <!-- Faint crest watermark -->
+      <img
+        class="back__watermark"
+        src="https://raw.githubusercontent.com/AndyCR121/Crout-Holdings/Crout-Automations-Wordpress-Rework/crout-holdings/src/assets/Crout%20Crest%20Logo%20Transparent.png"
+        alt=""
+        width="106" height="106"
+        loading="eager"
+        aria-hidden="true"
+      />
+
+      <!-- NFC circle indicator -->
+      <div class="back__nfc" role="img" aria-label="NFC tag location indicator">
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Outer glow ring -->
+          <circle cx="50" cy="50" r="47" stroke="rgba(197,163,95,0.12)" stroke-width="1"/>
+          <!-- Mid ring -->
+          <circle cx="50" cy="50" r="40" stroke="rgba(197,163,95,0.2)" stroke-width="0.8"/>
+          <!-- Main ring -->
+          <circle cx="50" cy="50" r="33" stroke="#c5a35f" stroke-width="1.2" opacity="0.7"/>
+          <!-- Inner decorative ring -->
+          <circle cx="50" cy="50" r="26" stroke="rgba(197,163,95,0.5)" stroke-width="0.6" stroke-dasharray="3 2"/>
+          <!-- Inner solid ring -->
+          <circle cx="50" cy="50" r="19" stroke="#c5a35f" stroke-width="1" opacity="0.6"/>
+          <!-- Centre fill disc -->
+          <circle cx="50" cy="50" r="10" fill="rgba(197,163,95,0.15)" stroke="#c5a35f" stroke-width="0.8" opacity="0.8"/>
+          <!-- NFC waves (left arc) -->
+          <path d="M38 43 Q32 50 38 57" stroke="#c5a35f" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+          <path d="M35 40 Q26 50 35 60" stroke="#c5a35f" stroke-width="0.8" stroke-linecap="round" opacity="0.3"/>
+          <!-- NFC waves (right arc) -->
+          <path d="M62 43 Q68 50 62 57" stroke="#c5a35f" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+          <path d="M65 40 Q74 50 65 60" stroke="#c5a35f" stroke-width="0.8" stroke-linecap="round" opacity="0.3"/>
+          <!-- Centre dot -->
+          <circle cx="50" cy="50" r="3" fill="#c5a35f" opacity="0.9"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
