@@ -9,14 +9,14 @@ import { CommonModule } from '@angular/common';
   styleUrl: './nav.component.scss'
 })
 export class NavComponent implements OnInit {
-  @Input() assetsBase: string = '';
-  @Input() homeUrl:    string = '/';
+  @Input() assetsBase: string = '/assets/';
+  @Input() homeUrl: string = '/';
   @Input() contactUrl: string = '/contact-us/';
 
-  scrolled    = false;
-  menuOpen    = false;
+  scrolled = false;
+  menuOpen = false;
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   @HostListener('window:scroll')
   onScroll(): void {
@@ -32,9 +32,9 @@ export class NavComponent implements OnInit {
   }
 
   readonly navLinks = [
-    { label: 'Home',        href: '/' },
-    { label: 'Divisions',   href: '/divisions/' },
-    { label: 'About',       href: '/about/' },
-    { label: 'Contact',     href: '/contact-us/' },
+    { label: 'Home', href: '/' },
+    // { label: 'Divisions',   href: '/divisions/' },
+    // { label: 'About',       href: '/about/' },
+    { label: 'Contact', href: '/contact-us/' },
   ];
 }

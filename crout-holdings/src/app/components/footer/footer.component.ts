@@ -9,22 +9,22 @@ import { CommonModule } from '@angular/common';
   styleUrl: './footer.component.scss'
 })
 export class FooterComponent {
-  @Input() assetsBase:  string = '';
-  @Input() contactUrl:  string = '/contact-us/';
+  @Input() assetsBase: string = '/assets/';
+  @Input() contactUrl: string = '/contact-us/';
 
   readonly currentYear = new Date().getFullYear();
 
   readonly divisions = [
     { label: 'Automations', href: 'https://automations.crout-holdings.com/' },
-    { label: 'Security',    href: '/divisions/security/' },
-    { label: 'Properties',  href: '/divisions/properties/' },
-    { label: 'Auto',        href: '/divisions/auto/' },
-    { label: 'SaaS',        href: '/divisions/saas/' },
+    { label: 'Security', href: '/divisions/security/' },
+    { label: 'Properties', href: '/divisions/properties/' },
+    { label: 'Auto', href: '/divisions/auto/' },
+    { label: 'SaaS', href: '/divisions/saas/' },
   ];
 
   readonly company = [
-    { label: 'About Us',      href: '/about/' },
-    { label: 'Contact',       href: '/contact-us/' },
+    { label: 'About Us', href: '/about/' },
+    { label: 'Contact', href: '/contact-us/' },
     { label: 'Privacy Policy', href: '/privacy-policy/' },
   ];
 }
