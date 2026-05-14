@@ -140,20 +140,17 @@
   }
 
   // ── Mobile drawer ──
-  // Always rendered in the DOM — visibility controlled purely by
-  // max-height + overflow so WordPress global CSS cannot interfere.
   &__drawer {
-    display: flex;          // always flex, never toggled
-    flex-direction: column;
+    display: flex !important;
+    flex-direction: column !important;
     background: #0d0d0d;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
     padding: 0 var(--space-6, 1.5rem);
-    gap: var(--space-1, 0.25rem);
+    gap: 0;
     overflow: hidden;
     max-height: 0;
     transition: max-height 320ms ease, padding 320ms ease;
 
-    // Only visible on mobile
     @media (min-width: 861px) {
       max-height: 0 !important;
       padding-top: 0 !important;
@@ -166,7 +163,18 @@
       padding-bottom: var(--space-6, 1.5rem);
     }
 
+    // Force the inner <nav> to stack vertically
+    nav {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: stretch !important;
+      width: 100%;
+      gap: 0;
+    }
+
     &-link {
+      display: block !important;
+      width: 100%;
       font-size: var(--text-base, 1rem);
       font-weight: 400;
       letter-spacing: 0.04em;
@@ -181,7 +189,7 @@
     }
 
     &-cta {
-      display: inline-flex;
+      display: inline-flex !important;
       align-self: flex-start;
       margin-top: var(--space-4, 1rem);
       padding: var(--space-3, 0.75rem) var(--space-6, 1.5rem);
