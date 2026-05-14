@@ -24,8 +24,20 @@
     <div class="footer__col">
       <p class="footer__col-heading">Divisions</p>
       <ul class="footer__list">
-        @for (link of divisions; track link.href) {
-          <li><a [href]="link.href" class="footer__link">{{ link.label }}</a></li>
+        @for (link of divisions; track link.label) {
+          <li>
+            @if (link.type === 'external') {
+              <a [href]="link.target" class="footer__link" target="_blank" rel="noopener noreferrer">
+                {{ link.label }}
+              </a>
+            } @else {
+              <a
+                href="#"
+                class="footer__link"
+                (click)="onLinkClick($event, link)"
+              >{{ link.label }}</a>
+            }
+          </li>
         }
       </ul>
     </div>
@@ -34,8 +46,18 @@
     <div class="footer__col">
       <p class="footer__col-heading">Company</p>
       <ul class="footer__list">
-        @for (link of company; track link.href) {
-          <li><a [href]="link.href" class="footer__link">{{ link.label }}</a></li>
+        @for (link of company; track link.label) {
+          <li>
+            @if (link.type === 'scroll') {
+              <a
+                href="#"
+                class="footer__link"
+                (click)="onLinkClick($event, link)"
+              >{{ link.label }}</a>
+            } @else {
+              <a [href]="link.target" class="footer__link">{{ link.label }}</a>
+            }
+          </li>
         }
       </ul>
     </div>
