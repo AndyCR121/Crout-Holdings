@@ -1,46 +1,33 @@
 /**
  * Angular Elements entry point — Crout Holdings.
- * Each component is registered as a native Custom Element.
  *
- * Build command:
- *   npm run build:elements
- *   (runs: ng build crout-holdings --configuration elements)
- *
- * Output: dist/crout-holdings/
- *   - main.js        (all components bundled, no hashing)
- *   - polyfills.js   (zone.js)
- *   - styles.css
- *   - assets/        (static assets copied from src/assets)
- *
- * WordPress usage (home page example):
- *   <ch-home
- *     assets-base="https://domain.com/wp-content/themes/theme/crout-elements/assets/"
- *     divisions-url="https://domain.com/divisions"
- *     contact-url="https://domain.com/contact-us">
- *   </ch-home>
- *
- * WordPress usage (privacy policy):
- *   <ch-privacy-policy
- *     assets-base="https://domain.com/wp-content/themes/theme/crout-elements/assets/">
- *   </ch-privacy-policy>
- *
- * NOTE: Nav and footer are handled by the WP theme layer.
+ * WordPress usage:
+ *   <ch-home assets-base="..." divisions-url="..." contact-url="..."></ch-home>
+ *   <ch-privacy-policy assets-base="..."></ch-privacy-policy>
+ *   <ch-contact-us></ch-contact-us>
  */
 import { createApplication } from '@angular/platform-browser';
 import { createCustomElement } from '@angular/elements';
 import { provideAnimations } from '@angular/platform-browser/animations';
+import { ReactiveFormsModule } from '@angular/forms';
+import { importProvidersFrom } from '@angular/core';
 
 import { HomePageComponent } from '../app/pages/home/home.page';
 import { PrivacyPolicyComponent } from '../app/components/privacy-policy/privacy-policy.component';
+import { ContactUsComponent } from '../app/components/contact-us/contact-us.component';
 
 (async () => {
   const app = await createApplication({
-    providers: [provideAnimations()]
+    providers: [
+      provideAnimations(),
+      importProvidersFrom(ReactiveFormsModule)
+    ]
   });
 
   const elements: [string, any][] = [
     ['ch-home',           HomePageComponent],
     ['ch-privacy-policy', PrivacyPolicyComponent],
+    ['ch-contact-us',     ContactUsComponent],
   ];
 
   for (const [tag, component] of elements) {
