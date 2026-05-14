@@ -12,6 +12,6 @@ export class HomeHeroComponent {
   @Input() assetsBase: string = '/assets/';
 
   get heroBg(): string {
-    return `${this.assetsBase}crout-holdings-hero.jpg`;
+    return `${this.assetsBase}scottish-castle-generated.png`;
   }
 }
