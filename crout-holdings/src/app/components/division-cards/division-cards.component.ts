@@ -1,15 +1,11 @@
-import { Component, Input } from '@angular/core';
+import { Component, HostBinding, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export interface Division {
   name: string;
-  /** background image for the card top — supply full URL or relative asset path */
   bgImage: string;
-  /** logo image for the card top */
   logo: string;
-  /** link to the division site */
   siteUrl: string;
-  /** scrolling services list */
   services: string[];
   available: boolean;
 }
@@ -22,6 +18,8 @@ export interface Division {
   styleUrl: './division-cards.component.scss'
 })
 export class DivisionCardsComponent {
+  @HostBinding('id') readonly hostId = 'divisions';
+
   @Input() assetsBase: string = '/assets/';
 
   get divisions(): Division[] {

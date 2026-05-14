@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostBinding } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 interface DivisionStatus {
@@ -15,6 +15,8 @@ interface DivisionStatus {
   styleUrl: './who-we-are.component.scss'
 })
 export class WhoWeAreComponent {
+  @HostBinding('id') readonly hostId = 'who-we-are';
+
   readonly divisions: DivisionStatus[] = [
     {
       name: 'Admin Automations',
