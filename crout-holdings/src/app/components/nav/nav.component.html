@@ -40,7 +40,7 @@
   </div>
 
   <!-- Mobile drawer -->
-  <div class="nav__drawer" [class.nav__drawer--open]="menuOpen" aria-hidden="{{!menuOpen}}">
+  <div class="nav__drawer" [class.nav__drawer--open]="menuOpen" [attr.aria-hidden]="!menuOpen">
     <nav aria-label="Mobile navigation">
       @for (link of navLinks; track link.href) {
         <a [href]="link.href" class="nav__drawer-link" (click)="closeMenu()">{{ link.label }}</a>
