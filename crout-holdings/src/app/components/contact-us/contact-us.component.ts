@@ -42,7 +42,6 @@ export class ContactUsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Initialise EmailJS with your public key
     emailjs.init(environment.emailjs.publicKey);
   }
 
@@ -64,14 +63,12 @@ export class ContactUsComponent implements OnInit {
     try {
       const { name, email, company, category, message } = this.form.value;
 
-      // Map form values to EmailJS template variables
       const templateParams = {
-        from_name:    name,
-        from_email:   email,
-        company:      company || 'N/A',
-        category:     this.categories.find(c => c.value === category)?.label ?? category,
+        from_name_surname: name,
+        from_email:        email,
+        company:           company || 'N/A',
+        category:          this.categories.find(c => c.value === category)?.label ?? category,
         message,
-        reply_to:     email,
       };
 
       await emailjs.send(
