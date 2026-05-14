@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, HostListener } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -8,33 +8,29 @@ import { CommonModule } from '@angular/common';
   templateUrl: './nav.component.html',
   styleUrl: './nav.component.scss'
 })
-export class NavComponent implements OnInit {
+export class NavComponent {
   @Input() assetsBase: string = '/assets/';
-  @Input() homeUrl: string = '/';
+  @Input() homeUrl:    string = '/';
   @Input() contactUrl: string = '/contact-us/';
 
-  scrolled = false;
   menuOpen = false;
 
-  ngOnInit(): void { }
+  toggleMenu(): void { this.menuOpen = !this.menuOpen; }
+  closeMenu():  void { this.menuOpen = false; }
 
-  @HostListener('window:scroll')
-  onScroll(): void {
-    this.scrolled = window.scrollY > 40;
+  scrollTo(event: Event, id: string): void {
+    event.preventDefault();
+    this.closeMenu();
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
-  toggleMenu(): void {
-    this.menuOpen = !this.menuOpen;
-  }
-
-  closeMenu(): void {
-    this.menuOpen = false;
-  }
-
-  readonly navLinks = [
-    { label: 'Home', href: '/' },
-    // { label: 'Divisions',   href: '/divisions/' },
-    // { label: 'About',       href: '/about/' },
-    { label: 'Contact', href: '/contact-us/' },
+  readonly navLinks: { label: string; type: 'scroll' | 'href'; target: string }[] = [
+    { label: 'Home',       type: 'href',   target: '/' },
+    { label: 'Divisions',  type: 'scroll', target: 'divisions' },
+    { label: 'About Us',   type: 'scroll', target: 'who-we-are' },
+    { label: 'Contact',    type: 'href',   target: '/contact-us/' },
   ];
 }
