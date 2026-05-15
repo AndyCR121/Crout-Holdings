@@ -1,6 +1,6 @@
 .services-hero {
-  background: var(--color-bg);
-  border-bottom: 1px solid var(--color-divider);
+  background: var(--color-surface-offset);
+  border-bottom: 1px solid var(--color-border);
   padding: clamp(var(--space-16), 8vw, var(--space-32)) var(--space-4);
 
   &__inner {
