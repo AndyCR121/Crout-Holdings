@@ -14,6 +14,18 @@ export const routes: Routes = [
     }
   },
   {
+    path: 'services',
+    loadComponent: () =>
+      import('./pages/services/services.component').then(m => m.ServicesComponent),
+    data: {
+      seo: {
+        title: 'Automation Services — Crout Automations',
+        description: 'Explore custom automation services built for South African SMEs — lead capture, invoicing, client onboarding, AI agents, and more. Based in Bloemfontein.',
+        canonical: '/services'
+      }
+    }
+  },
+  {
     path: 'contact-us',
     loadComponent: () =>
       import('./pages/contact/contact.component').then(m => m.ContactComponent),
