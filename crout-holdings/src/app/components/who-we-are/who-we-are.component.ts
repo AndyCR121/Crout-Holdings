@@ -23,11 +23,11 @@ export class WhoWeAreComponent {
       description: 'Intelligent workflow automation & custom business bots.',
       available: true
     },
-    {
-      name: 'Alarm System Installations',
-      description: 'Sub-contracting security alarm installations.',
-      available: false
-    },
+    // { // ⚠️ PSIRA registration pending — uncomment once legalities are sorted
+    //   name: 'Alarm System Installations',
+    //   description: 'Sub-contracting security alarm installations.',
+    //   available: false
+    // },
     {
       name: 'Property Rentals',
       description: 'Townhouse, house & real estate rental management.',
