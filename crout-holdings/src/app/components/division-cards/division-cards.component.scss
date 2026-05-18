@@ -30,8 +30,10 @@
   }
 
   &__grid {
-    display: grid;
+    display: inline-grid;
     grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+    width: fit-content;
+    max-width: 100%;
     gap: 1.5px;
     background: rgba(255, 255, 255, 0.06);
     border: 1.5px solid rgba(255, 255, 255, 0.06);
