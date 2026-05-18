@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { environment } from '../../../environments/environment';
-import * as emailjs from 'emailjs';
+import * as emailjs from '@emailjs/browser';
 
 export type FormStatus = 'idle' | 'submitting' | 'success' | 'error';
 
