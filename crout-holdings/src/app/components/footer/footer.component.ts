@@ -5,7 +5,7 @@ import { ScrollService } from '../../services/scroll.service';
 export interface FooterLink {
   label: string;
   /** 'href' navigates directly; 'scroll' calls scrollTo(); 'external' opens in new tab */
-  type:  'href' | 'scroll' | 'external';
+  type: 'href' | 'scroll' | 'external';
   target: string;
 }
 
@@ -18,13 +18,13 @@ export interface FooterLink {
   providers: [ScrollService]
 })
 export class FooterComponent implements OnInit {
-  @Input() assetsBase:  string = '/assets/';
-  @Input() contactUrl:  string = '/contact-us/';
-  @Input() homeUrl:     string = '/';
+  @Input() assetsBase: string = '/assets/';
+  @Input() contactUrl: string = '/contact-us/';
+  @Input() homeUrl: string = '/';
 
   readonly currentYear = new Date().getFullYear();
 
-  constructor(private scrollSvc: ScrollService) {}
+  constructor(private scrollSvc: ScrollService) { }
 
   ngOnInit(): void {
     this.scrollSvc.handleScrollParam();
@@ -43,16 +43,16 @@ export class FooterComponent implements OnInit {
    */
   readonly divisions: FooterLink[] = [
     { label: 'Automations', type: 'external', target: 'https://automations.crout-holdings.com/' },
-    { label: 'Security',    type: 'scroll',   target: 'divisions' },
-    { label: 'Properties',  type: 'scroll',   target: 'divisions' },
-    { label: 'Auto',        type: 'scroll',   target: 'divisions' },
-    { label: 'SaaS',        type: 'scroll',   target: 'divisions' },
+    // { label: 'Security',    type: 'scroll',   target: 'divisions' },
+    { label: 'Properties', type: 'scroll', target: 'divisions' },
+    { label: 'Auto', type: 'scroll', target: 'divisions' },
+    { label: 'SaaS', type: 'scroll', target: 'divisions' },
   ];
 
   /** Company column. */
   readonly company: FooterLink[] = [
-    { label: 'About Us',      type: 'scroll', target: 'who-we-are' },
-    { label: 'Contact',       type: 'href',   target: '/contact-us/' },
-    { label: 'Privacy Policy', type: 'href',  target: '/privacy-policy/' },
+    { label: 'About Us', type: 'scroll', target: 'who-we-are' },
+    { label: 'Contact', type: 'href', target: '/contact-us/' },
+    { label: 'Privacy Policy', type: 'href', target: '/privacy-policy/' },
   ];
 }

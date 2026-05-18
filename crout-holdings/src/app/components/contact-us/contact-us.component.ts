@@ -19,25 +19,25 @@ export class ContactUsComponent implements OnInit {
   status: FormStatus = 'idle';
 
   readonly categories = [
-    { value: 'general',              label: 'General' },
-    { value: 'support',              label: 'Support' },
-    { value: 'sales',                label: 'Sales' },
+    { value: 'general', label: 'General' },
+    { value: 'support', label: 'Support' },
+    { value: 'sales', label: 'Sales' },
     { value: 'division-automations', label: 'Division \u2014 Automations' },
-    { value: 'division-security',    label: 'Division \u2014 Security' },
-    { value: 'division-properties',  label: 'Division \u2014 Properties' },
-    { value: 'division-auto',        label: 'Division \u2014 Auto' },
-    { value: 'division-saas',        label: 'Division \u2014 SAAS' },
+    // { value: 'division-security',    label: 'Division \u2014 Security' },
+    { value: 'division-properties', label: 'Division \u2014 Properties' },
+    { value: 'division-auto', label: 'Division \u2014 Auto' },
+    { value: 'division-saas', label: 'Division \u2014 SAAS' },
   ];
 
   form: FormGroup;
 
   constructor(private fb: FormBuilder) {
     this.form = this.fb.group({
-      name:     ['', [Validators.required, Validators.minLength(2)]],
-      email:    ['', [Validators.required, Validators.email]],
-      company:  [''],
+      name: ['', [Validators.required, Validators.minLength(2)]],
+      email: ['', [Validators.required, Validators.email]],
+      company: [''],
       category: ['', Validators.required],
-      message:  ['', [Validators.required, Validators.minLength(10)]],
+      message: ['', [Validators.required, Validators.minLength(10)]],
     });
   }
 
@@ -65,9 +65,9 @@ export class ContactUsComponent implements OnInit {
 
       const templateParams = {
         from_name_surname: name,
-        from_email:        email,
-        company:           company || 'N/A',
-        category:          this.categories.find(c => c.value === category)?.label ?? category,
+        from_email: email,
+        company: company || 'N/A',
+        category: this.categories.find(c => c.value === category)?.label ?? category,
         message,
       };
 
