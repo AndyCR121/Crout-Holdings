@@ -4,7 +4,10 @@
     <h2 class="divisions__heading">Where we operate</h2>
   </div>
 
-  <div class="divisions__grid">
+  <!-- grid-template-columns bound exactly to card count — no empty tracks -->
+  <div class="divisions__grid"
+       [style.grid-template-columns]="'repeat(' + (divisions.length + 1) + ', 280px)'">
+
     <article class="card" *ngFor="let div of divisions">
 
       <!-- TOP: image bg + logo + name -->
