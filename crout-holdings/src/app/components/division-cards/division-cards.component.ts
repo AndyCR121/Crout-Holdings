@@ -40,20 +40,20 @@ export class DivisionCardsComponent {
           'Reporting & Dashboards',
         ]
       },
-      {
-        name: 'Crout Security',
-        bgImage: `${b}camera-generated.png`,
-        logo: `${b}divisions/security-logo.png`,
-        siteUrl: '#',
-        available: false,
-        services: [
-          'Alarm System Installations',
-          'Sub-Contracting Services',
-          'Security Assessments',
-          'Residential Security',
-          'Commercial Security',
-        ]
-      },
+      // { // ⚠️ PSIRA registration pending — uncomment once legalities are sorted
+      //   name: 'Crout Security',
+      //   bgImage: `${b}camera-generated.png`,
+      //   logo: `${b}divisions/security-logo.png`,
+      //   siteUrl: '#',
+      //   available: false,
+      //   services: [
+      //     'Alarm System Installations',
+      //     'Sub-Contracting Services',
+      //     'Security Assessments',
+      //     'Residential Security',
+      //     'Commercial Security',
+      //   ]
+      // },
       {
         name: 'Crout Properties',
         bgImage: `${b}home-generated.png`,
