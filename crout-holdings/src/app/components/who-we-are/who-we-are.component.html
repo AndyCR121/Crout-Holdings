@@ -1,37 +1,35 @@
 <section class="who">
-  <div class="who__overlay">
-    <div class="who__inner">
+  <div class="who__inner">
 
-      <div class="who__left">
-        <span class="who__eyebrow">Who We Are</span>
-        <h2 class="who__heading">The Crout Family</h2>
-        <p class="who__body">
-          Founded in 2022 by Andrew and Dylan Crout, Crout Holdings was built on
-          a simple conviction — that quality, drive, and functionality should
-          define everything we put our name on.
-        </p>
-        <p class="who__body">
-          We are a proudly South African holding company, growing a family of
-          divisions that span different industries while sharing the same
-          standards. Every service we offer reflects the values we were raised
-          on and the commitment we bring to every client.
-        </p>
-      </div>
+    <div class="who__left">
+      <span class="who__eyebrow">Who We Are</span>
+      <h2 class="who__heading">The Crout Family</h2>
+      <p class="who__body">
+        Founded in 2022 by Andrew and Dylan Crout, Crout Holdings was built on
+        a simple conviction — that quality, drive, and functionality should
+        define everything we put our name on.
+      </p>
+      <p class="who__body">
+        We are a proudly South African holding company, growing a family of
+        divisions that span different industries while sharing the same
+        standards. Every service we offer reflects the values we were raised
+        on and the commitment we bring to every client.
+      </p>
+    </div>
 
-      <div class="who__right">
-        <ul class="division-list">
-          <li class="division-list__item" *ngFor="let d of divisions">
-            <div class="division-list__meta">
-              <span class="division-list__name">{{ d.name }}</span>
-              <span class="division-list__badge" [class.division-list__badge--live]="d.available">
-                {{ d.available ? 'Available' : 'Coming Soon' }}
-              </span>
-            </div>
-            <p class="division-list__desc">{{ d.description }}</p>
-            <div class="division-list__rule"></div>
-          </li>
-        </ul>
-      </div>
+    <div class="who__right">
+      <ul class="division-list">
+        <li class="division-list__item" *ngFor="let d of divisions">
+          <div class="division-list__meta">
+            <span class="division-list__name">{{ d.name }}</span>
+            <span class="division-list__badge" [class.division-list__badge--live]="d.available">
+              {{ d.available ? 'Available' : 'Coming Soon' }}
+            </span>
+          </div>
+          <p class="division-list__desc">{{ d.description }}</p>
+          <div class="division-list__rule"></div>
+        </li>
+      </ul>
     </div>
 
   </div>
