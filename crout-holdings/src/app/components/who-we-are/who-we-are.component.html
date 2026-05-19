@@ -1,7 +1,4 @@
-<section
-  class="who"
-  [style.background-image]="'url(' + whoBg + ')'"
->
+<section class="who">
   <div class="who__inner">
 
     <div class="who__left">
@@ -20,7 +17,10 @@
       </p>
     </div>
 
-    <div class="who__right">
+    <div
+      class="who__right"
+      [style.background-image]="'url(' + whoBg + ')'"
+    >
       <ul class="division-list">
         <li class="division-list__item" *ngFor="let d of divisions">
           <div class="division-list__meta">
