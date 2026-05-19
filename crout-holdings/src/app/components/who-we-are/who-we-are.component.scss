@@ -28,30 +28,21 @@
     width: 100%;
   }
 
-  /* ── Right panel — full-height parallax logo bg ── */
+  /* ── Right panel — bg set fully via inline style ── */
   &__right {
     position: relative;
     background-color: #0a0a0a;
-    background-size: cover;
-    background-position: right center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
     display: flex;
     align-items: center;
+  }
 
-    &::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.72);
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    @media (hover: none) and (pointer: coarse) {
-      background-attachment: scroll;
-      background-position: center center;
-    }
+  /* Dark overlay — real div, scoped to right panel */
+  &__right-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    z-index: 0;
+    pointer-events: none;
   }
 
   &__right-inner {
