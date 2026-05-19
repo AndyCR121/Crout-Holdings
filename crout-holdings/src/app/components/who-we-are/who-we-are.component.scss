@@ -2,28 +2,25 @@
 
 .who {
   position: relative;
-  overflow: hidden;
   background-color: #0a0a0a;
   background-image: url('/assets/Crout Holdings Luxury Logo_Grey.png');
-  background-repeat: repeat-y;
-  background-size: 320px auto;
-  background-position: center 0;
-  animation: whoLogoScroll 28s linear infinite;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: #f5f5f0;
   padding: clamp(5rem, 10vw, 9rem) clamp(1.5rem, 6vw, 6rem);
 
-  &::before {
-    content: '';
+  &__overlay {
     position: absolute;
     inset: 0;
-    background: rgba(15, 15, 15, 0.82);
-    pointer-events: none;
-    z-index: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 1;
   }
 
   &__inner {
     position: relative;
-    z-index: 1;
+    z-index: 2;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: clamp(3rem, 6vw, 7rem);
@@ -68,7 +65,7 @@
 /* Division list */
 .division-list {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   list-style: none;
   padding: 0;
   margin: 0;
@@ -121,11 +118,10 @@
   }
 }
 
-@keyframes whoLogoScroll {
-  0%   { background-position: center 0; }
-  100% { background-position: center 520px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .who { animation: none; }
+/* Mobile: fixed attachment broken on iOS Safari — fall back to scroll */
+@media (hover: none) and (pointer: coarse) {
+  .who {
+    background-attachment: scroll;
+    background-position: center;
+  }
 }
