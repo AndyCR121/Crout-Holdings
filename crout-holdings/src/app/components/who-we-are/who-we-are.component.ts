@@ -19,7 +19,8 @@ export class WhoWeAreComponent {
   @Input() assetsBase: string = '/assets/';
 
   get whoBg(): string {
-    return `${this.assetsBase}Crout Holdings Luxury Logo_Grey.png`;
+    const filename = encodeURIComponent('Crout Holdings Luxury Logo_Grey.png');
+    return `${this.assetsBase}${filename}`;
   }
 
   readonly divisions: DivisionStatus[] = [
