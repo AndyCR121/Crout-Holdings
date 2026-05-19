@@ -3,25 +3,19 @@
 
     <!-- Logo -->
     <a [href]="homeUrl" class="nav__logo" (click)="closeMenu()">
-      <img
-        [src]="assetsBase + 'Crout Crest Logo Transparent.png'"
-        alt="Crout Holdings"
-        class="nav__logo-img"
-        width="44"
-        height="44"
-        loading="eager"
-      />
+      <img [src]="assetsBase + 'Crout Holdings Luxury Logo_Grey_Transparent.png'" alt="Crout Holdings"
+        class="nav__logo-img" width="44" height="44" loading="eager" />
       <span class="nav__logo-text">Crout Holdings</span>
     </a>
 
     <!-- Desktop links (centred) -->
     <nav class="nav__links" aria-label="Primary navigation">
       @for (link of navLinks; track link.target) {
-        @if (link.type === 'scroll') {
-          <a href="#" class="nav__link" (click)="scrollTo($event, link.target)">{{ link.label }}</a>
-        } @else {
-          <a [href]="link.target" class="nav__link">{{ link.label }}</a>
-        }
+      @if (link.type === 'scroll') {
+      <a href="#" class="nav__link" (click)="scrollTo($event, link.target)">{{ link.label }}</a>
+      } @else {
+      <a [href]="link.target" class="nav__link">{{ link.label }}</a>
+      }
       }
     </nav>
 
@@ -29,13 +23,8 @@
     <a [href]="contactUrl" class="nav__cta">Get in Touch</a>
 
     <!-- Hamburger -->
-    <button
-      class="nav__burger"
-      [class.nav__burger--open]="menuOpen"
-      (click)="toggleMenu()"
-      [attr.aria-expanded]="menuOpen"
-      aria-label="Toggle navigation menu"
-    >
+    <button class="nav__burger" [class.nav__burger--open]="menuOpen" (click)="toggleMenu()"
+      [attr.aria-expanded]="menuOpen" aria-label="Toggle navigation menu">
       <span></span>
       <span></span>
       <span></span>
@@ -47,11 +36,11 @@
   <div class="nav__drawer" [class.nav__drawer--open]="menuOpen" [attr.aria-hidden]="!menuOpen">
     <nav aria-label="Mobile navigation">
       @for (link of navLinks; track link.target) {
-        @if (link.type === 'scroll') {
-          <a href="#" class="nav__drawer-link" (click)="scrollTo($event, link.target)">{{ link.label }}</a>
-        } @else {
-          <a [href]="link.target" class="nav__drawer-link">{{ link.label }}</a>
-        }
+      @if (link.type === 'scroll') {
+      <a href="#" class="nav__drawer-link" (click)="scrollTo($event, link.target)">{{ link.label }}</a>
+      } @else {
+      <a [href]="link.target" class="nav__drawer-link">{{ link.label }}</a>
+      }
       }
       <a [href]="contactUrl" class="nav__drawer-cta" (click)="closeMenu()">Get in Touch</a>
     </nav>
