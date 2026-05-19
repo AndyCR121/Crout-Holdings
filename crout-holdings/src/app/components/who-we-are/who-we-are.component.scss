@@ -33,7 +33,7 @@
     position: relative;
     background-color: #0a0a0a;
     background-size: cover;
-    background-position: center;
+    background-position: right center;
     background-repeat: no-repeat;
     background-attachment: fixed;
     display: flex;
@@ -50,6 +50,7 @@
 
     @media (hover: none) and (pointer: coarse) {
       background-attachment: scroll;
+      background-position: center center;
     }
   }
 
