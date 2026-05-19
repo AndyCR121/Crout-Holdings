@@ -1,4 +1,4 @@
-import { Component, HostBinding } from '@angular/core';
+import { Component, HostBinding, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 interface DivisionStatus {
@@ -16,6 +16,11 @@ interface DivisionStatus {
 })
 export class WhoWeAreComponent {
   @HostBinding('id') readonly hostId = 'who-we-are';
+  @Input() assetsBase: string = '/assets/';
+
+  get whoBg(): string {
+    return `${this.assetsBase}Crout Holdings Luxury Logo_Grey.png`;
+  }
 
   readonly divisions: DivisionStatus[] = [
     {
@@ -23,11 +28,6 @@ export class WhoWeAreComponent {
       description: 'Intelligent workflow automation & custom business bots.',
       available: true
     },
-    // { // ⚠️ PSIRA registration pending — uncomment once legalities are sorted
-    //   name: 'Alarm System Installations',
-    //   description: 'Sub-contracting security alarm installations.',
-    //   available: false
-    // },
     {
       name: 'Property Rentals',
       description: 'Townhouse, house & real estate rental management.',

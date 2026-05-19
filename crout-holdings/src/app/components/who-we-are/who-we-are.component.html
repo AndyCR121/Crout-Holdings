@@ -1,4 +1,7 @@
-<section class="who">
+<section
+  class="who"
+  [style.background-image]="'url(' + whoBg + ')'"
+>
   <div class="who__inner">
 
     <div class="who__left">
@@ -22,7 +25,10 @@
         <li class="division-list__item" *ngFor="let d of divisions">
           <div class="division-list__meta">
             <span class="division-list__name">{{ d.name }}</span>
-            <span class="division-list__badge" [class.division-list__badge--live]="d.available">
+            <span
+              class="division-list__badge"
+              [class.division-list__badge--live]="d.available"
+            >
               {{ d.available ? 'Available' : 'Coming Soon' }}
             </span>
           </div>
