@@ -1,7 +1,7 @@
 <section class="who">
-  <div class="who__inner">
 
-    <div class="who__left">
+  <div class="who__left">
+    <div class="who__left-inner">
       <span class="who__eyebrow">Who We Are</span>
       <h2 class="who__heading">The Crout Family</h2>
       <p class="who__body">
@@ -16,11 +16,13 @@
         on and the commitment we bring to every client.
       </p>
     </div>
+  </div>
 
-    <div
-      class="who__right"
-      [style.background-image]="'url(' + whoBg + ')'"
-    >
+  <div
+    class="who__right"
+    [style.background-image]="'url(' + whoBg + ')'"
+  >
+    <div class="who__right-inner">
       <ul class="division-list">
         <li class="division-list__item" *ngFor="let d of divisions">
           <div class="division-list__meta">
@@ -37,6 +39,6 @@
         </li>
       </ul>
     </div>
-
   </div>
+
 </section>
