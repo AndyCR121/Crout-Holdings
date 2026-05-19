@@ -28,15 +28,29 @@
     width: 100%;
   }
 
-  /* ── Right panel — bg set fully via inline style ── */
+  /* ── Right panel — parallax bg ──
+     background-attachment: fixed positions relative to viewport.
+     75% horizontal = centre of the right half (50%+25% = 75% of viewport).
+     background-size: 50vw auto = fills exactly the right panel width. */
   &__right {
     position: relative;
     background-color: #0a0a0a;
+    background-size: 50vw auto;
+    background-position: 75% center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
     display: flex;
     align-items: center;
+
+    @media (hover: none) and (pointer: coarse) {
+      /* iOS Safari: fixed bg broken on mobile, fall back to scroll */
+      background-attachment: scroll;
+      background-size: cover;
+      background-position: center center;
+    }
   }
 
-  /* Dark overlay — real div, scoped to right panel */
+  /* Overlay scoped to right panel only */
   &__right-overlay {
     position: absolute;
     inset: 0;
