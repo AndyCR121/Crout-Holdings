@@ -1,18 +1,66 @@
-<section class="services-hero" aria-labelledby="services-hero-title">
-  <div class="services-hero__inner">
-    <span class="services-hero__label" caScrollReveal>What We Build</span>
-    <h1 class="services-hero__title" id="services-hero-title" caScrollReveal>Automation Services
-      <span class="services-hero__title--accent">Built for Your Business</span>
-    </h1>
-    <p class="services-hero__subtitle" caScrollReveal>
-      From lead capture to AI-powered workflows — every service is custom-built around
-      how your business actually operates, not a one-size-fits-all template.
-    </p>
+<section class="svc-hub">
+
+  <!-- Background -->
+  <div class="svc-hub__bg" aria-hidden="true">
+    <div class="svc-hub__bg-orb svc-hub__bg-orb--1"></div>
+    <div class="svc-hub__bg-orb svc-hub__bg-orb--2"></div>
+    <div class="svc-hub__bg-grid"></div>
   </div>
+
+  <!-- Hero -->
+  <div class="svc-hub__hero">
+    <div class="svc-hub__container">
+      <nav class="svc-hub__breadcrumb" aria-label="Breadcrumb">
+        <a routerLink="/">Home</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Services</span>
+      </nav>
+      <div class="svc-hub__badge">
+        <span class="svc-hub__badge-dot" aria-hidden="true"></span>
+        4 Automation Categories
+      </div>
+      <h1 class="svc-hub__heading">What We <span class="accent">Automate</span></h1>
+      <p class="svc-hub__sub">
+        Every workflow is built custom for your business. Pick the category that matches
+        your biggest bottleneck and we’ll design a system around it.
+      </p>
+    </div>
+  </div>
+
+  <!-- Service Cards Grid -->
+  <div class="svc-hub__grid-wrap">
+    <div class="svc-hub__container">
+      <div class="svc-hub__grid">
+        <a
+          *ngFor="let s of services; let i = index"
+          [routerLink]="['/services', s.slug]"
+          class="svc-card"
+          [class.svc-card--blue]="s.accent === 'blue'"
+          caScrollReveal
+          [style.animation-delay]="(i * 0.1) + 's'"
+          [attr.aria-label]="s.label"
+        >
+          <div class="svc-card__icon" [innerHTML]="s.icon" aria-hidden="true"></div>
+          <div class="svc-card__body">
+            <span class="svc-card__label">{{ s.label }}</span>
+            <p class="svc-card__tagline">{{ s.tagline }}</p>
+            <p class="svc-card__desc">{{ s.description }}</p>
+            <ul class="svc-card__features" aria-label="Included features">
+              <li *ngFor="let f of s.features">{{ f }}</li>
+            </ul>
+          </div>
+          <div class="svc-card__cta" aria-hidden="true">
+            Explore
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="svc-hub__container svc-hub__cta-wrap">
+    <ca-cta-banner></ca-cta-banner>
+  </div>
+
 </section>
-
-<ca-services-overview />
-
-<ca-pricing />
-
-<ca-cta-banner />
