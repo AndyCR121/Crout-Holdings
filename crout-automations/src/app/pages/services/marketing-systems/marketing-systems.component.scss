@@ -1,0 +1,22 @@
+@use '../../../../styles/service-page';
+
+.mkt-page {
+  .svc-page-bg__orb--1 {
+    background: radial-gradient(circle, var(--color-blue) 0%, transparent 70%);
+    top: -60px; right: -80px;
+  }
+  .svc-page-bg__orb--2 {
+    background: radial-gradient(circle, var(--color-orange) 0%, transparent 70%);
+    bottom: 200px; left: -60px;
+  }
+
+  .svc-sub__card-icon { color: var(--color-blue); background: rgba(74,123,175,0.1); border-color: rgba(74,123,175,0.2); }
+  .svc-sub__card-features li svg { color: var(--color-blue); }
+  .svc-section-heading::after { background: var(--color-blue); }
+  .svc-page-hero__heading .accent { color: var(--color-blue); }
+  .svc-page-hero__badge { background: rgba(74,123,175,0.12); border-color: rgba(74,123,175,0.25); }
+  .svc-page-hero__dot { background: var(--color-blue); }
+  .svc-how__step-num { color: rgba(74,123,175,0.18); }
+  .btn--primary { background: var(--color-blue); &:hover { background: var(--color-blue-hover); box-shadow: 0 8px 24px rgba(74,123,175,0.4); } }
+  .svc-sub__card:hover { background: rgba(74,123,175,0.07); border-color: rgba(74,123,175,0.22); }
+}

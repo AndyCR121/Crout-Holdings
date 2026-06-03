@@ -1,0 +1,70 @@
+<div class="pm-page">
+
+  <div class="svc-page-bg" aria-hidden="true">
+    <div class="svc-page-bg__orb svc-page-bg__orb--1"></div>
+    <div class="svc-page-bg__orb svc-page-bg__orb--2"></div>
+    <div class="svc-page-bg__grid"></div>
+  </div>
+
+  <header class="svc-page-hero">
+    <div class="svc-page-container">
+      <nav class="svc-page-breadcrumb" aria-label="Breadcrumb">
+        <a routerLink="/">Home</a><span>/</span>
+        <a routerLink="/services">Services</a><span>/</span>
+        <span aria-current="page">Project Management</span>
+      </nav>
+      <div class="svc-page-hero__badge">
+        <span class="svc-page-hero__dot" aria-hidden="true"></span>
+        4 Systems
+      </div>
+      <h1 class="svc-page-hero__heading">Automated <span class="accent">Project Management</span></h1>
+      <p class="svc-page-hero__sub">
+        Cards created. Teams notified. Progress tracked. Every step of your project lifecycle
+        runs automatically in Trello, Jira, or a custom system built for how your team works.
+      </p>
+      <div class="svc-page-hero__actions">
+        <a routerLink="/contact-us" class="btn btn--primary">Let’s Build It</a>
+        <a routerLink="/services" class="btn btn--ghost">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          All Services
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <section class="svc-sub" aria-labelledby="pm-sub-heading">
+    <div class="svc-page-container">
+      <h2 id="pm-sub-heading" class="svc-section-heading">What’s Included</h2>
+      <div class="svc-sub__grid">
+        <div *ngFor="let s of subServices" class="svc-sub__card" caScrollReveal>
+          <div class="svc-sub__card-icon" [innerHTML]="s.icon" aria-hidden="true"></div>
+          <h3 class="svc-sub__card-title">{{ s.title }}</h3>
+          <p class="svc-sub__card-desc">{{ s.description }}</p>
+          <ul class="svc-sub__card-features" aria-label="Features">
+            <li *ngFor="let f of s.features">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              {{ f }}
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="svc-how" aria-labelledby="pm-how-heading">
+    <div class="svc-page-container">
+      <h2 id="pm-how-heading" class="svc-section-heading">How It Works</h2>
+      <div class="svc-how__steps">
+        <div *ngFor="let step of steps" class="svc-how__step" caScrollReveal>
+          <div class="svc-how__step-num">{{ step.num }}</div>
+          <div class="svc-how__step-body"><h3>{{ step.title }}</h3><p>{{ step.desc }}</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="svc-page-container svc-page-cta">
+    <ca-cta-banner></ca-cta-banner>
+  </div>
+
+</div>

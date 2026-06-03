@@ -1,0 +1,29 @@
+@use '../../../../styles/service-page';
+
+.wa-page {
+  .svc-page-bg__orb--1 {
+    background: radial-gradient(circle, #25D366 0%, transparent 70%);
+    top: -60px; right: -80px;
+    opacity: 0.12;
+  }
+  .svc-page-bg__orb--2 {
+    background: radial-gradient(circle, var(--color-blue) 0%, transparent 70%);
+    bottom: 200px; left: -60px;
+  }
+
+  .svc-sub__grid--5 {
+    grid-template-columns: repeat(3, 1fr);
+    @media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 540px) { grid-template-columns: 1fr; }
+  }
+
+  .svc-sub__card-icon { color: #25D366; background: rgba(37,211,102,0.1); border-color: rgba(37,211,102,0.2); }
+  .svc-sub__card-features li svg { color: #25D366; }
+  .svc-section-heading::after { background: #25D366; }
+  .svc-page-hero__heading .accent { color: #25D366; }
+  .svc-page-hero__badge { background: rgba(37,211,102,0.1); border-color: rgba(37,211,102,0.22); }
+  .svc-page-hero__dot { background: #25D366; }
+  .svc-how__step-num { color: rgba(37,211,102,0.18); }
+  .btn--primary { background: #25D366; &:hover { background: #1eae52; box-shadow: 0 8px 24px rgba(37,211,102,0.35); } }
+  .svc-sub__card:hover { background: rgba(37,211,102,0.06); border-color: rgba(37,211,102,0.22); }
+}
