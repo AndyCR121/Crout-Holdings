@@ -37,7 +37,7 @@
       <h2 id="pm-sub-heading" class="svc-section-heading">What’s Included</h2>
       <div class="svc-sub__grid">
         <div *ngFor="let s of subServices" class="svc-sub__card" caScrollReveal>
-          <div class="svc-sub__card-icon" [innerHTML]="s.icon" aria-hidden="true"></div>
+          <div class="svc-sub__card-icon" [innerHTML]="s.icon | safeHtml"></div>
           <h3 class="svc-sub__card-title">{{ s.title }}</h3>
           <p class="svc-sub__card-desc">{{ s.description }}</p>
           <ul class="svc-sub__card-features" aria-label="Features">

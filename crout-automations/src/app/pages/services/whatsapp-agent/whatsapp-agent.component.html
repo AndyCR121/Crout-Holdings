@@ -37,7 +37,7 @@
       <h2 id="wa-sub-heading" class="svc-section-heading">What the Agent Does</h2>
       <div class="svc-sub__grid svc-sub__grid--5">
         <div *ngFor="let s of subServices" class="svc-sub__card" caScrollReveal>
-          <div class="svc-sub__card-icon" [innerHTML]="s.icon" aria-hidden="true"></div>
+          <div class="svc-sub__card-icon" [innerHTML]="s.icon | safeHtml"></div>
           <h3 class="svc-sub__card-title">{{ s.title }}</h3>
           <p class="svc-sub__card-desc">{{ s.description }}</p>
           <ul class="svc-sub__card-features" aria-label="Features">
@@ -55,12 +55,9 @@
     <div class="svc-page-container">
       <h2 id="wa-how-heading" class="svc-section-heading">How It Works</h2>
       <div class="svc-how__steps">
-        <div *ngFor="let step of steps; let i = index" class="svc-how__step" caScrollReveal>
+        <div *ngFor="let step of steps" class="svc-how__step" caScrollReveal>
           <div class="svc-how__step-num">{{ step.num }}</div>
-          <div class="svc-how__step-body">
-            <h3>{{ step.title }}</h3>
-            <p>{{ step.desc }}</p>
-          </div>
+          <div class="svc-how__step-body"><h3>{{ step.title }}</h3><p>{{ step.desc }}</p></div>
         </div>
       </div>
     </div>

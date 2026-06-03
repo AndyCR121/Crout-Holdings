@@ -1,13 +1,11 @@
 <section class="svc-hub">
 
-  <!-- Background -->
   <div class="svc-hub__bg" aria-hidden="true">
     <div class="svc-hub__bg-orb svc-hub__bg-orb--1"></div>
     <div class="svc-hub__bg-orb svc-hub__bg-orb--2"></div>
     <div class="svc-hub__bg-grid"></div>
   </div>
 
-  <!-- Hero -->
   <div class="svc-hub__hero">
     <div class="svc-hub__container">
       <nav class="svc-hub__breadcrumb" aria-label="Breadcrumb">
@@ -27,7 +25,6 @@
     </div>
   </div>
 
-  <!-- Service Cards Grid -->
   <div class="svc-hub__grid-wrap">
     <div class="svc-hub__container">
       <div class="svc-hub__grid">
@@ -40,7 +37,7 @@
           [style.animation-delay]="(i * 0.1) + 's'"
           [attr.aria-label]="s.label"
         >
-          <div class="svc-card__icon" [innerHTML]="s.icon" aria-hidden="true"></div>
+          <div class="svc-card__icon" [innerHTML]="s.icon | safeHtml"></div>
           <div class="svc-card__body">
             <span class="svc-card__label">{{ s.label }}</span>
             <p class="svc-card__tagline">{{ s.tagline }}</p>
@@ -58,7 +55,6 @@
     </div>
   </div>
 
-  <!-- CTA -->
   <div class="svc-hub__container svc-hub__cta-wrap">
     <ca-cta-banner></ca-cta-banner>
   </div>

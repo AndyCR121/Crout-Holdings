@@ -1,38 +1,28 @@
 <div class="qs-page">
 
-  <!-- Background -->
   <div class="svc-page-bg" aria-hidden="true">
     <div class="svc-page-bg__orb svc-page-bg__orb--1"></div>
     <div class="svc-page-bg__orb svc-page-bg__orb--2"></div>
     <div class="svc-page-bg__grid"></div>
   </div>
 
-  <!-- Hero -->
   <header class="svc-page-hero">
     <div class="svc-page-container">
       <nav class="svc-page-breadcrumb" aria-label="Breadcrumb">
-        <a routerLink="/">Home</a>
-        <span>/</span>
-        <a routerLink="/services">Services</a>
-        <span>/</span>
+        <a routerLink="/">Home</a><span>/</span>
+        <a routerLink="/services">Services</a><span>/</span>
         <span aria-current="page">Quote &amp; Invoice System</span>
       </nav>
-
       <div class="svc-page-hero__badge">
         <span class="svc-page-hero__dot" aria-hidden="true"></span>
         6 Sub-Systems
       </div>
-
-      <h1 class="svc-page-hero__heading">
-        Quote &amp; Invoice
-        <span class="accent">Automation</span>
-      </h1>
+      <h1 class="svc-page-hero__heading">Quote &amp; Invoice <span class="accent">Automation</span></h1>
       <p class="svc-page-hero__sub">
         From the first enquiry to the final payment — your entire quoting and invoicing
         pipeline runs itself. Integrated with your accounting platform, built around your
         pricing logic, and always on brand.
       </p>
-
       <div class="svc-page-hero__actions">
         <a routerLink="/contact-us" class="btn btn--primary">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
@@ -46,18 +36,12 @@
     </div>
   </header>
 
-  <!-- Sub-Services -->
   <section class="svc-sub" aria-labelledby="sub-heading">
     <div class="svc-page-container">
       <h2 id="sub-heading" class="svc-section-heading">What’s Included</h2>
       <div class="svc-sub__grid">
-        <div
-          *ngFor="let s of subServices; let i = index"
-          class="svc-sub__card"
-          caScrollReveal
-          [id]="s.id"
-        >
-          <div class="svc-sub__card-icon" [innerHTML]="s.icon" aria-hidden="true"></div>
+        <div *ngFor="let s of subServices" class="svc-sub__card" caScrollReveal [id]="s.id">
+          <div class="svc-sub__card-icon" [innerHTML]="s.icon | safeHtml"></div>
           <h3 class="svc-sub__card-title">{{ s.title }}</h3>
           <p class="svc-sub__card-desc">{{ s.description }}</p>
           <ul class="svc-sub__card-features" aria-label="Features">
@@ -71,24 +55,18 @@
     </div>
   </section>
 
-  <!-- How It Works -->
   <section class="svc-how" aria-labelledby="how-heading">
     <div class="svc-page-container">
       <h2 id="how-heading" class="svc-section-heading">How It Works</h2>
       <div class="svc-how__steps">
         <div *ngFor="let step of steps; let i = index" class="svc-how__step" caScrollReveal>
-          <div class="svc-how__step-num" aria-hidden="true">{{ step.num }}</div>
-          <div class="svc-how__step-body">
-            <h3>{{ step.title }}</h3>
-            <p>{{ step.desc }}</p>
-          </div>
-          <div *ngIf="i < steps.length - 1" class="svc-how__connector" aria-hidden="true"></div>
+          <div class="svc-how__step-num">{{ step.num }}</div>
+          <div class="svc-how__step-body"><h3>{{ step.title }}</h3><p>{{ step.desc }}</p></div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- CTA -->
   <div class="svc-page-container svc-page-cta">
     <ca-cta-banner></ca-cta-banner>
   </div>

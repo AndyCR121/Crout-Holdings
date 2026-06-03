@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CtaBannerComponent } from '../../components/cta-banner/cta-banner.component';
 import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive';
+import { SafeHtmlPipe } from '../../pipes/safe-html.pipe';
 
 @Component({
   selector: 'ca-services',
   standalone: true,
-  imports: [CommonModule, RouterModule, CtaBannerComponent, ScrollRevealDirective],
+  imports: [CommonModule, RouterModule, CtaBannerComponent, ScrollRevealDirective, SafeHtmlPipe],
   templateUrl: './services.component.html',
   styleUrl: './services.component.scss'
 })
