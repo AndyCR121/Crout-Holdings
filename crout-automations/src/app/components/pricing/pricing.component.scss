@@ -114,15 +114,27 @@
     }
   }
 
-  // ---- Service Cards Grid ----
-  &__grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+  // ---- Service Cards Flex Layout ----
+  //
+  // Row fill logic:
+  //   1 item  → 1 col (fills row)
+  //   2 items → 2 equal cols
+  //   3 items → 3 equal cols
+  //   4 items → 2 + 2  (flex-wrap breaks at 50% basis)
+  //   5 items → 3 + 2  (items on second row stretch via flex-grow)
+  //   6 items → 3 + 3
+  //   7+      → only 6 shown, "View More" appears below
+  //
+  // Implementation: each card has flex-basis that targets ~33% so 3 fit per row.
+  // flex-grow:1 makes remaining items on the last row expand to fill the space.
+  // At 4 items the 4th item wraps and flexbasis of ~50% means 2 per row.
+  // We use calc to account for gap.
+
+  &__flex {
+    display: flex;
+    flex-wrap: wrap;
     gap: var(--space-6);
     align-items: stretch;
-
-    @media (max-width: 1024px) { grid-template-columns: repeat(2, 1fr); }
-    @media (max-width: 640px)  { grid-template-columns: 1fr; }
   }
 
   &__card {
@@ -134,7 +146,11 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-5);
-    height: 100%;
+    // Each card targets ~33% width (3 per row), growing to fill remaining space.
+    // With gap: var(--space-6) = 1.5rem, two gaps in a row = 3rem.
+    flex: 1 1 calc(33.333% - var(--space-6));
+    // Hard min so cards don't go tiny on medium screens before the breakpoint kicks in
+    min-width: 220px;
     transition:
       box-shadow var(--transition-interactive),
       transform var(--transition-interactive);
@@ -160,6 +176,52 @@
       .pricing__addon-item     { border-color: rgba(255,255,255,0.08); }
       .pricing__addon-name     { color: rgba(255,255,255,0.65); }
       .pricing__addon-price    { color: var(--color-orange); }
+    }
+
+    // Collapse to 2 cols on tablet
+    @media (max-width: 1024px) {
+      flex-basis: calc(50% - var(--space-6));
+    }
+
+    // Single col on mobile
+    @media (max-width: 640px) {
+      flex-basis: 100%;
+    }
+  }
+
+  // ---- View More CTA ----
+  &__view-more {
+    display: flex;
+    justify-content: center;
+    margin-top: calc(var(--space-4) * -1); // pull up slightly into the card gap rhythm
+  }
+
+  &__view-more-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-8);
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    text-decoration: none;
+    transition:
+      background var(--transition-interactive),
+      border-color var(--transition-interactive),
+      transform var(--transition-interactive);
+
+    svg { transition: transform var(--transition-interactive); }
+
+    &:hover {
+      background: var(--color-surface-2);
+      border-color: var(--color-orange);
+      color: var(--color-orange);
+      transform: translateY(-1px);
+
+      svg { transform: translateX(3px); }
     }
   }
 
@@ -408,7 +470,6 @@
     }
 
     &--conditional {
-      // Greyed out until toggled
       border-style: dashed;
       border-color: rgba(255,255,255,0.1);
       background: rgba(255,255,255,0.02);

@@ -14,7 +14,7 @@
 
     <!-- ===== Ghost Loader: Service Cards ===== -->
     @if (ghostLoaderOnLoad()) {
-      <div class="pricing__grid">
+      <div class="pricing__flex">
         @for (s of skeletonCards; track $index) {
           <div class="pricing__card pricing__card--ghost">
             <div class="ghost ghost--name"></div>
@@ -31,8 +31,8 @@
     } @else {
 
     <!-- ===== Service Cards ===== -->
-    <div class="pricing__grid" caScrollReveal [staggerChildren]="true">
-      @for (svc of visibleServices; track svc.service_id; let i = $index) {
+    <div class="pricing__flex" caScrollReveal [staggerChildren]="true">
+      @for (svc of visibleServicesLimited; track svc.service_id; let i = $index) {
         <div
           class="pricing__card"
           [class.pricing__card--highlight]="i % 2 === 0"
@@ -74,6 +74,16 @@
         </div>
       }
     </div>
+
+    <!-- View More CTA (shown when there are more than 6 services) -->
+    @if (hasMoreServices) {
+      <div class="pricing__view-more">
+        <a routerLink="/services" class="pricing__view-more-btn">
+          View All Services
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    }
 
     } <!-- end @else ghost -->
 

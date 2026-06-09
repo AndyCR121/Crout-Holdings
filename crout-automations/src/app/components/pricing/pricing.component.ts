@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive';
 import { ApiService } from '../../services/api.service';
 import { IService, IAddon, IPackage } from '../../interfaces/i-service.interface';
@@ -7,10 +8,13 @@ import { IAddonState, IPackageView } from '../../interfaces/i-service-display.in
 import { FindByIdPipe } from '../../pipes/find-by-id.pipe';
 import { FilterByServiceIdPipe } from '../../pipes/filter-by-service-id.pipe';
 
+/** Maximum service cards shown in the pricing section before "View More" appears */
+const MAX_VISIBLE_SERVICES = 6;
+
 @Component({
   selector: 'ca-pricing',
   standalone: true,
-  imports: [CommonModule, ScrollRevealDirective, FindByIdPipe, FilterByServiceIdPipe],
+  imports: [CommonModule, RouterModule, ScrollRevealDirective, FindByIdPipe, FilterByServiceIdPipe],
   templateUrl: './pricing.component.html',
   styleUrl: './pricing.component.scss'
 })
@@ -29,6 +33,12 @@ export class PricingComponent implements OnInit {
   // ── Derived views ──────────────────────────────────────────────────────────
   /** Services where Conditional === false — shown as individual cards */
   visibleServices: IService[] = [];
+
+  /** Capped at MAX_VISIBLE_SERVICES for the pricing section */
+  visibleServicesLimited: IService[] = [];
+
+  /** True when there are more services than MAX_VISIBLE_SERVICES */
+  hasMoreServices = false;
 
   /** Root packages (no parent_package_id) — the ones we render */
   packageViews: IPackageView[] = [];
@@ -70,6 +80,12 @@ export class PricingComponent implements OnInit {
     // Services with Conditional === false only
     this.visibleServices = this.services.filter(s => !s.Conditional);
 
+    // Cap display in pricing section
+    this.hasMoreServices = this.visibleServices.length > MAX_VISIBLE_SERVICES;
+    this.visibleServicesLimited = this.hasMoreServices
+      ? this.visibleServices.slice(0, MAX_VISIBLE_SERVICES)
+      : this.visibleServices;
+
     // Root packages = those not referenced as parent_package_id by anyone
     const childIds = new Set(
       this.packages
@@ -82,13 +98,10 @@ export class PricingComponent implements OnInit {
     this.packageViews = rootPackages.map(pkg => {
       const childPkg = this.packages.find(p => p.parent_package_id === pkg.package_id) ?? null;
 
-      // The conditional service is the one whose service_id matches the child pkg service_id
-      // (service_id 5 = conditional WhatsApp, etc.)
       const conditionalService = childPkg
         ? (this.services.find(s => s.Conditional && s.service_id === childPkg.service_id) ?? null)
         : null;
 
-      // Addons for the root package's primary service
       const svcId = pkg.service_id;
       const addonStates: IAddonState[] = svcId
         ? this.addons
@@ -111,7 +124,6 @@ export class PricingComponent implements OnInit {
     view.conditionalEnabled = !view.conditionalEnabled;
 
     if (view.conditionalEnabled && view.childPkg) {
-      // Switch addon states to the child package's conditional service addons
       const childSvcId = view.conditionalService?.service_id;
       if (childSvcId != null) {
         view.addonStates = this.addons
@@ -119,7 +131,6 @@ export class PricingComponent implements OnInit {
           .map(a => ({ addon: a, enabled: false }));
       }
     } else if (!view.conditionalEnabled) {
-      // Revert to root package addons
       const rootSvcId = view.pkg.service_id;
       if (rootSvcId != null) {
         view.addonStates = this.addons
@@ -140,11 +151,8 @@ export class PricingComponent implements OnInit {
 
   // ── Price helpers ─────────────────────────────────────────────────────────
   basePrice(view: IPackageView): number {
-    // Base price = R3000 per non-conditional service in the package
-    // For multi-service packages (suite) we sum up services by scanning addons' service refs
     const svcId = this.activePkg(view).service_id;
     if (!svcId) {
-      // Multi-service suite — sum unique service base prices referenced by its addons
       const addonsOfPkg = view.addonStates.map(s => s.addon);
       const svcIds = [...new Set(addonsOfPkg.map(a => a.service_id).filter(id => id != null))] as number[];
       return svcIds.reduce((sum, id) => {
