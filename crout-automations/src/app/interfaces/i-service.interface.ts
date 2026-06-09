@@ -18,7 +18,8 @@ export interface IAddon {
 export interface IPackage {
   package_id: number;
   parent_package_id?: number; // conditional FK to allow nested packages
-  service_id?: number;
+  /** One or more service IDs this package is composed of */
+  service_ids?: number[];
   PackageName: string;
   PackageDescription: string;
   Discount: number;        // 0–1 (percentage)

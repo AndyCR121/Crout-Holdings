@@ -119,15 +119,13 @@
             <!-- Addon line items -->
             <ul class="pricing__suite-items" role="list">
 
-              <!-- Base service row -->
-              @let activeSvcId = activePkg(view).service_id;
-              @if (activeSvcId) {
-                @let activeSvc = services | findById : activeSvcId;
-                @if (activeSvc) {
+              <!-- Base service rows — one per service in the active package -->
+              @for (svc of activeServices(view); track svc.service_id) {
+                @if (!svc.Conditional) {
                   <li class="pricing__suite-item">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                    <span class="pricing__suite-item-label">{{ activeSvc.ServiceName }} (base)</span>
-                    <span class="pricing__suite-item-price">R{{ formatPrice(activeSvc.Price) }}</span>
+                    <span class="pricing__suite-item-label">{{ svc.ServiceName }} (base)</span>
+                    <span class="pricing__suite-item-price">R{{ formatPrice(svc.Price) }}</span>
                   </li>
                 }
               }
@@ -156,7 +154,7 @@
                 </li>
               }
 
-              <!-- Conditional service toggle (greyed out when no child package) -->
+              <!-- Conditional service toggle -->
               @if (view.childPkg && view.conditionalService) {
                 <li
                   class="pricing__suite-item pricing__suite-item--conditional"
@@ -183,32 +181,6 @@
                     + R{{ formatPrice(view.conditionalService.Price) }}
                   </span>
                 </li>
-
-                <!-- Conditional child addons (shown when toggled on) -->
-                <!-- @if (view.conditionalEnabled) {
-                  @for (state of view.addonStates; track state.addon.addon_id) {
-                    <li
-                      class="pricing__suite-item pricing__suite-item--addon"
-                      [class.pricing__suite-item--active]="state.enabled"
-                    >
-                      <button
-                        class="pricing__suite-toggle pricing__suite-toggle--sm"
-                        [class.pricing__suite-toggle--on]="state.enabled"
-                        [attr.aria-pressed]="state.enabled"
-                        [attr.aria-label]="'Toggle addon ' + state.addon.AddonName"
-                        (click)="toggleAddon(state)"
-                      >
-                        <span class="pricing__suite-toggle-track">
-                          <span class="pricing__suite-toggle-thumb"></span>
-                        </span>
-                      </button>
-                      <span class="pricing__suite-item-label">{{ state.addon.AddonName }}</span>
-                      <span class="pricing__suite-item-price pricing__suite-item-price--addon">
-                        + R{{ formatPrice(state.addon.Price) }}
-                      </span>
-                    </li>
-                  }
-                } -->
               }
 
             </ul>
@@ -223,7 +195,6 @@
               <p class="pricing__suite-price-label" style="margin-top: 0.75rem">Bundle price</p>
 
               @if (discountUnlocked(view)) {
-                <!-- Discount active -->
                 <div class="pricing__suite-price-now">
                   <span class="pricing__suite-price-currency">R</span>
                   <span class="pricing__suite-price-amount">{{ formatPrice(discountedTotal(view)) }}</span>
@@ -233,7 +204,6 @@
                   You save R{{ formatPrice(saving(view)) }}
                 </div>
               } @else {
-                <!-- Discount locked -->
                 <div class="pricing__suite-price-now pricing__suite-price-now--locked">
                   <span class="pricing__suite-price-currency">R</span>
                   <span class="pricing__suite-price-amount">{{ formatPrice(fullTotal(view)) }}</span>

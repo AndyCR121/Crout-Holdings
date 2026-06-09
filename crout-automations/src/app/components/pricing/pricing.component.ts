@@ -25,15 +25,15 @@ export class PricingComponent implements OnInit {
 
   private api = inject(ApiService);
 
-  // ── Loading state ──────────────────────────────────────────────────────────
+  // ── Loading state ────────────────────────────────────────────────────────
   ghostLoaderOnLoad = signal<boolean>(true);
 
-  // ── Raw data ───────────────────────────────────────────────────────────────
+  // ── Raw data ──────────────────────────────────────────────────────────────
   services: IService[]  = [];
   addons:   IAddon[]    = [];
   packages: IPackage[]  = [];
 
-  // ── Derived views ──────────────────────────────────────────────────────────
+  // ── Derived views ─────────────────────────────────────────────────────────
   /** Services where Conditional === false — shown as individual cards */
   visibleServices: IService[] = [];
 
@@ -46,7 +46,7 @@ export class PricingComponent implements OnInit {
   /** Root packages (no parent_package_id) — the ones we render */
   packageViews: IPackageView[] = [];
 
-  // ── Monthly retainer (static) ──────────────────────────────────────────────
+  // ── Monthly retainer (static) ─────────────────────────────────────────────
   readonly retainerPrice = 1200;
 
   readonly PACKAGE_DISCOUNT = 0.15;
@@ -98,22 +98,29 @@ export class PricingComponent implements OnInit {
     this.packageViews = rootPackages.map(pkg => {
       const childPkg = this.packages.find(p => p.parent_package_id === pkg.package_id) ?? null;
 
-      const conditionalService = childPkg
-        ? (this.services.find(s => s.Conditional && s.service_id === childPkg.service_id) ?? null)
+      // Resolve conditional service from the child package's service_ids.
+      // A conditional service is any service flagged Conditional === true
+      // that appears in the child package's service_ids list.
+      const conditionalService: IService | null = childPkg
+        ? (this.services.find(
+            s => s.Conditional && (childPkg.service_ids ?? []).includes(s.service_id)
+          ) ?? null)
         : null;
 
-      const svcId = pkg.service_id;
+      // Resolve all IService objects for the root package.
+      const rootServices: IService[] = (pkg.service_ids ?? []).reduce<IService[]>((acc, id) => {
+        const svc = this.services.find(s => s.service_id === id);
+        if (svc) acc.push(svc);
+        return acc;
+      }, []);
 
-      // Build the stable root addon list from the root package's service.
-      const rootAddonStates: IAddonState[] = svcId
-        ? this.addons
-            .filter(a => a.service_id === svcId)
-            .map(a => ({ addon: a, enabled: false }))
-        : [];
+      // Build stable root addon list — aggregated across ALL root service IDs.
+      const rootAddonStates: IAddonState[] = (pkg.service_ids ?? []).flatMap(svcId =>
+        this.addons
+          .filter(a => a.service_id === svcId)
+          .map(a => ({ addon: a, enabled: false }))
+      );
 
-      // The conditional index is the length of the root list — child addons
-      // splice in after all root addons, keeping the conditional toggle row
-      // (rendered separately in HTML) visually anchored.
       const conditionalIndex = conditionalService ? rootAddonStates.length : -1;
 
       return {
@@ -121,10 +128,11 @@ export class PricingComponent implements OnInit {
         childPkg,
         conditionalService,
         conditionalEnabled: false,
+        rootServices,
         rootAddonStates,
         childAddonStates: [],   // populated once on first conditional toggle
         conditionalIndex,
-        addonStates: [...rootAddonStates], // initially mirrors root
+        addonStates: [...rootAddonStates],
       } satisfies IPackageView;
     });
   }
@@ -135,12 +143,11 @@ export class PricingComponent implements OnInit {
    * Toggles the conditional (child) service on or off.
    *
    * Rules:
-   * 1. Root addon states (and any user selections on them) are NEVER reset.
-   * 2. Child addons are built once on the first enable, then reused on
-   *    subsequent toggles — preserving the user's child-addon selections too.
-   * 3. The merged addonStates list is rebuilt by appending child addons after
-   *    the root list, so the conditional toggle row always stays at the same
-   *    visual position in the HTML.
+   * 1. Root addon states (and any user selections) are NEVER reset.
+   * 2. Child addons are built once on the first enable, reused thereafter
+   *    (preserving user's child-addon selections across toggles).
+   * 3. Child addons are appended after all root addons so the conditional
+   *    toggle row keeps its visual position in the HTML.
    */
   toggleConditional(view: IPackageView): void {
     view.conditionalEnabled = !view.conditionalEnabled;
@@ -148,35 +155,25 @@ export class PricingComponent implements OnInit {
     if (view.conditionalEnabled && view.childPkg) {
       // Build child addon states once; reuse on subsequent toggles.
       if (view.childAddonStates.length === 0) {
-        const childSvcId = view.conditionalService?.service_id;
-        if (childSvcId != null) {
-          view.childAddonStates = this.addons
-            .filter(a => a.service_id === childSvcId)
-            .map(a => ({ addon: a, enabled: false, isConditionalChild: true }));
-        }
+        view.childAddonStates = (view.childPkg.service_ids ?? []).flatMap(svcId =>
+          this.addons
+            .filter(a => a.service_id === svcId)
+            .map(a => ({ addon: a, enabled: false, isConditionalChild: true }))
+        );
       }
     }
 
-    // Rebuild the merged list regardless of toggle direction.
     view.addonStates = this.buildMergedAddonList(view);
   }
 
   /**
    * Merges root and (optionally) child addon states into a stable list.
-   *
-   * OFF → root list only (child entries removed, root indices unchanged)
-   * ON  → root list + child addons appended after rootAddonStates
-   *
-   * The conditional toggle ROW itself is rendered by the existing HTML block
-   * and always appears after root addon rows, so appending child addons after
-   * the root list keeps everything in the correct visual order.
+   * OFF → root only; ON → root + child appended.
    */
   private buildMergedAddonList(view: IPackageView): IAddonState[] {
     if (!view.conditionalEnabled) {
-      // Conditional turned off — return clean copy of root only.
       return [...view.rootAddonStates];
     }
-    // Conditional turned on — root addons first, child addons after.
     return [...view.rootAddonStates, ...view.childAddonStates];
   }
 
@@ -189,18 +186,37 @@ export class PricingComponent implements OnInit {
     return view.conditionalEnabled && view.childPkg ? view.childPkg : view.pkg;
   }
 
+  /**
+   * Resolved IService objects for the currently active package.
+   * When the conditional is enabled, merges root services + conditional service.
+   */
+  activeServices(view: IPackageView): IService[] {
+    if (view.conditionalEnabled && view.childPkg) {
+      const childServices = (view.childPkg.service_ids ?? []).reduce<IService[]>((acc, id) => {
+        const svc = this.services.find(s => s.service_id === id);
+        if (svc) acc.push(svc);
+        return acc;
+      }, []);
+      // Merge root + child, de-duplicating by service_id.
+      const seen = new Set(view.rootServices.map(s => s.service_id));
+      const merged = [...view.rootServices];
+      for (const svc of childServices) {
+        if (!seen.has(svc.service_id)) merged.push(svc);
+      }
+      return merged;
+    }
+    return view.rootServices;
+  }
+
   // ── Discount gate ─────────────────────────────────────────────────────────
-  /** Number of add-ons currently toggled on for a package view */
   enabledAddonCount(view: IPackageView): number {
     return view.addonStates.filter(s => s.enabled).length;
   }
 
-  /** True when enough add-ons are selected to unlock the bundle discount */
   discountUnlocked(view: IPackageView): boolean {
     return this.enabledAddonCount(view) >= MIN_ADDONS_FOR_DISCOUNT;
   }
 
-  /** How many more add-ons the user needs to select to unlock the discount */
   addonsNeededForDiscount(view: IPackageView): number {
     return Math.max(0, MIN_ADDONS_FOR_DISCOUNT - this.enabledAddonCount(view));
   }
@@ -208,35 +224,36 @@ export class PricingComponent implements OnInit {
   // ── Price helpers ─────────────────────────────────────────────────────────
 
   /**
-   * Base price calculation.
-   *
-   * Always uses the root package's own service price as the floor.
-   * When the conditional service is enabled its price is added on top.
-   * This ensures the price block never shows R0 when the package has a
-   * service_id but no addons are selected.
+   * Base price = sum of all root service prices.
+   * When the conditional is enabled, the conditional service price is added too.
+   * Falls back to summing addon service prices if the package has no service_ids.
    */
   basePrice(view: IPackageView): number {
-    const rootSvcId = view.pkg.service_id;
+    const svcIds = view.pkg.service_ids ?? [];
 
-    // Fallback: if root package has no service_id, derive from addon service IDs.
-    if (!rootSvcId) {
-      const allAddons = view.addonStates.map(s => s.addon);
-      const svcIds = [...new Set(allAddons.map(a => a.service_id).filter((id): id is number => id != null))];
-      return svcIds.reduce((sum, id) => {
+    // Fallback: derive from addon service IDs when package has no service_ids.
+    if (svcIds.length === 0) {
+      const uniqueIds = [...new Set(
+        view.addonStates.map(s => s.addon.service_id).filter((id): id is number => id != null)
+      )];
+      return uniqueIds.reduce((sum, id) => {
         const svc = this.services.find(s => s.service_id === id);
         return sum + (svc?.Price ?? 0);
       }, 0);
     }
 
-    // Normal path: root service price (always) + conditional service price (when on).
-    const rootSvc = this.services.find(s => s.service_id === rootSvcId);
-    const rootPrice = rootSvc?.Price ?? 0;
+    // Normal path: sum all root service prices.
+    const rootTotal = svcIds.reduce((sum, id) => {
+      const svc = this.services.find(s => s.service_id === id);
+      return sum + (svc?.Price ?? 0);
+    }, 0);
 
+    // Add conditional service price when toggled on.
     const conditionalPrice = (view.conditionalEnabled && view.conditionalService)
       ? (view.conditionalService.Price ?? 0)
       : 0;
 
-    return rootPrice + conditionalPrice;
+    return rootTotal + conditionalPrice;
   }
 
   enabledAddonTotal(view: IPackageView): number {
@@ -249,10 +266,6 @@ export class PricingComponent implements OnInit {
     return this.basePrice(view) + this.enabledAddonTotal(view);
   }
 
-  /**
-   * Returns the discounted total only when the minimum add-on threshold is met.
-   * Otherwise returns the full total (no discount applied).
-   */
   discountedTotal(view: IPackageView): number {
     if (!this.discountUnlocked(view)) return this.fullTotal(view);
     const discount = this.activePkg(view).Discount ?? 0;

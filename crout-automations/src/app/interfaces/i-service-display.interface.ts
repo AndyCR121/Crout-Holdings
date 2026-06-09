@@ -17,8 +17,6 @@ export interface IServiceDisplay extends IService {
 export interface IAddonState {
   addon: IAddon;
   enabled: boolean;
-  /** True for the always-visible base-service row (locked on, not togglable) */
-  isBase?: boolean;
   /** True for child addons injected when the conditional service is enabled */
   isConditionalChild?: boolean;
 }
@@ -35,24 +33,27 @@ export interface IPackageView {
   /**
    * The stable merged addon list.
    * Root addons keep their original indices at all times.
-   * When conditionalEnabled, child addons are spliced in directly after the
-   * conditional toggle row (whose original index is stored in conditionalIndex).
+   * When conditionalEnabled, child addons are appended after root addons.
    */
   addonStates: IAddonState[];
   /**
-   * The root-only addon states, kept as the stable source of truth so that
-   * toggling the conditional on/off never loses user selections on root addons.
+   * The root-only addon states — stable source of truth aggregated across
+   * ALL service_ids on the root package. Never mutated after buildViews().
    */
   rootAddonStates: IAddonState[];
   /**
-   * Addon states for the child package's service — populated once the
-   * conditional is first toggled on and preserved across subsequent toggles.
+   * Addon states for the child package's services — populated once on the
+   * first conditional toggle and preserved across subsequent toggles.
    */
   childAddonStates: IAddonState[];
   /**
-   * The index within rootAddonStates where the conditional service row lives,
-   * so child addons can always be inserted immediately after it.
-   * -1 when there is no conditional service.
+   * -1 when there is no conditional service; otherwise the index within
+   * rootAddonStates after which child addons are spliced.
    */
   conditionalIndex: number;
+  /**
+   * Resolved IService objects for every service_id in the root package,
+   * cached here so the template can iterate them without extra lookups.
+   */
+  rootServices: IService[];
 }
