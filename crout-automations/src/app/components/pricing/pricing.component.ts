@@ -1,36 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive';
-
-export interface AddOn {
-  name: string;
-  price: number;
-}
-
-export interface Service {
-  name: string;
-  popular?: boolean;
-  highlight?: boolean;
-  basePrice: number;
-  desc: string;
-  includes: string[];
-  addOns: AddOn[];
-  bundleDeal?: boolean;
-  ctaLabel: string;
-  ctaHref: string;
-}
-
-export interface XeroSuiteAddOn {
-  label: string;
-  price: number;
-}
-
-export interface XeroSuiteItem {
-  label: string;
-  price: number;
-  optional?: boolean;
-  addOns?: XeroSuiteAddOn[];
-}
+import { ApiService } from '../../services/api.service';
+import { IService, IAddon, IPackage } from '../../interfaces/i-service.interface';
+import { IAddonState, IPackageView } from '../../interfaces/i-service-display.interface';
 
 @Component({
   selector: 'ca-pricing',
@@ -39,138 +12,172 @@ export interface XeroSuiteItem {
   templateUrl: './pricing.component.html',
   styleUrl: './pricing.component.scss'
 })
-export class PricingComponent {
+export class PricingComponent implements OnInit {
 
-  readonly PACKAGE_DISCOUNT        = 0.15;
-  readonly SUITE_DISCOUNT_BASE     = 0.15;  // without WhatsApp
-  readonly SUITE_DISCOUNT_WHATSAPP = 0.20;  // with WhatsApp
+  private api = inject(ApiService);
 
-  xeroSuiteWhatsApp = false;
+  // ── Loading state ──────────────────────────────────────────────────────────
+  ghostLoaderOnLoad = signal<boolean>(true);
 
-  services: Service[] = [
-    {
-      name: 'WhatsApp Agent',
-      popular: true,
-      highlight: true,
-      basePrice: 6000,
-      bundleDeal: true,
-      desc: 'A flexible WhatsApp Agent that handles enquiries, automates quotes, creates job cards, and manages client comms — pick exactly what you need.',
-      includes: [
-        'Base WhatsApp Agent',
-        '2M Tokens included',
-        'Smart Client Support',
-      ],
-      addOns: [
-        { name: 'Marketing Messaging',        price: 800  },
-        { name: 'Automated Quoting [Xero]',   price: 1200 },
-        { name: '5M+ Token Upgrade',          price: 600  },
-        { name: 'Template/Forms Messaging',   price: 500  },
-      ],
-      ctaLabel: 'Choose Plan',
-      ctaHref: '/contact-us/',
-    },
-    {
-      name: 'Automated Quotes',
-      basePrice: 6000,
-      bundleDeal: true,
-      desc: 'End-to-end quote automation — triggered by email, webhook, or WhatsApp, linked to Xero, and approved by the right person automatically.',
-      includes: [
-        'Email/Webhook Trigger',
-        'Xero-Linked Quotes',
-        'Responsible Manager Confirmation',
-        'Smart Agent Management',
-        'WhatsApp/Telegram Integration',
-      ],
-      addOns: [
-        { name: 'Xero Invoices',              price: 800 },
-        { name: 'Invoice Follow-Ups [Xero]',  price: 600 },
-      ],
-      ctaLabel: 'Choose Plan',
-      ctaHref: '/contact-us/',
-    },
-    {
-      name: 'Automated Job Cards',
-      basePrice: 6000,
-      bundleDeal: true,
-      desc: 'Auto-generate job cards from any trigger — email, webhook, or WhatsApp — synced with Trello and managed by AI agents.',
-      includes: [
-        'Email/Webhook/WhatsApp Trigger',
-        'Trello Integration',
-        'Smart Agent Management',
-        'Template Based',
-        'WhatsApp/Telegram Integration',
-      ],
-      addOns: [
-        { name: 'Custom Setup',               price: 1000 },
-        { name: 'Payroll Excel Generation',   price: 900  },
-      ],
-      ctaLabel: 'Choose Plan',
-      ctaHref: '/contact-us/',
-    },
-  ];
+  // ── Raw data ───────────────────────────────────────────────────────────────
+  services: IService[]  = [];
+  addons:   IAddon[]    = [];
+  packages: IPackage[]  = [];
 
-  readonly xeroSuiteItems: XeroSuiteItem[] = [
-    { label: 'Automated Quotes',          price: 6000 },
-    { label: 'Xero Invoices',             price: 800  },
-    { label: 'Invoice Follow-Ups [Xero]', price: 600  },
-    { label: 'Automated Job Cards',       price: 6000 },
-    { label: 'Payroll Excel Generation',  price: 900  },
-    {
-      label: 'WhatsApp Agent Service',
-      price: 6000,
-      optional: true,
-      addOns: [
-        { label: 'Marketing Messaging',       price: 800  },
-        { label: 'Automated Quoting [Xero]',  price: 1200 },
-        { label: '5M+ Token Upgrade',         price: 600  },
-        { label: 'Template/Forms Messaging',  price: 500  },
-      ],
-    },
-  ];
+  // ── Derived views ──────────────────────────────────────────────────────────
+  /** Services where Conditional === false — shown as individual cards */
+  visibleServices: IService[] = [];
 
-  get suiteDiscount(): number {
-    return this.xeroSuiteWhatsApp
-      ? this.SUITE_DISCOUNT_WHATSAPP
-      : this.SUITE_DISCOUNT_BASE;
+  /** Root packages (no parent_package_id) — the ones we render */
+  packageViews: IPackageView[] = [];
+
+  // ── Monthly retainer (static) ──────────────────────────────────────────────
+  readonly retainerPrice = 1200;
+
+  readonly PACKAGE_DISCOUNT = 0.15;
+
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
+  ngOnInit(): void {
+    this.onLoad();
   }
 
-  get xeroSuiteFullPrice(): number {
-    let total = 0;
-    for (const item of this.xeroSuiteItems) {
-      if (item.optional && !this.xeroSuiteWhatsApp) continue;
-      total += item.price;
-      if (item.optional && this.xeroSuiteWhatsApp && item.addOns) {
-        total += item.addOns.reduce((s, a) => s + a.price, 0);
+  async onLoad(): Promise<void> {
+    try {
+      const [svcs, ads, pkgs] = await Promise.all([
+        this.api.getServices().toPromise(),
+        this.api.getAddons().toPromise(),
+        this.api.getPackages().toPromise(),
+      ]);
+
+      if (svcs && ads && pkgs) {
+        this.services  = svcs;
+        this.addons    = ads;
+        this.packages  = pkgs;
+        this.buildViews();
+        this.ghostLoaderOnLoad.set(false);
+      }
+    } catch (error: any) {
+      console.error(
+        error ? (error.message ?? error.error ?? error) : 'Something went wrong onLoad()!'
+      );
+    }
+  }
+
+  // ── View builders ─────────────────────────────────────────────────────────
+  private buildViews(): void {
+    // Services with Conditional === false only
+    this.visibleServices = this.services.filter(s => !s.Conditional);
+
+    // Root packages = those not referenced as parent_package_id by anyone
+    const childIds = new Set(
+      this.packages
+        .filter(p => p.parent_package_id != null)
+        .map(p => p.parent_package_id!)
+    );
+
+    const rootPackages = this.packages.filter(p => !childIds.has(p.package_id));
+
+    this.packageViews = rootPackages.map(pkg => {
+      const childPkg = this.packages.find(p => p.parent_package_id === pkg.package_id) ?? null;
+
+      // The conditional service is the one whose service_id matches the child pkg service_id
+      // (service_id 5 = conditional WhatsApp, etc.)
+      const conditionalService = childPkg
+        ? (this.services.find(s => s.Conditional && s.service_id === childPkg.service_id) ?? null)
+        : null;
+
+      // Addons for the root package's primary service
+      const svcId = pkg.service_id;
+      const addonStates: IAddonState[] = svcId
+        ? this.addons
+            .filter(a => a.service_id === svcId)
+            .map(a => ({ addon: a, enabled: false }))
+        : [];
+
+      return {
+        pkg,
+        childPkg,
+        conditionalService,
+        conditionalEnabled: false,
+        addonStates,
+      } satisfies IPackageView;
+    });
+  }
+
+  // ── Toggle helpers ────────────────────────────────────────────────────────
+  toggleConditional(view: IPackageView): void {
+    view.conditionalEnabled = !view.conditionalEnabled;
+
+    if (view.conditionalEnabled && view.childPkg) {
+      // Switch addon states to the child package's conditional service addons
+      const childSvcId = view.conditionalService?.service_id;
+      if (childSvcId != null) {
+        view.addonStates = this.addons
+          .filter(a => a.service_id === childSvcId)
+          .map(a => ({ addon: a, enabled: false }));
+      }
+    } else if (!view.conditionalEnabled) {
+      // Revert to root package addons
+      const rootSvcId = view.pkg.service_id;
+      if (rootSvcId != null) {
+        view.addonStates = this.addons
+          .filter(a => a.service_id === rootSvcId)
+          .map(a => ({ addon: a, enabled: false }));
       }
     }
-    return total;
   }
 
-  get xeroSuiteDiscountedPrice(): number {
-    return Math.round(this.xeroSuiteFullPrice * (1 - this.suiteDiscount));
+  toggleAddon(state: IAddonState): void {
+    state.enabled = !state.enabled;
   }
 
-  get xeroSuiteSaving(): number {
-    return this.xeroSuiteFullPrice - this.xeroSuiteDiscountedPrice;
+  // ── Active package resolution ─────────────────────────────────────────────
+  activePkg(view: IPackageView): IPackage {
+    return view.conditionalEnabled && view.childPkg ? view.childPkg : view.pkg;
   }
 
-  toggleXeroWhatsApp(): void {
-    this.xeroSuiteWhatsApp = !this.xeroSuiteWhatsApp;
+  // ── Price helpers ─────────────────────────────────────────────────────────
+  basePrice(view: IPackageView): number {
+    // Base price = R3000 per non-conditional service in the package
+    // For multi-service packages (suite) we sum up services by scanning addons' service refs
+    const svcId = this.activePkg(view).service_id;
+    if (!svcId) {
+      // Multi-service suite — sum unique service base prices referenced by its addons
+      const addonsOfPkg = view.addonStates.map(s => s.addon);
+      const svcIds = [...new Set(addonsOfPkg.map(a => a.service_id).filter(id => id != null))] as number[];
+      return svcIds.reduce((sum, id) => {
+        const svc = this.services.find(s => s.service_id === id);
+        return sum + (svc?.Price ?? 0);
+      }, 0);
+    }
+    const svc = this.services.find(s => s.service_id === svcId);
+    return svc?.Price ?? 3000;
   }
 
-  bundleFullPrice(svc: Service): number {
-    return svc.basePrice + svc.addOns.reduce((sum, a) => sum + a.price, 0);
+  enabledAddonTotal(view: IPackageView): number {
+    return view.addonStates
+      .filter(s => s.enabled)
+      .reduce((sum, s) => sum + s.addon.Price, 0);
   }
 
-  bundleDiscountedPrice(svc: Service): number {
-    return Math.round(this.bundleFullPrice(svc) * (1 - this.PACKAGE_DISCOUNT));
+  fullTotal(view: IPackageView): number {
+    return this.basePrice(view) + this.enabledAddonTotal(view);
   }
 
-  bundleSaving(svc: Service): number {
-    return this.bundleFullPrice(svc) - this.bundleDiscountedPrice(svc);
+  discountedTotal(view: IPackageView): number {
+    const discount = this.activePkg(view).Discount ?? 0;
+    return Math.round(this.fullTotal(view) * (1 - discount));
+  }
+
+  saving(view: IPackageView): number {
+    return this.fullTotal(view) - this.discountedTotal(view);
   }
 
   formatPrice(n: number): string {
     return n.toLocaleString('en-ZA');
   }
+
+  // ── Ghost skeleton helpers ────────────────────────────────────────────────
+  skeletonCards = Array(3).fill(null);
+  skeletonPackages = Array(2).fill(null);
 }
