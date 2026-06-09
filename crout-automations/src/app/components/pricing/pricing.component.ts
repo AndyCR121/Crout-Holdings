@@ -9,7 +9,7 @@ import { FindByIdPipe } from '../../pipes/find-by-id.pipe';
 import { FilterByServiceIdPipe } from '../../pipes/filter-by-service-id.pipe';
 
 /** Maximum service cards shown in the pricing section before "View More" appears */
-const MAX_VISIBLE_SERVICES = 6;
+const MAX_VISIBLE_SERVICES = 4;
 
 /** Minimum number of add-ons that must be enabled before the bundle discount applies */
 const MIN_ADDONS_FOR_DISCOUNT = 2;
@@ -93,25 +93,28 @@ export class PricingComponent implements OnInit {
     const childIds = new Set(
       this.packages
         .filter(p => p.parent_package_id != null)
-        .map(p => p.parent_package_id!)
+        .map(p => p.package_id!)
     );
+    console.dir(this.packages);
+
+    console.dir(childIds);
 
     const rootPackages = this.packages.filter(p => !childIds.has(p.package_id));
 
     this.packageViews = rootPackages.map(pkg => {
       const childPkg = this.packages.find(p => p.parent_package_id === pkg.package_id) ?? null;
-
       const conditionalService = childPkg
-        ? (this.services.find(s => s.Conditional && s.service_id === childPkg.service_id) ?? null)
-        : null;
-
+      ? (this.services.find(s => s.Conditional && s.service_id === childPkg.service_id) ?? null)
+      : null;
+      
+      console.dir(childPkg);
       const svcId = pkg.service_id;
       const addonStates: IAddonState[] = svcId
-        ? this.addons
-            .filter(a => a.service_id === svcId)
-            .map(a => ({ addon: a, enabled: false }))
-        : [];
-
+      ? this.addons
+      .filter(a => a.service_id === svcId)
+      .map(a => ({ addon: a, enabled: false }))
+      : [];
+      
       return {
         pkg,
         childPkg,
@@ -120,6 +123,7 @@ export class PricingComponent implements OnInit {
         addonStates,
       } satisfies IPackageView;
     });
+    console.dir(this.packageViews);
   }
 
   // ── Toggle helpers ────────────────────────────────────────────────────────

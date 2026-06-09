@@ -132,6 +132,7 @@ export const DEMO_PACKAGES: IPackage[] = [
     // resolve to this package instead of package_id: 4.
     package_id: 5,
     parent_package_id: 4,
+    service_id: 5,
     PackageName: 'Xero Suite (with WhatsApp Agent)',
     PackageDescription:
       'Everything in Xero Suite plus the full WhatsApp Agent with all addons at a bundle discount.',
