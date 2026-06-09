@@ -73,7 +73,7 @@ export const DEMO_PACKAGES: IPackage[] = [
     service_id: 1,
     PackageName: 'WhatsApp Agent — Full Bundle',
     PackageDescription:
-      'WhatsApp Agent base with all addons (Marketing Messaging, Automated Quoting [Xero], 5M+ Token Upgrade, Template/Forms Messaging) at a 15% bundle discount.',
+      'WhatsApp Agent base with all addons (Marketing Messaging, Automated Quoting [Xero], 5M+ Token Upgrade, Template/Forms Messaging) at a bundle discount.',
     Discount: 0.15,
   },
   {
@@ -81,7 +81,7 @@ export const DEMO_PACKAGES: IPackage[] = [
     service_id: 2,
     PackageName: 'Quote System — Full Bundle',
     PackageDescription:
-      'Quote System base with Xero Invoices and Invoice Follow-Ups [Xero] at a 15% bundle discount.',
+      'Quote System base with Xero Invoices and Invoice Follow-Ups [Xero] at a bundle discount.',
     Discount: 0.15,
   },
   {
@@ -89,7 +89,7 @@ export const DEMO_PACKAGES: IPackage[] = [
     service_id: 3,
     PackageName: 'Project Management — Full Bundle',
     PackageDescription:
-      'Project Management System base with Custom Setup and Payroll Excel Generation at a 15% bundle discount.',
+      'Project Management System base with Custom Setup and Payroll Excel Generation at a bundle discount.',
     Discount: 0.15,
   },
   {
@@ -97,15 +97,16 @@ export const DEMO_PACKAGES: IPackage[] = [
     service_id: null as unknown as number,
     PackageName: 'Xero Suite (without WhatsApp)',
     PackageDescription:
-      'Quote System + Xero Invoices + Invoice Follow-Ups + Project Management System + Payroll Excel Generation — bundled at 15% off.',
+      'Quote System + Xero Invoices + Invoice Follow-Ups + Project Management System + Payroll Excel Generation at a bundle discount.',
     Discount: 0.15,
   },
   {
     package_id: 5,
     service_id: null as unknown as number,
+    parent_package_id: 4,
     PackageName: 'Xero Suite (with WhatsApp Agent)',
     PackageDescription:
-      'Everything in Xero Suite plus the full WhatsApp Agent with all addons — bundled at 20% off.',
+      'Everything in Xero Suite plus the full WhatsApp Agent with all addons at a bundle discount',
     Discount: 0.20,
   },
 ];

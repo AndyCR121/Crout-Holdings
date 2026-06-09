@@ -4,6 +4,7 @@ export interface IService {
   Price: number;           // default 3000.00
   HasAddons: boolean;      // default false
   ServiceDescription: string;
+  Conditional: boolean; // default false, used in conditions if set in config to use parent package or other.
 }
 
 export interface IAddon {
@@ -16,7 +17,8 @@ export interface IAddon {
 
 export interface IPackage {
   package_id: number;
-  service_id: number;
+  parent_package_id?: number; // conditional FK to allow nested packages
+  service_id?: number;
   PackageName: string;
   PackageDescription: string;
   Discount: number;        // 0–1 (percentage)
