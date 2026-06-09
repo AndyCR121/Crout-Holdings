@@ -14,6 +14,7 @@ export const DEMO_SERVICES: IService[] = [
     ServiceName: 'WhatsApp Agent',
     Price: 3000.00,
     HasAddons: true,
+    Conditional: false,
     ServiceDescription:
       'A flexible WhatsApp Agent that handles enquiries, automates quotes, creates job cards, and manages client comms — pick exactly what you need.',
   },
@@ -22,6 +23,7 @@ export const DEMO_SERVICES: IService[] = [
     ServiceName: 'Quote System',
     Price: 3000.00,
     HasAddons: true,
+    Conditional: false,
     ServiceDescription:
       'End-to-end quote automation — triggered by email, webhook, or WhatsApp, linked to Xero, and approved by the right person automatically.',
   },
@@ -30,6 +32,7 @@ export const DEMO_SERVICES: IService[] = [
     ServiceName: 'Project Management System',
     Price: 3000.00,
     HasAddons: true,
+    Conditional: false,
     ServiceDescription:
       'Auto-generate job cards from any trigger — email, webhook, or WhatsApp — synced with Trello and managed by AI agents.',
   },
@@ -38,8 +41,24 @@ export const DEMO_SERVICES: IService[] = [
     ServiceName: 'Marketing Systems',
     Price: 3000.00,
     HasAddons: true,
+    Conditional: false,
     ServiceDescription:
       'Automated marketing workflows — bulk messaging, campaign triggers, and scheduled broadcasts via WhatsApp and email.',
+  },
+  {
+    // Conditional service — used as the toggle switch between Xero Suite
+    // (without WhatsApp, package_id: 4) and Xero Suite (with WhatsApp, package_id: 5).
+    // When a config references this service with Conditional: true, the pricing
+    // engine should resolve to parent_package_id: 4 → 5 based on the toggle state.
+    service_id: 5,
+    ServiceName: 'WhatsApp Agent [Xero Suite Add-on]',
+    Price: 3000.00,
+    HasAddons: true,
+    Conditional: true,
+    ServiceDescription:
+      'The WhatsApp Agent as a conditional add-on within the Xero Suite package. ' +
+      'Enabling this switches the active package from "Xero Suite (without WhatsApp)" ' +
+      'to "Xero Suite (with WhatsApp Agent)", applying the higher bundle discount.',
   },
 ];
 
@@ -63,6 +82,12 @@ export const DEMO_ADDONS: IAddon[] = [
   // Marketing Systems (service_id: 4)
   { addon_id: 9,  service_id: 4, AddonName: 'Scheduled Broadcasts',     AddonDescription: 'Schedule recurring bulk messages at set times or dates.',                         Price: 500  },
   { addon_id: 10, service_id: 4, AddonName: 'Campaign Analytics',       AddonDescription: 'Track delivery, open, and response rates per campaign.',                          Price: 600  },
+
+  // WhatsApp Agent [Xero Suite Add-on] (service_id: 5) — mirrors service_id: 1 addons
+  { addon_id: 11, service_id: 5, AddonName: 'Marketing Messaging',       AddonDescription: 'Broadcast marketing messages to your client list via WhatsApp.',                   Price: 800  },
+  { addon_id: 12, service_id: 5, AddonName: 'Automated Quoting [Xero]', AddonDescription: 'Allow the WhatsApp agent to generate and send Xero-linked quotes automatically.', Price: 1200 },
+  { addon_id: 13, service_id: 5, AddonName: '5M+ Token Upgrade',        AddonDescription: 'Increase your AI token allocation beyond the standard 2M included.',               Price: 600  },
+  { addon_id: 14, service_id: 5, AddonName: 'Template/Forms Messaging', AddonDescription: 'Send templated or form-based messages for structured client interactions.',         Price: 500  },
 ];
 
 // ─── Packages ────────────────────────────────────────────────────────────────
@@ -93,20 +118,23 @@ export const DEMO_PACKAGES: IPackage[] = [
     Discount: 0.15,
   },
   {
+    // Base Xero Suite — no WhatsApp. parent_package_id is undefined (root package).
     package_id: 4,
-    service_id: null as unknown as number,
     PackageName: 'Xero Suite (without WhatsApp)',
     PackageDescription:
       'Quote System + Xero Invoices + Invoice Follow-Ups + Project Management System + Payroll Excel Generation at a bundle discount.',
     Discount: 0.15,
   },
   {
+    // Extended Xero Suite — WhatsApp toggled ON.
+    // parent_package_id: 4 signals this is the "upgraded" variant of package 4.
+    // When the conditional service (service_id: 5) is enabled in config,
+    // resolve to this package instead of package_id: 4.
     package_id: 5,
-    service_id: null as unknown as number,
     parent_package_id: 4,
     PackageName: 'Xero Suite (with WhatsApp Agent)',
     PackageDescription:
-      'Everything in Xero Suite plus the full WhatsApp Agent with all addons at a bundle discount',
+      'Everything in Xero Suite plus the full WhatsApp Agent with all addons at a bundle discount.',
     Discount: 0.20,
   },
 ];
