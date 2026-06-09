@@ -120,12 +120,12 @@ export class PricingComponent implements OnInit {
   /**
    * Toggles the conditional (child) service on or off.
    *
-   * ON  → switches to child package — replaces addonStates with child addons only.
-   * OFF → switches back to root package — restores addonStates to root addons only.
-   *
-   * Child addon states are built fresh on every enable so the list is always
-   * scoped to the child package's service_ids. User selections on the child
-   * are preserved across toggles via childAddonStates.
+   * Rules:
+   * 1. Root addon states (and any user selections) are NEVER reset.
+   * 2. Child addons are built once on the first enable, reused thereafter
+   *    (preserving user's child-addon selections across toggles).
+   * 3. addonStates is always rebuilt via buildMergedAddonList:
+   *    OFF → root only | ON → root + child appended.
    */
   toggleConditional(view: IPackageView): void {
     view.conditionalEnabled = !view.conditionalEnabled;
@@ -139,12 +139,20 @@ export class PricingComponent implements OnInit {
             .map(a => ({ addon: a, enabled: false, isConditionalChild: true }))
         );
       }
-      // Active list = child addons only (child package replaces root).
-      view.addonStates = [...view.childAddonStates];
-    } else {
-      // Active list = root addons only (restored cleanly, no child leftovers).
-      view.addonStates = [...view.rootAddonStates];
     }
+
+    view.addonStates = this.buildMergedAddonList(view);
+  }
+
+  /**
+   * Merges root and (optionally) child addon states into a stable list.
+   * OFF → root only; ON → root + child appended.
+   */
+  private buildMergedAddonList(view: IPackageView): IAddonState[] {
+    if (!view.conditionalEnabled) {
+      return [...view.rootAddonStates];
+    }
+    return [...view.rootAddonStates, ...view.childAddonStates];
   }
 
   toggleAddon(state: IAddonState): void {
