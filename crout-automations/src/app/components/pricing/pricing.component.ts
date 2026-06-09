@@ -11,6 +11,9 @@ import { FilterByServiceIdPipe } from '../../pipes/filter-by-service-id.pipe';
 /** Maximum service cards shown in the pricing section before "View More" appears */
 const MAX_VISIBLE_SERVICES = 6;
 
+/** Minimum number of add-ons that must be enabled before the bundle discount applies */
+const MIN_ADDONS_FOR_DISCOUNT = 2;
+
 @Component({
   selector: 'ca-pricing',
   standalone: true,
@@ -149,6 +152,22 @@ export class PricingComponent implements OnInit {
     return view.conditionalEnabled && view.childPkg ? view.childPkg : view.pkg;
   }
 
+  // ── Discount gate ─────────────────────────────────────────────────────────
+  /** Number of add-ons currently toggled on for a package view */
+  enabledAddonCount(view: IPackageView): number {
+    return view.addonStates.filter(s => s.enabled).length;
+  }
+
+  /** True when enough add-ons are selected to unlock the bundle discount */
+  discountUnlocked(view: IPackageView): boolean {
+    return this.enabledAddonCount(view) >= MIN_ADDONS_FOR_DISCOUNT;
+  }
+
+  /** How many more add-ons the user needs to select to unlock the discount */
+  addonsNeededForDiscount(view: IPackageView): number {
+    return Math.max(0, MIN_ADDONS_FOR_DISCOUNT - this.enabledAddonCount(view));
+  }
+
   // ── Price helpers ─────────────────────────────────────────────────────────
   basePrice(view: IPackageView): number {
     const svcId = this.activePkg(view).service_id;
@@ -174,7 +193,12 @@ export class PricingComponent implements OnInit {
     return this.basePrice(view) + this.enabledAddonTotal(view);
   }
 
+  /**
+   * Returns the discounted total only when the minimum add-on threshold is met.
+   * Otherwise returns the full total (no discount applied).
+   */
   discountedTotal(view: IPackageView): number {
+    if (!this.discountUnlocked(view)) return this.fullTotal(view);
     const discount = this.activePkg(view).Discount ?? 0;
     return Math.round(this.fullTotal(view) * (1 - discount));
   }

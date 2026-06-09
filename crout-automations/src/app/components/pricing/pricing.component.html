@@ -221,15 +221,29 @@
               <p class="pricing__suite-price-full">R{{ formatPrice(fullTotal(view)) }}</p>
 
               <p class="pricing__suite-price-label" style="margin-top: 0.75rem">Bundle price</p>
-              <div class="pricing__suite-price-now">
-                <span class="pricing__suite-price-currency">R</span>
-                <span class="pricing__suite-price-amount">{{ formatPrice(discountedTotal(view)) }}</span>
-              </div>
 
-              <div class="pricing__suite-price-saving">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                You save R{{ formatPrice(saving(view)) }}
-              </div>
+              @if (discountUnlocked(view)) {
+                <!-- Discount active -->
+                <div class="pricing__suite-price-now">
+                  <span class="pricing__suite-price-currency">R</span>
+                  <span class="pricing__suite-price-amount">{{ formatPrice(discountedTotal(view)) }}</span>
+                </div>
+                <div class="pricing__suite-price-saving">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  You save R{{ formatPrice(saving(view)) }}
+                </div>
+              } @else {
+                <!-- Discount locked -->
+                <div class="pricing__suite-price-now pricing__suite-price-now--locked">
+                  <span class="pricing__suite-price-currency">R</span>
+                  <span class="pricing__suite-price-amount">{{ formatPrice(fullTotal(view)) }}</span>
+                </div>
+                <div class="pricing__suite-discount-hint">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  Select {{ addonsNeededForDiscount(view) }} more add-on{{ addonsNeededForDiscount(view) === 1 ? '' : 's' }} to unlock
+                  {{ activePkg(view).Discount * 100 | number:'1.0-0' }}% off
+                </div>
+              }
             </div>
 
             <a href="/contact-us/" class="pricing__suite-cta">Get this Package</a>
