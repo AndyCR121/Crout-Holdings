@@ -95,7 +95,7 @@ export const DEMO_ADDONS: IAddon[] = [
 export const DEMO_PACKAGES: IPackage[] = [
   {
     package_id: 1,
-    service_id: 1,
+    service_ids: [1],
     PackageName: 'WhatsApp Agent — Full Bundle',
     PackageDescription:
       'WhatsApp Agent base with all addons (Marketing Messaging, Automated Quoting [Xero], 5M+ Token Upgrade, Template/Forms Messaging) at a bundle discount.',
@@ -103,7 +103,7 @@ export const DEMO_PACKAGES: IPackage[] = [
   },
   {
     package_id: 2,
-    service_id: 2,
+    service_ids: [2],
     PackageName: 'Quote System — Full Bundle',
     PackageDescription:
       'Quote System base with Xero Invoices and Invoice Follow-Ups [Xero] at a bundle discount.',
@@ -111,7 +111,7 @@ export const DEMO_PACKAGES: IPackage[] = [
   },
   {
     package_id: 3,
-    service_id: 3,
+    service_ids: [3],
     PackageName: 'Project Management — Full Bundle',
     PackageDescription:
       'Project Management System base with Custom Setup and Payroll Excel Generation at a bundle discount.',
@@ -120,6 +120,7 @@ export const DEMO_PACKAGES: IPackage[] = [
   {
     // Base Xero Suite — no WhatsApp. parent_package_id is undefined (root package).
     package_id: 4,
+    service_ids: [2, 3],
     PackageName: 'Xero Suite (without WhatsApp)',
     PackageDescription:
       'Quote System + Xero Invoices + Invoice Follow-Ups + Project Management System + Payroll Excel Generation at a bundle discount.',
@@ -132,7 +133,7 @@ export const DEMO_PACKAGES: IPackage[] = [
     // resolve to this package instead of package_id: 4.
     package_id: 5,
     parent_package_id: 4,
-    service_id: 5,
+    service_ids: [2, 3, 5],
     PackageName: 'Xero Suite (with WhatsApp Agent)',
     PackageDescription:
       'Everything in Xero Suite plus the full WhatsApp Agent with all addons at a bundle discount.',

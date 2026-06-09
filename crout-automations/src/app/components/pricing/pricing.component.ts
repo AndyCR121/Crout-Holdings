@@ -90,7 +90,7 @@ export class PricingComponent implements OnInit {
     const childIds = new Set(
       this.packages
         .filter(p => p.parent_package_id != null)
-        .map(p => p.parent_package_id!)
+        .map(p => p.package_id!)
     );
 
     const rootPackages = this.packages.filter(p => !childIds.has(p.package_id));

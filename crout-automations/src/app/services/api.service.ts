@@ -75,7 +75,7 @@ export class ApiService {
   getPackagesByService(serviceId: number): Observable<IPackage[]> {
     return this.http
       .get<IPackage[]>(`${this.base}/services/${serviceId}/packages`)
-      .pipe(catchError(() => of(DEMO_PACKAGES.filter(p => p.service_id === serviceId))));
+      .pipe(catchError(() => of(DEMO_PACKAGES.filter(p => p.service_ids?.includes(serviceId)))));
   }
 
   // ─── Users ───────────────────────────────────────────────────────────────
