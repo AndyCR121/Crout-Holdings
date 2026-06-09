@@ -4,11 +4,13 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
 import { ApiService } from '../../services/api.service';
 import { IService, IAddon, IPackage } from '../../interfaces/i-service.interface';
 import { IAddonState, IPackageView } from '../../interfaces/i-service-display.interface';
+import { FindByIdPipe } from '../../pipes/find-by-id.pipe';
+import { FilterByServiceIdPipe } from '../../pipes/filter-by-service-id.pipe';
 
 @Component({
   selector: 'ca-pricing',
   standalone: true,
-  imports: [CommonModule, ScrollRevealDirective],
+  imports: [CommonModule, ScrollRevealDirective, FindByIdPipe, FilterByServiceIdPipe],
   templateUrl: './pricing.component.html',
   styleUrl: './pricing.component.scss'
 })
