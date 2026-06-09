@@ -6,7 +6,7 @@ import {
   IUserService,
 } from '../interfaces/i-service.interface';
 
-// ─── Services ───────────────────────────────────────────────────────────────
+// ─── Services ────────────────────────────────────────────────────────────────────
 
 export const DEMO_SERVICES: IService[] = [
   {
@@ -46,10 +46,6 @@ export const DEMO_SERVICES: IService[] = [
       'Automated marketing workflows — bulk messaging, campaign triggers, and scheduled broadcasts via WhatsApp and email.',
   },
   {
-    // Conditional service — used as the toggle switch between Xero Suite
-    // (without WhatsApp, package_id: 4) and Xero Suite (with WhatsApp, package_id: 5).
-    // When a config references this service with Conditional: true, the pricing
-    // engine should resolve to parent_package_id: 4 → 5 based on the toggle state.
     service_id: 5,
     ServiceName: 'WhatsApp Agent [Xero Suite Add-on]',
     Price: 3000.00,
@@ -62,7 +58,7 @@ export const DEMO_SERVICES: IService[] = [
   },
 ];
 
-// ─── Addons ─────────────────────────────────────────────────────────────────
+// ─── Addons ─────────────────────────────────────────────────────────────────────
 
 export const DEMO_ADDONS: IAddon[] = [
   // WhatsApp Agent (service_id: 1)
@@ -90,7 +86,7 @@ export const DEMO_ADDONS: IAddon[] = [
   { addon_id: 14, service_id: 5, AddonName: 'Template/Forms Messaging', AddonDescription: 'Send templated or form-based messages for structured client interactions.',         Price: 500  },
 ];
 
-// ─── Packages ────────────────────────────────────────────────────────────────
+// ─── Packages ────────────────────────────────────────────────────────────────────────
 
 export const DEMO_PACKAGES: IPackage[] = [
   {
@@ -100,6 +96,7 @@ export const DEMO_PACKAGES: IPackage[] = [
     PackageDescription:
       'WhatsApp Agent base with all addons (Marketing Messaging, Automated Quoting [Xero], 5M+ Token Upgrade, Template/Forms Messaging) at a bundle discount.',
     Discount: 0.15,
+    minimumRequiredAddons: 2,
   },
   {
     package_id: 2,
@@ -108,6 +105,7 @@ export const DEMO_PACKAGES: IPackage[] = [
     PackageDescription:
       'Quote System base with Xero Invoices and Invoice Follow-Ups [Xero] at a bundle discount.',
     Discount: 0.15,
+    minimumRequiredAddons: 2,
   },
   {
     package_id: 3,
@@ -116,21 +114,20 @@ export const DEMO_PACKAGES: IPackage[] = [
     PackageDescription:
       'Project Management System base with Custom Setup and Payroll Excel Generation at a bundle discount.',
     Discount: 0.15,
+    minimumRequiredAddons: 2,
   },
   {
-    // Base Xero Suite — no WhatsApp. parent_package_id is undefined (root package).
+    // Base Xero Suite — no WhatsApp. Discount always active (no addon gate).
     package_id: 4,
     service_ids: [2, 3],
     PackageName: 'Xero Suite (without WhatsApp)',
     PackageDescription:
       'Quote System + Xero Invoices + Invoice Follow-Ups + Project Management System + Payroll Excel Generation at a bundle discount.',
     Discount: 0.15,
+    // minimumRequiredAddons omitted — discount applies unconditionally
   },
   {
-    // Extended Xero Suite — WhatsApp toggled ON.
-    // parent_package_id: 4 signals this is the "upgraded" variant of package 4.
-    // When the conditional service (service_id: 5) is enabled in config,
-    // resolve to this package instead of package_id: 4.
+    // Extended Xero Suite — WhatsApp toggled ON. Discount always active.
     package_id: 5,
     parent_package_id: 4,
     service_ids: [5],
@@ -138,10 +135,11 @@ export const DEMO_PACKAGES: IPackage[] = [
     PackageDescription:
       'Everything in Xero Suite plus the full WhatsApp Agent with all addons at a bundle discount.',
     Discount: 0.20,
+    // minimumRequiredAddons omitted — discount applies unconditionally
   },
 ];
 
-// ─── Users ───────────────────────────────────────────────────────────────────
+// ─── Users ─────────────────────────────────────────────────────────────────────────
 
 export const DEMO_USERS: IUser[] = [
   {
@@ -182,7 +180,7 @@ export const DEMO_USERS: IUser[] = [
   },
 ];
 
-// ─── User Services ────────────────────────────────────────────────────────────
+// ─── User Services ──────────────────────────────────────────────────────────────────────
 // WoodenWeld (user_id: 1) → Project Management System (service_id: 3)
 // Globefurn  (user_id: 2) → Quote System             (service_id: 2)
 

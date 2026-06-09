@@ -23,6 +23,12 @@ export interface IPackage {
   PackageName: string;
   PackageDescription: string;
   Discount: number;        // 0–1 (percentage)
+  /**
+   * Minimum number of add-ons that must be enabled before the bundle
+   * discount is applied. When undefined or 0, the discount is always active
+   * regardless of how many add-ons are selected.
+   */
+  minimumRequiredAddons?: number;
 }
 
 export interface IUser {
