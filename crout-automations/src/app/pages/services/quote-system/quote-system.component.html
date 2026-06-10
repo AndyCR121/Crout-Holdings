@@ -13,16 +13,35 @@
         <a routerLink="/services">Services</a><span>/</span>
         <span aria-current="page">Quote &amp; Invoice System</span>
       </nav>
+
       <div class="svc-page-hero__badge">
         <span class="svc-page-hero__dot" aria-hidden="true"></span>
-        6 Sub-Systems
+        @if (loading()) {
+          <span class="svc-page-ghost svc-page-ghost--badge"></span>
+        } @else {
+          {{ subServices.length }} Sub-Systems
+        }
       </div>
-      <h1 class="svc-page-hero__heading">Quote &amp; Invoice <span class="accent">Automation</span></h1>
-      <p class="svc-page-hero__sub">
-        From the first enquiry to the final payment — your entire quoting and invoicing
-        pipeline runs itself. Integrated with your accounting platform, built around your
-        pricing logic, and always on brand.
-      </p>
+
+      @if (loading()) {
+        <div class="svc-page-ghost svc-page-ghost--heading"></div>
+        <div class="svc-page-ghost svc-page-ghost--sub"></div>
+        <div class="svc-page-ghost svc-page-ghost--sub svc-page-ghost--sub-sm"></div>
+      } @else {
+        <h1 class="svc-page-hero__heading">Quote &amp; Invoice <span class="accent">Automation</span></h1>
+        <p class="svc-page-hero__sub">
+          {{ service()?.ServiceDescription ?? 'From the first enquiry to the final payment — your entire quoting and invoicing pipeline runs itself.' }}
+        </p>
+
+        @if ((service()?.features ?? []).length > 0) {
+          <ul class="svc-page-hero__features" aria-label="Key capabilities">
+            @for (f of service()!.features; track f) {
+              <li>{{ f }}</li>
+            }
+          </ul>
+        }
+      }
+
       <div class="svc-page-hero__actions">
         <a routerLink="/contact-us" class="btn btn--primary">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
@@ -36,9 +55,45 @@
     </div>
   </header>
 
+  <!-- Packages strip -->
+  @if (!loading() && packages().length > 0) {
+    <section class="svc-pkg-strip" aria-labelledby="qs-pkg-heading">
+      <div class="svc-page-container">
+        <h2 id="qs-pkg-heading" class="svc-section-heading">Available Packages</h2>
+        <div class="svc-pkg-strip__grid">
+          @for (pkg of packages(); track pkg.package_id) {
+            <div class="svc-pkg-card">
+              <span class="svc-pkg-card__name">{{ pkg.PackageName }}</span>
+              <p class="svc-pkg-card__desc">{{ pkg.PackageDescription }}</p>
+              <span class="svc-pkg-card__discount">{{ pkg.Discount * 100 | number:'1.0-0' }}% bundle discount</span>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- Add-ons strip -->
+  @if (!loading() && addons().length > 0) {
+    <section class="svc-addon-strip" aria-labelledby="qs-addon-heading">
+      <div class="svc-page-container">
+        <h2 id="qs-addon-heading" class="svc-section-heading">Add-ons</h2>
+        <div class="svc-addon-strip__grid">
+          @for (addon of addons(); track addon.addon_id) {
+            <div class="svc-addon-card">
+              <span class="svc-addon-card__name">{{ addon.AddonName }}</span>
+              <p class="svc-addon-card__desc">{{ addon.AddonDescription }}</p>
+              <span class="svc-addon-card__price">+R{{ addon.Price | number }} /mo</span>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+  }
+
   <section class="svc-sub" aria-labelledby="sub-heading">
     <div class="svc-page-container">
-      <h2 id="sub-heading" class="svc-section-heading">What’s Included</h2>
+      <h2 id="sub-heading" class="svc-section-heading">What's Included</h2>
       <div class="svc-sub__grid">
         <div *ngFor="let s of subServices" class="svc-sub__card" caScrollReveal [id]="s.id">
           <div class="svc-sub__card-icon" [innerHTML]="s.icon | safeHtml"></div>

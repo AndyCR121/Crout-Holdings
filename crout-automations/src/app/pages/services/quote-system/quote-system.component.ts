@@ -1,9 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CtaBannerComponent } from '../../../components/cta-banner/cta-banner.component';
 import { ScrollRevealDirective } from '../../../directives/scroll-reveal.directive';
 import { SafeHtmlPipe } from '../../../pipes/safe-html.pipe';
+import { ApiService } from '../../../services/api.service';
+import { IServiceDisplay } from '../../../interfaces/i-service-display.interface';
+import { IAddon, IPackage } from '../../../interfaces/i-service.interface';
+
+const SERVICE_NAME = 'Quote System';
 
 @Component({
   selector: 'ca-quote-system',
@@ -12,7 +17,14 @@ import { SafeHtmlPipe } from '../../../pipes/safe-html.pipe';
   templateUrl: './quote-system.component.html',
   styleUrl: './quote-system.component.scss'
 })
-export class QuoteSystemComponent {
+export class QuoteSystemComponent implements OnInit {
+
+  private api = inject(ApiService);
+
+  loading = signal<boolean>(true);
+  service = signal<IServiceDisplay | null>(null);
+  addons = signal<IAddon[]>([]);
+  packages = signal<IPackage[]>([]);
 
   subServices = [
     {
@@ -65,4 +77,26 @@ export class QuoteSystemComponent {
     { num: '03', title: 'Deliver', desc: 'The branded quote is sent to the client via their preferred channel — PDF, email, or WhatsApp.' },
     { num: '04', title: 'Convert & Follow Up', desc: 'On approval, the quote becomes an invoice instantly. Unpaid invoices trigger follow-up reminders automatically.' }
   ];
+
+  ngOnInit(): void {
+    this.onLoad();
+  }
+
+  async onLoad(): Promise<void> {
+    try {
+      const allServices = await this.api.getServices().toPromise();
+      const raw = allServices?.find(s => s.ServiceName === SERVICE_NAME);
+      if (raw) {
+        const addons = await this.api.getAddonsByService(raw.service_id).toPromise();
+        const pkgs   = await this.api.getPackagesByService(raw.service_id).toPromise();
+        this.addons.set(addons ?? []);
+        this.packages.set(pkgs ?? []);
+        this.service.set(raw as IServiceDisplay);
+      }
+    } catch (err: any) {
+      console.error(err?.message ?? err ?? 'QuoteSystemComponent onLoad() failed');
+    } finally {
+      this.loading.set(false);
+    }
+  }
 }

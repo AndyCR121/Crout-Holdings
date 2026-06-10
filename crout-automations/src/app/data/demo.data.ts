@@ -17,6 +17,14 @@ export const DEMO_SERVICES: IService[] = [
     Conditional: false,
     ServiceDescription:
       'A flexible WhatsApp Agent that handles enquiries, automates quotes, creates job cards, and manages client comms — pick exactly what you need.',
+    features: [
+      'Client Support',
+      'Team Notifications',
+      'Client Notifications',
+      'Quote Gathering & Generation',
+      'Marketing Reach',
+      'Custom Flows',
+    ],
   },
   {
     service_id: 2,
@@ -26,6 +34,14 @@ export const DEMO_SERVICES: IService[] = [
     Conditional: false,
     ServiceDescription:
       'End-to-end quote automation — triggered by email, webhook, or WhatsApp, linked to Xero, and approved by the right person automatically.',
+    features: [
+      'Xero Integration',
+      'Multi-Platform Accounting',
+      'Custom Calculations',
+      'Auto Invoice Follow-Ups',
+      'Quote-to-Invoice Pipeline',
+      'Smart Summaries',
+    ],
   },
   {
     service_id: 3,
@@ -35,6 +51,14 @@ export const DEMO_SERVICES: IService[] = [
     Conditional: false,
     ServiceDescription:
       'Auto-generate job cards from any trigger — email, webhook, or WhatsApp — synced with Trello and managed by AI agents.',
+    features: [
+      'Auto Trello Card Creation',
+      'Trello Board Management',
+      'Jira Integration',
+      'Custom Trigger Workflows',
+      'Team Notifications',
+      'Custom Systems',
+    ],
   },
   {
     service_id: 4,
@@ -44,6 +68,14 @@ export const DEMO_SERVICES: IService[] = [
     Conditional: false,
     ServiceDescription:
       'Automated marketing workflows — bulk messaging, campaign triggers, and scheduled broadcasts via WhatsApp and email.',
+    features: [
+      'Branded Image Generation',
+      'Faceless & Face Videos',
+      'All Social Platforms',
+      'Weekly Scheduling',
+      'SEO & Analytics',
+      'After-Hours Receptionist',
+    ],
   },
   {
     service_id: 5,
@@ -55,6 +87,7 @@ export const DEMO_SERVICES: IService[] = [
       'The WhatsApp Agent as a conditional add-on within the Xero Suite package. ' +
       'Enabling this switches the active package from "Xero Suite (without WhatsApp)" ' +
       'to "Xero Suite (with WhatsApp Agent)", applying the higher bundle discount.',
+    features: [],
   },
 ];
 

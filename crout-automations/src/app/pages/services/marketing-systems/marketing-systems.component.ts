@@ -1,9 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CtaBannerComponent } from '../../../components/cta-banner/cta-banner.component';
 import { ScrollRevealDirective } from '../../../directives/scroll-reveal.directive';
 import { SafeHtmlPipe } from '../../../pipes/safe-html.pipe';
+import { ApiService } from '../../../services/api.service';
+import { IServiceDisplay } from '../../../interfaces/i-service-display.interface';
+import { IAddon, IPackage } from '../../../interfaces/i-service.interface';
+
+const SERVICE_NAME = 'Marketing Systems';
 
 @Component({
   selector: 'ca-marketing-systems',
@@ -12,7 +17,14 @@ import { SafeHtmlPipe } from '../../../pipes/safe-html.pipe';
   templateUrl: './marketing-systems.component.html',
   styleUrl: './marketing-systems.component.scss'
 })
-export class MarketingSystemsComponent {
+export class MarketingSystemsComponent implements OnInit {
+
+  private api = inject(ApiService);
+
+  loading = signal<boolean>(true);
+  service = signal<IServiceDisplay | null>(null);
+  addons = signal<IAddon[]>([]);
+  packages = signal<IPackage[]>([]);
 
   subServices = [
     {
@@ -57,6 +69,28 @@ export class MarketingSystemsComponent {
     { num: '01', title: 'Brand Setup', desc: 'We train the system on your brand — colours, tone, fonts, products, and typical content style.' },
     { num: '02', title: 'Content Generated', desc: 'AI creates images, captions, and videos weekly based on your content calendar and business events.' },
     { num: '03', title: 'Auto-Posted', desc: 'Content goes live on all your platforms at optimal times — no manual uploads, no missed posts.' },
-    { num: '04', title: 'Report & Optimise', desc: 'Weekly analytics reports surface what’s working, and the system adjusts content direction accordingly.' }
+    { num: '04', title: 'Report & Optimise', desc: 'Weekly analytics reports surface what\'s working, and the system adjusts content direction accordingly.' }
   ];
+
+  ngOnInit(): void {
+    this.onLoad();
+  }
+
+  async onLoad(): Promise<void> {
+    try {
+      const allServices = await this.api.getServices().toPromise();
+      const raw = allServices?.find(s => s.ServiceName === SERVICE_NAME);
+      if (raw) {
+        const addons = await this.api.getAddonsByService(raw.service_id).toPromise();
+        const pkgs   = await this.api.getPackagesByService(raw.service_id).toPromise();
+        this.addons.set(addons ?? []);
+        this.packages.set(pkgs ?? []);
+        this.service.set(raw as IServiceDisplay);
+      }
+    } catch (err: any) {
+      console.error(err?.message ?? err ?? 'MarketingSystemsComponent onLoad() failed');
+    } finally {
+      this.loading.set(false);
+    }
+  }
 }

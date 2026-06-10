@@ -5,6 +5,8 @@ export interface IService {
   HasAddons: boolean;      // default false
   ServiceDescription: string;
   Conditional: boolean; // default false, used in conditions if set in config to use parent package or other.
+  /** High-level bullet points shown on the services page card and service sub-page */
+  features: string[];
 }
 
 export interface IAddon {

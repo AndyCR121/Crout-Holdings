@@ -1,9 +1,15 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CtaBannerComponent } from '../../../components/cta-banner/cta-banner.component';
 import { ScrollRevealDirective } from '../../../directives/scroll-reveal.directive';
 import { SafeHtmlPipe } from '../../../pipes/safe-html.pipe';
+import { ApiService } from '../../../services/api.service';
+import { IServiceDisplay } from '../../../interfaces/i-service-display.interface';
+import { IAddon, IPackage } from '../../../interfaces/i-service.interface';
+
+/** Static display metadata for the WhatsApp Agent service (service_id: 1) */
+const SERVICE_NAME = 'WhatsApp Agent';
 
 @Component({
   selector: 'ca-whatsapp-agent',
@@ -12,7 +18,14 @@ import { SafeHtmlPipe } from '../../../pipes/safe-html.pipe';
   templateUrl: './whatsapp-agent.component.html',
   styleUrl: './whatsapp-agent.component.scss'
 })
-export class WhatsappAgentComponent {
+export class WhatsappAgentComponent implements OnInit {
+
+  private api = inject(ApiService);
+
+  loading = signal<boolean>(true);
+  service = signal<IServiceDisplay | null>(null);
+  addons = signal<IAddon[]>([]);
+  packages = signal<IPackage[]>([]);
 
   subServices = [
     {
@@ -53,4 +66,27 @@ export class WhatsappAgentComponent {
     { num: '03', title: 'WhatsApp Delivers', desc: 'A branded, contextual message is sent to the client or team member via WhatsApp instantly.' },
     { num: '04', title: 'Loop Closes', desc: 'Replies are captured, follow-up flows triggered, and the conversation history is stored for context.' }
   ];
+
+  ngOnInit(): void {
+    this.onLoad();
+  }
+
+  async onLoad(): Promise<void> {
+    try {
+      const allServices = await this.api.getServices().toPromise();
+      const raw = allServices?.find(s => s.ServiceName === SERVICE_NAME);
+      if (raw) {
+        const addons = await this.api.getAddonsByService(raw.service_id).toPromise();
+        const pkgs   = await this.api.getPackagesByService(raw.service_id).toPromise();
+        this.addons.set(addons ?? []);
+        this.packages.set(pkgs ?? []);
+        // Build display object using same META lookup as ServicesComponent
+        this.service.set(raw as IServiceDisplay);
+      }
+    } catch (err: any) {
+      console.error(err?.message ?? err ?? 'WhatsappAgentComponent onLoad() failed');
+    } finally {
+      this.loading.set(false);
+    }
+  }
 }

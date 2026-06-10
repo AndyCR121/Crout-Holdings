@@ -13,15 +13,35 @@
         <a routerLink="/services">Services</a><span>/</span>
         <span aria-current="page">WhatsApp AI Agent</span>
       </nav>
+
       <div class="svc-page-hero__badge">
         <span class="svc-page-hero__dot" aria-hidden="true"></span>
-        5 Agent Capabilities
+        @if (loading()) {
+          <span class="svc-page-ghost svc-page-ghost--badge"></span>
+        } @else {
+          {{ subServices.length }} Agent Capabilities
+        }
       </div>
-      <h1 class="svc-page-hero__heading">WhatsApp <span class="accent">AI Agent</span></h1>
-      <p class="svc-page-hero__sub">
-        Your business runs 24/7 on your clients’ most-used app. One AI agent handles support,
-        notifications, quote gathering, and marketing — all over WhatsApp.
-      </p>
+
+      @if (loading()) {
+        <div class="svc-page-ghost svc-page-ghost--heading"></div>
+        <div class="svc-page-ghost svc-page-ghost--sub"></div>
+        <div class="svc-page-ghost svc-page-ghost--sub svc-page-ghost--sub-sm"></div>
+      } @else {
+        <h1 class="svc-page-hero__heading">WhatsApp <span class="accent">AI Agent</span></h1>
+        <p class="svc-page-hero__sub">
+          {{ service()?.ServiceDescription ?? 'A flexible WhatsApp Agent that handles enquiries, automates quotes, creates job cards, and manages client comms — pick exactly what you need.' }}
+        </p>
+
+        @if ((service()?.features ?? []).length > 0) {
+          <ul class="svc-page-hero__features" aria-label="Key capabilities">
+            @for (f of service()!.features; track f) {
+              <li>{{ f }}</li>
+            }
+          </ul>
+        }
+      }
+
       <div class="svc-page-hero__actions">
         <a routerLink="/contact-us" class="btn btn--primary">Book a Demo</a>
         <a routerLink="/services" class="btn btn--ghost">
@@ -31,6 +51,42 @@
       </div>
     </div>
   </header>
+
+  <!-- Packages strip -->
+  @if (!loading() && packages().length > 0) {
+    <section class="svc-pkg-strip" aria-labelledby="wa-pkg-heading">
+      <div class="svc-page-container">
+        <h2 id="wa-pkg-heading" class="svc-section-heading">Available Packages</h2>
+        <div class="svc-pkg-strip__grid">
+          @for (pkg of packages(); track pkg.package_id) {
+            <div class="svc-pkg-card">
+              <span class="svc-pkg-card__name">{{ pkg.PackageName }}</span>
+              <p class="svc-pkg-card__desc">{{ pkg.PackageDescription }}</p>
+              <span class="svc-pkg-card__discount">{{ pkg.Discount * 100 | number:'1.0-0' }}% bundle discount</span>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- Add-ons strip -->
+  @if (!loading() && addons().length > 0) {
+    <section class="svc-addon-strip" aria-labelledby="wa-addon-heading">
+      <div class="svc-page-container">
+        <h2 id="wa-addon-heading" class="svc-section-heading">Add-ons</h2>
+        <div class="svc-addon-strip__grid">
+          @for (addon of addons(); track addon.addon_id) {
+            <div class="svc-addon-card">
+              <span class="svc-addon-card__name">{{ addon.AddonName }}</span>
+              <p class="svc-addon-card__desc">{{ addon.AddonDescription }}</p>
+              <span class="svc-addon-card__price">+R{{ addon.Price | number }} /mo</span>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+  }
 
   <section class="svc-sub" aria-labelledby="wa-sub-heading">
     <div class="svc-page-container">
