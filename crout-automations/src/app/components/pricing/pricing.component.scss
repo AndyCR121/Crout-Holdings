@@ -147,10 +147,9 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-5);
-    // Target ~33% so 3 cards fit per row, but allow growth to fill remaining space
     flex-grow: 1;
     flex-shrink: 1;
-    flex-basis: calc(33.333% - var(--space-6));
+    flex-basis: calc(50% - var(--space-6));
     // Cap at 50% so a lone card on the last row never exceeds 2-per-row width,
     // enforcing the minimum-2-per-row visual rule
     max-width: calc(50% - var(--space-6));
