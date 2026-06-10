@@ -52,41 +52,20 @@
     </div>
   </header>
 
-  <!-- Packages strip -->
-  @if (!loading() && packages().length > 0) {
-    <section class="svc-pkg-strip" aria-labelledby="wa-pkg-heading">
-      <div class="svc-page-container">
-        <h2 id="wa-pkg-heading" class="svc-section-heading">Available Packages</h2>
-        <div class="svc-pkg-strip__grid">
-          @for (pkg of packages(); track pkg.package_id) {
-            <div class="svc-pkg-card">
-              <span class="svc-pkg-card__name">{{ pkg.PackageName }}</span>
-              <p class="svc-pkg-card__desc">{{ pkg.PackageDescription }}</p>
-              <span class="svc-pkg-card__discount">{{ pkg.Discount * 100 | number:'1.0-0' }}% bundle discount</span>
-            </div>
-          }
-        </div>
-      </div>
-    </section>
-  }
-
-  <!-- Add-ons strip -->
-  @if (!loading() && addons().length > 0) {
-    <section class="svc-addon-strip" aria-labelledby="wa-addon-heading">
-      <div class="svc-page-container">
-        <h2 id="wa-addon-heading" class="svc-section-heading">Add-ons</h2>
-        <div class="svc-addon-strip__grid">
-          @for (addon of addons(); track addon.addon_id) {
-            <div class="svc-addon-card">
-              <span class="svc-addon-card__name">{{ addon.AddonName }}</span>
-              <p class="svc-addon-card__desc">{{ addon.AddonDescription }}</p>
-              <span class="svc-addon-card__price">+R{{ addon.Price | number }} /mo</span>
-            </div>
-          }
-        </div>
-      </div>
-    </section>
-  }
+  <!-- ── Service Configurator (matches pricing page suite UI) ── -->
+  <section class="svc-configurator-section" aria-labelledby="wa-configurator-heading">
+    <div class="svc-page-container">
+      <h2 id="wa-configurator-heading" class="svc-section-heading">Configure Your Package</h2>
+      <p class="svc-section-sub">Toggle the add-ons your business needs and see your bundle price update in real time.</p>
+      <ca-service-configurator
+        [services]="service() ? [service()!] : []"
+        [addons]="addons()"
+        [packages]="packages()"
+        [allServices]="allServices()"
+        [loading]="loading()"
+      />
+    </div>
+  </section>
 
   <section class="svc-sub" aria-labelledby="wa-sub-heading">
     <div class="svc-page-container">

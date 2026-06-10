@@ -19,7 +19,7 @@
         @if (loading()) {
           <span class="svc-page-ghost svc-page-ghost--badge"></span>
         } @else {
-          {{ subServices.length }} Marketing Systems
+          {{ subServices.length }} Marketing Channels
         }
       </div>
 
@@ -30,7 +30,7 @@
       } @else {
         <h1 class="svc-page-hero__heading">Marketing <span class="accent">Systems</span></h1>
         <p class="svc-page-hero__sub">
-          {{ service()?.ServiceDescription ?? 'Automated marketing workflows — bulk messaging, campaign triggers, and scheduled broadcasts via WhatsApp and email.' }}
+          {{ service()?.ServiceDescription ?? 'AI-powered content creation, scheduling, and analytics — running your social media and marketing automatically every week.' }}
         </p>
 
         @if ((service()?.features ?? []).length > 0) {
@@ -43,7 +43,7 @@
       }
 
       <div class="svc-page-hero__actions">
-        <a routerLink="/contact-us" class="btn btn--primary">Book a Demo</a>
+        <a routerLink="/contact-us" class="btn btn--primary">Get Started</a>
         <a routerLink="/services" class="btn btn--ghost">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           All Services
@@ -52,41 +52,20 @@
     </div>
   </header>
 
-  <!-- Packages strip -->
-  @if (!loading() && packages().length > 0) {
-    <section class="svc-pkg-strip" aria-labelledby="ms-pkg-heading">
-      <div class="svc-page-container">
-        <h2 id="ms-pkg-heading" class="svc-section-heading">Available Packages</h2>
-        <div class="svc-pkg-strip__grid">
-          @for (pkg of packages(); track pkg.package_id) {
-            <div class="svc-pkg-card">
-              <span class="svc-pkg-card__name">{{ pkg.PackageName }}</span>
-              <p class="svc-pkg-card__desc">{{ pkg.PackageDescription }}</p>
-              <span class="svc-pkg-card__discount">{{ pkg.Discount * 100 | number:'1.0-0' }}% bundle discount</span>
-            </div>
-          }
-        </div>
-      </div>
-    </section>
-  }
-
-  <!-- Add-ons strip -->
-  @if (!loading() && addons().length > 0) {
-    <section class="svc-addon-strip" aria-labelledby="ms-addon-heading">
-      <div class="svc-page-container">
-        <h2 id="ms-addon-heading" class="svc-section-heading">Add-ons</h2>
-        <div class="svc-addon-strip__grid">
-          @for (addon of addons(); track addon.addon_id) {
-            <div class="svc-addon-card">
-              <span class="svc-addon-card__name">{{ addon.AddonName }}</span>
-              <p class="svc-addon-card__desc">{{ addon.AddonDescription }}</p>
-              <span class="svc-addon-card__price">+R{{ addon.Price | number }} /mo</span>
-            </div>
-          }
-        </div>
-      </div>
-    </section>
-  }
+  <!-- ── Service Configurator (matches pricing page suite UI) ── -->
+  <section class="svc-configurator-section" aria-labelledby="ms-configurator-heading">
+    <div class="svc-page-container">
+      <h2 id="ms-configurator-heading" class="svc-section-heading">Configure Your Package</h2>
+      <p class="svc-section-sub">Toggle the add-ons your business needs and see your bundle price update in real time.</p>
+      <ca-service-configurator
+        [services]="service() ? [service()!] : []"
+        [addons]="addons()"
+        [packages]="packages()"
+        [allServices]="allServices()"
+        [loading]="loading()"
+      />
+    </div>
+  </section>
 
   <section class="svc-sub" aria-labelledby="ms-sub-heading">
     <div class="svc-page-container">

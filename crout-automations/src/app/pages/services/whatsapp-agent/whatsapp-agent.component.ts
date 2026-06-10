@@ -5,16 +5,15 @@ import { CtaBannerComponent } from '../../../components/cta-banner/cta-banner.co
 import { ScrollRevealDirective } from '../../../directives/scroll-reveal.directive';
 import { SafeHtmlPipe } from '../../../pipes/safe-html.pipe';
 import { ApiService } from '../../../services/api.service';
-import { IServiceDisplay } from '../../../interfaces/i-service-display.interface';
-import { IAddon, IPackage } from '../../../interfaces/i-service.interface';
+import { ServiceConfiguratorComponent } from '../../../components/service-configurator/service-configurator.component';
+import { IService, IAddon, IPackage } from '../../../interfaces/i-service.interface';
 
-/** Static display metadata for the WhatsApp Agent service (service_id: 1) */
 const SERVICE_NAME = 'WhatsApp Agent';
 
 @Component({
   selector: 'ca-whatsapp-agent',
   standalone: true,
-  imports: [CommonModule, RouterModule, CtaBannerComponent, ScrollRevealDirective, SafeHtmlPipe],
+  imports: [CommonModule, RouterModule, CtaBannerComponent, ScrollRevealDirective, SafeHtmlPipe, ServiceConfiguratorComponent],
   templateUrl: './whatsapp-agent.component.html',
   styleUrl: './whatsapp-agent.component.scss'
 })
@@ -23,9 +22,10 @@ export class WhatsappAgentComponent implements OnInit {
   private api = inject(ApiService);
 
   loading = signal<boolean>(true);
-  service = signal<IServiceDisplay | null>(null);
+  service = signal<IService | null>(null);
   addons = signal<IAddon[]>([]);
   packages = signal<IPackage[]>([]);
+  allServices = signal<IService[]>([]);
 
   subServices = [
     {
@@ -67,21 +67,21 @@ export class WhatsappAgentComponent implements OnInit {
     { num: '04', title: 'Loop Closes', desc: 'Replies are captured, follow-up flows triggered, and the conversation history is stored for context.' }
   ];
 
-  ngOnInit(): void {
-    this.onLoad();
-  }
+  ngOnInit(): void { this.onLoad(); }
 
   async onLoad(): Promise<void> {
     try {
-      const allServices = await this.api.getServices().toPromise();
-      const raw = allServices?.find(s => s.ServiceName === SERVICE_NAME);
+      const allSvcs = await this.api.getServices().toPromise();
+      this.allServices.set(allSvcs ?? []);
+      const raw = allSvcs?.find(s => s.ServiceName === SERVICE_NAME);
       if (raw) {
-        const addons = await this.api.getAddonsByService(raw.service_id).toPromise();
-        const pkgs   = await this.api.getPackagesByService(raw.service_id).toPromise();
+        const [addons, pkgs] = await Promise.all([
+          this.api.getAddonsByService(raw.service_id).toPromise(),
+          this.api.getPackagesByService(raw.service_id).toPromise(),
+        ]);
         this.addons.set(addons ?? []);
         this.packages.set(pkgs ?? []);
-        // Build display object using same META lookup as ServicesComponent
-        this.service.set(raw as IServiceDisplay);
+        this.service.set(raw);
       }
     } catch (err: any) {
       console.error(err?.message ?? err ?? 'WhatsappAgentComponent onLoad() failed');

@@ -5,15 +5,15 @@ import { CtaBannerComponent } from '../../../components/cta-banner/cta-banner.co
 import { ScrollRevealDirective } from '../../../directives/scroll-reveal.directive';
 import { SafeHtmlPipe } from '../../../pipes/safe-html.pipe';
 import { ApiService } from '../../../services/api.service';
-import { IServiceDisplay } from '../../../interfaces/i-service-display.interface';
-import { IAddon, IPackage } from '../../../interfaces/i-service.interface';
+import { ServiceConfiguratorComponent } from '../../../components/service-configurator/service-configurator.component';
+import { IService, IAddon, IPackage } from '../../../interfaces/i-service.interface';
 
 const SERVICE_NAME = 'Project Management System';
 
 @Component({
   selector: 'ca-project-management',
   standalone: true,
-  imports: [CommonModule, RouterModule, CtaBannerComponent, ScrollRevealDirective, SafeHtmlPipe],
+  imports: [CommonModule, RouterModule, CtaBannerComponent, ScrollRevealDirective, SafeHtmlPipe, ServiceConfiguratorComponent],
   templateUrl: './project-management.component.html',
   styleUrl: './project-management.component.scss'
 })
@@ -22,9 +22,10 @@ export class ProjectManagementComponent implements OnInit {
   private api = inject(ApiService);
 
   loading = signal<boolean>(true);
-  service = signal<IServiceDisplay | null>(null);
+  service = signal<IService | null>(null);
   addons = signal<IAddon[]>([]);
   packages = signal<IPackage[]>([]);
+  allServices = signal<IService[]>([]);
 
   subServices = [
     {
@@ -60,20 +61,21 @@ export class ProjectManagementComponent implements OnInit {
     { num: '04', title: 'Progress Tracked', desc: 'Status changes, completions, and overdue items trigger further automations automatically.' }
   ];
 
-  ngOnInit(): void {
-    this.onLoad();
-  }
+  ngOnInit(): void { this.onLoad(); }
 
   async onLoad(): Promise<void> {
     try {
-      const allServices = await this.api.getServices().toPromise();
-      const raw = allServices?.find(s => s.ServiceName === SERVICE_NAME);
+      const allSvcs = await this.api.getServices().toPromise();
+      this.allServices.set(allSvcs ?? []);
+      const raw = allSvcs?.find(s => s.ServiceName === SERVICE_NAME);
       if (raw) {
-        const addons = await this.api.getAddonsByService(raw.service_id).toPromise();
-        const pkgs   = await this.api.getPackagesByService(raw.service_id).toPromise();
+        const [addons, pkgs] = await Promise.all([
+          this.api.getAddonsByService(raw.service_id).toPromise(),
+          this.api.getPackagesByService(raw.service_id).toPromise(),
+        ]);
         this.addons.set(addons ?? []);
         this.packages.set(pkgs ?? []);
-        this.service.set(raw as IServiceDisplay);
+        this.service.set(raw);
       }
     } catch (err: any) {
       console.error(err?.message ?? err ?? 'ProjectManagementComponent onLoad() failed');
