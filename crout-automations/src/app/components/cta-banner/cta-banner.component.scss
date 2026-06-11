@@ -4,6 +4,7 @@
   border-top: 1px solid var(--color-divider);
   position: relative;
   overflow: hidden;
+  width: 100%;
 
   &__bg {
     position: absolute;
@@ -17,7 +18,8 @@
   &__container {
     position: relative;
     z-index: 1;
-    width: var(--content-default);
+    width: 100%;
+    max-width: var(--content-default);
     margin-inline: auto;
     padding-inline: var(--space-6);
     display: flex;

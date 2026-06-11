@@ -15,7 +15,7 @@
       </div>
       <h1 class="svc-page__heading">WhatsApp <span class="accent">AI Agent</span></h1>
       @if (service()) {
-        <p class="svc-page__sub">{{ service()!.serviceDescription }}</p>
+        <p class="svc-page__sub">{{ service()!.ServiceDescription }}</p>
       } @else if (loading()) {
         <div class="svc-page__sub-ghost"></div>
       }
@@ -80,8 +80,7 @@
     </div>
   }
 
-  <div class="svc-page__container">
-    <ca-cta-banner></ca-cta-banner>
-  </div>
+  <!-- CTA — full width, no container wrapper -->
+  <ca-cta-banner></ca-cta-banner>
 
 </section>
