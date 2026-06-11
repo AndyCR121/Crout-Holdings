@@ -1,0 +1,90 @@
+<div class="admin-page">
+  <div class="admin-page-header">
+    <h1 class="admin-page-title">Users</h1>
+    <span class="admin-badge">Page {{ page() }}</span>
+  </div>
+
+  <div *ngIf="error()" class="admin-error">{{ error() }}</div>
+
+  <div *ngIf="loading()" class="admin-loading">
+    <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
+  </div>
+
+  <div *ngIf="!loading()" class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th><th>Username</th><th>First Name</th><th>Surname</th>
+          <th>Email</th><th>Cell</th><th>Admin</th><th>Active</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let u of users()" [class.editing]="editingId() === u.user_id">
+          <ng-container *ngIf="editingId() !== u.user_id">
+            <td>{{ u.user_id }}</td>
+            <td>{{ u.username }}</td>
+            <td>{{ u.firstName }}</td>
+            <td>{{ u.surname }}</td>
+            <td>{{ u.email }}</td>
+            <td>{{ u.cellNumber ?? '—' }}</td>
+            <td><span class="admin-pill" [class.green]="u.isAdmin">{{ u.isAdmin ? 'Yes' : 'No' }}</span></td>
+            <td><span class="admin-pill" [class.green]="u.active">{{ u.active ? 'Active' : 'Inactive' }}</span></td>
+            <td class="admin-actions">
+              <button class="btn-edit" (click)="startEdit(u)">Edit</button>
+              <button class="btn-delete" (click)="confirmDelete(u.user_id)">Delete</button>
+            </td>
+          </ng-container>
+          <ng-container *ngIf="editingId() === u.user_id">
+            <td>{{ u.user_id }}</td>
+            <td>{{ u.username }}</td>
+            <td><input [(ngModel)]="editBuffer().firstName" class="admin-input" /></td>
+            <td><input [(ngModel)]="editBuffer().surname"   class="admin-input" /></td>
+            <td><input [(ngModel)]="editBuffer().email"     class="admin-input" /></td>
+            <td><input [(ngModel)]="editBuffer().cellNumber" class="admin-input" /></td>
+            <td>
+              <select [(ngModel)]="editBuffer().isAdmin" class="admin-input">
+                <option [ngValue]="true">Yes</option><option [ngValue]="false">No</option>
+              </select>
+            </td>
+            <td>
+              <select [(ngModel)]="editBuffer().active" class="admin-input">
+                <option [ngValue]="true">Active</option><option [ngValue]="false">Inactive</option>
+              </select>
+            </td>
+            <td class="admin-actions">
+              <button class="btn-save" [disabled]="saving()" (click)="saveEdit(u)">{{ saving() ? '...' : 'Save' }}</button>
+              <button class="btn-cancel" (click)="cancelEdit()">Cancel</button>
+            </td>
+          </ng-container>
+        </tr>
+        <tr *ngIf="users().length === 0">
+          <td colspan="9" class="admin-empty">No users found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="admin-pagination">
+    <button class="btn-page" [disabled]="page() === 1" (click)="prevPage()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Prev
+    </button>
+    <span>Page {{ page() }}</span>
+    <button class="btn-page" [disabled]="!hasMore()" (click)="nextPage()">
+      Next
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="admin-modal-backdrop" *ngIf="deleteConfirmId() !== null" (click)="cancelDelete()">
+  <div class="admin-modal" (click)="$event.stopPropagation()">
+    <h3>Delete User #{{ deleteConfirmId() }}?</h3>
+    <p>This action cannot be undone.</p>
+    <div class="admin-modal-actions">
+      <button class="btn-delete" (click)="doDelete(deleteConfirmId()!)">Yes, Delete</button>
+      <button class="btn-cancel" (click)="cancelDelete()">Cancel</button>
+    </div>
+  </div>
+</div>

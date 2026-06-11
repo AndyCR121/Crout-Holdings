@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
+import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
   {
@@ -96,7 +97,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/privacy-policy/privacy-policy.page').then(m => m.PrivacyPolicyPageComponent)
   },
-  // ── Client Portal (auth-guarded) ────────────────────────────────────────
+  // ── Client Portal (auth-guarded) ────────────────────────────────────────────
   {
     path: 'client',
     canActivate: [authGuard],
@@ -136,6 +137,40 @@ export const routes: Routes = [
               import('./pages/portal/billing/payment-methods/portal-payment-methods.component').then(m => m.PortalPaymentMethodsComponent),
           },
         ],
+      },
+    ],
+  },
+  // ── Admin Portal (auth + admin guard) ───────────────────────────────────────
+  {
+    path: 'admin',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./pages/admin/admin.component').then(m => m.AdminComponent),
+    children: [
+      { path: '', redirectTo: 'users', pathMatch: 'full' },
+      {
+        path: 'users',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./pages/admin/users/admin-users.component').then(m => m.AdminUsersComponent),
+      },
+      {
+        path: 'services',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./pages/admin/services/admin-services.component').then(m => m.AdminServicesComponent),
+      },
+      {
+        path: 'packages',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./pages/admin/packages/admin-packages.component').then(m => m.AdminPackagesComponent),
+      },
+      {
+        path: 'companies',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./pages/admin/companies/admin-companies.component').then(m => m.AdminCompaniesComponent),
       },
     ],
   },

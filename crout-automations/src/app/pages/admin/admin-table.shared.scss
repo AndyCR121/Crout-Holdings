@@ -1,0 +1,218 @@
+// Shared admin table + page styles — imported by each admin sub-page
+
+.admin-page {
+  max-width: 1100px;
+}
+
+.admin-page-header {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  margin-bottom:   24px;
+}
+
+.admin-page-title {
+  font-size:   22px;
+  font-weight: 700;
+  color:       rgba(255,255,255,0.92);
+  margin:      0;
+}
+
+.admin-badge {
+  font-size:      12px;
+  padding:        4px 10px;
+  background:     rgba(255,255,255,0.08);
+  border-radius:  20px;
+  color:          rgba(255,255,255,0.55);
+}
+
+.admin-error {
+  background:    rgba(192,57,43,0.15);
+  border:        1px solid rgba(231,76,60,0.35);
+  border-radius: 8px;
+  padding:       12px 16px;
+  color:         #e74c3c;
+  font-size:     14px;
+  margin-bottom: 16px;
+}
+
+// ── Skeleton loader ──────────────────────────────────────────────────────────
+@keyframes shimmer { 0%{background-position:-400% 0} 100%{background-position:400% 0} }
+.admin-loading { display: flex; flex-direction: column; gap: 8px; }
+.skeleton-row {
+  height:     44px;
+  border-radius: 6px;
+  background: linear-gradient(90deg,rgba(255,255,255,0.05) 25%,rgba(255,255,255,0.10) 50%,rgba(255,255,255,0.05) 75%);
+  background-size: 400% 100%;
+  animation:  shimmer 1.4s ease-in-out infinite;
+}
+
+// ── Table ────────────────────────────────────────────────────────────────────
+.admin-table-wrap {
+  overflow-x:    auto;
+  border-radius: 10px;
+  border:        1px solid rgba(255,255,255,0.08);
+  margin-bottom: 20px;
+}
+
+.admin-table {
+  width:           100%;
+  border-collapse: collapse;
+  font-size:       13.5px;
+
+  th {
+    background:    rgba(255,255,255,0.05);
+    color:         rgba(255,255,255,0.50);
+    font-weight:   600;
+    font-size:     11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding:       10px 14px;
+    text-align:    left;
+    white-space:   nowrap;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  td {
+    padding:       11px 14px;
+    color:         rgba(255,255,255,0.80);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tr:hover td { background: rgba(255,255,255,0.03); }
+
+  tr.editing td { background: rgba(192,57,43,0.07); }
+
+  .td-desc {
+    max-width:     240px;
+    white-space:   nowrap;
+    overflow:      hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.admin-empty {
+  text-align: center;
+  color:      rgba(255,255,255,0.30);
+  padding:    32px !important;
+  font-size:  14px;
+}
+
+// ── Pills ────────────────────────────────────────────────────────────────────
+.admin-pill {
+  display:       inline-block;
+  padding:       2px 8px;
+  border-radius: 20px;
+  font-size:     11px;
+  font-weight:   600;
+  background:    rgba(255,255,255,0.08);
+  color:         rgba(255,255,255,0.45);
+  &.green { background: rgba(39,174,96,0.15); color: #2ecc71; }
+}
+
+// ── Inputs (inline edit) ─────────────────────────────────────────────────────
+.admin-input {
+  background:    rgba(255,255,255,0.06);
+  border:        1px solid rgba(255,255,255,0.15);
+  border-radius: 5px;
+  color:         rgba(255,255,255,0.90);
+  font-size:     13px;
+  padding:       4px 8px;
+  width:         100%;
+  min-width:     80px;
+  outline:       none;
+  &:focus { border-color: #e74c3c; }
+  option { background: #0a1628; }
+}
+
+.admin-checkbox {
+  display:     flex;
+  align-items: center;
+  gap:         8px;
+  color:       rgba(255,255,255,0.75);
+  font-size:   14px;
+  input[type=checkbox] { width: 16px; height: 16px; accent-color: #e74c3c; }
+}
+
+// ── Action buttons ───────────────────────────────────────────────────────────
+.admin-actions { white-space: nowrap; }
+
+%admin-btn {
+  border:        none;
+  border-radius: 5px;
+  font-size:     12px;
+  font-weight:   600;
+  padding:       5px 12px;
+  cursor:        pointer;
+  transition:    opacity 140ms;
+  &:disabled { opacity: .45; cursor: default; }
+}
+
+.btn-edit   { @extend %admin-btn; background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.80); margin-right: 6px; &:hover { background: rgba(255,255,255,0.15); } }
+.btn-delete { @extend %admin-btn; background: rgba(192,57,43,0.20); color: #e74c3c; &:hover { background: rgba(192,57,43,0.35); } }
+.btn-save   { @extend %admin-btn; background: rgba(39,174,96,0.20); color: #2ecc71; margin-right: 6px; &:hover { background: rgba(39,174,96,0.35); } }
+.btn-cancel { @extend %admin-btn; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.55); &:hover { background: rgba(255,255,255,0.12); } }
+.btn-create { @extend %admin-btn; background: rgba(192,57,43,0.22); color: #e74c3c; padding: 7px 16px; font-size: 13px; &:hover { background: rgba(192,57,43,0.38); } }
+
+// ── Pagination ───────────────────────────────────────────────────────────────
+.admin-pagination {
+  display:     flex;
+  align-items: center;
+  gap:         16px;
+  font-size:   13px;
+  color:       rgba(255,255,255,0.50);
+}
+
+.btn-page {
+  display:       flex;
+  align-items:   center;
+  gap:           6px;
+  @extend %admin-btn;
+  background:    rgba(255,255,255,0.07);
+  color:         rgba(255,255,255,0.70);
+  padding:       6px 14px;
+  &:hover:not(:disabled) { background: rgba(255,255,255,0.13); }
+  &:disabled { opacity: .3; cursor: default; }
+}
+
+// ── Modal ────────────────────────────────────────────────────────────────────
+.admin-modal-backdrop {
+  position:        fixed;
+  inset:           0;
+  background:      rgba(0,0,0,0.65);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  z-index:         1000;
+  backdrop-filter: blur(3px);
+}
+
+.admin-modal {
+  background:    #0f1f38;
+  border:        1px solid rgba(255,255,255,0.10);
+  border-radius: 12px;
+  padding:       28px 32px;
+  min-width:     320px;
+  max-width:     480px;
+  width:         100%;
+
+  h3 { font-size: 17px; font-weight: 700; color: rgba(255,255,255,0.92); margin-bottom: 10px; }
+  p  { font-size: 14px; color: rgba(255,255,255,0.55); margin-bottom: 20px; }
+
+  label {
+    display:        block;
+    font-size:      13px;
+    color:          rgba(255,255,255,0.60);
+    margin-bottom:  12px;
+    .admin-input { margin-top: 4px; }
+  }
+}
+
+.admin-modal-actions {
+  display:    flex;
+  gap:        10px;
+  margin-top: 20px;
+}
