@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import {
   IService,
@@ -11,24 +11,11 @@ import {
   IUserService,
   IServiceConfig,
 } from '../interfaces/i-service.interface';
-import {
-  DEMO_SERVICES,
-  DEMO_ADDONS,
-  DEMO_PACKAGES,
-  DEMO_USERS,
-  DEMO_COMPANIES,
-  DEMO_USER_SERVICES,
-} from '../data/demo.data';
 
-/**
- * Reads the API base URL from the window-level env injected by WordPress/server.
- * Falls back to an empty string so calls fail gracefully and the demo fallback fires.
- *
- * Add to your WordPress theme's wp_head (or Elementor custom HTML):
- *   <script>window.__env = { apiUrl: 'https://api.crout-holdings.com' };</script>
- */
 function getApiUrl(): string {
-  return (window as any).__env?.apiUrl ?? '';
+  const url = (window as any).__env?.apiUrl ?? '';
+  if (!url) console.warn('[ApiService] window.__env.apiUrl is not set — API calls will fail.');
+  return url;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -42,91 +29,91 @@ export class ApiService {
 
   getServices(): Observable<IService[]> {
     return this.http
-      .get<IService[]>(`${this.base}/services`)
-      .pipe(catchError(() => of(DEMO_SERVICES)));
+      .get<IService[]>(`${this.base}/api/services`)
+      .pipe(catchError(err => throwError(() => err)));
   }
 
-  getService(id: number): Observable<IService | undefined> {
+  getService(id: number): Observable<IService> {
     return this.http
-      .get<IService>(`${this.base}/services/${id}`)
-      .pipe(catchError(() => of(DEMO_SERVICES.find(s => s.service_id === id))));
+      .get<IService>(`${this.base}/api/services/${id}`)
+      .pipe(catchError(err => throwError(() => err)));
   }
 
   // ─── Addons ──────────────────────────────────────────────────────────────
 
   getAddons(): Observable<IAddon[]> {
     return this.http
-      .get<IAddon[]>(`${this.base}/addons`)
-      .pipe(catchError(() => of(DEMO_ADDONS)));
+      .get<IAddon[]>(`${this.base}/api/addons`)
+      .pipe(catchError(err => throwError(() => err)));
   }
 
   getAddonsByService(serviceId: number): Observable<IAddon[]> {
     return this.http
-      .get<IAddon[]>(`${this.base}/services/${serviceId}/addons`)
-      .pipe(catchError(() => of(DEMO_ADDONS.filter(a => a.service_id === serviceId))));
+      .get<IAddon[]>(`${this.base}/api/services/${serviceId}/addons`)
+      .pipe(catchError(err => throwError(() => err)));
   }
 
   // ─── Packages ────────────────────────────────────────────────────────────
 
   getPackages(): Observable<IPackage[]> {
     return this.http
-      .get<IPackage[]>(`${this.base}/packages`)
-      .pipe(catchError(() => of(DEMO_PACKAGES)));
+      .get<IPackage[]>(`${this.base}/api/packages`)
+      .pipe(catchError(err => throwError(() => err)));
   }
 
   getPackagesByService(serviceId: number): Observable<IPackage[]> {
     return this.http
-      .get<IPackage[]>(`${this.base}/services/${serviceId}/packages`)
-      .pipe(catchError(() => of(DEMO_PACKAGES.filter(p => p.service_ids?.includes(serviceId)))));
+      .get<IPackage[]>(`${this.base}/api/services/${serviceId}/packages`)
+      .pipe(catchError(err => throwError(() => err)));
   }
 
   // ─── Users ───────────────────────────────────────────────────────────────
 
   getUsers(): Observable<IUser[]> {
     return this.http
-      .get<IUser[]>(`${this.base}/users`)
-      .pipe(catchError(() => of(DEMO_USERS)));
+      .get<IUser[]>(`${this.base}/api/users`)
+      .pipe(catchError(err => throwError(() => err)));
   }
 
-  getUser(id: number): Observable<IUser | undefined> {
+  getUser(id: number): Observable<IUser> {
     return this.http
-      .get<IUser>(`${this.base}/users/${id}`)
-      .pipe(catchError(() => of(DEMO_USERS.find(u => u.user_id === id))));
+      .get<IUser>(`${this.base}/api/users/${id}`)
+      .pipe(catchError(err => throwError(() => err)));
   }
 
   // ─── Companies ───────────────────────────────────────────────────────────
 
   getCompanies(): Observable<ICompany[]> {
     return this.http
-      .get<ICompany[]>(`${this.base}/companies`)
-      .pipe(catchError(() => of(DEMO_COMPANIES)));
+      .get<ICompany[]>(`${this.base}/api/companies`)
+      .pipe(catchError(err => throwError(() => err)));
   }
 
   getCompaniesByUser(userId: number): Observable<ICompany[]> {
     return this.http
-      .get<ICompany[]>(`${this.base}/users/${userId}/companies`)
-      .pipe(catchError(() => of(DEMO_COMPANIES.filter(c => c.user_id === userId))));
+      .get<ICompany[]>(`${this.base}/api/users/${userId}/companies`)
+      .pipe(catchError(err => throwError(() => err)));
   }
 
-  getCompany(companyId: number): Observable<ICompany | undefined> {
+  getCompany(companyId: number): Observable<ICompany> {
     return this.http
-      .get<ICompany>(`${this.base}/companies/${companyId}`)
-      .pipe(catchError(() => of(DEMO_COMPANIES.find(c => c.company_id === companyId))));
+      .get<ICompany>(`${this.base}/api/companies/${companyId}`)
+      .pipe(catchError(err => throwError(() => err)));
   }
 
   // ─── Company Services ─────────────────────────────────────────────────────
 
   getCompanyServices(companyId: number): Observable<IUserService[]> {
     return this.http
-      .get<IUserService[]>(`${this.base}/companies/${companyId}/services`)
-      .pipe(catchError(() => of(DEMO_USER_SERVICES.filter(us => us.company_id === companyId))));
+      .get<IUserService[]>(`${this.base}/api/companies/${companyId}/services`)
+      .pipe(catchError(err => throwError(() => err)));
   }
 
   // ─── Service Config ──────────────────────────────────────────────────────
 
   getServiceConfig(companyId: number, serviceId: number): Observable<IServiceConfig | null> {
     return this.http
-      .get<IServiceConfig>(`${this.base}/companies/${companyId}/services/${serviceId}/config`)
-      .pipe(catchError(() => of(null)));
+      .get<IServiceConfig>(`${this.base}/api/companies/${companyId}/services/${serviceId}/config`)
+      .pipe(catchError(err => throwError(() => err)));
   }
 }

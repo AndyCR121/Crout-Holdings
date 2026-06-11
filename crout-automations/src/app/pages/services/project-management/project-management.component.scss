@@ -1,12 +1,7 @@
-@use '../../../../styles/service-page';
+@use '../../../../styles/mixins' as *;
 
-.pm-page {
-  .svc-page-bg__orb--1 {
-    background: radial-gradient(circle, var(--color-orange) 0%, transparent 70%);
-    top: -60px; right: -80px;
-  }
-  .svc-page-bg__orb--2 {
-    background: radial-gradient(circle, var(--color-blue) 0%, transparent 70%);
-    bottom: 200px; left: -60px;
-  }
+:host { display: block; }
+
+.svc-page {
+  @include svc-page-base();
 }

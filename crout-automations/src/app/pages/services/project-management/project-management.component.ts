@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CtaBannerComponent } from '../../../components/cta-banner/cta-banner.component';
@@ -27,38 +27,31 @@ export class ProjectManagementComponent implements OnInit {
   packages = signal<IPackage[]>([]);
   allServices = signal<IService[]>([]);
 
-  subServices = [
-    {
-      icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="2" width="9" height="9"/><rect x="13" y="2" width="9" height="9"/><rect x="13" y="13" width="9" height="9"/><rect x="2" y="13" width="9" height="9"/></svg>`,
-      title: 'Auto Trello Card Creation',
-      description: 'Automatically create Trello cards the moment a trigger fires — a new client form, a WhatsApp message, a quote approval. Each card pre-populated with the right details.',
-      features: ['Form-triggered card creation','Pre-populated card fields','Auto checklist attachment','Label & member assignment','Due date logic','Multi-board routing']
-    },
-    {
-      icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>`,
-      title: 'Trello Board Management',
-      description: 'Full lifecycle management of your Trello boards — move cards between lists on status changes, archive completed cards, and keep boards clean without manual effort.',
-      features: ['Automated card movement','Status-based list transitions','Auto-archive completed items','Due date monitoring','Overdue escalation alerts','Board health reporting']
-    },
-    {
-      icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>`,
-      title: 'Jira Integration',
-      description: 'Create and manage Jira issues, sprints, and epics automatically. Keep developers and project managers in sync without anyone having to manually log tickets.',
-      features: ['Auto Jira issue creation','Sprint & epic management','Status transition automation','Custom field population','Cross-team notifications','Velocity & burndown data pulls']
-    },
-    {
-      icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>`,
-      title: 'Custom Project Systems',
-      description: 'No tool perfectly fits your workflow? We build custom project management systems from scratch — tailored triggers, stages, roles, and automations designed around how your team operates.',
-      features: ['Bespoke stage logic','Custom role & RACI automation','Multi-tool orchestration','Client-facing status portals','Custom dashboards','Any trigger source']
-    }
-  ];
+  readonly subServiceIcons: Record<string, string> = {
+    'Auto Trello Card Creation': `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`,
+    'Trello Board Management': `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>`,
+    'Jira Integration': `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>`,
+    'Custom Trigger Workflows': `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>`,
+    'Team Notifications': `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
+    'Custom Systems': `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`,
+  };
+
+  readonly defaultIcon = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+
+  subServices = computed(() => {
+    const svc = this.service();
+    if (!svc) return [];
+    return (svc.features ?? []).map(f => ({
+      icon: this.subServiceIcons[f] ?? this.defaultIcon,
+      title: f,
+    }));
+  });
 
   steps = [
-    { num: '01', title: 'Trigger Event', desc: 'A form submission, client message, quote approval, or any defined event initiates the workflow.' },
-    { num: '02', title: 'System Builds', desc: 'Cards, tickets, or tasks are created in Trello or Jira, pre-filled with all relevant data.' },
-    { num: '03', title: 'Team Notified', desc: 'The right team members receive instant WhatsApp or email notifications with direct links.' },
-    { num: '04', title: 'Progress Tracked', desc: 'Status changes, completions, and overdue items trigger further automations automatically.' }
+    { num: '01', title: 'Trigger Fires', desc: 'An email, webhook, WhatsApp message, or form submission triggers the job card creation flow.' },
+    { num: '02', title: 'Card Created', desc: 'A structured Trello card (or Jira ticket) is created instantly, populated with all relevant data.' },
+    { num: '03', title: 'Team Notified', desc: 'The right team member is assigned and notified via WhatsApp with a direct link to the card.' },
+    { num: '04', title: 'Progress Tracked', desc: 'As the card moves through stages, automated updates are sent to the client and management.' }
   ];
 
   ngOnInit(): void { this.onLoad(); }

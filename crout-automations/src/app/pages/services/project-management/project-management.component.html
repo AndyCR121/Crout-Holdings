@@ -1,105 +1,86 @@
-<div class="pm-page">
+<section class="svc-page">
 
-  <div class="svc-page-bg" aria-hidden="true">
-    <div class="svc-page-bg__orb svc-page-bg__orb--1"></div>
-    <div class="svc-page-bg__orb svc-page-bg__orb--2"></div>
-    <div class="svc-page-bg__grid"></div>
-  </div>
-
-  <header class="svc-page-hero">
-    <div class="svc-page-container">
-      <nav class="svc-page-breadcrumb" aria-label="Breadcrumb">
-        <a routerLink="/">Home</a><span>/</span>
-        <a routerLink="/services">Services</a><span>/</span>
+  <div class="svc-page__hero">
+    <div class="svc-page__container">
+      <nav class="svc-page__breadcrumb" aria-label="Breadcrumb">
+        <a routerLink="/">Home</a>
+        <span aria-hidden="true">/</span>
+        <a routerLink="/services">Services</a>
+        <span aria-hidden="true">/</span>
         <span aria-current="page">Project Management</span>
       </nav>
-
-      <div class="svc-page-hero__badge">
-        <span class="svc-page-hero__dot" aria-hidden="true"></span>
-        @if (loading()) {
-          <span class="svc-page-ghost svc-page-ghost--badge"></span>
-        } @else {
-          {{ subServices.length }} System Types
-        }
+      <div class="svc-page__badge">
+        <span class="badge-dot" aria-hidden="true"></span>
+        Project &amp; Task Automation
       </div>
-
-      @if (loading()) {
-        <div class="svc-page-ghost svc-page-ghost--heading"></div>
-        <div class="svc-page-ghost svc-page-ghost--sub"></div>
-        <div class="svc-page-ghost svc-page-ghost--sub svc-page-ghost--sub-sm"></div>
-      } @else {
-        <h1 class="svc-page-hero__heading">Project <span class="accent">Management</span></h1>
-        <p class="svc-page-hero__sub">
-          {{ service()?.ServiceDescription ?? 'Automated Trello and Jira workflows that create, move, and close project cards without anyone touching a keyboard.' }}
-        </p>
-
-        @if ((service()?.features ?? []).length > 0) {
-          <ul class="svc-page-hero__features" aria-label="Key capabilities">
-            @for (f of service()!.features; track f) {
-              <li>{{ f }}</li>
-            }
-          </ul>
-        }
+      <h1 class="svc-page__heading">Project <span class="accent">Management</span></h1>
+      @if (service()) {
+        <p class="svc-page__sub">{{ service()!.ServiceDescription }}</p>
+      } @else if (loading()) {
+        <div class="svc-page__sub-ghost"></div>
       }
-
-      <div class="svc-page-hero__actions">
-        <a routerLink="/contact-us" class="btn btn--primary">Get Started</a>
-        <a routerLink="/services" class="btn btn--ghost">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-          All Services
-        </a>
-      </div>
     </div>
-  </header>
+  </div>
 
-  <!-- ── Service Configurator (matches pricing page suite UI) ── -->
-  <section class="svc-configurator-section" aria-labelledby="pm-configurator-heading">
-    <div class="svc-page-container">
-      <h2 id="pm-configurator-heading" class="svc-section-heading">Configure Your Package</h2>
-      <p class="svc-section-sub">Toggle the add-ons your business needs and see your bundle price update in real time.</p>
-      <ca-service-configurator
-        [services]="service() ? [service()!] : []"
-        [addons]="addons()"
-        [packages]="packages()"
-        [allServices]="allServices()"
-        [loading]="loading()"
-      />
-    </div>
-  </section>
-
-  <section class="svc-sub" aria-labelledby="pm-sub-heading">
-    <div class="svc-page-container">
-      <h2 id="pm-sub-heading" class="svc-section-heading">What's Included</h2>
-      <div class="svc-sub__grid">
-        <div *ngFor="let s of subServices" class="svc-sub__card" caScrollReveal>
-          <div class="svc-sub__card-icon" [innerHTML]="s.icon | safeHtml"></div>
-          <h3 class="svc-sub__card-title">{{ s.title }}</h3>
-          <p class="svc-sub__card-desc">{{ s.description }}</p>
-          <ul class="svc-sub__card-features" aria-label="Features">
-            <li *ngFor="let f of s.features">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-              {{ f }}
-            </li>
-          </ul>
+  <!-- Sub-services from API features[] -->
+  <div class="svc-page__section">
+    <div class="svc-page__container">
+      <h2 class="svc-page__section-title">What's Included</h2>
+      @if (loading()) {
+        <div class="svc-page__sub-grid">
+          @for (i of [0,1,2,3,4,5]; track i) {
+            <div class="sub-card sub-card--ghost">
+              <div class="sub-ghost sub-ghost--icon"></div>
+              <div class="sub-ghost sub-ghost--title"></div>
+            </div>
+          }
         </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="svc-how" aria-labelledby="pm-how-heading">
-    <div class="svc-page-container">
-      <h2 id="pm-how-heading" class="svc-section-heading">How It Works</h2>
-      <div class="svc-how__steps">
-        <div *ngFor="let step of steps" class="svc-how__step" caScrollReveal>
-          <div class="svc-how__step-num">{{ step.num }}</div>
-          <div class="svc-how__step-body"><h3>{{ step.title }}</h3><p>{{ step.desc }}</p></div>
+      } @else {
+        <div class="svc-page__sub-grid">
+          @for (s of subServices(); track s.title; let i = $index) {
+            <div class="sub-card" caScrollReveal [style.animation-delay]="(i * 0.08) + 's'">
+              <div class="sub-card__icon" [innerHTML]="s.icon | safeHtml"></div>
+              <h3 class="sub-card__title">{{ s.title }}</h3>
+            </div>
+          }
         </div>
+      }
+    </div>
+  </div>
+
+  <!-- How it works -->
+  <div class="svc-page__section svc-page__section--alt">
+    <div class="svc-page__container">
+      <h2 class="svc-page__section-title">How It Works</h2>
+      <div class="svc-page__steps">
+        @for (step of steps; track step.num) {
+          <div class="step-card" caScrollReveal>
+            <span class="step-card__num">{{ step.num }}</span>
+            <h3 class="step-card__title">{{ step.title }}</h3>
+            <p class="step-card__desc">{{ step.desc }}</p>
+          </div>
+        }
       </div>
     </div>
-  </section>
+  </div>
 
-  <div class="svc-page-container svc-page-cta">
+  <!-- Pricing configurator -->
+  @if (!loading() && service()) {
+    <div class="svc-page__section">
+      <div class="svc-page__container">
+        <h2 class="svc-page__section-title">Pricing</h2>
+        <ca-service-configurator
+          [service]="service()!"
+          [addons]="addons()"
+          [packages]="packages()"
+          [allServices]="allServices()"
+        ></ca-service-configurator>
+      </div>
+    </div>
+  }
+
+  <div class="svc-page__container">
     <ca-cta-banner></ca-cta-banner>
   </div>
 
-</div>
+</section>
