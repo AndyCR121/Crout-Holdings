@@ -17,7 +17,22 @@ public class AuthController(IAuthService auth) : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>POST /api/auth/register</summary>
+    /// <summary>POST /api/auth/signup — primary endpoint used by the Angular frontend</summary>
+    [HttpPost("signup")]
+    public async Task<IActionResult> Signup([FromBody] RegisterRequest request)
+    {
+        try
+        {
+            var result = await auth.RegisterAsync(request);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>POST /api/auth/register — kept as alias</summary>
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
