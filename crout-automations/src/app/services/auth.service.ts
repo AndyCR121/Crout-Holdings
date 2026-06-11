@@ -12,8 +12,7 @@ export interface ISignupPayload {
 }
 export interface IAuthResponse { token: string; user: IUser; }
 
-/** Cookie helpers — JWT stored as HttpOnly-style cookie via server, but we also
- *  keep a non-sensitive "session" cookie for the client UI to detect auth state. */
+/** Cookie helpers */
 function readCookie(name: string): string | null {
   const match = document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]*)'));
   return match ? decodeURIComponent(match[1]) : null;
@@ -49,9 +48,8 @@ export class AuthService {
     return this.http
       .post<IAuthResponse>(`${this.base}/auth/login`, payload, { withCredentials: true })
       .pipe(
+        tap(r => this._setSession(r.user, r.token)),
         map(r => r.user),
-        tap(user => this._setSession(user)),
-        // TODO: Implement error toast\
       );
   }
 
@@ -60,8 +58,9 @@ export class AuthService {
     return this.http
       .post<IAuthResponse>(`${this.base}/auth/signup`, payload, { withCredentials: true })
       .pipe(
+        tap(r => this._setSession(r.user, r.token)),
         map(r => r.user),
-        tap(user => this._setSession(user)));
+      );
   }
 
   // ── Password Reset Request ─────────────────────────────────────────────────
@@ -72,14 +71,14 @@ export class AuthService {
   }
 
   // ── Update Profile ─────────────────────────────────────────────────────────
+  // Calls PUT /api/profile (requires JWT — interceptor attaches it via ca_jwt cookie)
   updateProfile(updates: Partial<IUser>): Observable<IUser> {
-    const user = this.currentUser()!;
     return this.http
-      .patch<IUser>(`${this.base}/users/${user.user_id}`, updates, { withCredentials: true })
+      .put<IUser>(`${this.base}/profile`, updates, { withCredentials: true })
       .pipe(
         tap(updated => this._setSession(updated)),
         catchError(() => {
-          const merged = { ...user, ...updates };
+          const merged = { ...this.currentUser()!, ...updates };
           this._setSession(merged);
           return of(merged);
         })
@@ -99,9 +98,11 @@ export class AuthService {
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
-  private _setSession(user: IUser): void {
+  /** Persist session: write both the user object and the JWT cookie. */
+  private _setSession(user: IUser, token?: string): void {
     const safe: Partial<IUser> = { ...user, password: '' };
     writeCookie('ca_user', JSON.stringify(safe), 7);
+    if (token) writeCookie('ca_jwt', token, 7);
     this.currentUser.set(user);
   }
 }

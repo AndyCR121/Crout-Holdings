@@ -46,4 +46,22 @@ public class AuthController(IAuthService auth) : ControllerBase
             return Conflict(new { error = ex.Message });
         }
     }
+
+    /// <summary>
+    /// POST /api/auth/logout
+    /// JWTs are stateless — invalidation happens client-side by clearing cookies.
+    /// This endpoint exists so the frontend has a clean 200 to react to.
+    /// For future token-blocklist support, add a revocation store here.
+    /// </summary>
+    [HttpPost("logout")]
+    public IActionResult Logout()
+    {
+        // Clear the JWT cookie server-side as well (belt-and-suspenders)
+        Response.Cookies.Delete("ca_jwt", new Microsoft.AspNetCore.Http.CookieOptions
+        {
+            Path     = "/",
+            SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax,
+        });
+        return Ok(new { message = "Logged out." });
+    }
 }
