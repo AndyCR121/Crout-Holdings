@@ -159,3 +159,7 @@
   &:hover:not(:disabled) { background: #d06820; }
   &:disabled { opacity: 0.55; cursor: not-allowed; }
 }
+
+.ca-modal-hint {
+    color: rgb(201,199,199);
+}
