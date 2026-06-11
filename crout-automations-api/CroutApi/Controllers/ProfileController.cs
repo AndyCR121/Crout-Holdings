@@ -1,6 +1,6 @@
-using System.Security.Claims;
 using CroutApi.DTOs.Company;
 using CroutApi.DTOs.Profile;
+using CroutApi.Helpers;
 using CroutApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +12,9 @@ namespace CroutApi.Controllers;
 [Authorize]
 public class ProfileController(IProfileService profile) : ControllerBase
 {
-    private int UserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    // JwtHelper.GetUserId reads the 'sub' claim, which is what JwtHelper.GenerateToken writes.
+    // ClaimTypes.NameIdentifier is a different string and would always return null here.
+    private int UserId => JwtHelper.GetUserId(User);
 
     /// <summary>GET /api/profile</summary>
     [HttpGet]
@@ -45,7 +47,7 @@ public class ProfileController(IProfileService profile) : ControllerBase
         }
     }
 
-    // ── Companies ──────────────────────────────────────────────────────────
+    // ── Companies ──────────────────────────────────────────────────────
 
     /// <summary>GET /api/profile/companies</summary>
     [HttpGet("companies")]
