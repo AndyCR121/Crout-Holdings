@@ -21,11 +21,11 @@ import {
 function normalizeService(raw: any): IService {
   return {
     service_id:         raw.service_id         ?? raw.serviceId         ?? raw.id,
-    ServiceName:        raw.ServiceName        ?? raw.serviceName       ?? raw.name        ?? '',
-    Price:              raw.Price               ?? raw.price             ?? 0,
-    HasAddons:          raw.HasAddons           ?? raw.hasAddons         ?? false,
-    ServiceDescription: raw.ServiceDescription  ?? raw.serviceDescription ?? raw.description ?? '',
-    Conditional:        raw.Conditional         ?? raw.conditional       ?? false,
+    serviceName:        raw.serviceName        ?? raw.ServiceName       ?? raw.name        ?? '',
+    price:              raw.price               ?? raw.Price             ?? 0,
+    hasAddons:          raw.hasAddons           ?? raw.HasAddons         ?? false,
+    serviceDescription: raw.serviceDescription  ?? raw.ServiceDescription ?? raw.description ?? '',
+    conditional:        raw.conditional         ?? raw.Conditional       ?? false,
     features:           raw.features            ?? [],
   };
 }
@@ -34,9 +34,9 @@ function normalizeAddon(raw: any): IAddon {
   return {
     addon_id:         raw.addon_id         ?? raw.addonId         ?? raw.id,
     service_id:       raw.service_id       ?? raw.serviceId       ?? null,
-    AddonName:        raw.AddonName        ?? raw.addonName       ?? raw.name        ?? '',
-    AddonDescription: raw.AddonDescription ?? raw.addonDescription ?? raw.description ?? '',
-    Price:            raw.Price             ?? raw.price           ?? 0,
+    addonName:        raw.addonName        ?? raw.AddonName       ?? raw.name        ?? '',
+    addonDescription: raw.addonDescription ?? raw.AddonDescription ?? raw.description ?? '',
+    price:            raw.price             ?? raw.Price           ?? 0,
   };
 }
 
@@ -45,9 +45,9 @@ function normalizePackage(raw: any): IPackage {
     package_id:           raw.package_id           ?? raw.packageId          ?? raw.id,
     parent_package_id:    raw.parent_package_id     ?? raw.parentPackageId    ?? undefined,
     service_ids:          raw.service_ids           ?? raw.serviceIds         ?? [],
-    PackageName:          raw.PackageName           ?? raw.packageName        ?? raw.name        ?? '',
-    PackageDescription:   raw.PackageDescription    ?? raw.packageDescription ?? raw.description ?? '',
-    Discount:             raw.Discount              ?? raw.discount           ?? 0,
+    packageName:          raw.packageName           ?? raw.PackageName        ?? raw.name        ?? '',
+    packageDescription:   raw.packageDescription    ?? raw.PackageDescription ?? raw.description ?? '',
+    discount:             raw.discount              ?? raw.discount           ?? 0,
     minimumRequiredAddons: raw.minimumRequiredAddons ?? raw.minimumrequiredaddons ?? undefined,
   };
 }
