@@ -18,23 +18,25 @@ function readCookie(name: string): string | null {
   return match ? decodeURIComponent(match[1]) : null;
 }
 function writeCookie(name: string, value: string, days = 7): void {
-  const exp = new Date(Date.now() + days * 864e5).toUTCString();
-  document.cookie = `${name}=${encodeURIComponent(value)};expires=${exp};path=/;SameSite=Lax`;
+  const exp      = new Date(Date.now() + days * 864e5).toUTCString();
+  const secure   = location.protocol === 'https:' ? ';Secure' : '';
+  document.cookie = `${name}=${encodeURIComponent(value)};expires=${exp};path=/;SameSite=Lax${secure}`;
 }
 function deleteCookie(name: string): void {
-  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+  const secure = location.protocol === 'https:' ? ';Secure' : '';
+  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Lax${secure}`;
 }
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly http = inject(HttpClient);
+  private readonly http   = inject(HttpClient);
   private readonly router = inject(Router);
-  private readonly env = inject(EnvironmentService);
+  private readonly env    = inject(EnvironmentService);
   private get base(): string { return this.env.apiUrl; }
 
   // ── Signals ──────────────────────────────────────────────────────────────
   readonly currentUser = signal<IUser | null>(this._restoreUser());
-  readonly isLoggedIn = computed(() => this.currentUser() !== null);
+  readonly isLoggedIn  = computed(() => this.currentUser() !== null);
 
   // ── Restore from cookie on init ──────────────────────────────────────────
   private _restoreUser(): IUser | null {
@@ -71,7 +73,6 @@ export class AuthService {
   }
 
   // ── Update Profile ─────────────────────────────────────────────────────────
-  // Calls PUT /api/profile (requires JWT — interceptor attaches it via ca_jwt cookie)
   updateProfile(updates: Partial<IUser>): Observable<IUser> {
     return this.http
       .put<IUser>(`${this.base}/profile`, updates, { withCredentials: true })
