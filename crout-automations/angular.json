@@ -29,7 +29,13 @@
               { "glob": "**/*", "input": "src/assets", "output": "assets" }
             ],
             "styles": ["src/styles/styles.scss"],
-            "scripts": []
+            "scripts": [],
+            "fileReplacements": [
+              {
+                "replace": "src/environments/environment.ts",
+                "with": "src/environments/environment.prod.ts"
+              }
+            ]
           },
           "configurations": {
             "production": {
@@ -42,7 +48,8 @@
             "development": {
               "optimization": false,
               "extractLicenses": false,
-              "sourceMap": true
+              "sourceMap": true,
+              "fileReplacements": []
             },
             "elements": {
               "outputPath": {
@@ -76,6 +83,9 @@
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "proxyConfig": "proxy.conf.json"
+          },
           "configurations": {
             "production": { "buildTarget": "crout-automations:build:production" },
             "development": { "buildTarget": "crout-automations:build:development" }

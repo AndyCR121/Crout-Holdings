@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 import {
   IService,
   IAddon,
@@ -12,20 +13,35 @@ import {
   IServiceConfig,
 } from '../interfaces/i-service.interface';
 
-function getApiUrl(): string {
-  const url = (window as any).__env?.apiUrl ?? '';
-  if (!url) console.warn('[ApiService] window.__env.apiUrl is not set — API calls will fail.');
-  return url;
+/**
+ * Resolve the API base URL.
+ * Priority: environment.apiUrl (set at build time) → window.__env.apiUrl (WordPress runtime inject)
+ *
+ * In development:  environment.apiUrl = 'http://localhost:3000'
+ *                  The dev server proxy (proxy.conf.json) also forwards /api/* so
+ *                  relative paths like '/api/services' work without CORS issues.
+ * In production:   environment.apiUrl = '' so we fall through to window.__env.apiUrl
+ *                  which WordPress injects via wp_inline_script before the bundle loads.
+ */
+function resolveApiUrl(): string {
+  if (environment.apiUrl) return environment.apiUrl;
+  const runtime = (window as any).__env?.apiUrl ?? '';
+  if (!runtime) {
+    console.warn(
+      '[ApiService] No API URL found. Set environment.apiUrl (dev) or window.__env.apiUrl (production via WordPress).'
+    );
+  }
+  return runtime;
 }
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
 
-  private get base(): string { return getApiUrl(); }
+  private readonly base = resolveApiUrl();
 
   constructor(private http: HttpClient) {}
 
-  // ─── Services ────────────────────────────────────────────────────────────
+  // ─── Services ────────────────────────────────────────────────────────────────
 
   getServices(): Observable<IService[]> {
     return this.http
@@ -39,7 +55,7 @@ export class ApiService {
       .pipe(catchError(err => throwError(() => err)));
   }
 
-  // ─── Addons ──────────────────────────────────────────────────────────────
+  // ─── Addons ───────────────────────────────────────────────────────────────────
 
   getAddons(): Observable<IAddon[]> {
     return this.http
@@ -53,7 +69,7 @@ export class ApiService {
       .pipe(catchError(err => throwError(() => err)));
   }
 
-  // ─── Packages ────────────────────────────────────────────────────────────
+  // ─── Packages ────────────────────────────────────────────────────────────────
 
   getPackages(): Observable<IPackage[]> {
     return this.http
@@ -67,7 +83,7 @@ export class ApiService {
       .pipe(catchError(err => throwError(() => err)));
   }
 
-  // ─── Users ───────────────────────────────────────────────────────────────
+  // ─── Users ────────────────────────────────────────────────────────────────────
 
   getUsers(): Observable<IUser[]> {
     return this.http
@@ -81,7 +97,7 @@ export class ApiService {
       .pipe(catchError(err => throwError(() => err)));
   }
 
-  // ─── Companies ───────────────────────────────────────────────────────────
+  // ─── Companies ───────────────────────────────────────────────────────────────
 
   getCompanies(): Observable<ICompany[]> {
     return this.http
@@ -101,7 +117,7 @@ export class ApiService {
       .pipe(catchError(err => throwError(() => err)));
   }
 
-  // ─── Company Services ─────────────────────────────────────────────────────
+  // ─── Company Services ─────────────────────────────────────────────────────────
 
   getCompanyServices(companyId: number): Observable<IUserService[]> {
     return this.http
@@ -109,7 +125,7 @@ export class ApiService {
       .pipe(catchError(err => throwError(() => err)));
   }
 
-  // ─── Service Config ──────────────────────────────────────────────────────
+  // ─── Service Config ───────────────────────────────────────────────────────────
 
   getServiceConfig(companyId: number, serviceId: number): Observable<IServiceConfig | null> {
     return this.http
