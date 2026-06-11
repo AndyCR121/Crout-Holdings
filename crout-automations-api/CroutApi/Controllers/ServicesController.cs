@@ -11,6 +11,14 @@ public class ServicesController(IServiceCatalogService catalog) : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll() => Ok(await catalog.GetServicesAsync());
 
+    /// <summary>GET /api/services/{id} — single service with its features</summary>
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var service = await catalog.GetServiceByIdAsync(id);
+        return service is null ? NotFound() : Ok(service);
+    }
+
     /// <summary>GET /api/services/{id}/addons</summary>
     [HttpGet("{id:int}/addons")]
     public async Task<IActionResult> GetAddons(int id) => Ok(await catalog.GetAddonsByServiceAsync(id));
