@@ -1,0 +1,93 @@
+<div class="ca-modal-backdrop" role="dialog" aria-modal="true" aria-label="Account">
+  <div class="ca-modal-box">
+
+    <!-- Header -->
+    <div class="ca-modal-header">
+      <div class="ca-modal-tabs">
+        <button
+          [class.active]="tab() === 'login'"
+          (click)="switchTab('login')"
+        >Login</button>
+        <button
+          [class.active]="tab() === 'signup'"
+          (click)="switchTab('signup')"
+        >Sign Up</button>
+      </div>
+      <button class="ca-modal-close" (click)="close.emit()" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Error -->
+    @if (error()) {
+      <div class="ca-modal-error">{{ error() }}</div>
+    }
+
+    <!-- LOGIN -->
+    @if (tab() === 'login') {
+      <form class="ca-modal-form" (ngSubmit)="submitLogin()" novalidate>
+        <div class="ca-field">
+          <label>Username or Email</label>
+          <input
+            type="text" [(ngModel)]="loginId" name="loginId"
+            placeholder="you@example.com"
+            autocomplete="username"
+          />
+        </div>
+        <div class="ca-field">
+          <label>Password</label>
+          <input
+            type="password" [(ngModel)]="loginPwd" name="loginPwd"
+            placeholder="••••••••"
+            autocomplete="current-password"
+          />
+        </div>
+        <button type="submit" class="ca-btn-primary" [disabled]="loading()">
+          {{ loading() ? 'Signing in…' : 'Sign In' }}
+        </button>
+      </form>
+    }
+
+    <!-- SIGN UP -->
+    @if (tab() === 'signup') {
+      <form class="ca-modal-form" (ngSubmit)="submitSignup()" novalidate>
+        <div class="ca-field-row">
+          <div class="ca-field">
+            <label>First Name <span class="req">*</span></label>
+            <input type="text" [(ngModel)]="signupFirstName" name="firstName" placeholder="John" />
+          </div>
+          <div class="ca-field">
+            <label>Surname <span class="req">*</span></label>
+            <input type="text" [(ngModel)]="signupSurname" name="surname" placeholder="Smith" />
+          </div>
+        </div>
+        <div class="ca-field">
+          <label>Username <span class="req">*</span></label>
+          <input type="text" [(ngModel)]="signupUsername" name="username" placeholder="johnsmith" autocomplete="username" />
+        </div>
+        <div class="ca-field">
+          <label>Email <span class="req">*</span></label>
+          <input type="email" [(ngModel)]="signupEmail" name="email" placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div class="ca-field">
+          <label>Company (optional)</label>
+          <input type="text" [(ngModel)]="signupCompany" name="company" placeholder="Acme (Pty) Ltd" />
+        </div>
+        <div class="ca-field">
+          <label>Password <span class="req">*</span></label>
+          <input type="password" [(ngModel)]="signupPwd" name="pwd" placeholder="••••••••" autocomplete="new-password" />
+        </div>
+        <div class="ca-field">
+          <label>Confirm Password <span class="req">*</span></label>
+          <input type="password" [(ngModel)]="signupPwd2" name="pwd2" placeholder="••••••••" autocomplete="new-password" />
+        </div>
+        <button type="submit" class="ca-btn-primary" [disabled]="loading()">
+          {{ loading() ? 'Creating account…' : 'Create Account' }}
+        </button>
+      </form>
+    }
+
+  </div>
+</div>
