@@ -24,8 +24,8 @@
       <input type="file" accept="image/*" class="pprofile__avatar-input" (change)="onAvatarChange($event)" />
     </label>
     <div class="pprofile__avatar-meta">
-      <span class="pprofile__avatar-name">{{ firstName() || user()?.FirstName }} {{ surname() || user()?.Surname }}</span>
-      <span class="pprofile__avatar-email">{{ email() || user()?.Email }}</span>
+      <span class="pprofile__avatar-name">{{ firstName() || user()?.firstName }} {{ surname() || user()?.surname }}</span>
+      <span class="pprofile__avatar-email">{{ email() || user()?.email }}</span>
     </div>
   </div>
 
@@ -112,12 +112,12 @@
         <!-- View mode -->
         <ng-container *ngIf="editingId() !== c.company_id">
           <div class="pprofile__company-info">
-            <span class="pprofile__company-name">{{ c.CompanyName }}</span>
-            <span class="pprofile__company-industry" *ngIf="c.Industry">{{ c.Industry }}</span>
-            <span class="pprofile__company-meta" *ngIf="c.Email">{{ c.Email }}</span>
-            <span class="pprofile__company-meta" *ngIf="c.Phone">{{ c.Phone }}</span>
+            <span class="pprofile__company-name">{{ c.companyName }}</span>
+            <span class="pprofile__company-industry" *ngIf="c.industry">{{ c.industry }}</span>
+            <span class="pprofile__company-meta" *ngIf="c.email">{{ c.email }}</span>
+            <span class="pprofile__company-meta" *ngIf="c.phone">{{ c.phone }}</span>
             <span class="pprofile__company-meta" *ngIf="c.VATNumber">VAT: {{ c.VATNumber }}</span>
-            <span class="pprofile__company-meta" *ngIf="c.RegistrationNumber">Reg: {{ c.RegistrationNumber }}</span>
+            <span class="pprofile__company-meta" *ngIf="c.registrationNumber">Reg: {{ c.registrationNumber }}</span>
           </div>
           <div class="pprofile__company-actions">
             <button class="pprofile__btn pprofile__btn--ghost pprofile__btn--sm" (click)="openEditCompany(c)">Edit</button>

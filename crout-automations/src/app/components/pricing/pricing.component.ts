@@ -53,7 +53,7 @@ export class PricingComponent implements OnInit {
     }).pipe(
       switchMap(({ svcs, pkgs }) => {
         // Only request addons for services that (a) have addons AND (b) have a valid service_id
-        const addonSvcs = svcs.filter(s => s.HasAddons && s.service_id != null);
+        const addonSvcs = svcs.filter(s => s.hasAddons && s.service_id != null);
 
         const addonRequests = addonSvcs.length
           ? forkJoin(
@@ -89,7 +89,7 @@ export class PricingComponent implements OnInit {
 
   // ── View builders ─────────────────────────────────────────────────────────
   private buildViews(): void {
-    this.visibleServices = this.services.filter(s => !s.Conditional);
+    this.visibleServices = this.services.filter(s => !s.conditional);
     this.hasMoreServices = this.visibleServices.length > MAX_VISIBLE_SERVICES;
     this.visibleServicesLimited = this.hasMoreServices
       ? this.visibleServices.slice(0, MAX_VISIBLE_SERVICES)
@@ -108,7 +108,7 @@ export class PricingComponent implements OnInit {
 
       const conditionalService: IService | null = childPkg
         ? (this.services.find(
-            s => s.Conditional && (childPkg.service_ids ?? []).includes(s.service_id)
+            s => s.conditional && (childPkg.service_ids ?? []).includes(s.service_id)
           ) ?? null)
         : null;
 
@@ -212,17 +212,17 @@ export class PricingComponent implements OnInit {
       )];
       return uniqueIds.reduce((sum, id) => {
         const svc = this.services.find(s => s.service_id === id);
-        return sum + (svc?.Price ?? 0);
+        return sum + (svc?.price ?? 0);
       }, 0);
     }
 
     const rootTotal = svcIds.reduce((sum, id) => {
       const svc = this.services.find(s => s.service_id === id);
-      return sum + (svc?.Price ?? 0);
+      return sum + (svc?.price ?? 0);
     }, 0);
 
     const conditionalPrice = (view.conditionalEnabled && view.conditionalService)
-      ? (view.conditionalService.Price ?? 0)
+      ? (view.conditionalService.price ?? 0)
       : 0;
 
     return rootTotal + conditionalPrice;
@@ -231,7 +231,7 @@ export class PricingComponent implements OnInit {
   enabledAddonTotal(view: IPackageView): number {
     return view.addonStates
       .filter(s => s.enabled)
-      .reduce((sum, s) => sum + s.addon.Price, 0);
+      .reduce((sum, s) => sum + s.addon.price, 0);
   }
 
   fullTotal(view: IPackageView): number {
@@ -240,7 +240,7 @@ export class PricingComponent implements OnInit {
 
   discountedTotal(view: IPackageView): number {
     if (!this.discountUnlocked(view)) return this.fullTotal(view);
-    const discount = this.activePkg(view).Discount ?? 0;
+    const discount = this.activePkg(view).discount ?? 0;
     return Math.round(this.fullTotal(view) * (1 - discount));
   }
 

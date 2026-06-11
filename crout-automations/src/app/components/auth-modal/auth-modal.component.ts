@@ -56,7 +56,7 @@ export class AuthModalComponent {
         next: (user) => {
           this.loading.set(false);
           this.close.emit();
-          this.toastSvc.success(`Welcome back, ${user.FirstName || user.Username}!`);
+          this.toastSvc.success(`Welcome back, ${user.firstName || user.username}!`);
           this.router.navigate(['/client/dashboard']);
         },
         error: (e: Error) => {
@@ -88,7 +88,7 @@ export class AuthModalComponent {
       next: (user) => {
         this.loading.set(false);
         this.close.emit();
-        this.toastSvc.success(`Account created! Welcome, ${user.FirstName || user.Username}.`);
+        this.toastSvc.success(`Account created! Welcome, ${user.firstName || user.username}.`);
         this.router.navigate(['/client/dashboard']);
       },
       error: (e: Error) => {

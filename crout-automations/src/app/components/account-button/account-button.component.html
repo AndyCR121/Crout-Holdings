@@ -14,14 +14,14 @@
       <!-- Avatar -->
       <span class="ca-avatar">
         @if (user()!.profilePicture) {
-          <img [src]="user()!.profilePicture!" [alt]="user()!.Username" />
+          <img [src]="user()!.profilePicture!" [alt]="user()!.username" />
         } @else {
           <span class="ca-avatar-initials">{{ initials() }}</span>
         }
       </span>
       <!-- Identity -->
       <span class="ca-account-identity">
-        <span class="ca-account-username">{{ user()!.Username }}</span>
+        <span class="ca-account-username">{{ user()!.username }}</span>
         @if (primaryCompany()) {
           <span class="ca-account-company">{{ primaryCompany() }}</span>
         }

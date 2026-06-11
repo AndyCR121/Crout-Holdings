@@ -65,11 +65,11 @@ export class PortalProfileComponent implements OnInit {
   constructor() {
     const u = this.user();
     if (u) {
-      this.username.set(u.Username ?? '');
-      this.firstName.set(u.FirstName ?? '');
-      this.surname.set(u.Surname ?? '');
-      this.email.set(u.Email ?? '');
-      this.cellNumber.set(u.CellNumber ?? '');
+      this.username.set(u.username ?? '');
+      this.firstName.set(u.firstName ?? '');
+      this.surname.set(u.surname ?? '');
+      this.email.set(u.email ?? '');
+      this.cellNumber.set(u.cellNumber ?? '');
     }
   }
 
@@ -85,7 +85,7 @@ export class PortalProfileComponent implements OnInit {
   readonly initials = computed(() => {
     const u = this.user();
     if (!u) return '';
-    return ((u.FirstName?.[0] ?? '') + (u.Surname?.[0] ?? '')).toUpperCase() || u.Username[0].toUpperCase();
+    return ((u.firstName?.[0] ?? '') + (u.surname?.[0] ?? '')).toUpperCase() || u.username[0].toUpperCase();
   });
 
   onAvatarChange(event: Event): void {
@@ -101,11 +101,11 @@ export class PortalProfileComponent implements OnInit {
   saveProfile(): void {
     this.saving.set(true);
     const updates: Partial<IUser> = {
-      Username:   this.username(),
-      FirstName:  this.firstName(),
-      Surname:    this.surname(),
-      Email:      this.email(),
-      CellNumber: this.cellNumber() || null,
+      username:   this.username(),
+      firstName:  this.firstName(),
+      surname:    this.surname(),
+      email:      this.email(),
+      cellNumber: this.cellNumber() || null,
     };
     this.auth.updateProfile(updates).subscribe({
       next: () => { this.saving.set(false); this.toast.success('Profile updated successfully.'); },
@@ -146,34 +146,34 @@ export class PortalProfileComponent implements OnInit {
     const newCompany: ICompany = {
       company_id:          Date.now(),   // temp ID until API responds
       user_id:             uid,
-      CompanyName:         this.addName().trim(),
-      Industry:            this.addIndustry().trim() || null,
-      Email:               this.addEmail().trim() || null,
-      Phone:               this.addPhone().trim() || null,
+      companyName:         this.addName().trim(),
+      industry:            this.addIndustry().trim() || null,
+      email:               this.addEmail().trim() || null,
+      phone:               this.addPhone().trim() || null,
       VATNumber:           this.addVAT().trim() || null,
-      RegistrationNumber:  this.addReg().trim() || null,
-      Address:             this.addAddress().trim() || null,
-      Active:              true,
+      registrationNumber:  this.addReg().trim() || null,
+      address:             this.addAddress().trim() || null,
+      active:              true,
     };
     // In a real app: POST /companies — demo fallback adds locally
     setTimeout(() => {
       this.companies.update(c => [...c, newCompany]);
       this.showAddForm.set(false);
       this.savingCompany.set(false);
-      this.toast.success(`Company "${newCompany.CompanyName}" added.`);
+      this.toast.success(`Company "${newCompany.companyName}" added.`);
     }, 600);
   }
 
   // ── Company: open edit form ────────────────────────────────────────────────
   openEditCompany(c: ICompany): void {
     this.showAddForm.set(false);
-    this.editName.set(c.CompanyName);
-    this.editIndustry.set(c.Industry ?? '');
-    this.editEmail.set(c.Email ?? '');
-    this.editPhone.set(c.Phone ?? '');
+    this.editName.set(c.companyName);
+    this.editIndustry.set(c.industry ?? '');
+    this.editEmail.set(c.email ?? '');
+    this.editPhone.set(c.phone ?? '');
     this.editVAT.set(c.VATNumber ?? '');
-    this.editReg.set(c.RegistrationNumber ?? '');
-    this.editAddress.set(c.Address ?? '');
+    this.editReg.set(c.registrationNumber ?? '');
+    this.editAddress.set(c.address ?? '');
     this.editingId.set(c.company_id);
   }
 
@@ -184,26 +184,26 @@ export class PortalProfileComponent implements OnInit {
     this.savingCompany.set(true);
     const updated: ICompany = {
       ...c,
-      CompanyName:         this.editName().trim(),
-      Industry:            this.editIndustry().trim() || null,
-      Email:               this.editEmail().trim() || null,
-      Phone:               this.editPhone().trim() || null,
+      companyName:         this.editName().trim(),
+      industry:            this.editIndustry().trim() || null,
+      email:               this.editEmail().trim() || null,
+      phone:               this.editPhone().trim() || null,
       VATNumber:           this.editVAT().trim() || null,
-      RegistrationNumber:  this.editReg().trim() || null,
-      Address:             this.editAddress().trim() || null,
+      registrationNumber:  this.editReg().trim() || null,
+      address:             this.editAddress().trim() || null,
     };
     setTimeout(() => {
       this.companies.update(list => list.map(x => x.company_id === c.company_id ? updated : x));
       this.editingId.set(null);
       this.savingCompany.set(false);
-      this.toast.success(`Company "${updated.CompanyName}" updated.`);
+      this.toast.success(`Company "${updated.companyName}" updated.`);
     }, 600);
   }
 
   // ── Company: remove ───────────────────────────────────────────────────────
   removeCompany(c: ICompany): void {
-    if (!confirm(`Remove "${c.CompanyName}"? This cannot be undone.`)) return;
+    if (!confirm(`Remove "${c.companyName}"? This cannot be undone.`)) return;
     this.companies.update(list => list.filter(x => x.company_id !== c.company_id));
-    this.toast.success(`Company "${c.CompanyName}" removed.`);
+    this.toast.success(`Company "${c.companyName}" removed.`);
   }
 }

@@ -22,9 +22,9 @@
 
       <div class="psubs__row-header">
         <div class="psubs__row-title-group">
-          <span class="psubs__service-name">{{ row.service?.ServiceName ?? 'Unknown Service' }}</span>
-          <span class="psubs__badge" [class]="statusClass(row.userService.Status)">
-            {{ statusLabel(row.userService.Status) }}
+          <span class="psubs__service-name">{{ row.service?.serviceName ?? 'Unknown Service' }}</span>
+          <span class="psubs__badge" [class]="statusClass(row.userService.status)">
+            {{ statusLabel(row.userService.status) }}
           </span>
         </div>
         <div class="psubs__price">

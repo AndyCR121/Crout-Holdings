@@ -1,6 +1,6 @@
 <section class="pd-wrap">
   <h1 class="pd-title">Dashboard</h1>
-  <p class="pd-sub">Welcome back, <strong>{{ user()?.Username }}</strong></p>
+  <p class="pd-sub">Welcome back, <strong>{{ user()?.username }}</strong></p>
 
   @if (loading()) {
     <div class="pd-skeleton-grid">
@@ -23,8 +23,8 @@
           <!-- Company header -->
           <div class="pd-company-header">
             <div class="pd-company-meta">
-              <span class="pd-company-name">{{ company.CompanyName }}</span>
-              <span class="pd-company-industry" *ngIf="company.Industry">{{ company.Industry }}</span>
+              <span class="pd-company-name">{{ company.companyName }}</span>
+              <span class="pd-company-industry" *ngIf="company.industry">{{ company.industry }}</span>
             </div>
             <span class="pd-company-count">{{ companyServices.length }} service{{ companyServices.length !== 1 ? 's' : '' }}</span>
           </div>
@@ -38,11 +38,11 @@
                   <!-- Header -->
                   <div class="pd-card-header">
                     <div>
-                      <h2 class="pd-card-name">{{ svc.ServiceName }}</h2>
-                      <p class="pd-card-desc">{{ svc.ServiceDescription }}</p>
+                      <h2 class="pd-card-name">{{ svc.serviceName }}</h2>
+                      <p class="pd-card-desc">{{ svc.serviceDescription }}</p>
                     </div>
-                    <span class="pd-status-badge" [class]="statusClass(us.Status)">
-                      {{ statusLabel(us.Status) }}
+                    <span class="pd-status-badge" [class]="statusClass(us.status)">
+                      {{ statusLabel(us.status) }}
                     </span>
                   </div>
 

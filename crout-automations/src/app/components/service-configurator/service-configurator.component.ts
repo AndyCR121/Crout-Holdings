@@ -55,7 +55,7 @@ export class ServiceConfiguratorComponent implements OnChanges {
       // Resolve the conditional service from allServices (it has Conditional:true)
       const conditionalService: IService | null = childPkg
         ? (this.allServices.find(
-            s => s.Conditional && (childPkg.service_ids ?? []).includes(s.service_id)
+            s => s.conditional && (childPkg.service_ids ?? []).includes(s.service_id)
           ) ?? null)
         : null;
 
@@ -165,17 +165,17 @@ export class ServiceConfiguratorComponent implements OnChanges {
       )];
       return uniqueIds.reduce((sum, id) => {
         const svc = this.allServices.find(s => s.service_id === id);
-        return sum + (svc?.Price ?? 0);
+        return sum + (svc?.price ?? 0);
       }, 0);
     }
 
     const rootTotal = svcIds.reduce((sum, id) => {
       const svc = this.allServices.find(s => s.service_id === id);
-      return sum + (svc?.Price ?? 0);
+      return sum + (svc?.price ?? 0);
     }, 0);
 
     const conditionalPrice = (view.conditionalEnabled && view.conditionalService)
-      ? (view.conditionalService.Price ?? 0)
+      ? (view.conditionalService.price ?? 0)
       : 0;
 
     return rootTotal + conditionalPrice;
@@ -184,7 +184,7 @@ export class ServiceConfiguratorComponent implements OnChanges {
   enabledAddonTotal(view: IPackageView): number {
     return view.addonStates
       .filter(s => s.enabled)
-      .reduce((sum, s) => sum + s.addon.Price, 0);
+      .reduce((sum, s) => sum + s.addon.price, 0);
   }
 
   fullTotal(view: IPackageView): number {
@@ -193,7 +193,7 @@ export class ServiceConfiguratorComponent implements OnChanges {
 
   discountedTotal(view: IPackageView): number {
     if (!this.discountUnlocked(view)) return this.fullTotal(view);
-    const discount = this.activePkg(view).Discount ?? 0;
+    const discount = this.activePkg(view).discount ?? 0;
     return Math.round(this.fullTotal(view) * (1 - discount));
   }
 

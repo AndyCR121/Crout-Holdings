@@ -29,8 +29,8 @@
       <!-- Group header -->
       <div class="pservices__group-header" (click)="toggleGroup(group)">
         <div class="pservices__group-meta">
-          <span class="pservices__group-name">{{ group.company.CompanyName }}</span>
-          <span class="pservices__group-industry" *ngIf="group.company.Industry">{{ group.company.Industry }}</span>
+          <span class="pservices__group-name">{{ group.company.companyName }}</span>
+          <span class="pservices__group-industry" *ngIf="group.company.industry">{{ group.company.industry }}</span>
         </div>
         <div class="pservices__group-right">
           <span class="pservices__group-count">{{ group.rows.length }} service{{ group.rows.length !== 1 ? 's' : '' }}</span>
@@ -53,12 +53,12 @@
           <!-- Card header -->
           <div class="pservices__card-header">
             <div class="pservices__card-title-row">
-              <h2 class="pservices__card-title">{{ row.service.ServiceName }}</h2>
-              <span class="pservices__status" [ngClass]="statusClass(row.userService.Status)">
-                {{ statusLabel(row.userService.Status) }}
+              <h2 class="pservices__card-title">{{ row.service.serviceName }}</h2>
+              <span class="pservices__status" [ngClass]="statusClass(row.userService.status)">
+                {{ statusLabel(row.userService.status) }}
               </span>
             </div>
-            <p class="pservices__card-desc">{{ row.service.ServiceDescription }}</p>
+            <p class="pservices__card-desc">{{ row.service.serviceDescription }}</p>
           </div>
 
           <!-- Active addons -->
@@ -79,13 +79,13 @@
           <div class="pservices__edit" *ngIf="row.editing">
             <p class="pservices__edit-hint">Select the integrations you'd like — we'll action the changes within 24 hours.</p>
             <ul class="pservices__addon-toggle-list">
-              <li *ngFor="let addon of row.addons" class="pservices__addon-toggle" [class.pservices__addon-toggle--active]="isSelected(row, addon.AddonName)" (click)="toggleAddon(row, addon.AddonName)">
+              <li *ngFor="let addon of row.addons" class="pservices__addon-toggle" [class.pservices__addon-toggle--active]="isSelected(row, addon.addonName)" (click)="toggleAddon(row, addon.addonName)">
                 <span class="pservices__addon-check">
-                  <svg *ngIf="isSelected(row, addon.AddonName)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg *ngIf="isSelected(row, addon.addonName)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
                 </span>
                 <span class="pservices__addon-info">
-                  <strong>{{ addon.AddonName }}</strong>
-                  <small>{{ addon.AddonDescription }}</small>
+                  <strong>{{ addon.addonName }}</strong>
+                  <small>{{ addon.addonDescription }}</small>
                 </span>
               </li>
             </ul>
@@ -105,12 +105,12 @@
               <button class="pservices__side-panel-close" (click)="closeSidePanel(row)" aria-label="Close">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
-              <h3>{{ row.service.ServiceName }}</h3>
-              <p class="pservices__side-desc">{{ row.service.ServiceDescription }}</p>
+              <h3>{{ row.service.serviceName }}</h3>
+              <p class="pservices__side-desc">{{ row.service.serviceDescription }}</p>
               <div class="pservices__side-meta">
-                <div><span>Company</span><strong>{{ group.company.CompanyName }}</strong></div>
+                <div><span>Company</span><strong>{{ group.company.companyName }}</strong></div>
                 <div><span>Status</span>
-                  <strong [ngClass]="statusClass(row.userService.Status)">{{ statusLabel(row.userService.Status) }}</strong>
+                  <strong [ngClass]="statusClass(row.userService.status)">{{ statusLabel(row.userService.status) }}</strong>
                 </div>
                 <div *ngIf="row.userService.subscription_id">
                   <span>Subscription</span><strong>{{ row.userService.subscription_id }}</strong>

@@ -1,10 +1,10 @@
 export interface IService {
   service_id: number;
-  ServiceName: string;
-  Price: number;           // default 3000.00
-  HasAddons: boolean;      // default false
-  ServiceDescription: string;
-  Conditional: boolean; // default false, used in conditions if set in config to use parent package or other.
+  serviceName: string;
+  price: number;           // default 3000.00
+  hasAddons: boolean;      // default false
+  serviceDescription: string;
+  conditional: boolean; // default false, used in conditions if set in config to use parent package or other.
   /** High-level bullet points shown on the services page card and service sub-page */
   features: string[];
 }
@@ -12,9 +12,9 @@ export interface IService {
 export interface IAddon {
   addon_id: number;
   service_id: number | null;
-  AddonName: string;
-  AddonDescription: string;
-  Price: number;           // default 200.00
+  addonName: string;
+  addonDescription: string;
+  price: number;           // default 200.00
 }
 
 export interface IPackage {
@@ -22,9 +22,9 @@ export interface IPackage {
   parent_package_id?: number; // conditional FK to allow nested packages
   /** One or more service IDs this package is composed of */
   service_ids?: number[];
-  PackageName: string;
-  PackageDescription: string;
-  Discount: number;        // 0–1 (percentage)
+  packageName: string;
+  packageDescription: string;
+  discount: number;        // 0–1 (percentage)
   /**
    * Minimum number of add-ons that must be enabled before the bundle
    * discount is applied. When undefined or 0, the discount is always active
@@ -41,26 +41,26 @@ export interface IPackage {
 export interface ICompany {
   company_id: number;
   user_id: number;             // FK → IUser.user_id
-  CompanyName: string;
-  Industry?: string | null;
+  companyName: string;
+  industry?: string | null;
   VATNumber?: string | null;
-  RegistrationNumber?: string | null;
-  Email?: string | null;
-  Phone?: string | null;
-  Address?: string | null;
-  Active: boolean;
+  registrationNumber?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  active: boolean;
 }
 
 export interface IUser {
   user_id: number;
-  Username: string;
-  Password: string;
-  FirstName: string;
-  Surname: string;
-  Email: string;
-  CellNumber: string | null;
-  Active: boolean;
-  IsAdmin: boolean;
+  username: string;
+  password: string;
+  firstName: string;
+  surname: string;
+  email: string;
+  cellNumber: string | null;
+  active: boolean;
+  isAdmin: boolean;
   /** Optional profile picture URL or base64 data URI */
   profilePicture?: string | null;
 }
@@ -74,8 +74,8 @@ export interface IUserService {
   package_id: number | null;
   subscription_id: string | null;
   config: string;              // JSON string
-  Active: boolean;             // default true
-  Status: UserServiceStatus;   // default 1
+  active: boolean;             // default true
+  status: UserServiceStatus;   // default 1
 }
 
 export interface IServiceConfig {

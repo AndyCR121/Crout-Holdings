@@ -71,16 +71,16 @@ export class ServicesComponent implements OnInit {
       const resp = await this.api.getServices().toPromise();
       if (resp) {
         this.services = resp
-          .filter(s => !s.Conditional)           // hide conditional services
+          .filter(s => !s.conditional)           // hide conditional services
           .map((s, i) => {
-            const meta = SERVICE_META[s.ServiceName];
+            const meta = SERVICE_META[s.serviceName];
             const accent: ServiceAccent = i % 2 === 0 ? 'orange' : 'blue';
             return {
               ...s,
-              slug:    meta?.slug    ?? s.ServiceName.toLowerCase().replace(/\s+/g, '-'),
+              slug:    meta?.slug    ?? s.serviceName.toLowerCase().replace(/\s+/g, '-'),
               icon:    meta?.icon    ?? '',
-              label:   meta?.label   ?? s.ServiceName,
-              tagline: meta?.tagline ?? s.ServiceDescription,
+              label:   meta?.label   ?? s.serviceName,
+              tagline: meta?.tagline ?? s.serviceDescription,
               // features comes from IService (API / demo data) — no META override needed
               accent:  meta?.accent  ?? accent,
             } as IServiceDisplay;

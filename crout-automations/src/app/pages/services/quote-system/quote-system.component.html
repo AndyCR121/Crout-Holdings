@@ -15,7 +15,7 @@
       </div>
       <h1 class="svc-page__heading">Quote <span class="accent">System</span></h1>
       @if (service()) {
-        <p class="svc-page__sub">{{ service()!.ServiceDescription }}</p>
+        <p class="svc-page__sub">{{ service()!.serviceDescription }}</p>
       } @else if (loading()) {
         <div class="svc-page__sub-ghost"></div>
       }

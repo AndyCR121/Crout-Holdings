@@ -3,7 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of, tap, catchError, map } from 'rxjs';
 import { IUser } from '../interfaces/i-service.interface';
-import { DEMO_USERS } from '../data/demo.data';
 import { EnvironmentService } from './environment.service';
 
 export interface ILoginPayload  { identifier: string; password: string; }
@@ -52,15 +51,7 @@ export class AuthService {
       .pipe(
         map(r => r.user),
         tap(user => this._setSession(user)),
-        catchError(() => {
-          const found = DEMO_USERS.find(
-            u => (u.Username === payload.identifier || u.Email === payload.identifier)
-              && u.Password === payload.password
-          );
-          if (!found) throw new Error('Invalid credentials');
-          this._setSession(found);
-          return of(found);
-        })
+        // TODO: Implement error toast\
       );
   }
 
@@ -74,14 +65,14 @@ export class AuthService {
         catchError(() => {
           const fake: IUser = {
             user_id:    Date.now(),
-            Username:   payload.username,
-            Password:   payload.password,
-            FirstName:  payload.firstName,
-            Surname:    payload.surname,
-            Email:      payload.email,
-            CellNumber: null,
-            Active:     true,
-            IsAdmin:    false,
+            username:   payload.username,
+            password:   payload.password,
+            firstName:  payload.firstName,
+            surname:    payload.surname,
+            email:      payload.email,
+            cellNumber: null,
+            active:     true,
+            isAdmin:    false,
           };
           this._setSession(fake);
           return of(fake);
@@ -125,7 +116,7 @@ export class AuthService {
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
   private _setSession(user: IUser): void {
-    const safe: Partial<IUser> = { ...user, Password: '' };
+    const safe: Partial<IUser> = { ...user, password: '' };
     writeCookie('ca_user', JSON.stringify(safe), 7);
     this.currentUser.set(user);
   }

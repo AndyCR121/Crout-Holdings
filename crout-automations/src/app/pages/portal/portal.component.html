@@ -30,7 +30,7 @@
       <div class="portal-user-chip" *ngIf="user()">
         <span class="portal-user-avatar">{{ initials() }}</span>
         <div class="portal-user-info">
-          <span class="portal-user-name">{{ user()!.Username }}</span>
+          <span class="portal-user-name">{{ user()!.username }}</span>
           <span class="portal-user-company" *ngIf="primaryCompany()">{{ primaryCompany() }}</span>
         </div>
       </div>

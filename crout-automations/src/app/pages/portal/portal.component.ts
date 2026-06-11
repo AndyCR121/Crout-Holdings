@@ -23,12 +23,12 @@ export class PortalComponent implements OnInit {
   readonly initials = computed(() => {
     const u = this.user();
     if (!u) return '';
-    return ((u.FirstName?.[0] ?? '') + (u.Surname?.[0] ?? '')).toUpperCase() || u.Username[0].toUpperCase();
+    return ((u.firstName?.[0] ?? '') + (u.surname?.[0] ?? '')).toUpperCase() || u.username[0].toUpperCase();
   });
 
   /** Primary company name shown in the sidebar chip (first active company). */
   readonly primaryCompany = computed(() =>
-    this.companies().find(c => c.Active)?.CompanyName ?? null
+    this.companies().find(c => c.active)?.companyName ?? null
   );
 
   ngOnInit(): void {

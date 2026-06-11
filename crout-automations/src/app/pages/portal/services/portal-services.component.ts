@@ -138,7 +138,7 @@ export class PortalServicesComponent implements OnInit {
       row.editing      = false;
       this.saving.set(null);
       this.groups.update(g => [...g]);
-      this.toast.success(`Configuration request submitted for ${row.service.ServiceName}.`);
+      this.toast.success(`Configuration request submitted for ${row.service.serviceName}.`);
     }, 800);
   }
 
