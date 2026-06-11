@@ -8,7 +8,7 @@ import { IAddonState, IPackageView } from '../../interfaces/i-service-display.in
 import { FindByIdPipe } from '../../pipes/find-by-id.pipe';
 import { FilterByServiceIdPipe } from '../../pipes/filter-by-service-id.pipe';
 import { forkJoin, of } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, catchError } from 'rxjs/operators';
 
 /** Maximum service cards shown in the pricing section before "View More" appears */
 const MAX_VISIBLE_SERVICES = 6;
@@ -51,11 +51,22 @@ export class PricingComponent implements OnInit {
       svcs: this.api.getServices(),
       pkgs: this.api.getAllPackages(),
     }).pipe(
-      // Step 2: once we have services, fetch addons per-service in parallel
       switchMap(({ svcs, pkgs }) => {
-        const addonRequests = svcs.length
-          ? forkJoin(svcs.map((s: IService) => this.api.getAddonsByService(s.service_id)))
+        // Only request addons for services that (a) have addons AND (b) have a valid service_id
+        const addonSvcs = svcs.filter(s => s.HasAddons && s.service_id != null);
+
+        const addonRequests = addonSvcs.length
+          ? forkJoin(
+              addonSvcs.map((s: IService) =>
+                this.api.getAddonsByService(s.service_id).pipe(
+                  // If one service's addon fetch fails (e.g. 404), return empty array
+                  // so the rest of the load still completes.
+                  catchError(() => of([] as IAddon[]))
+                )
+              )
+            )
           : of([] as IAddon[][]);
+
         return forkJoin({ svcs: of(svcs), pkgs: of(pkgs), addonMatrix: addonRequests });
       })
     ).subscribe({
@@ -70,6 +81,8 @@ export class PricingComponent implements OnInit {
       error: (err: unknown) => {
         const e = err as { message?: string; error?: string };
         console.error(e?.message ?? e?.error ?? 'Something went wrong onLoad()!');
+        // Still dismiss the ghost loader so the page isn't permanently stuck
+        this.ghostLoaderOnLoad.set(false);
       },
     });
   }
