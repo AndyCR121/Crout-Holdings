@@ -72,10 +72,6 @@
           <input type="email" [(ngModel)]="signupEmail" name="email" placeholder="you@example.com" autocomplete="email" />
         </div>
         <div class="ca-field">
-          <label>Company (optional)</label>
-          <input type="text" [(ngModel)]="signupCompany" name="company" placeholder="Acme (Pty) Ltd" />
-        </div>
-        <div class="ca-field">
           <label>Password <span class="req">*</span></label>
           <input type="password" [(ngModel)]="signupPwd" name="pwd" placeholder="••••••••" autocomplete="new-password" />
         </div>
@@ -86,6 +82,7 @@
         <button type="submit" class="ca-btn-primary" [disabled]="loading()">
           {{ loading() ? 'Creating account…' : 'Create Account' }}
         </button>
+        <p class="ca-modal-hint">You can add your company/companies after signing up under <strong>Profile → Companies</strong>.</p>
       </form>
     }
 
