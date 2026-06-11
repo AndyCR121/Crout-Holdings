@@ -23,13 +23,13 @@ export class ApiService {
 
   getServices(): Observable<IService[]> {
     return this.http
-      .get<IService[]>(`${this.base}/api/services`)
+      .get<IService[]>(`${this.base}/services`)
       .pipe(catchError(err => throwError(() => err)));
   }
 
   getService(id: number): Observable<IService> {
     return this.http
-      .get<IService>(`${this.base}/api/services/${id}`)
+      .get<IService>(`${this.base}/services/${id}`)
       .pipe(catchError(err => throwError(() => err)));
   }
 
@@ -37,13 +37,13 @@ export class ApiService {
 
   getAddons(): Observable<IAddon[]> {
     return this.http
-      .get<IAddon[]>(`${this.base}/api/addons`)
+      .get<IAddon[]>(`${this.base}/addons`)
       .pipe(catchError(err => throwError(() => err)));
   }
 
   getAddonsByService(serviceId: number): Observable<IAddon[]> {
     return this.http
-      .get<IAddon[]>(`${this.base}/api/services/${serviceId}/addons`)
+      .get<IAddon[]>(`${this.base}/services/${serviceId}/addons`)
       .pipe(catchError(err => throwError(() => err)));
   }
 
@@ -51,13 +51,13 @@ export class ApiService {
 
   getPackages(): Observable<IPackage[]> {
     return this.http
-      .get<IPackage[]>(`${this.base}/api/packages`)
+      .get<IPackage[]>(`${this.base}/packages`)
       .pipe(catchError(err => throwError(() => err)));
   }
 
   getPackagesByService(serviceId: number): Observable<IPackage[]> {
     return this.http
-      .get<IPackage[]>(`${this.base}/api/services/${serviceId}/packages`)
+      .get<IPackage[]>(`${this.base}/services/${serviceId}/packages`)
       .pipe(catchError(err => throwError(() => err)));
   }
 
@@ -65,13 +65,13 @@ export class ApiService {
 
   getUsers(): Observable<IUser[]> {
     return this.http
-      .get<IUser[]>(`${this.base}/api/users`)
+      .get<IUser[]>(`${this.base}/users`)
       .pipe(catchError(err => throwError(() => err)));
   }
 
   getUser(id: number): Observable<IUser> {
     return this.http
-      .get<IUser>(`${this.base}/api/users/${id}`)
+      .get<IUser>(`${this.base}/users/${id}`)
       .pipe(catchError(err => throwError(() => err)));
   }
 
@@ -79,19 +79,19 @@ export class ApiService {
 
   getCompanies(): Observable<ICompany[]> {
     return this.http
-      .get<ICompany[]>(`${this.base}/api/companies`)
+      .get<ICompany[]>(`${this.base}/companies`)
       .pipe(catchError(err => throwError(() => err)));
   }
 
   getCompaniesByUser(userId: number): Observable<ICompany[]> {
     return this.http
-      .get<ICompany[]>(`${this.base}/api/users/${userId}/companies`)
+      .get<ICompany[]>(`${this.base}/users/${userId}/companies`)
       .pipe(catchError(err => throwError(() => err)));
   }
 
   getCompany(companyId: number): Observable<ICompany> {
     return this.http
-      .get<ICompany>(`${this.base}/api/companies/${companyId}`)
+      .get<ICompany>(`${this.base}/companies/${companyId}`)
       .pipe(catchError(err => throwError(() => err)));
   }
 
@@ -99,7 +99,7 @@ export class ApiService {
 
   getCompanyServices(companyId: number): Observable<IUserService[]> {
     return this.http
-      .get<IUserService[]>(`${this.base}/api/companies/${companyId}/services`)
+      .get<IUserService[]>(`${this.base}/companies/${companyId}/services`)
       .pipe(catchError(err => throwError(() => err)));
   }
 
@@ -107,7 +107,7 @@ export class ApiService {
 
   getServiceConfig(companyId: number, serviceId: number): Observable<IServiceConfig | null> {
     return this.http
-      .get<IServiceConfig>(`${this.base}/api/companies/${companyId}/services/${serviceId}/config`)
+      .get<IServiceConfig>(`${this.base}/companies/${companyId}/services/${serviceId}/config`)
       .pipe(catchError(err => throwError(() => err)));
   }
 }
