@@ -4,10 +4,7 @@ import { Router } from '@angular/router';
 import { Observable, of, tap, catchError, map } from 'rxjs';
 import { IUser } from '../interfaces/i-service.interface';
 import { DEMO_USERS } from '../data/demo.data';
-
-function getApiUrl(): string {
-  return (window as any).__env?.apiUrl ?? '';
-}
+import { EnvironmentService } from './environment.service';
 
 export interface ILoginPayload  { identifier: string; password: string; }
 export interface ISignupPayload {
@@ -34,7 +31,8 @@ function deleteCookie(name: string): void {
 export class AuthService {
   private readonly http   = inject(HttpClient);
   private readonly router = inject(Router);
-  private get base(): string { return getApiUrl(); }
+  private readonly env    = inject(EnvironmentService);
+  private get base(): string { return this.env.apiUrl; }
 
   // ── Signals ──────────────────────────────────────────────────────────────
   readonly currentUser  = signal<IUser | null>(this._restoreUser());
@@ -55,7 +53,6 @@ export class AuthService {
         map(r => r.user),
         tap(user => this._setSession(user)),
         catchError(() => {
-          // Demo fallback — match by Username or Email + Password
           const found = DEMO_USERS.find(
             u => (u.Username === payload.identifier || u.Email === payload.identifier)
               && u.Password === payload.password
@@ -75,7 +72,6 @@ export class AuthService {
         map(r => r.user),
         tap(user => this._setSession(user)),
         catchError(() => {
-          // Demo: create a fake user locally (no Company — managed via ICompany)
           const fake: IUser = {
             user_id:    Date.now(),
             Username:   payload.username,
@@ -121,7 +117,7 @@ export class AuthService {
       .pipe(catchError(() => of(null)))
       .subscribe(() => {
         deleteCookie('ca_user');
-        deleteCookie('ca_jwt');   // HttpOnly set by server; client delete is best-effort
+        deleteCookie('ca_jwt');
         this.currentUser.set(null);
         this.router.navigate(['/']);
       });
@@ -129,7 +125,6 @@ export class AuthService {
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
   private _setSession(user: IUser): void {
-    // Store non-sensitive user object in a readable cookie for UI hydration
     const safe: Partial<IUser> = { ...user, Password: '' };
     writeCookie('ca_user', JSON.stringify(safe), 7);
     this.currentUser.set(user);

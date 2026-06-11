@@ -2,11 +2,12 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { EnvironmentService } from './environment.service';
 
 export interface IN8nExecution {
   id:         string;
   workflowId: string;
-  startedAt:  string;   // ISO date string
+  startedAt:  string;
   stoppedAt:  string;
   status:     'success' | 'error' | 'running';
 }
@@ -17,30 +18,24 @@ export interface IDailyRun {
   error:   number;
 }
 
-function getApiUrl(): string {
-  return (window as any).__env?.apiUrl ?? '';
-}
-
 @Injectable({ providedIn: 'root' })
 export class N8nService {
   private readonly http = inject(HttpClient);
-  private get base(): string { return getApiUrl(); }
+  private readonly env  = inject(EnvironmentService);
+  private get base(): string { return this.env.apiUrl; }
 
-  /** Fetch raw executions for a workflow from our backend proxy. */
   getExecutions(workflowId: string, limit = 100): Observable<IN8nExecution[]> {
     return this.http
       .get<IN8nExecution[]>(`${this.base}/n8n/executions/${workflowId}?limit=${limit}`, { withCredentials: true })
       .pipe(catchError(() => of(this._demoExecutions(workflowId))));
   }
 
-  /** Aggregate executions into daily run counts for charting. */
   getDailyRuns(workflowId: string, days = 14): Observable<IDailyRun[]> {
     return this.http
       .get<IDailyRun[]>(`${this.base}/n8n/daily-runs/${workflowId}?days=${days}`, { withCredentials: true })
       .pipe(catchError(() => of(this._demoDailyRuns(days))));
   }
 
-  // ── Demo fallbacks ─────────────────────────────────────────────────────────
   private _demoExecutions(workflowId: string): IN8nExecution[] {
     return Array.from({ length: 20 }, (_, i) => ({
       id:         `demo-${i}`,
@@ -55,10 +50,11 @@ export class N8nService {
     return Array.from({ length: days }, (_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - (days - 1 - i));
-      const dateStr = d.toISOString().slice(0, 10);
-      const success = Math.floor(Math.random() * 18) + 2;
-      const error   = Math.floor(Math.random() * 3);
-      return { date: dateStr, success, error };
+      return {
+        date:    d.toISOString().slice(0, 10),
+        success: Math.floor(Math.random() * 18) + 2,
+        error:   Math.floor(Math.random() * 3),
+      };
     });
   }
 }
