@@ -35,12 +35,6 @@ export class ApiService {
 
   // ─── Addons ───────────────────────────────────────────────────────────────
 
-  getAddons(): Observable<IAddon[]> {
-    return this.http
-      .get<IAddon[]>(`${this.base}/addons`)
-      .pipe(catchError(err => throwError(() => err)));
-  }
-
   getAddonsByService(serviceId: number): Observable<IAddon[]> {
     return this.http
       .get<IAddon[]>(`${this.base}/services/${serviceId}/addons`)
@@ -49,9 +43,9 @@ export class ApiService {
 
   // ─── Packages ─────────────────────────────────────────────────────────────
 
-  getPackages(): Observable<IPackage[]> {
+  getAllPackages(): Observable<IPackage[]> {
     return this.http
-      .get<IPackage[]>(`${this.base}/packages`)
+      .get<IPackage[]>(`${this.base}/services/packages`)
       .pipe(catchError(err => throwError(() => err)));
   }
 
@@ -63,12 +57,6 @@ export class ApiService {
 
   // ─── Users ────────────────────────────────────────────────────────────────
 
-  getUsers(): Observable<IUser[]> {
-    return this.http
-      .get<IUser[]>(`${this.base}/users`)
-      .pipe(catchError(err => throwError(() => err)));
-  }
-
   getUser(id: number): Observable<IUser> {
     return this.http
       .get<IUser>(`${this.base}/users/${id}`)
@@ -76,12 +64,6 @@ export class ApiService {
   }
 
   // ─── Companies ────────────────────────────────────────────────────────────
-
-  getCompanies(): Observable<ICompany[]> {
-    return this.http
-      .get<ICompany[]>(`${this.base}/companies`)
-      .pipe(catchError(err => throwError(() => err)));
-  }
 
   getCompaniesByUser(userId: number): Observable<ICompany[]> {
     return this.http
