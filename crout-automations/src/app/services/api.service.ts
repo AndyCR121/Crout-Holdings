@@ -7,6 +7,7 @@ import {
   IAddon,
   IPackage,
   IUser,
+  ICompany,
   IUserService,
   IServiceConfig,
 } from '../interfaces/i-service.interface';
@@ -15,6 +16,7 @@ import {
   DEMO_ADDONS,
   DEMO_PACKAGES,
   DEMO_USERS,
+  DEMO_COMPANIES,
   DEMO_USER_SERVICES,
 } from '../data/demo.data';
 
@@ -92,19 +94,39 @@ export class ApiService {
       .pipe(catchError(() => of(DEMO_USERS.find(u => u.user_id === id))));
   }
 
-  // ─── User Services ───────────────────────────────────────────────────────
+  // ─── Companies ───────────────────────────────────────────────────────────
 
-  getUserServices(userId: number): Observable<IUserService[]> {
+  getCompanies(): Observable<ICompany[]> {
     return this.http
-      .get<IUserService[]>(`${this.base}/users/${userId}/services`)
-      .pipe(catchError(() => of(DEMO_USER_SERVICES.filter(us => us.user_id === userId))));
+      .get<ICompany[]>(`${this.base}/companies`)
+      .pipe(catchError(() => of(DEMO_COMPANIES)));
+  }
+
+  getCompaniesByUser(userId: number): Observable<ICompany[]> {
+    return this.http
+      .get<ICompany[]>(`${this.base}/users/${userId}/companies`)
+      .pipe(catchError(() => of(DEMO_COMPANIES.filter(c => c.user_id === userId))));
+  }
+
+  getCompany(companyId: number): Observable<ICompany | undefined> {
+    return this.http
+      .get<ICompany>(`${this.base}/companies/${companyId}`)
+      .pipe(catchError(() => of(DEMO_COMPANIES.find(c => c.company_id === companyId))));
+  }
+
+  // ─── Company Services ─────────────────────────────────────────────────────
+
+  getCompanyServices(companyId: number): Observable<IUserService[]> {
+    return this.http
+      .get<IUserService[]>(`${this.base}/companies/${companyId}/services`)
+      .pipe(catchError(() => of(DEMO_USER_SERVICES.filter(us => us.company_id === companyId))));
   }
 
   // ─── Service Config ──────────────────────────────────────────────────────
 
-  getServiceConfig(userId: number, serviceId: number): Observable<IServiceConfig | null> {
+  getServiceConfig(companyId: number, serviceId: number): Observable<IServiceConfig | null> {
     return this.http
-      .get<IServiceConfig>(`${this.base}/users/${userId}/services/${serviceId}/config`)
+      .get<IServiceConfig>(`${this.base}/companies/${companyId}/services/${serviceId}/config`)
       .pipe(catchError(() => of(null)));
   }
 }

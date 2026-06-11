@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { ApiService } from '../../../services/api.service';
 import { ToastService } from '../../../services/toast.service';
-import { IUserService, IService, IAddon } from '../../../interfaces/i-service.interface';
+import { IUserService, IService, IAddon, ICompany } from '../../../interfaces/i-service.interface';
 
 interface ServiceRow {
   userService: IUserService;
@@ -14,6 +14,12 @@ interface ServiceRow {
   editing:     boolean;
   editConfig:  string[];
   sidePanelOpen: boolean;
+}
+
+interface CompanyGroup {
+  company:  ICompany;
+  rows:     ServiceRow[];
+  expanded: boolean;
 }
 
 @Component({
@@ -29,7 +35,7 @@ export class PortalServicesComponent implements OnInit {
   private readonly toast = inject(ToastService);
 
   readonly user    = computed(() => this.auth.currentUser());
-  readonly rows    = signal<ServiceRow[]>([]);
+  readonly groups  = signal<CompanyGroup[]>([]);
   readonly loading = signal(true);
   readonly saving  = signal<number | null>(null);
 
@@ -39,15 +45,30 @@ export class PortalServicesComponent implements OnInit {
 
     this.api.getServices().subscribe(svcs => {
       this.api.getAddons().subscribe(allAddons => {
-        this.api.getUserServices(uid).subscribe(us => {
-          const built: ServiceRow[] = us.map(u => {
-            const svc     = svcs.find(s => s.service_id === u.service_id)!;
-            const addons  = allAddons.filter(a => a.service_id === u.service_id);
-            const active  = this._parseConfig(u.config);
-            return { userService: u, service: svc, addons, activeAddons: active, editing: false, editConfig: [...active], sidePanelOpen: false };
+        this.api.getCompaniesByUser(uid).subscribe(companies => {
+          if (!companies.length) { this.loading.set(false); return; }
+
+          let remaining = companies.length;
+          const built: CompanyGroup[] = [];
+
+          companies.forEach(company => {
+            this.api.getCompanyServices(company.company_id).subscribe(us => {
+              const rows: ServiceRow[] = us.map(u => {
+                const svc    = svcs.find(s => s.service_id === u.service_id)!;
+                const addons = allAddons.filter(a => a.service_id === u.service_id);
+                const active = this._parseConfig(u.config);
+                return { userService: u, service: svc, addons, activeAddons: active, editing: false, editConfig: [...active], sidePanelOpen: false };
+              });
+              built.push({ company, rows, expanded: true });
+              remaining--;
+              if (remaining === 0) {
+                // Sort groups by company_id for stable order
+                built.sort((a, b) => a.company.company_id - b.company.company_id);
+                this.groups.set(built);
+                this.loading.set(false);
+              }
+            });
           });
-          this.rows.set(built);
-          this.loading.set(false);
         });
       });
     });
@@ -57,22 +78,27 @@ export class PortalServicesComponent implements OnInit {
     try { const p = JSON.parse(cfg); return p.integrations ?? []; } catch { return []; }
   }
 
+  toggleGroup(group: CompanyGroup): void {
+    group.expanded = !group.expanded;
+    this.groups.update(g => [...g]);
+  }
+
   startEdit(row: ServiceRow): void {
-    row.editing     = true;
-    row.editConfig  = [...row.activeAddons];
-    this.rows.update(r => [...r]);
+    row.editing    = true;
+    row.editConfig = [...row.activeAddons];
+    this.groups.update(g => [...g]);
   }
 
   cancelEdit(row: ServiceRow): void {
     row.editing = false;
-    this.rows.update(r => [...r]);
+    this.groups.update(g => [...g]);
   }
 
   toggleAddon(row: ServiceRow, addonName: string): void {
     const idx = row.editConfig.indexOf(addonName);
     if (idx > -1) row.editConfig.splice(idx, 1);
     else          row.editConfig.push(addonName);
-    this.rows.update(r => [...r]);
+    this.groups.update(g => [...g]);
   }
 
   isSelected(row: ServiceRow, name: string): boolean {
@@ -82,38 +108,38 @@ export class PortalServicesComponent implements OnInit {
   submitConfigRequest(row: ServiceRow): void {
     this.saving.set(row.userService.service_id);
     const payload = { integrations: row.editConfig };
-    this.api['http']?.post?.(`/users/${this.user()!.user_id}/services/${row.userService.service_id}/config-request`, payload).subscribe?.();
+    this.api['http']?.post?.(
+      `/companies/${row.userService.company_id}/services/${row.userService.service_id}/config-request`,
+      payload
+    ).subscribe?.();
     setTimeout(() => {
       row.activeAddons = [...row.editConfig];
       row.editing      = false;
       this.saving.set(null);
-      this.rows.update(r => [...r]);
+      this.groups.update(g => [...g]);
       this.toast.success(`Configuration request submitted for ${row.service.ServiceName}.`);
     }, 800);
   }
 
-  submitConfigRequestError(row: ServiceRow): void {
-    this.saving.set(null);
-    row.editing = false;
-    this.rows.update(r => [...r]);
-    this.toast.error(`Failed to submit request for ${row.service.ServiceName}. Please try again.`);
-  }
-
   openSidePanel(row: ServiceRow): void {
     row.sidePanelOpen = true;
-    this.rows.update(r => [...r]);
+    this.groups.update(g => [...g]);
   }
 
   closeSidePanel(row: ServiceRow): void {
     row.sidePanelOpen = false;
-    this.rows.update(r => [...r]);
+    this.groups.update(g => [...g]);
   }
 
   statusLabel(s: number): string {
-    return ['Disabled','In Development','Live','Pending'][s] ?? 'Unknown';
+    return ['Disabled', 'In Development', 'Live', 'Pending'][s] ?? 'Unknown';
   }
 
   statusClass(s: number): string {
-    return ['status-disabled','status-dev','status-live','status-pending'][s] ?? '';
+    return ['status-disabled', 'status-dev', 'status-live', 'status-pending'][s] ?? '';
+  }
+
+  hasAnyService(): boolean {
+    return this.groups().some(g => g.rows.length > 0);
   }
 }

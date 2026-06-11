@@ -12,7 +12,7 @@ function getApiUrl(): string {
 export interface ILoginPayload  { identifier: string; password: string; }
 export interface ISignupPayload {
   username: string; email: string; password: string;
-  firstName: string; surname: string; company?: string;
+  firstName: string; surname: string;
 }
 export interface IAuthResponse  { token: string; user: IUser; }
 
@@ -75,18 +75,17 @@ export class AuthService {
         map(r => r.user),
         tap(user => this._setSession(user)),
         catchError(() => {
-          // Demo: create a fake user locally
+          // Demo: create a fake user locally (no Company — managed via ICompany)
           const fake: IUser = {
-            user_id: Date.now(),
-            Username:  payload.username,
-            Password:  payload.password,
-            Company:   payload.company ?? null,
-            FirstName: payload.firstName,
-            Surname:   payload.surname,
-            Email:     payload.email,
+            user_id:    Date.now(),
+            Username:   payload.username,
+            Password:   payload.password,
+            FirstName:  payload.firstName,
+            Surname:    payload.surname,
+            Email:      payload.email,
             CellNumber: null,
-            Active:    true,
-            IsAdmin:   false,
+            Active:     true,
+            IsAdmin:    false,
           };
           this._setSession(fake);
           return of(fake);

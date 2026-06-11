@@ -33,11 +33,28 @@ export interface IPackage {
   minimumRequiredAddons?: number;
 }
 
+/**
+ * A company (business entity) that belongs to a user.
+ * A single user (client) may own multiple companies, each with their
+ * own set of active services.
+ */
+export interface ICompany {
+  company_id: number;
+  user_id: number;             // FK → IUser.user_id
+  CompanyName: string;
+  Industry?: string | null;
+  VATNumber?: string | null;
+  RegistrationNumber?: string | null;
+  Email?: string | null;
+  Phone?: string | null;
+  Address?: string | null;
+  Active: boolean;
+}
+
 export interface IUser {
   user_id: number;
   Username: string;
   Password: string;
-  Company: string | null;
   FirstName: string;
   Surname: string;
   Email: string;
@@ -52,18 +69,18 @@ export type UserServiceStatus = 0 | 1 | 2 | 3;
 // 0 = Disabled | 1 = In Development | 2 = Live | 3 = Pending
 
 export interface IUserService {
-  user_id: number;
+  company_id: number;          // FK → ICompany.company_id (replaces user_id)
   service_id: number;
   package_id: number | null;
   subscription_id: string | null;
-  config: string;          // JSON string
-  Active: boolean;         // default true
-  Status: UserServiceStatus; // default 1
+  config: string;              // JSON string
+  Active: boolean;             // default true
+  Status: UserServiceStatus;   // default 1
 }
 
 export interface IServiceConfig {
   service_config_id: number;
-  user_id: number;
+  company_id: number;
   service_id: number;
-  config: string;          // JSON string
+  config: string;              // JSON string
 }

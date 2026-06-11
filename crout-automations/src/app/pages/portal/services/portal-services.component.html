@@ -1,90 +1,139 @@
-<section class="ps-wrap">
-  <h1 class="ps-title">Services</h1>
-  <p class="ps-sub">Your subscribed services & configurations.</p>
+<div class="pservices">
 
-  @if (loading()) {
-    <div class="ps-skeleton">
-      <div class="ps-skeleton-row" *ngFor="let _ of [1,2]"></div>
-    </div>
-  } @else if (rows().length === 0) {
-    <div class="ps-empty">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l9 4.5V12c0 5-4 9.3-9 10.5C7 21.3 3 17 3 12V6.5L12 2z"/></svg>
-      <h3>No services subscribed</h3>
-      <p>Head to our services page to get started.</p>
-    </div>
-  } @else {
-    <div class="ps-list">
-      @for (row of rows(); track row.userService.service_id) {
-        <div class="ps-card">
+  <!-- Header -->
+  <header class="pservices__header">
+    <h1 class="pservices__title">My Services</h1>
+    <p class="pservices__subtitle">Active automations running for your companies.</p>
+  </header>
+
+  <!-- Loading -->
+  <div class="pservices__empty" *ngIf="loading()">
+    <div class="pservices__spinner"></div>
+    <p>Loading your services…</p>
+  </div>
+
+  <!-- No services at all -->
+  <div class="pservices__empty" *ngIf="!loading() && !hasAnyService()">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <rect x="2" y="3" width="20" height="14" rx="2"/>
+      <path d="M8 21h8M12 17v4"/>
+    </svg>
+    <h3>No Active Services</h3>
+    <p>You don't have any active services yet. Get in touch to get started.</p>
+  </div>
+
+  <!-- Company groups -->
+  <ng-container *ngIf="!loading()">
+    <section class="pservices__group" *ngFor="let group of groups()">
+
+      <!-- Group header -->
+      <div class="pservices__group-header" (click)="toggleGroup(group)">
+        <div class="pservices__group-meta">
+          <span class="pservices__group-name">{{ group.company.CompanyName }}</span>
+          <span class="pservices__group-industry" *ngIf="group.company.Industry">{{ group.company.Industry }}</span>
+        </div>
+        <div class="pservices__group-right">
+          <span class="pservices__group-count">{{ group.rows.length }} service{{ group.rows.length !== 1 ? 's' : '' }}</span>
+          <svg class="pservices__group-chevron" [class.pservices__group-chevron--open]="group.expanded"
+               width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- No services for this company -->
+      <div class="pservices__empty pservices__empty--inline" *ngIf="group.expanded && group.rows.length === 0">
+        <p>No services linked to this company yet.</p>
+      </div>
+
+      <!-- Service cards -->
+      <div class="pservices__list" *ngIf="group.expanded && group.rows.length > 0">
+        <article class="pservices__card" *ngFor="let row of group.rows">
 
           <!-- Card header -->
-          <div class="ps-card-header">
-            <div class="ps-card-info">
-              <h2 class="ps-card-name">{{ row.service.ServiceName }}</h2>
-              <p class="ps-card-desc">{{ row.service.ServiceDescription }}</p>
-              <!-- Active addons -->
-              <div class="ps-chips" *ngIf="row.activeAddons.length > 0">
-                @for (a of row.activeAddons; track a) {
-                  <span class="ps-chip">{{ a }}</span>
-                }
-              </div>
-            </div>
-            <div class="ps-card-actions">
-              <span class="ps-status-badge" [class]="statusClass(row.userService.Status)">
+          <div class="pservices__card-header">
+            <div class="pservices__card-title-row">
+              <h2 class="pservices__card-title">{{ row.service.ServiceName }}</h2>
+              <span class="pservices__status" [ngClass]="statusClass(row.userService.Status)">
                 {{ statusLabel(row.userService.Status) }}
               </span>
-              <button class="ps-btn-secondary" (click)="openSidePanel(row)">View</button>
-              <button class="ps-btn-primary" (click)="startEdit(row)" *ngIf="!row.editing">Edit</button>
-              <button class="ps-btn-ghost"   (click)="cancelEdit(row)" *ngIf="row.editing">Cancel</button>
             </div>
+            <p class="pservices__card-desc">{{ row.service.ServiceDescription }}</p>
           </div>
 
-          <!-- Edit expand panel -->
-          @if (row.editing) {
-            <div class="ps-edit-panel">
-              <p class="ps-edit-label">Select add-ons / integrations to request:</p>
-              <div class="ps-addon-grid">
-                @for (addon of row.addons; track addon.addon_id) {
-                  <label class="ps-addon-toggle" [class.selected]="isSelected(row, addon.AddonName)">
-                    <input
-                      type="checkbox"
-                      [checked]="isSelected(row, addon.AddonName)"
-                      (change)="toggleAddon(row, addon.AddonName)"
-                    />
-                    <span class="ps-addon-name">{{ addon.AddonName }}</span>
-                    <span class="ps-addon-desc">{{ addon.AddonDescription }}</span>
-                  </label>
-                }
-              </div>
-              <button
-                class="ps-request-btn"
-                (click)="submitConfigRequest(row)"
-                [disabled]="saving() === row.userService.service_id"
-              >
-                {{ saving() === row.userService.service_id ? 'Sending request…' : 'Submit Request' }}
+          <!-- Active addons -->
+          <div class="pservices__addons" *ngIf="row.activeAddons.length > 0">
+            <span class="pservices__addons-label">Active Integrations</span>
+            <ul class="pservices__addons-list">
+              <li *ngFor="let a of row.activeAddons">{{ a }}</li>
+            </ul>
+          </div>
+
+          <!-- Card actions -->
+          <div class="pservices__card-actions" *ngIf="!row.editing">
+            <button class="pservices__btn pservices__btn--secondary" (click)="startEdit(row)">Request Config Change</button>
+            <button class="pservices__btn pservices__btn--ghost" (click)="openSidePanel(row)">View Details</button>
+          </div>
+
+          <!-- Edit section -->
+          <div class="pservices__edit" *ngIf="row.editing">
+            <p class="pservices__edit-hint">Select the integrations you'd like — we'll action the changes within 24 hours.</p>
+            <ul class="pservices__addon-toggle-list">
+              <li *ngFor="let addon of row.addons" class="pservices__addon-toggle" [class.pservices__addon-toggle--active]="isSelected(row, addon.AddonName)" (click)="toggleAddon(row, addon.AddonName)">
+                <span class="pservices__addon-check">
+                  <svg *ngIf="isSelected(row, addon.AddonName)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+                <span class="pservices__addon-info">
+                  <strong>{{ addon.AddonName }}</strong>
+                  <small>{{ addon.AddonDescription }}</small>
+                </span>
+              </li>
+            </ul>
+            <div class="pservices__edit-actions">
+              <button class="pservices__btn pservices__btn--ghost" (click)="cancelEdit(row)">Cancel</button>
+              <button class="pservices__btn pservices__btn--primary" (click)="submitConfigRequest(row)" [disabled]="saving() === row.userService.service_id">
+                <span *ngIf="saving() !== row.userService.service_id">Submit Request</span>
+                <span *ngIf="saving() === row.userService.service_id">Submitting…</span>
               </button>
             </div>
-          }
+          </div>
 
-        </div>
-
-        <!-- Side panel overlay -->
-        @if (row.sidePanelOpen) {
-          <div class="ps-side-backdrop" (click)="closeSidePanel(row)">
-            <div class="ps-side-panel" (click)="$event.stopPropagation()">
-              <div class="ps-side-header">
-                <h3>{{ row.service.ServiceName }}</h3>
-                <button class="ps-side-close" (click)="closeSidePanel(row)">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                </button>
+          <!-- Side panel overlay -->
+          <div class="pservices__side-panel" [class.pservices__side-panel--open]="row.sidePanelOpen">
+            <div class="pservices__side-panel-backdrop" (click)="closeSidePanel(row)"></div>
+            <div class="pservices__side-panel-drawer">
+              <button class="pservices__side-panel-close" (click)="closeSidePanel(row)" aria-label="Close">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+              <h3>{{ row.service.ServiceName }}</h3>
+              <p class="pservices__side-desc">{{ row.service.ServiceDescription }}</p>
+              <div class="pservices__side-meta">
+                <div><span>Company</span><strong>{{ group.company.CompanyName }}</strong></div>
+                <div><span>Status</span>
+                  <strong [ngClass]="statusClass(row.userService.Status)">{{ statusLabel(row.userService.Status) }}</strong>
+                </div>
+                <div *ngIf="row.userService.subscription_id">
+                  <span>Subscription</span><strong>{{ row.userService.subscription_id }}</strong>
+                </div>
               </div>
-              <div class="ps-side-body">
-                <p class="ps-side-ni">Not Implemented Yet</p>
+              <div *ngIf="row.service.features?.length">
+                <p class="pservices__side-section-label">Features</p>
+                <ul class="pservices__side-features">
+                  <li *ngFor="let f of row.service.features">{{ f }}</li>
+                </ul>
+              </div>
+              <div *ngIf="row.activeAddons.length">
+                <p class="pservices__side-section-label">Active Integrations</p>
+                <ul class="pservices__side-features">
+                  <li *ngFor="let a of row.activeAddons">{{ a }}</li>
+                </ul>
               </div>
             </div>
           </div>
-        }
-      }
-    </div>
-  }
-</section>
+
+        </article>
+      </div>
+    </section>
+  </ng-container>
+
+</div>

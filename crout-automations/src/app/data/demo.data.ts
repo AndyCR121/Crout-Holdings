@@ -3,6 +3,7 @@ import {
   IAddon,
   IPackage,
   IUser,
+  ICompany,
   IUserService,
 } from '../interfaces/i-service.interface';
 
@@ -173,13 +174,13 @@ export const DEMO_PACKAGES: IPackage[] = [
 ];
 
 // ─── Users ─────────────────────────────────────────────────────────────────────────
+// Company is no longer stored on IUser — see DEMO_COMPANIES below.
 
 export const DEMO_USERS: IUser[] = [
   {
     user_id: 0,
     Username: 'Andrew',
     Password: 'pwd1',
-    Company: 'Crout Holdings',
     FirstName: 'Andrew',
     Surname: 'Crout',
     Email: 'andrew@crout-holdings.com',
@@ -191,19 +192,6 @@ export const DEMO_USERS: IUser[] = [
     user_id: 1,
     Username: 'Jaco',
     Password: 'pwd2',
-    Company: 'WoodenWeld',
-    FirstName: 'Jaco',
-    Surname: 'Visser',
-    Email: 'admin@woodenweld.co.za',
-    CellNumber: '(+27) 79 024 6945',
-    Active: true,
-    IsAdmin: false,
-  },
-  {
-    user_id: 2,
-    Username: 'Jaco',
-    Password: 'pwd3',
-    Company: 'Globefurn',
     FirstName: 'Jaco',
     Surname: 'Visser',
     Email: 'admin@woodenweld.co.za',
@@ -213,13 +201,56 @@ export const DEMO_USERS: IUser[] = [
   },
 ];
 
+// ─── Companies ──────────────────────────────────────────────────────────────────────
+// Each user can own multiple companies. Services are linked per company.
+
+export const DEMO_COMPANIES: ICompany[] = [
+  {
+    company_id: 1,
+    user_id: 0,
+    CompanyName: 'Crout Holdings',
+    Industry: 'Technology / Automation',
+    VATNumber: null,
+    RegistrationNumber: null,
+    Email: 'andrew@crout-holdings.com',
+    Phone: '(+27) 64 656 9894',
+    Address: 'Bloemfontein, Free State, ZA',
+    Active: true,
+  },
+  {
+    company_id: 2,
+    user_id: 1,
+    CompanyName: 'WoodenWeld',
+    Industry: 'Manufacturing / Woodwork',
+    VATNumber: null,
+    RegistrationNumber: null,
+    Email: 'admin@woodenweld.co.za',
+    Phone: '(+27) 79 024 6945',
+    Address: null,
+    Active: true,
+  },
+  {
+    company_id: 3,
+    user_id: 1,
+    CompanyName: 'Globefurn',
+    Industry: 'Furniture / Retail',
+    VATNumber: null,
+    RegistrationNumber: null,
+    Email: null,
+    Phone: null,
+    Address: null,
+    Active: true,
+  },
+];
+
 // ─── User Services ──────────────────────────────────────────────────────────────────────
-// WoodenWeld (user_id: 1) → Project Management System (service_id: 3)
-// Globefurn  (user_id: 2) → Quote System             (service_id: 2)
+// Services are now linked to company_id, not user_id.
+// WoodenWeld (company_id: 2) → Project Management System (service_id: 3)
+// Globefurn  (company_id: 3) → Quote System             (service_id: 2)
 
 export const DEMO_USER_SERVICES: IUserService[] = [
   {
-    user_id: 1,
+    company_id: 2,
     service_id: 3,
     package_id: null,
     subscription_id: null,
@@ -231,7 +262,7 @@ export const DEMO_USER_SERVICES: IUserService[] = [
     Status: 2,
   },
   {
-    user_id: 2,
+    company_id: 3,
     service_id: 2,
     package_id: null,
     subscription_id: null,
