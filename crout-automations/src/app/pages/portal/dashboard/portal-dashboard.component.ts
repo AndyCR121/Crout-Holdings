@@ -4,13 +4,14 @@ import { AuthService } from '../../../services/auth.service';
 import { ApiService } from '../../../services/api.service';
 import { N8nService, IDailyRun } from '../../../services/n8n.service';
 import { IUserService, IService, ICompany } from '../../../interfaces/i-service.interface';
+import { CompanySvcFilterPipe } from '../../../pipes/company-svc-filter.pipe';
 import { forkJoin, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'ca-portal-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CompanySvcFilterPipe],
   templateUrl: './portal-dashboard.component.html',
   styleUrls: ['./portal-dashboard.component.scss'],
 })
