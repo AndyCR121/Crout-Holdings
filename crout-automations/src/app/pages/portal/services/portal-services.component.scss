@@ -1,0 +1,299 @@
+.ps-wrap { padding: 0; }
+
+.ps-title {
+  font-size:   28px;
+  font-weight: 800;
+  color:       #fff;
+  margin:      0 0 4px;
+}
+
+.ps-sub {
+  font-size:  15px;
+  color:      rgba(255,255,255,0.50);
+  margin:     0 0 32px;
+}
+
+.ps-list {
+  display:        flex;
+  flex-direction: column;
+  gap:            16px;
+}
+
+// ── Card ──────────────────────────────────────────────────────────────────
+.ps-card {
+  background:    rgba(255,255,255,0.04);
+  border:        1px solid rgba(255,255,255,0.09);
+  border-radius: 14px;
+  overflow:      hidden;
+}
+
+.ps-card-header {
+  display:         flex;
+  align-items:     flex-start;
+  justify-content: space-between;
+  gap:             16px;
+  padding:         22px 24px;
+}
+
+.ps-card-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ps-card-name {
+  font-size:   17px;
+  font-weight: 700;
+  color:       #fff;
+  margin:      0;
+}
+
+.ps-card-desc {
+  font-size:  13px;
+  color:      rgba(255,255,255,0.45);
+  margin:     0;
+  max-width:  55ch;
+}
+
+.ps-chips {
+  display:   flex;
+  flex-wrap: wrap;
+  gap:       6px;
+  margin-top: 4px;
+}
+
+.ps-chip {
+  padding:       3px 10px;
+  background:    rgba(79,163,184,0.12);
+  border:        1px solid rgba(79,163,184,0.25);
+  border-radius: 20px;
+  font-size:     12px;
+  color:         #4fa3b8;
+}
+
+.ps-card-actions {
+  display:     flex;
+  align-items: center;
+  gap:         8px;
+  flex-shrink: 0;
+  flex-wrap:   wrap;
+}
+
+.ps-status-badge {
+  padding:       4px 10px;
+  border-radius: 20px;
+  font-size:     11px;
+  font-weight:   700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &.status-disabled { background: rgba(150,150,150,0.15); color: #aaa; }
+  &.status-dev      { background: rgba(234,195,50,0.15);  color: #e8c232; }
+  &.status-live     { background: rgba(80,200,120,0.15);  color: #50cc78; }
+  &.status-pending  { background: rgba(100,150,255,0.15); color: #7aaeff; }
+}
+
+.ps-btn-primary {
+  padding:       8px 16px;
+  background:    #ea7b32;
+  border:        none;
+  border-radius: 8px;
+  color:         #fff;
+  font-size:     13px;
+  font-weight:   600;
+  cursor:        pointer;
+  transition:    background 140ms;
+  &:hover { background: #d06820; }
+}
+
+.ps-btn-secondary {
+  padding:       8px 16px;
+  background:    rgba(255,255,255,0.07);
+  border:        1px solid rgba(255,255,255,0.14);
+  border-radius: 8px;
+  color:         rgba(255,255,255,0.80);
+  font-size:     13px;
+  font-weight:   600;
+  cursor:        pointer;
+  transition:    background 140ms;
+  &:hover { background: rgba(255,255,255,0.12); }
+}
+
+.ps-btn-ghost {
+  padding:       8px 16px;
+  background:    transparent;
+  border:        1px solid rgba(255,255,255,0.14);
+  border-radius: 8px;
+  color:         rgba(255,255,255,0.50);
+  font-size:     13px;
+  cursor:        pointer;
+  transition:    background 140ms;
+  &:hover { background: rgba(255,255,255,0.06); }
+}
+
+// ── Edit panel ─────────────────────────────────────────────────────────
+.ps-edit-panel {
+  border-top:     1px solid rgba(255,255,255,0.08);
+  padding:        20px 24px 24px;
+  background:     rgba(255,255,255,0.02);
+  display:        flex;
+  flex-direction: column;
+  gap:            16px;
+}
+
+.ps-edit-label {
+  font-size:  13px;
+  color:      rgba(255,255,255,0.45);
+  margin:     0;
+}
+
+.ps-addon-grid {
+  display:               grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap:                   10px;
+}
+
+.ps-addon-toggle {
+  display:        flex;
+  flex-direction: column;
+  gap:            4px;
+  padding:        12px 14px;
+  background:     rgba(255,255,255,0.04);
+  border:         1px solid rgba(255,255,255,0.09);
+  border-radius:  10px;
+  cursor:         pointer;
+  transition:     background 120ms, border-color 120ms;
+
+  input[type="checkbox"] { display: none; }
+
+  &.selected {
+    background:   rgba(234,123,50,0.12);
+    border-color: rgba(234,123,50,0.40);
+  }
+
+  &:hover { background: rgba(255,255,255,0.07); }
+}
+
+.ps-addon-name {
+  font-size:   13px;
+  font-weight: 600;
+  color:       rgba(255,255,255,0.85);
+}
+
+.ps-addon-desc {
+  font-size: 12px;
+  color:     rgba(255,255,255,0.40);
+}
+
+.ps-request-btn {
+  align-self:    flex-start;
+  padding:       10px 24px;
+  background:    #ea7b32;
+  border:        none;
+  border-radius: 8px;
+  color:         #fff;
+  font-size:     14px;
+  font-weight:   700;
+  cursor:        pointer;
+  transition:    background 140ms, opacity 140ms;
+
+  &:hover:not(:disabled) { background: #d06820; }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+}
+
+// ── Side panel ─────────────────────────────────────────────────────────
+.ps-side-backdrop {
+  position:   fixed;
+  inset:      0;
+  background: rgba(0,0,0,0.50);
+  z-index:    500;
+  display:    flex;
+  justify-content: flex-end;
+  animation:  caBdFadeIn 160ms ease;
+}
+
+@keyframes caBdFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.ps-side-panel {
+  width:          420px;
+  max-width:      100vw;
+  height:         100%;
+  background:     #0e1c35;
+  border-left:    1px solid rgba(255,255,255,0.09);
+  display:        flex;
+  flex-direction: column;
+  animation:      caSlidePanelIn 220ms cubic-bezier(0.16,1,0.3,1);
+}
+
+@keyframes caSlidePanelIn {
+  from { transform: translateX(40px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+.ps-side-header {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  padding:         20px 24px;
+  border-bottom:   1px solid rgba(255,255,255,0.08);
+
+  h3 { font-size: 16px; font-weight: 700; color: #fff; margin: 0; }
+}
+
+.ps-side-close {
+  padding:    8px;
+  background: transparent;
+  border:     none;
+  border-radius: 8px;
+  color:      rgba(255,255,255,0.45);
+  cursor:     pointer;
+  &:hover { background: rgba(255,255,255,0.08); color: #fff; }
+}
+
+.ps-side-body {
+  flex:     1;
+  display:  flex;
+  align-items: center;
+  justify-content: center;
+  padding:  24px;
+}
+
+.ps-side-ni {
+  font-size:  14px;
+  color:      rgba(255,255,255,0.35);
+  font-style: italic;
+  text-align: center;
+}
+
+// ── Skeleton & empty ───────────────────────────────────────────────────────
+.ps-skeleton { display: flex; flex-direction: column; gap: 12px; }
+
+.ps-skeleton-row {
+  height:        100px;
+  border-radius: 14px;
+  background:    linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation:     shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.ps-empty {
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  text-align:     center;
+  padding:        64px 24px;
+  color:          rgba(255,255,255,0.40);
+  gap:            12px;
+
+  h3 { color: rgba(255,255,255,0.70); font-size: 18px; font-weight: 700; margin: 0; }
+  p  { font-size: 14px; margin: 0; max-width: 36ch; }
+}

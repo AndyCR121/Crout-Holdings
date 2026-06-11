@@ -1,0 +1,75 @@
+<section class="pd-wrap">
+  <h1 class="pd-title">Dashboard</h1>
+  <p class="pd-sub">Welcome back, <strong>{{ user()?.Username }}</strong></p>
+
+  @if (loading()) {
+    <div class="pd-skeleton-grid">
+      <div class="pd-skeleton-card" *ngFor="let _ of [1,2]"></div>
+    </div>
+  } @else if (userServices().length === 0) {
+    <div class="pd-empty">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l9 4.5V12c0 5-4 9.3-9 10.5C7 21.3 3 17 3 12V6.5L12 2z"/></svg>
+      <h3>No active services yet</h3>
+      <p>Your subscribed services will appear here once activated.</p>
+    </div>
+  } @else {
+    <div class="pd-grid">
+      @for (us of userServices(); track us.service_id) {
+        @let svc = getService(us.service_id);
+        @if (svc) {
+          <div class="pd-card">
+            <!-- Header -->
+            <div class="pd-card-header">
+              <div>
+                <h2 class="pd-card-name">{{ svc.ServiceName }}</h2>
+                <p class="pd-card-desc">{{ svc.ServiceDescription }}</p>
+              </div>
+              <span class="pd-status-badge" [class]="statusClass(us.Status)">
+                {{ statusLabel(us.Status) }}
+              </span>
+            </div>
+
+            <!-- Addon config chips -->
+            @let addons = getAddonNames(us.config);
+            @if (addons.length > 0) {
+              <div class="pd-addons">
+                <span class="pd-addons-label">Config</span>
+                <div class="pd-chips">
+                  @for (a of addons; track a) {
+                    <span class="pd-chip">{{ a }}</span>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- n8n runs bar chart -->
+            @let bars = chartBars(us.service_id);
+            @if (bars.length > 0) {
+              <div class="pd-chart-wrap">
+                <span class="pd-chart-label">Workflow Runs — Last 14 days</span>
+                <svg class="pd-chart" viewBox="0 0 560 90" preserveAspectRatio="none">
+                  @for (bar of bars; track bar.x) {
+                    <rect
+                      [attr.x]="bar.x"
+                      [attr.y]="90 - bar.h"
+                      [attr.width]="Math.max(2, 560/bars.length - 2)"
+                      [attr.height]="bar.h"
+                      [attr.fill]="bar.isError ? '#e05c5c' : '#4fa3b8'"
+                      rx="2"
+                    />
+                  }
+                </svg>
+                <div class="pd-chart-dates">
+                  @for (bar of bars; track bar.x) {
+                    <span>{{ bar.label }}</span>
+                  }
+                </div>
+              </div>
+            }
+
+          </div>
+        }
+      }
+    </div>
+  }
+</section>

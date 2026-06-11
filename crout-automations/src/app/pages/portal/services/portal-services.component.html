@@ -1,0 +1,90 @@
+<section class="ps-wrap">
+  <h1 class="ps-title">Services</h1>
+  <p class="ps-sub">Your subscribed services & configurations.</p>
+
+  @if (loading()) {
+    <div class="ps-skeleton">
+      <div class="ps-skeleton-row" *ngFor="let _ of [1,2]"></div>
+    </div>
+  } @else if (rows().length === 0) {
+    <div class="ps-empty">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l9 4.5V12c0 5-4 9.3-9 10.5C7 21.3 3 17 3 12V6.5L12 2z"/></svg>
+      <h3>No services subscribed</h3>
+      <p>Head to our services page to get started.</p>
+    </div>
+  } @else {
+    <div class="ps-list">
+      @for (row of rows(); track row.userService.service_id) {
+        <div class="ps-card">
+
+          <!-- Card header -->
+          <div class="ps-card-header">
+            <div class="ps-card-info">
+              <h2 class="ps-card-name">{{ row.service.ServiceName }}</h2>
+              <p class="ps-card-desc">{{ row.service.ServiceDescription }}</p>
+              <!-- Active addons -->
+              <div class="ps-chips" *ngIf="row.activeAddons.length > 0">
+                @for (a of row.activeAddons; track a) {
+                  <span class="ps-chip">{{ a }}</span>
+                }
+              </div>
+            </div>
+            <div class="ps-card-actions">
+              <span class="ps-status-badge" [class]="statusClass(row.userService.Status)">
+                {{ statusLabel(row.userService.Status) }}
+              </span>
+              <button class="ps-btn-secondary" (click)="openSidePanel(row)">View</button>
+              <button class="ps-btn-primary" (click)="startEdit(row)" *ngIf="!row.editing">Edit</button>
+              <button class="ps-btn-ghost"   (click)="cancelEdit(row)" *ngIf="row.editing">Cancel</button>
+            </div>
+          </div>
+
+          <!-- Edit expand panel -->
+          @if (row.editing) {
+            <div class="ps-edit-panel">
+              <p class="ps-edit-label">Select add-ons / integrations to request:</p>
+              <div class="ps-addon-grid">
+                @for (addon of row.addons; track addon.addon_id) {
+                  <label class="ps-addon-toggle" [class.selected]="isSelected(row, addon.AddonName)">
+                    <input
+                      type="checkbox"
+                      [checked]="isSelected(row, addon.AddonName)"
+                      (change)="toggleAddon(row, addon.AddonName)"
+                    />
+                    <span class="ps-addon-name">{{ addon.AddonName }}</span>
+                    <span class="ps-addon-desc">{{ addon.AddonDescription }}</span>
+                  </label>
+                }
+              </div>
+              <button
+                class="ps-request-btn"
+                (click)="submitConfigRequest(row)"
+                [disabled]="saving() === row.userService.service_id"
+              >
+                {{ saving() === row.userService.service_id ? 'Sending request…' : 'Submit Request' }}
+              </button>
+            </div>
+          }
+
+        </div>
+
+        <!-- Side panel overlay -->
+        @if (row.sidePanelOpen) {
+          <div class="ps-side-backdrop" (click)="closeSidePanel(row)">
+            <div class="ps-side-panel" (click)="$event.stopPropagation()">
+              <div class="ps-side-header">
+                <h3>{{ row.service.ServiceName }}</h3>
+                <button class="ps-side-close" (click)="closeSidePanel(row)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+              </div>
+              <div class="ps-side-body">
+                <p class="ps-side-ni">Not Implemented Yet</p>
+              </div>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  }
+</section>
