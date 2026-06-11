@@ -32,10 +32,9 @@ export class PortalDashboardComponent implements OnInit {
       this.api.getUserServices(uid).subscribe(us => {
         this.userServices.set(us);
         this.loading.set(false);
-        // Load n8n daily runs per service
-        us.forEach(us => {
-          this.n8n.getDailyRuns(`workflow_${us.service_id}`, 14).subscribe(runs => {
-            this.dailyRuns.update(m => ({ ...m, [us.service_id]: runs }));
+        us.forEach(u => {
+          this.n8n.getDailyRuns(`workflow_${u.service_id}`, 14).subscribe(runs => {
+            this.dailyRuns.update(m => ({ ...m, [u.service_id]: runs }));
           });
         });
       });
@@ -54,23 +53,24 @@ export class PortalDashboardComponent implements OnInit {
   }
 
   statusLabel(s: number): string {
-    return ['Disabled','In Development','Live','Pending'][s] ?? 'Unknown';
+    return ['Disabled', 'In Development', 'Live', 'Pending'][s] ?? 'Unknown';
   }
 
   statusClass(s: number): string {
-    return ['status-disabled','status-dev','status-live','status-pending'][s] ?? '';
+    return ['status-disabled', 'status-dev', 'status-live', 'status-pending'][s] ?? '';
   }
 
-  // Build inline SVG bar chart path data from daily runs
-  chartBars(serviceId: number): { x: number; h: number; isError: boolean; label: string }[] {
+  chartBars(serviceId: number): { x: number; h: number; w: number; isError: boolean; label: string }[] {
     const runs  = this.dailyRuns()[serviceId] ?? [];
+    if (runs.length === 0) return [];
     const max   = Math.max(...runs.map(r => r.success + r.error), 1);
     const W     = 560;
     const H     = 80;
-    const barW  = Math.floor((W - runs.length) / Math.max(runs.length, 1));
+    const barW  = Math.max(2, Math.floor((W - runs.length) / runs.length));
     return runs.map((r, i) => ({
       x:       i * (barW + 1),
       h:       Math.round(((r.success + r.error) / max) * H),
+      w:       barW,
       isError: r.error > 0,
       label:   r.date.slice(5),
     }));

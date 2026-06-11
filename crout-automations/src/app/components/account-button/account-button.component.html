@@ -14,7 +14,7 @@
       <!-- Avatar -->
       <span class="ca-avatar">
         @if (user()!.profilePicture) {
-          <img [src]="user()!.profilePicture" [alt]="user()!.Username" />
+          <img [src]="user()!.profilePicture!" [alt]="user()!.Username" />
         } @else {
           <span class="ca-avatar-initials">{{ initials() }}</span>
         }
@@ -43,19 +43,19 @@
   <!-- Dropdown (logged in only) -->
   @if (open() && loggedIn()) {
     <div class="ca-account-dropdown" role="menu">
-      <button class="ca-dd-item" role="menuitem" (click)="navigate('/portal/dashboard')">
+      <button class="ca-dd-item" role="menuitem" (click)="navigate('/client/dashboard')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         Dashboard
       </button>
-      <button class="ca-dd-item" role="menuitem" (click)="navigate('/portal/services')">
+      <button class="ca-dd-item" role="menuitem" (click)="navigate('/client/services')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 4.5V12c0 5-4 9.3-9 10.5C7 21.3 3 17 3 12V6.5L12 2z"/></svg>
         Services
       </button>
-      <button class="ca-dd-item" role="menuitem" (click)="navigate('/portal/profile')">
+      <button class="ca-dd-item" role="menuitem" (click)="navigate('/client/profile')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         Profile
       </button>
-      <button class="ca-dd-item" role="menuitem" (click)="navigate('/portal/billing')">
+      <button class="ca-dd-item" role="menuitem" (click)="navigate('/client/billing')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
         Billing
       </button>

@@ -44,6 +44,8 @@ export interface IUser {
   CellNumber: string | null;
   Active: boolean;
   IsAdmin: boolean;
+  /** Optional profile picture URL or base64 data URI */
+  profilePicture?: string | null;
 }
 
 export type UserServiceStatus = 0 | 1 | 2 | 3;
