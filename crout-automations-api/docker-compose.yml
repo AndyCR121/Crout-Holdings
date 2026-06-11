@@ -45,35 +45,8 @@ services:
       JWT_AUDIENCE:           ${JWT_AUDIENCE}
       JWT_EXPIRY_HOURS:       '8'
       HMAC_SECRET:            ${HMAC_SECRET}
-    expose:
-      - '8080'
-
-  # ── Nginx Reverse Proxy ───────────────────────────────────
-  nginx:
-    image: nginx:alpine
-    container_name: crout_nginx
-    restart: unless-stopped
-    depends_on:
-      - api
     ports:
-      - '80:80'
-      - '443:443'
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - certbot_www:/var/www/certbot
-      - certbot_conf:/etc/letsencrypt
-
-  # ── Certbot (SSL) ───────────────────────────────────────
-  certbot:
-    image: certbot/certbot
-    container_name: crout_certbot
-    volumes:
-      - certbot_www:/var/www/certbot
-      - certbot_conf:/etc/letsencrypt
-    # Renew automatically — runs then exits, nginx picks up renewed certs
-    entrypoint: /bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done'
+      - '5000:8080'   # exposed to host only — host Nginx proxies this
 
 volumes:
   db_data:
-  certbot_www:
-  certbot_conf:
