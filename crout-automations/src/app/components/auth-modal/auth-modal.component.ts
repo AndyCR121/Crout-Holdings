@@ -61,7 +61,8 @@ export class AuthModalComponent {
         },
         error: (e: any) => {
           this.loading.set(false);
-          this.error.set(e ? e.error : e.message ?? 'Login failed. Please try again.');
+          console.dir(e);
+          this.error.set(e.error ? e.error.error ?? e.error.message : 'Login failed. Please try again.');
         },
       });
   }
