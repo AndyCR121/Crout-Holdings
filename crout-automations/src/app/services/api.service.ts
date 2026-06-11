@@ -14,40 +14,41 @@ import {
 } from '../interfaces/i-service.interface';
 
 // ─── Field-name normalizers ───────────────────────────────────────────────────
-// The live API returns camelCase while IService/IAddon/IPackage use a
-// mixed PascalCase/snake_case convention.  These mappers accept EITHER shape
+// The live API returns PascalCase while IService/IAddon/IPackage use a
+// mixed camelCase/snake_case convention. These mappers accept EITHER shape
 // so nothing breaks whether the server changes casing or the demo data is used.
 
 function normalizeService(raw: any): IService {
   return {
-    service_id:         raw.service_id         ?? raw.serviceId         ?? raw.id,
-    serviceName:        raw.serviceName        ?? raw.ServiceName       ?? raw.name        ?? '',
-    price:              raw.price               ?? raw.Price             ?? 0,
-    hasAddons:          raw.hasAddons           ?? raw.HasAddons         ?? false,
-    serviceDescription: raw.serviceDescription  ?? raw.ServiceDescription ?? raw.description ?? '',
-    conditional:        raw.conditional         ?? raw.Conditional       ?? false,
+    service_id:         raw.service_id          ?? raw.serviceId          ?? raw.id,
+    // ⚠️  Must map to lowercase keys to match IService + buildViews() checks
+    serviceName:        raw.ServiceName         ?? raw.serviceName        ?? raw.name        ?? '',
+    price:              raw.Price               ?? raw.price              ?? 0,
+    hasAddons:          raw.HasAddons           ?? raw.hasAddons          ?? false,
+    serviceDescription: raw.ServiceDescription  ?? raw.serviceDescription ?? raw.description ?? '',
+    conditional:        raw.Conditional         ?? raw.conditional        ?? false,
     features:           raw.features            ?? [],
   };
 }
 
 function normalizeAddon(raw: any): IAddon {
   return {
-    addon_id:         raw.addon_id         ?? raw.addonId         ?? raw.id,
-    service_id:       raw.service_id       ?? raw.serviceId       ?? null,
-    addonName:        raw.addonName        ?? raw.AddonName       ?? raw.name        ?? '',
-    addonDescription: raw.addonDescription ?? raw.AddonDescription ?? raw.description ?? '',
-    price:            raw.price             ?? raw.Price           ?? 0,
+    addon_id:         raw.addon_id         ?? raw.addonId          ?? raw.id,
+    service_id:       raw.service_id       ?? raw.serviceId        ?? null,
+    addonName:        raw.AddonName        ?? raw.addonName        ?? raw.name        ?? '',
+    addonDescription: raw.AddonDescription ?? raw.addonDescription ?? raw.description ?? '',
+    price:            raw.Price            ?? raw.price            ?? 0,
   };
 }
 
 function normalizePackage(raw: any): IPackage {
   return {
-    package_id:           raw.package_id           ?? raw.packageId          ?? raw.id,
-    parent_package_id:    raw.parent_package_id     ?? raw.parentPackageId    ?? undefined,
-    service_ids:          raw.service_ids           ?? raw.serviceIds         ?? [],
-    packageName:          raw.packageName           ?? raw.PackageName        ?? raw.name        ?? '',
-    packageDescription:   raw.packageDescription    ?? raw.PackageDescription ?? raw.description ?? '',
-    discount:             raw.discount              ?? raw.discount           ?? 0,
+    package_id:            raw.package_id           ?? raw.packageId          ?? raw.id,
+    parent_package_id:     raw.parent_package_id    ?? raw.parentPackageId    ?? undefined,
+    service_ids:           raw.service_ids          ?? raw.serviceIds         ?? [],
+    packageName:           raw.PackageName          ?? raw.packageName        ?? raw.name        ?? '',
+    packageDescription:    raw.PackageDescription   ?? raw.packageDescription ?? raw.description ?? '',
+    discount:              raw.Discount             ?? raw.discount           ?? 0,
     minimumRequiredAddons: raw.minimumRequiredAddons ?? raw.minimumrequiredaddons ?? undefined,
   };
 }

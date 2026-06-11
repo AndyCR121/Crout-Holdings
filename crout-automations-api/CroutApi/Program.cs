@@ -14,6 +14,21 @@ var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "crout-a
 var jwtExpiry   = int.Parse(Environment.GetEnvironmentVariable("JWT_EXPIRY_HOURS") ?? "8");
 var hmacSecret  = Environment.GetEnvironmentVariable("HMAC_SECRET")  ?? throw new InvalidOperationException("HMAC_SECRET not set");
 
+// -- CORS allowed origins -----------------------------------------------------
+// Set ALLOWED_ORIGINS in your .env / server environment as a comma-separated
+// list of the exact origins your Angular app is served from, e.g.:
+//   ALLOWED_ORIGINS=https://crout-automations.co.za,https://www.crout-automations.co.za,http://localhost:4200
+//
+// ⚠️  AllowAnyOrigin() is intentionally NOT used here.
+//     The Angular client sends withCredentials:true (for HttpOnly JWT cookies).
+//     Browsers reject credentialed cross-origin requests when the server
+//     responds with Access-Control-Allow-Origin: * — a specific origin list
+//     is required, paired with AllowCredentials().
+var rawOrigins     = Environment.GetEnvironmentVariable("ALLOWED_ORIGINS")
+                     ?? "http://localhost:4200,http://localhost:4201";
+var allowedOrigins = rawOrigins
+    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
 // -- Helpers ------------------------------------------------------------------
 builder.Services.AddSingleton(new DbHelper());
 builder.Services.AddSingleton(new JwtHelper(jwtSecret, jwtIssuer, jwtAudience, jwtExpiry));
@@ -50,8 +65,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
-builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
-  p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
+
+builder.Services.AddCors(options =>
+{
+  options.AddDefaultPolicy(policy =>
+  {
+    policy
+      .WithOrigins(allowedOrigins)   // explicit origins — required for withCredentials
+      .AllowAnyMethod()
+      .AllowAnyHeader()
+      .AllowCredentials();           // enables cookie / Authorization header pass-through
+  });
+});
 
 var app = builder.Build();
 app.UseCors();
