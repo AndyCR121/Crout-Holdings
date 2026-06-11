@@ -24,12 +24,12 @@ public class AuthService(IUserRepository users, JwtHelper jwt, EncryptionHelper 
 
         var user = new User
         {
-            Username = request.Username,
+            Username     = request.Username,
             PasswordHash = enc.Hash(request.Password),
-            FirstName = request.FirstName,
-            Surname = request.Surname,
-            Email = request.Email,
-            CellNumber = request.CellNumber,
+            FirstName    = request.FirstName,
+            Surname      = request.Surname,
+            Email        = request.Email,
+            CellNumber   = request.CellNumber,
         };
         user.UserId = await users.CreateAsync(user);
         return BuildResponse(user);
@@ -37,8 +37,8 @@ public class AuthService(IUserRepository users, JwtHelper jwt, EncryptionHelper 
 
     private LoginResponse BuildResponse(User user)
     {
-        var token = jwt.Generate(user.UserId, user.Username, user.IsAdmin);
-        var dto = new UserDto(user.UserId, user.Username, user.FirstName, user.Surname, user.Email, user.CellNumber, user.IsAdmin);
+        var token = jwt.GenerateToken(user.UserId, user.Username, user.IsAdmin);
+        var dto   = new UserDto(user.UserId, user.Username, user.FirstName, user.Surname, user.Email, user.CellNumber, user.IsAdmin);
         return new LoginResponse(token, dto);
     }
 }

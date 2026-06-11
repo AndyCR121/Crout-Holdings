@@ -13,7 +13,7 @@ public class ServiceRequestsController(IServiceRequestService svcRequests) : Con
 {
     private int UserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-    /// <summary>POST /api/service-requests — submit a config change or new service request</summary>
+    /// <summary>POST /api/service-requests</summary>
     [HttpPost]
     public async Task<IActionResult> Submit([FromBody] SubmitServiceRequestDto dto)
     {
@@ -22,7 +22,7 @@ public class ServiceRequestsController(IServiceRequestService svcRequests) : Con
             var result = await svcRequests.SubmitAsync(UserId, dto);
             return Created($"/api/service-requests/{result.RequestId}", result);
         }
-        catch (KeyNotFoundException ex)         { return NotFound(new { error = ex.Message }); }
-        catch (UnauthorizedAccessException ex)  { return Forbid(); }
+        catch (KeyNotFoundException)        { return NotFound(new { error = "Company not found." }); }
+        catch (UnauthorizedAccessException) { return Forbid(); }
     }
 }
