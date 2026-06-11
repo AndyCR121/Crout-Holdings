@@ -59,9 +59,9 @@ export class AuthModalComponent {
           this.toastSvc.success(`Welcome back, ${user.firstName || user.username}!`);
           this.router.navigate(['/client/dashboard']);
         },
-        error: (e: Error) => {
+        error: (e: any) => {
           this.loading.set(false);
-          this.error.set(e.message ?? 'Login failed. Please try again.');
+          this.error.set(e ? e.error : e.message ?? 'Login failed. Please try again.');
         },
       });
   }

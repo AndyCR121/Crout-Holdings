@@ -13,7 +13,7 @@ public class AuthController(IAuthService auth) : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         var result = await auth.LoginAsync(request);
-        if (result is null) return Unauthorized(new { error = "Invalid username or password." });
+        if (result is null) return Unauthorized(new { error = "Invalid identifier or password." });
         return Ok(result);
     }
 

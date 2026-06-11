@@ -1,3 +1,4 @@
+-- Active: 1781193513914@@169.255.58.150@3306@crout_automations
 -- =============================================================================
 -- 03_fix_encoding.sql
 -- Replace mojibake â€" (UTF-8 en-dash misread as latin-1 / cp1252) with a
@@ -40,8 +41,8 @@ SET
   PackageName        = REPLACE(PackageName,        'â€"', '-'),
   PackageDescription = REPLACE(PackageDescription, 'â€"', '-')
 WHERE
-  PackageName        LIKE '%â€"%'
-  OR PackageDescription LIKE '%â€"%';
+  PackageName        CONTAINS('â€"')
+  OR PackageDescription CONTAINS('â€"');
 
 -- ── ServiceFeatures ───────────────────────────────────────────────────────────
 UPDATE ServiceFeatures
@@ -73,9 +74,9 @@ WHERE
 -- =============================================================================
 -- Verification — uncomment and run after the updates to confirm zero remaining.
 -- =============================================================================
--- SELECT 'Services'        AS tbl, COUNT(*) AS remaining FROM Services        WHERE ServiceName LIKE '%â€"%' OR ServiceDescription LIKE '%â€"%';
--- SELECT 'Addons'          AS tbl, COUNT(*) AS remaining FROM Addons          WHERE AddonName   LIKE '%â€"%' OR AddonDescription   LIKE '%â€"%';
--- SELECT 'Packages'        AS tbl, COUNT(*) AS remaining FROM Packages        WHERE PackageName LIKE '%â€"%' OR PackageDescription  LIKE '%â€"%';
--- SELECT 'ServiceFeatures' AS tbl, COUNT(*) AS remaining FROM ServiceFeatures WHERE Feature     LIKE '%â€"%';
--- SELECT 'Users'           AS tbl, COUNT(*) AS remaining FROM Users           WHERE FirstName   LIKE '%â€"%' OR Surname LIKE '%â€"%';
--- SELECT 'Companies'       AS tbl, COUNT(*) AS remaining FROM Companies       WHERE CompanyName LIKE '%â€"%' OR Industry LIKE '%â€"%' OR Address LIKE '%â€"%';
+SELECT 'Services'        AS tbl, COUNT(*) AS remaining FROM Services        WHERE ServiceName LIKE '%â€"%' OR ServiceDescription LIKE '%â€"%';
+SELECT 'Addons'          AS tbl, COUNT(*) AS remaining FROM Addons          WHERE AddonName   LIKE '%â€"%' OR AddonDescription   LIKE '%â€"%';
+SELECT 'Packages'        AS tbl, COUNT(*) AS remaining FROM Packages        WHERE PackageName LIKE '%â€"%' OR PackageDescription  LIKE '%â€"%';
+SELECT 'ServiceFeatures' AS tbl, COUNT(*) AS remaining FROM ServiceFeatures WHERE Feature     LIKE '%â€"%';
+SELECT 'Users'           AS tbl, COUNT(*) AS remaining FROM Users           WHERE FirstName   LIKE '%â€"%' OR Surname LIKE '%â€"%';
+SELECT 'Companies'       AS tbl, COUNT(*) AS remaining FROM Companies       WHERE CompanyName LIKE '%â€"%' OR Industry LIKE '%â€"%' OR Address LIKE '%â€"%';

@@ -1,3 +1,3 @@
 namespace CroutApi.DTOs.Auth;
 
-public record LoginRequest(string Username, string Password);
+public record LoginRequest(string Identifier, string Password);

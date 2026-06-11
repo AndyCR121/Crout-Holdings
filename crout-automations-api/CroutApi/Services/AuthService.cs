@@ -9,7 +9,7 @@ public class AuthService(IUserRepository users, JwtHelper jwt, EncryptionHelper 
 {
     public async Task<LoginResponse?> LoginAsync(LoginRequest request)
     {
-        var user = await users.GetByUsernameAsync(request.Username);
+        var user = await users.GetByUsernameAsync(request.Identifier);
         if (user is null) return null;
         if (user.PasswordHash != enc.Hash(request.Password)) return null;
         return BuildResponse(user);
