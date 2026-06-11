@@ -31,7 +31,7 @@
         <span class="portal-user-avatar">{{ initials() }}</span>
         <div class="portal-user-info">
           <span class="portal-user-name">{{ user()!.Username }}</span>
-          <span class="portal-user-company" *ngIf="user()!.Company">{{ user()!.Company }}</span>
+          <span class="portal-user-company" *ngIf="primaryCompany()">{{ primaryCompany() }}</span>
         </div>
       </div>
       <button class="portal-logout-btn" (click)="logout()">

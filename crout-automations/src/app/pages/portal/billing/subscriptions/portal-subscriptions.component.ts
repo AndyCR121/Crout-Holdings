@@ -3,11 +3,14 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../../services/auth.service';
 import { ApiService } from '../../../../services/api.service';
 import { PaystackService, IPaystackSubscription } from '../../../../services/paystack.service';
-import { IUserService, IService } from '../../../../interfaces/i-service.interface';
+import { IUserService, IService, ICompany } from '../../../../interfaces/i-service.interface';
+import { forkJoin, of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 interface SubRow {
   userService:  IUserService;
   service:      IService | undefined;
+  company:      ICompany | undefined;
   subscription: IPaystackSubscription | null;
 }
 
@@ -31,28 +34,50 @@ export class PortalSubscriptionsComponent implements OnInit {
     const uid = this.user()?.user_id;
     if (uid == null) { this.loading.set(false); return; }
 
-    this.api.getServices().subscribe(svcs => {
-      this.api.getUserServices(uid).subscribe(userSvcs => {
-        // Fetch Paystack subscriptions list
-        this.paystack.getSubscriptions().subscribe(paystackSubs => {
-          const built: SubRow[] = userSvcs.map(us => {
-            const svc = svcs.find(s => s.service_id === us.service_id);
-            const sub = paystackSubs.find(ps => ps.subscription_code === us.subscription_id) ?? null;
-            return { userService: us, service: svc, subscription: sub };
-          });
-          this.rows.set(built);
-          this.loading.set(false);
-        });
-      });
+    this.api.getServices().pipe(
+      switchMap(svcs =>
+        this.api.getCompaniesByUser(uid).pipe(
+          switchMap(companies => {
+            if (companies.length === 0) {
+              return of({ svcs, companies, allUserSvcs: [] as IUserService[] });
+            }
+            return forkJoin(
+              companies.map(c => this.api.getCompanyServices(c.company_id))
+            ).pipe(
+              switchMap(results => of({
+                svcs,
+                companies,
+                allUserSvcs: ([] as IUserService[]).concat(...results),
+              }))
+            );
+          })
+        )
+      ),
+      switchMap(({ svcs, companies, allUserSvcs }) =>
+        this.paystack.getSubscriptions().pipe(
+          switchMap(paystackSubs => {
+            const built: SubRow[] = allUserSvcs.map((us: IUserService) => ({
+              userService:  us,
+              service:      svcs.find((s: IService) => s.service_id === us.service_id),
+              company:      companies.find((c: ICompany) => c.company_id === us.company_id),
+              subscription: paystackSubs.find(ps => ps.subscription_code === us.subscription_id) ?? null,
+            }));
+            return of(built);
+          })
+        )
+      )
+    ).subscribe(built => {
+      this.rows.set(built);
+      this.loading.set(false);
     });
   }
 
   statusLabel(s: number): string {
-    return ['Disabled','In Development','Live','Pending'][s] ?? 'Unknown';
+    return ['Disabled', 'In Development', 'Live', 'Pending'][s] ?? 'Unknown';
   }
 
   statusClass(s: number): string {
-    return ['status-disabled','status-dev','status-live','status-pending'][s] ?? '';
+    return ['status-disabled', 'status-dev', 'status-live', 'status-pending'][s] ?? '';
   }
 
   formatDate(iso: string | null | undefined): string {

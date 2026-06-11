@@ -1,44 +1,57 @@
 import {
-  Component, inject, signal, computed,
-  HostListener, ElementRef
+  Component, inject, signal, computed, HostListener, OnInit
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { ApiService } from '../../services/api.service';
 import { AuthModalComponent } from '../auth-modal/auth-modal.component';
+import { ICompany } from '../../interfaces/i-service.interface';
 
 @Component({
   selector: 'ca-account-button',
   standalone: true,
-  imports: [CommonModule, RouterModule, AuthModalComponent],
+  imports: [CommonModule, AuthModalComponent],
   templateUrl: './account-button.component.html',
   styleUrls: ['./account-button.component.scss'],
 })
-export class AccountButtonComponent {
-  readonly auth    = inject(AuthService);
-  private readonly router  = inject(Router);
-  private readonly elRef   = inject(ElementRef);
+export class AccountButtonComponent implements OnInit {
+  private readonly auth   = inject(AuthService);
+  private readonly api    = inject(ApiService);
+  private readonly router = inject(Router);
 
-  readonly open         = signal(false);
+  readonly loggedIn      = computed(() => this.auth.isLoggedIn());
+  readonly user          = computed(() => this.auth.currentUser());
+  readonly open          = signal(false);
   readonly showAuthModal = signal(false);
+  readonly companies     = signal<ICompany[]>([]);
 
-  readonly user    = computed(() => this.auth.currentUser());
-  readonly loggedIn = computed(() => this.auth.isLoggedIn());
-
-  /** Initials fallback when no profile picture */
   readonly initials = computed(() => {
     const u = this.user();
     if (!u) return '';
     return ((u.FirstName?.[0] ?? '') + (u.Surname?.[0] ?? '')).toUpperCase() || u.Username[0].toUpperCase();
   });
 
+  /** First active company name — shown in the account button identity row. */
+  readonly primaryCompany = computed(() =>
+    this.companies().find(c => c.Active)?.CompanyName ?? null
+  );
+
+  ngOnInit(): void {
+    const uid = this.user()?.user_id;
+    if (uid == null) return;
+    this.api.getCompaniesByUser(uid).subscribe(c => this.companies.set(c));
+  }
+
   toggleDropdown(): void {
     if (!this.loggedIn()) {
       this.showAuthModal.set(true);
-      return;
+    } else {
+      this.open.update(v => !v);
     }
-    this.open.update(v => !v);
   }
+
+  closeModal(): void { this.showAuthModal.set(false); }
 
   navigate(path: string): void {
     this.open.set(false);
@@ -50,14 +63,9 @@ export class AccountButtonComponent {
     this.auth.logout();
   }
 
-  closeModal(): void {
-    this.showAuthModal.set(false);
-  }
-
   @HostListener('document:click', ['$event'])
   onDocClick(e: MouseEvent): void {
-    if (this.open() && !this.elRef.nativeElement.contains(e.target)) {
-      this.open.set(false);
-    }
+    const host = (e.target as HTMLElement).closest('ca-account-button');
+    if (!host) this.open.set(false);
   }
 }

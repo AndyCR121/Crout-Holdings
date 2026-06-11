@@ -22,8 +22,8 @@
       <!-- Identity -->
       <span class="ca-account-identity">
         <span class="ca-account-username">{{ user()!.Username }}</span>
-        @if (user()!.Company) {
-          <span class="ca-account-company">{{ user()!.Company }}</span>
+        @if (primaryCompany()) {
+          <span class="ca-account-company">{{ primaryCompany() }}</span>
         }
       </span>
       <!-- Caret -->

@@ -19,8 +19,8 @@ type AuthTab = 'login' | 'signup';
 export class AuthModalComponent {
   readonly close  = output<void>();
 
-  private readonly auth   = inject(AuthService);
-  private readonly router = inject(Router);
+  private readonly auth     = inject(AuthService);
+  private readonly router   = inject(Router);
   private readonly toastSvc = inject(ToastService);
 
   tab        = signal<AuthTab>('login');
@@ -31,12 +31,11 @@ export class AuthModalComponent {
   loginId  = '';
   loginPwd = '';
 
-  // Sign-up form
+  // Sign-up form — company is created post-signup via Profile > Companies
   signupUsername  = '';
   signupEmail     = '';
   signupFirstName = '';
   signupSurname   = '';
-  signupCompany   = '';
   signupPwd       = '';
   signupPwd2      = '';
 
@@ -84,7 +83,6 @@ export class AuthModalComponent {
       email:     this.signupEmail,
       firstName: this.signupFirstName,
       surname:   this.signupSurname,
-      company:   this.signupCompany || undefined,
       password:  this.signupPwd,
     }).subscribe({
       next: (user) => {
