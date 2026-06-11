@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 
 type AuthTab = 'login' | 'signup';
 
@@ -20,6 +21,7 @@ export class AuthModalComponent {
 
   private readonly auth   = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly toastSvc = inject(ToastService);
 
   tab        = signal<AuthTab>('login');
   loading    = signal(false);
@@ -52,10 +54,11 @@ export class AuthModalComponent {
     this.error.set(null);
     this.auth.login({ identifier: this.loginId, password: this.loginPwd })
       .subscribe({
-        next: () => {
+        next: (user) => {
           this.loading.set(false);
           this.close.emit();
-          this.router.navigate(['/portal/dashboard']);
+          this.toastSvc.success(`Welcome back, ${user.FirstName || user.Username}!`);
+          this.router.navigate(['/client/dashboard']);
         },
         error: (e: Error) => {
           this.loading.set(false);
@@ -84,10 +87,11 @@ export class AuthModalComponent {
       company:   this.signupCompany || undefined,
       password:  this.signupPwd,
     }).subscribe({
-      next: () => {
+      next: (user) => {
         this.loading.set(false);
         this.close.emit();
-        this.router.navigate(['/portal/dashboard']);
+        this.toastSvc.success(`Account created! Welcome, ${user.FirstName || user.Username}.`);
+        this.router.navigate(['/client/dashboard']);
       },
       error: (e: Error) => {
         this.loading.set(false);

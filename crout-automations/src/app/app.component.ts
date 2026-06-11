@@ -3,15 +3,17 @@ import { RouterOutlet } from '@angular/router';
 import { SeoService } from './services/seo.service';
 import { DevNavComponent } from './components/dev-nav/dev-nav.component';
 import { AccountButtonComponent } from './components/account-button/account-button.component';
+import { ToastComponent } from './components/toast/toast.component';
 
 @Component({
   selector: 'ca-root',
   standalone: true,
-  imports: [RouterOutlet, DevNavComponent, AccountButtonComponent],
+  imports: [RouterOutlet, DevNavComponent, AccountButtonComponent, ToastComponent],
   template: `
     <ca-dev-nav />
     <ca-account-button class="app-account-btn" />
     <router-outlet />
+    <ca-toast />
   `,
   styles: [`
     :host {

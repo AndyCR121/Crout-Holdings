@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { ApiService } from '../../../services/api.service';
+import { ToastService } from '../../../services/toast.service';
 import { IUserService, IService, IAddon } from '../../../interfaces/i-service.interface';
 
 interface ServiceRow {
   userService: IUserService;
   service:     IService;
-  addons:      IAddon[];   // all addons for this service
-  activeAddons: string[]; // names already in config
+  addons:      IAddon[];
+  activeAddons: string[];
   editing:     boolean;
   editConfig:  string[];
   sidePanelOpen: boolean;
@@ -23,8 +24,9 @@ interface ServiceRow {
   styleUrls: ['./portal-services.component.scss'],
 })
 export class PortalServicesComponent implements OnInit {
-  private readonly auth = inject(AuthService);
-  private readonly api  = inject(ApiService);
+  private readonly auth  = inject(AuthService);
+  private readonly api   = inject(ApiService);
+  private readonly toast = inject(ToastService);
 
   readonly user    = computed(() => this.auth.currentUser());
   readonly rows    = signal<ServiceRow[]>([]);
@@ -79,7 +81,6 @@ export class PortalServicesComponent implements OnInit {
 
   submitConfigRequest(row: ServiceRow): void {
     this.saving.set(row.userService.service_id);
-    // POST to API (no-op in demo)
     const payload = { integrations: row.editConfig };
     this.api['http']?.post?.(`/users/${this.user()!.user_id}/services/${row.userService.service_id}/config-request`, payload).subscribe?.();
     setTimeout(() => {
@@ -87,7 +88,15 @@ export class PortalServicesComponent implements OnInit {
       row.editing      = false;
       this.saving.set(null);
       this.rows.update(r => [...r]);
+      this.toast.success(`Configuration request submitted for ${row.service.ServiceName}.`);
     }, 800);
+  }
+
+  submitConfigRequestError(row: ServiceRow): void {
+    this.saving.set(null);
+    row.editing = false;
+    this.rows.update(r => [...r]);
+    this.toast.error(`Failed to submit request for ${row.service.ServiceName}. Please try again.`);
   }
 
   openSidePanel(row: ServiceRow): void {
