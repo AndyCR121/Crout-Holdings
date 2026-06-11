@@ -1,7 +1,7 @@
 {
   "/api": {
-    "target": "http://localhost:3000",
-    "secure": false,
+    "target": "https://api.automations.crout-holdings.com",
+    "secure": true,
     "changeOrigin": true,
     "logLevel": "info"
   }
