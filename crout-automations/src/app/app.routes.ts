@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -94,6 +95,49 @@ export const routes: Routes = [
     path: 'privacy-policy',
     loadComponent: () =>
       import('./pages/privacy-policy/privacy-policy.page').then(m => m.PrivacyPolicyPageComponent)
+  },
+  // ── Client Portal (auth-guarded) ────────────────────────────────────────
+  {
+    path: 'client',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/portal/portal.component').then(m => m.PortalComponent),
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./pages/portal/dashboard/portal-dashboard.component').then(m => m.PortalDashboardComponent),
+      },
+      {
+        path: 'services',
+        loadComponent: () =>
+          import('./pages/portal/services/portal-services.component').then(m => m.PortalServicesComponent),
+      },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./pages/portal/profile/portal-profile.component').then(m => m.PortalProfileComponent),
+      },
+      {
+        path: 'billing',
+        loadComponent: () =>
+          import('./pages/portal/billing/portal-billing.component').then(m => m.PortalBillingComponent),
+        children: [
+          { path: '', redirectTo: 'subscriptions', pathMatch: 'full' },
+          {
+            path: 'subscriptions',
+            loadComponent: () =>
+              import('./pages/portal/billing/subscriptions/portal-subscriptions.component').then(m => m.PortalSubscriptionsComponent),
+          },
+          {
+            path: 'payment-methods',
+            loadComponent: () =>
+              import('./pages/portal/billing/payment-methods/portal-payment-methods.component').then(m => m.PortalPaymentMethodsComponent),
+          },
+        ],
+      },
+    ],
   },
   {
     path: '**',

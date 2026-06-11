@@ -1,0 +1,58 @@
+<div class="psubs">
+
+  <h2 class="psubs__title">Subscriptions</h2>
+  <p class="psubs__hint">Your active service subscriptions are listed below, linked to your Paystack billing account.</p>
+
+  <!-- Loading skeleton -->
+  <ng-container *ngIf="loading()">
+    <div class="psubs__skeleton" *ngFor="let i of [0,1,2]"></div>
+  </ng-container>
+
+  <!-- Empty -->
+  <div class="psubs__empty" *ngIf="!loading() && rows().length === 0">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+    </svg>
+    <p>No active subscriptions found.</p>
+  </div>
+
+  <!-- Subscription rows -->
+  <ng-container *ngIf="!loading() && rows().length > 0">
+    <div class="psubs__row" *ngFor="let row of rows()">
+
+      <div class="psubs__row-header">
+        <div class="psubs__row-title-group">
+          <span class="psubs__service-name">{{ row.service?.ServiceName ?? 'Unknown Service' }}</span>
+          <span class="psubs__badge" [class]="statusClass(row.userService.Status)">
+            {{ statusLabel(row.userService.Status) }}
+          </span>
+        </div>
+        <div class="psubs__price">
+          {{ formatPrice(row.subscription?.amount) }}
+          <span class="psubs__price-interval" *ngIf="row.subscription?.plan?.interval">/{{ row.subscription!.plan!.interval }}</span>
+        </div>
+      </div>
+
+      <div class="psubs__row-meta">
+        <div class="psubs__meta-item">
+          <span class="psubs__meta-label">Subscription Ref</span>
+          <span class="psubs__meta-value code">{{ row.subscription?.subscription_code ?? row.userService.subscription_id ?? '—' }}</span>
+        </div>
+        <div class="psubs__meta-item">
+          <span class="psubs__meta-label">Plan</span>
+          <span class="psubs__meta-value">{{ row.subscription?.plan?.name ?? '—' }}</span>
+        </div>
+        <div class="psubs__meta-item">
+          <span class="psubs__meta-label">Next Billing</span>
+          <span class="psubs__meta-value">{{ formatDate(row.subscription?.next_payment_date) }}</span>
+        </div>
+        <div class="psubs__meta-item">
+          <span class="psubs__meta-label">Status</span>
+          <span class="psubs__meta-value" [class.psubs__meta-value--active]="row.subscription?.status === 'active'">{{ row.subscription?.status ?? '—' }}</span>
+        </div>
+      </div>
+
+    </div>
+  </ng-container>
+
+</div>

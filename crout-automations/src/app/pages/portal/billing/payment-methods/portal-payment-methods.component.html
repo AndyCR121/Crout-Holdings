@@ -1,0 +1,42 @@
+<div class="pmethods">
+
+  <h2 class="pmethods__title">Payment Methods</h2>
+  <p class="pmethods__hint">Cards saved to your Paystack account for automatic subscription billing.</p>
+
+  <!-- Loading skeleton -->
+  <ng-container *ngIf="loading()">
+    <div class="pmethods__skeleton" *ngFor="let i of [0,1]"></div>
+  </ng-container>
+
+  <!-- Empty state -->
+  <div class="pmethods__empty" *ngIf="!loading() && cards().length === 0">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
+    </svg>
+    <p>No saved payment methods found.</p>
+    <span class="pmethods__empty-hint">Payment methods are saved automatically when you complete a Paystack transaction.</span>
+  </div>
+
+  <!-- Card list -->
+  <div class="pmethods__list" *ngIf="!loading() && cards().length > 0">
+    <div class="pmethods__card" *ngFor="let card of cards()">
+
+      <div class="pmethods__card-icon" [attr.data-brand]="cardBrand(card.card_type)">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
+        </svg>
+      </div>
+
+      <div class="pmethods__card-body">
+        <span class="pmethods__card-number">{{ maskedNumber(card.last4) }}</span>
+        <span class="pmethods__card-brand">{{ card.card_type | titlecase }} &bull; Expires {{ card.exp_month }}/{{ card.exp_year }}</span>
+      </div>
+
+      <div class="pmethods__card-badge" *ngIf="card.channel">
+        {{ card.channel }}
+      </div>
+
+    </div>
+  </div>
+
+</div>
