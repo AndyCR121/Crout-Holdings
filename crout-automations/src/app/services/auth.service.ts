@@ -5,12 +5,12 @@ import { Observable, of, tap, catchError, map } from 'rxjs';
 import { IUser } from '../interfaces/i-service.interface';
 import { EnvironmentService } from './environment.service';
 
-export interface ILoginPayload  { identifier: string; password: string; }
+export interface ILoginPayload { identifier: string; password: string; }
 export interface ISignupPayload {
   username: string; email: string; password: string;
   firstName: string; surname: string;
 }
-export interface IAuthResponse  { token: string; user: IUser; }
+export interface IAuthResponse { token: string; user: IUser; }
 
 /** Cookie helpers — JWT stored as HttpOnly-style cookie via server, but we also
  *  keep a non-sensitive "session" cookie for the client UI to detect auth state. */
@@ -28,14 +28,14 @@ function deleteCookie(name: string): void {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly http   = inject(HttpClient);
+  private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
-  private readonly env    = inject(EnvironmentService);
+  private readonly env = inject(EnvironmentService);
   private get base(): string { return this.env.apiUrl; }
 
   // ── Signals ──────────────────────────────────────────────────────────────
-  readonly currentUser  = signal<IUser | null>(this._restoreUser());
-  readonly isLoggedIn   = computed(() => this.currentUser() !== null);
+  readonly currentUser = signal<IUser | null>(this._restoreUser());
+  readonly isLoggedIn = computed(() => this.currentUser() !== null);
 
   // ── Restore from cookie on init ──────────────────────────────────────────
   private _restoreUser(): IUser | null {
@@ -61,23 +61,7 @@ export class AuthService {
       .post<IAuthResponse>(`${this.base}/auth/signup`, payload, { withCredentials: true })
       .pipe(
         map(r => r.user),
-        tap(user => this._setSession(user)),
-        catchError(() => {
-          const fake: IUser = {
-            user_id:    Date.now(),
-            username:   payload.username,
-            password:   payload.password,
-            firstName:  payload.firstName,
-            surname:    payload.surname,
-            email:      payload.email,
-            cellNumber: null,
-            active:     true,
-            isAdmin:    false,
-          };
-          this._setSession(fake);
-          return of(fake);
-        })
-      );
+        tap(user => this._setSession(user)));
   }
 
   // ── Password Reset Request ─────────────────────────────────────────────────

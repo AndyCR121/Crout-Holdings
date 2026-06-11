@@ -92,9 +92,9 @@ export class AuthModalComponent {
         this.toastSvc.success(`Account created! Welcome, ${user.firstName || user.username}.`);
         this.router.navigate(['/client/dashboard']);
       },
-      error: (e: Error) => {
+      error: (e: any) => {
         this.loading.set(false);
-        this.error.set(e.message ?? 'Sign-up failed. Please try again.');
+        this.error.set(e.error ? e.error.error ?? e.error.message : 'Sign-up failed. Please try again.');
       },
     });
   }
