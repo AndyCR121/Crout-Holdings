@@ -1,7 +1,3 @@
-@use '../../../../styles/mixins' as *;
-
+// Styles for this page come from the global src/styles/service-page.scss
+// which is already included in styles.scss.
 :host { display: block; }
-
-.svc-page {
-  @include svc-page-base();
-}

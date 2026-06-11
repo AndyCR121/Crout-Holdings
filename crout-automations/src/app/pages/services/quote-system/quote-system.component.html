@@ -70,10 +70,11 @@
       <div class="svc-page__container">
         <h2 class="svc-page__section-title">Pricing</h2>
         <ca-service-configurator
-          [service]="service()!"
+          [services]="service() ? [service()!] : []"
           [addons]="addons()"
           [packages]="packages()"
           [allServices]="allServices()"
+          [loading]="loading()"
         ></ca-service-configurator>
       </div>
     </div>
