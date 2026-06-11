@@ -7,6 +7,8 @@ import { IService, IAddon, IPackage } from '../../interfaces/i-service.interface
 import { IAddonState, IPackageView } from '../../interfaces/i-service-display.interface';
 import { FindByIdPipe } from '../../pipes/find-by-id.pipe';
 import { FilterByServiceIdPipe } from '../../pipes/filter-by-service-id.pipe';
+import { forkJoin, of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 /** Maximum service cards shown in the pricing section before "View More" appears */
 const MAX_VISIBLE_SERVICES = 6;
@@ -37,29 +39,39 @@ export class PricingComponent implements OnInit {
   packageViews: IPackageView[] = [];
 
   // ── Monthly retainer (static) ─────────────────────────────────────────────
-  readonly retainerPrice = 1200;
+  readonly retainerPrice    = 1200;
   readonly PACKAGE_DISCOUNT = 0.15;
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit(): void { this.onLoad(); }
 
-  async onLoad(): Promise<void> {
-    try {
-      const [svcs, ads, pkgs] = await Promise.all([
-        this.api.getServices().toPromise(),
-        this.api.getAddons().toPromise(),
-        this.api.getPackages().toPromise(),
-      ]);
-      if (svcs && ads && pkgs) {
+  onLoad(): void {
+    // Step 1: fetch services + packages in parallel
+    forkJoin({
+      svcs: this.api.getServices(),
+      pkgs: this.api.getAllPackages(),
+    }).pipe(
+      // Step 2: once we have services, fetch addons per-service in parallel
+      switchMap(({ svcs, pkgs }) => {
+        const addonRequests = svcs.length
+          ? forkJoin(svcs.map((s: IService) => this.api.getAddonsByService(s.service_id)))
+          : of([] as IAddon[][]);
+        return forkJoin({ svcs: of(svcs), pkgs: of(pkgs), addonMatrix: addonRequests });
+      })
+    ).subscribe({
+      next: ({ svcs, pkgs, addonMatrix }) => {
         this.services = svcs;
-        this.addons   = ads;
         this.packages = pkgs;
+        // Flatten per-service addon arrays into one list
+        this.addons   = (addonMatrix as IAddon[][]).flat();
         this.buildViews();
         this.ghostLoaderOnLoad.set(false);
-      }
-    } catch (error: any) {
-      console.error(error ? (error.message ?? error.error ?? error) : 'Something went wrong onLoad()!');
-    }
+      },
+      error: (err: unknown) => {
+        const e = err as { message?: string; error?: string };
+        console.error(e?.message ?? e?.error ?? 'Something went wrong onLoad()!');
+      },
+    });
   }
 
   // ── View builders ─────────────────────────────────────────────────────────
@@ -117,47 +129,23 @@ export class PricingComponent implements OnInit {
 
   // ── Toggle helpers ────────────────────────────────────────────────────────
 
-  /**
-   * Toggles the conditional (child) service on or off.
-   *
-   * Rules:
-   * 1. Root addon states (and any user selections) are NEVER reset.
-   * 2. Child addons are built once on the first enable, reused thereafter
-   *    (preserving user's child-addon selections across toggles).
-   * 3. addonStates is always rebuilt via buildMergedAddonList:
-   *    OFF → root only | ON → root + child appended.
-   */
   toggleConditional(view: IPackageView): void {
     view.conditionalEnabled = !view.conditionalEnabled;
 
-    if (view.conditionalEnabled && view.childPkg) {
-      // Build child addon states once; reuse on subsequent re-enables.
-      if (view.childAddonStates.length === 0) {
-        view.childAddonStates = (view.childPkg.service_ids ?? []).flatMap(svcId =>
-          this.addons
-            .filter(a => a.service_id === svcId)
-            .map(a => ({ addon: a, enabled: false, isConditionalChild: true }))
-        );
-      }
+    if (view.conditionalEnabled && view.childPkg && view.childAddonStates.length === 0) {
+      view.childAddonStates = (view.childPkg.service_ids ?? []).flatMap(svcId =>
+        this.addons
+          .filter(a => a.service_id === svcId)
+          .map(a => ({ addon: a, enabled: false, isConditionalChild: true }))
+      );
     }
 
-    view.addonStates = this.buildMergedAddonList(view);
+    view.addonStates = view.conditionalEnabled
+      ? [...view.rootAddonStates, ...view.childAddonStates]
+      : [...view.rootAddonStates];
   }
 
-  /**
-   * Merges root and (optionally) child addon states into a stable list.
-   * OFF → root only; ON → root + child appended.
-   */
-  private buildMergedAddonList(view: IPackageView): IAddonState[] {
-    if (!view.conditionalEnabled) {
-      return [...view.rootAddonStates];
-    }
-    return [...view.rootAddonStates, ...view.childAddonStates];
-  }
-
-  toggleAddon(state: IAddonState): void {
-    state.enabled = !state.enabled;
-  }
+  toggleAddon(state: IAddonState): void { state.enabled = !state.enabled; }
 
   // ── Active package resolution ─────────────────────────────────────────────
   activePkg(view: IPackageView): IPackage {
@@ -187,28 +175,17 @@ export class PricingComponent implements OnInit {
     return view.addonStates.filter(s => s.enabled).length;
   }
 
-  /**
-   * Returns the minimum add-ons threshold for the active package.
-   * When minimumRequiredAddons is undefined or 0, the discount is always
-   * unlocked (no gating required).
-   */
   private minAddonsRequired(view: IPackageView): number {
     return this.activePkg(view).minimumRequiredAddons ?? 0;
   }
 
-  /**
-   * True when the bundle discount is unlocked.
-   * If minimumRequiredAddons is 0 / unset, always true.
-   */
   discountUnlocked(view: IPackageView): boolean {
     const min = this.minAddonsRequired(view);
     return min === 0 || this.enabledAddonCount(view) >= min;
   }
 
-  /** How many more add-ons the user needs to select to unlock the discount. */
   addonsNeededForDiscount(view: IPackageView): number {
-    const min = this.minAddonsRequired(view);
-    return Math.max(0, min - this.enabledAddonCount(view));
+    return Math.max(0, this.minAddonsRequired(view) - this.enabledAddonCount(view));
   }
 
   // ── Price helpers ─────────────────────────────────────────────────────────
@@ -263,6 +240,6 @@ export class PricingComponent implements OnInit {
   }
 
   // ── Ghost skeleton helpers ────────────────────────────────────────────────
-  skeletonCards = Array(3).fill(null);
+  skeletonCards    = Array(3).fill(null);
   skeletonPackages = Array(2).fill(null);
 }
