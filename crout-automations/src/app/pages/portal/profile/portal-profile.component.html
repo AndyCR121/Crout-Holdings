@@ -9,8 +9,8 @@
   <!-- Avatar + name summary -->
   <div class="pprofile__avatar-row">
     <label class="pprofile__avatar-wrap" title="Click to upload photo">
-      <ng-container *ngIf="avatarUrl(); else initBlock">
-        <img [src]="avatarUrl()" alt="Profile picture" class="pprofile__avatar-img" />
+      <ng-container *ngIf="resolvedAvatar(); else initBlock">
+        <img [src]="resolvedAvatar()" alt="Profile picture" class="pprofile__avatar-img" />
       </ng-container>
       <ng-template #initBlock>
         <span class="pprofile__avatar-initials">{{ initials() }}</span>
