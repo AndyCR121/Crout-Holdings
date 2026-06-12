@@ -1,0 +1,246 @@
+// ca-footer — full-width, dark navy, 4-column grid
+.ca-footer {
+  width: 100%;
+  background: #07192e;
+  color: rgba(232, 244, 253, 0.75);
+  font-size: 0.875rem;
+  line-height: 1.65;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+// Inner grid
+.ca-footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 4rem 2rem 3rem;
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1.4fr 1.2fr;
+  gap: 3rem;
+
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+  }
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding: 3rem 1.5rem 2rem;
+  }
+}
+
+// ── Brand column ─────────────────────────────────────────────────────────────
+.ca-footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.ca-footer-logo-link {
+  display: inline-block;
+  width: fit-content;
+  opacity: 1;
+  transition: opacity 160ms ease;
+
+  &:hover { opacity: 0.8; }
+  &:focus-visible {
+    outline: 2px solid rgba(79, 152, 163, 0.8);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+}
+
+.ca-footer-logo {
+  height: 38px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  // Brighten slightly so the logo reads well on the dark bg
+  filter: brightness(1.1);
+}
+
+.ca-footer-tagline {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #4f98a3;
+  margin: 0;
+}
+
+.ca-footer-desc {
+  color: rgba(232, 244, 253, 0.6);
+  font-size: 0.855rem;
+  max-width: 34ch;
+  margin: 0;
+  line-height: 1.7;
+}
+
+.ca-footer-socials {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+
+  a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(232, 244, 253, 0.65);
+    text-decoration: none;
+    transition: color 160ms ease, background 160ms ease, border-color 160ms ease;
+
+    &:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgba(79, 152, 163, 0.8);
+      outline-offset: 2px;
+    }
+  }
+}
+
+// ── Column headings ───────────────────────────────────────────────────────────
+.ca-footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.ca-footer-heading {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #fff;
+  margin: 0 0 0.25rem;
+  padding-bottom: 0.625rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+// ── Nav & service lists ───────────────────────────────────────────────────────
+.ca-footer-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  li {
+    display: flex;
+    align-items: center;
+  }
+}
+
+.ca-footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: rgba(232, 244, 253, 0.65);
+  text-decoration: none;
+  font-size: 0.875rem;
+  padding: 0.2rem 0;
+  transition: color 160ms ease;
+
+  svg { flex-shrink: 0; opacity: 0.5; transition: opacity 160ms ease, transform 160ms ease; }
+
+  &:hover {
+    color: #fff;
+    svg { opacity: 1; transform: translateX(2px); }
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(79, 152, 163, 0.8);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+// ── Contact list ──────────────────────────────────────────────────────────────
+.ca-footer-contact-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    color: rgba(232, 244, 253, 0.65);
+    font-size: 0.875rem;
+    line-height: 1.5;
+
+    svg {
+      flex-shrink: 0;
+      margin-top: 2px;
+      color: #4f98a3;
+    }
+
+    span, a {
+      color: rgba(232, 244, 253, 0.75);
+    }
+  }
+}
+
+// ── Bottom bar ────────────────────────────────────────────────────────────────
+.ca-footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.25rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  color: rgba(232, 244, 253, 0.45);
+
+  @media (max-width: 560px) {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1.25rem 1.5rem;
+  }
+}
+
+.ca-footer-copy {
+  white-space: nowrap;
+}
+
+.ca-footer-brought {
+  color: rgba(232, 244, 253, 0.45);
+
+  strong {
+    color: rgba(232, 244, 253, 0.75);
+    font-weight: 600;
+  }
+}
+
+.ca-footer-legal {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .ca-footer-link {
+    font-size: 0.8rem;
+    color: rgba(232, 244, 253, 0.45);
+    padding: 0;
+    gap: 0;
+
+    svg { display: none; }
+
+    &:hover { color: rgba(232, 244, 253, 0.85); }
+  }
+
+  span { color: rgba(232, 244, 253, 0.25); }
+}

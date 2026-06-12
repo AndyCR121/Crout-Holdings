@@ -5,6 +5,7 @@ import { filter } from 'rxjs/operators';
 import { SeoService } from './services/seo.service';
 import { DevNavComponent } from './components/dev-nav/dev-nav.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
+import { FooterComponent } from './components/footer/footer.component';
 import { ToastComponent } from './components/toast/toast.component';
 import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dialog.component';
 import { AccountButtonComponent } from './components/account-button/account-button.component';
@@ -12,12 +13,13 @@ import { AccountButtonComponent } from './components/account-button/account-butt
 @Component({
   selector: 'ca-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, DevNavComponent, NavbarComponent, ToastComponent, ConfirmDialogComponent, AccountButtonComponent],
+  imports: [CommonModule, RouterOutlet, DevNavComponent, NavbarComponent, FooterComponent, ToastComponent, ConfirmDialogComponent, AccountButtonComponent],
   template: `
     <ca-dev-nav *ngIf="!showNavbar" />
     <ca-navbar *ngIf="showNavbar" />
     <ca-account-button class="ca-account-fixed" />
     <router-outlet />
+    <ca-footer *ngIf="showNavbar" />
     <ca-toast />
     <ca-confirm-dialog />
   `,
@@ -36,7 +38,7 @@ export class AppComponent implements OnInit {
   private readonly seo    = inject(SeoService);
   private readonly router = inject(Router);
 
-  // ca-navbar shows on all public routes (not admin)
+  // ca-navbar & ca-footer show on all public routes (not admin)
   showNavbar = true;
 
   ngOnInit(): void {
@@ -45,6 +47,7 @@ export class AppComponent implements OnInit {
       .pipe(filter(e => e instanceof NavigationEnd))
       .subscribe((e: any) => {
         const url: string = e.urlAfterRedirects;
+        this.showNavbar = !url.startsWith('/admin');
       });
   }
 }
