@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using CroutApi.DTOs;
+using CroutApi.DTOs.Auth;
 using CroutApi.Models;
 using CroutApi.Repositories;
 using Microsoft.AspNetCore.Authorization;
@@ -195,9 +196,9 @@ public class AdminController(
         [FromQuery] int pageSize = 20)
     {
         if (!CallerIsAdmin) return Forbid();
-        var all     = (await services.GetAllAsync()).ToList();
-        var total   = all.Count;
-        var items   = all.Skip((page - 1) * pageSize).Take(pageSize);
+        var all   = (await services.GetAllAsync()).ToList();
+        var total = all.Count;
+        var items = all.Skip((page - 1) * pageSize).Take(pageSize);
         return Ok(new { items, total, page, pageSize });
     }
 
@@ -270,10 +271,11 @@ public class AdminController(
     [HttpGet("addons")]
     public async Task<IActionResult> GetAddons(
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 20)
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? search = null)
     {
         if (!CallerIsAdmin) return Forbid();
-        var (items, total) = await addons.GetAllAsync(page, pageSize);
+        var (items, total) = await addons.GetAllAsync(page, pageSize, search);
         return Ok(new { items, total, page, pageSize });
     }
 
@@ -286,7 +288,7 @@ public class AdminController(
     }
 
     [HttpPost("addons")]
-    public async Task<IActionResult> CreateAddon([FromBody] IAddon body)
+    public async Task<IActionResult> CreateAddon([FromBody] Addon body)
     {
         if (!CallerIsAdmin) return Forbid();
         if (string.IsNullOrWhiteSpace(body.AddonName))
@@ -297,7 +299,7 @@ public class AdminController(
     }
 
     [HttpPut("addons/{id:int}")]
-    public async Task<IActionResult> UpdateAddon(int id, [FromBody] IAddon body)
+    public async Task<IActionResult> UpdateAddon(int id, [FromBody] Addon body)
     {
         if (!CallerIsAdmin) return Forbid();
         body.AddonId = id;
