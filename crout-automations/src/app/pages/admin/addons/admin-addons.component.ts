@@ -26,7 +26,6 @@ export class AdminAddonsComponent implements OnInit {
   page     = signal(1);
   pageSize = 10;
   hasMore  = signal(true);
-  search   = signal('');
 
   editingId       = signal<number | null>(null);
   editBuffer      = signal<Partial<IAddon>>({});
@@ -47,7 +46,7 @@ export class AdminAddonsComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    this.admin.getAddons(this.page(), this.pageSize, this.search()).subscribe({
+    this.admin.getAddons(this.page(), this.pageSize).subscribe({
       next: data => { this.items.set(data.items); this.total.set(data.total); this.hasMore.set(data.items.length === this.pageSize); this.loading.set(false); },
       error: () => { this.error.set('Failed to load addons.'); this.loading.set(false); }
     });
@@ -57,7 +56,6 @@ export class AdminAddonsComponent implements OnInit {
     this.admin.getServices(1, 100).subscribe({ next: data => this.services.set(data) });
   }
 
-  onSearch(): void { this.page.set(1); this.load(); }
   prevPage(): void { if (this.page() > 1) { this.page.update(p => p - 1); this.load(); } }
   nextPage(): void { if (this.hasMore()) { this.page.update(p => p + 1); this.load(); } }
 

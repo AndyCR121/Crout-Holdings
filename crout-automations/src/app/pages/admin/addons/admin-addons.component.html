@@ -6,10 +6,6 @@
 
   <div *ngIf="error()" class="admin-error">{{ error() }}</div>
 
-  <div class="admin-toolbar">
-    <input class="admin-search" type="text" placeholder="Search addons..." [value]="search()" (input)="search.set($any($event.target).value); onSearch()" />
-  </div>
-
   <div *ngIf="loading()" class="admin-loading">
     <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
   </div>

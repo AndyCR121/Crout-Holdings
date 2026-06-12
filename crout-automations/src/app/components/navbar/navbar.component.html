@@ -1,0 +1,45 @@
+<nav class="navbar">
+  <div class="navbar-inner">
+    <!-- Logo -->
+    <a class="navbar-logo" routerLink="/" (click)="closeMenu()">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-label="Crout Automations" role="img">
+        <rect width="32" height="32" rx="6" fill="#0a2540"/>
+        <path d="M8 16 C8 10 12 7 16 7 C20 7 24 10 24 16" stroke="#4fc3f7" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M8 16 C8 22 12 25 16 25 C20 25 24 22 24 16" stroke="#4fc3f7" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <circle cx="16" cy="16" r="3" fill="#4fc3f7"/>
+      </svg>
+      <span>Crout Automations</span>
+    </a>
+
+    <!-- Desktop Links -->
+    <ul class="navbar-links" role="list">
+      <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">Home</a></li>
+      <li><a routerLink="/services" routerLinkActive="active">Services</a></li>
+      <li><a routerLink="/contact" routerLinkActive="active">Contact</a></li>
+      <li *ngIf="auth.isLoggedIn()">
+        <a routerLink="/portal" routerLinkActive="active" class="navbar-portal">Client Portal</a>
+      </li>
+    </ul>
+
+    <!-- Hamburger -->
+    <button class="navbar-hamburger" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen" aria-label="Toggle navigation">
+      <svg *ngIf="!menuOpen" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="6"  x2="21" y2="6"/>
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+      <svg *ngIf="menuOpen" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6"  y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div class="navbar-mobile" [class.open]="menuOpen" role="menu">
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" (click)="closeMenu()">Home</a>
+    <a routerLink="/services" routerLinkActive="active" (click)="closeMenu()">Services</a>
+    <a routerLink="/contact" routerLinkActive="active" (click)="closeMenu()">Contact</a>
+    <a *ngIf="auth.isLoggedIn()" routerLink="/portal" routerLinkActive="active" class="navbar-portal" (click)="closeMenu()">Client Portal</a>
+  </div>
+</nav>
