@@ -9,6 +9,7 @@ export interface IUser {
   isAdmin: boolean;
   password?: string;
   createdAt?: string;
+  profilePicture?: string;
 }
 
 export interface ICompany {
