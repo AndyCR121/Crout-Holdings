@@ -46,12 +46,21 @@ import { ContactComponent } from '../app/pages/contact/contact.component';
 import { ServicesComponent } from '../app/pages/services/services.component';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { NotFoundComponent } from '../app/pages/not-found/not-found.component';
+import { provideRouter } from '@angular/router';
+import { HomeComponent } from '../app/pages/home/home.component';
+import { MarketingSystemsComponent } from '../app/pages/services/marketing-systems/marketing-systems.component';
+import { ProjectManagementComponent } from '../app/pages/services/project-management/project-management.component';
+import { QuoteSystemComponent } from '../app/pages/services/quote-system/quote-system.component';
+import { WhatsappAgentComponent } from '../app/pages/services/whatsapp-agent/whatsapp-agent.component';
+import { NavbarComponent } from '../app/components/navbar/navbar.component';
+import { FooterComponent } from '../app/components/footer/footer.component';
 
 (async () => {
   const app = await createApplication({
     providers: [
       provideAnimations(),
       provideHttpClient(withFetch()),
+      provideRouter([])
     ]
   });
 
@@ -63,14 +72,25 @@ import { NotFoundComponent } from '../app/pages/not-found/not-found.component';
     ['ca-how-it-works',        HowItWorksComponent],
     ['ca-why-crout',           WhyCroutComponent],
     ['ca-pricing',             PricingComponent],
-    ['ca-cta-banner',          CtaBannerComponent],
+    // ['ca-cta-banner',          CtaBannerComponent],
     ['ca-privacy-policy',      PrivacyPolicyComponent],
     ['ca-service-configurator', ServiceConfiguratorComponent],
     ['ca-not-found',          NotFoundComponent],
+    ['ca-home',              HomeComponent],
+    
+    // ── Services section components ────────────────────────────────────
+    ['ca-quote-system',       QuoteSystemComponent],
+    ['ca-whatsapp-agent',       WhatsappAgentComponent],
+    ['ca-project-management',       ProjectManagementComponent],
+    ['ca-marketing-systems',       MarketingSystemsComponent],
 
     // ── Auth / Account ─────────────────────────────────────────────────
     ['ca-account-button',      AccountButtonComponent],
     ['ca-auth-modal',          AuthModalComponent],
+    
+    // ── NavBar / Footer ────────────────────────────────────────────────
+    ['ca-navbar',             NavbarComponent],
+    ['ca-footer',              FooterComponent],
 
     // ── Full page shells (handle their own internal routing) ───────────
     ['ca-admin',               AdminComponent],
