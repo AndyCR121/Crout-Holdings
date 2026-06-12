@@ -14,7 +14,7 @@ import { AccountButtonComponent } from './components/account-button/account-butt
   standalone: true,
   imports: [CommonModule, RouterOutlet, DevNavComponent, NavbarComponent, ToastComponent, ConfirmDialogComponent, AccountButtonComponent],
   template: `
-    <ca-dev-nav *ngIf="!showNavbar" />
+    <ca-dev-nav *ngIf="isDevRoute" />
     <ca-navbar *ngIf="showNavbar" />
     <ca-account-button class="ca-account-fixed" />
     <router-outlet />
@@ -36,14 +36,19 @@ export class AppComponent implements OnInit {
   private readonly seo    = inject(SeoService);
   private readonly router = inject(Router);
 
+  // ca-navbar shows on all public routes (not admin)
   showNavbar = true;
+  // ca-dev-nav disabled — set isDevRoute = true locally if you need it
+  isDevRoute = false;
 
   ngOnInit(): void {
     this.seo.init();
     this.router.events
       .pipe(filter(e => e instanceof NavigationEnd))
       .subscribe((e: any) => {
-        this.showNavbar = !e.urlAfterRedirects.startsWith('/admin');
+        const url: string = e.urlAfterRedirects;
+        this.showNavbar = !url.startsWith('/admin');
+        this.isDevRoute = false;
       });
   }
 }
