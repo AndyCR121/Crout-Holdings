@@ -37,23 +37,44 @@ import { WhyCroutComponent } from '../app/components/why-crout/why-crout.compone
 import { PricingComponent } from '../app/components/pricing/pricing.component';
 import { CtaBannerComponent } from '../app/components/cta-banner/cta-banner.component';
 import { PrivacyPolicyComponent } from '../app/components/privacy-policy/privacy-policy.component';
+import { AccountButtonComponent } from '../app/components/account-button/account-button.component';
+import { AuthModalComponent } from '../app/components/auth-modal/auth-modal.component';
+import { ServiceConfiguratorComponent } from '../app/components/service-configurator/service-configurator.component';
+import { AdminComponent } from '../app/pages/admin/admin.component';
+import { PortalComponent } from '../app/pages/portal/portal.component';
+import { ContactComponent } from '../app/pages/contact/contact.component';
+import { ServicesComponent } from '../app/pages/services/services.component';
+import { provideHttpClient, withFetch } from '@angular/common/http';
 
 (async () => {
   const app = await createApplication({
     providers: [
-      provideAnimations()
+      provideAnimations(),
+      provideHttpClient(withFetch()),
     ]
   });
 
   const elements: [string, any][] = [
-    ['ca-hero',              HeroComponent],
-    ['ca-pain-point',        PainPointComponent],
-    ['ca-services-overview', ServicesOverviewComponent],
-    ['ca-how-it-works',      HowItWorksComponent],
-    ['ca-why-crout',         WhyCroutComponent],
-    ['ca-pricing',           PricingComponent],
-    ['ca-cta-banner',        CtaBannerComponent],
-    ['ca-privacy-policy',    PrivacyPolicyComponent],
+    // ── Public section components ──────────────────────────────────────
+    ['ca-hero',                HeroComponent],
+    ['ca-pain-point',          PainPointComponent],
+    ['ca-services-overview',   ServicesOverviewComponent],
+    ['ca-how-it-works',        HowItWorksComponent],
+    ['ca-why-crout',           WhyCroutComponent],
+    ['ca-pricing',             PricingComponent],
+    ['ca-cta-banner',          CtaBannerComponent],
+    ['ca-privacy-policy',      PrivacyPolicyComponent],
+    ['ca-service-configurator', ServiceConfiguratorComponent],
+
+    // ── Auth / Account ─────────────────────────────────────────────────
+    ['ca-account-button',      AccountButtonComponent],
+    ['ca-auth-modal',          AuthModalComponent],
+
+    // ── Full page shells (handle their own internal routing) ───────────
+    ['ca-admin',               AdminComponent],
+    ['ca-portal',              PortalComponent],
+    ['ca-contact',             ContactComponent],
+    ['ca-services',            ServicesComponent],
   ];
 
   for (const [tag, component] of elements) {
