@@ -172,6 +172,18 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/admin/companies/admin-companies.component').then(m => m.AdminCompaniesComponent),
       },
+      {
+        path: 'addons',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./pages/admin/addons/admin-addons.component').then(m => m.AdminAddonsComponent),
+      },
+      {
+        path: 'service-features',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./pages/admin/service-features/admin-service-features.component').then(m => m.AdminServiceFeaturesComponent),
+      },
     ],
   },
   {
