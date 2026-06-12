@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using CroutApi.DTOs;
 using CroutApi.Models;
 using CroutApi.Repositories;
 using Microsoft.AspNetCore.Authorization;
@@ -43,12 +44,48 @@ public class AdminController(IUserRepository users, ICompanyRepository companies
         return user is null ? NotFound() : Ok(user);
     }
 
+    [HttpPost("users")]
+    public async Task<IActionResult> CreateUser([FromBody] CreateUserDto dto)
+    {
+        if (!CallerIsAdmin) return Forbid();
+
+        if (string.IsNullOrWhiteSpace(dto.Username) ||
+            string.IsNullOrWhiteSpace(dto.Email) ||
+            string.IsNullOrWhiteSpace(dto.FirstName) ||
+            string.IsNullOrWhiteSpace(dto.Surname))
+            return BadRequest(new { error = "Username, email, first name and surname are required." });
+
+        if (await users.UsernameExistsAsync(dto.Username))
+            return Conflict(new { error = "Username already exists." });
+
+        if (await users.EmailExistsAsync(dto.Email))
+            return Conflict(new { error = "Email already in use." });
+
+        var user = new User
+        {
+            Username     = dto.Username.Trim(),
+            FirstName    = dto.FirstName.Trim(),
+            Surname      = dto.Surname.Trim(),
+            Email        = dto.Email.Trim(),
+            CellNumber   = dto.CellNumber?.Trim(),
+            Active       = dto.Active,
+            IsAdmin      = dto.IsAdmin,
+            // Admin-created accounts get a placeholder hash; the user must
+            // set their own password via the forgot-password / invite flow.
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString()),
+        };
+
+        var newId = await users.CreateAsync(user);
+        var created = await users.GetByIdAsync(newId);
+        return CreatedAtAction(nameof(GetUser), new { id = newId }, created);
+    }
+
     [HttpPut("users/{id:int}")]
     public async Task<IActionResult> UpdateUser(int id, [FromBody] User body)
     {
         if (!CallerIsAdmin) return Forbid();
         body.UserId = id;
-        await users.UpdateAsync(body);
+        await users.AdminUpdateAsync(body);
         var updated = await users.GetByIdAsync(id);
         return Ok(updated);
     }
@@ -108,13 +145,40 @@ public class AdminController(IUserRepository users, ICompanyRepository companies
         return company is null ? NotFound() : Ok(company);
     }
 
+    [HttpPost("companies")]
+    public async Task<IActionResult> CreateCompany([FromBody] CreateCompanyDto dto)
+    {
+        if (!CallerIsAdmin) return Forbid();
+
+        if (string.IsNullOrWhiteSpace(dto.CompanyName))
+            return BadRequest(new { error = "Company name is required." });
+
+        var company = new Company
+        {
+            UserId             = dto.UserId,
+            CompanyName        = dto.CompanyName.Trim(),
+            Industry           = dto.Industry?.Trim(),
+            VATNumber          = dto.VATNumber?.Trim(),
+            RegistrationNumber = dto.RegistrationNumber?.Trim(),
+            Email              = dto.Email?.Trim(),
+            Phone              = dto.Phone?.Trim(),
+            Address            = dto.Address?.Trim(),
+            Active             = dto.Active,
+        };
+
+        var newId = await companies.CreateAsync(company);
+        // Use AdminGetById (no Active filter) so we return the row regardless of status
+        var created = await companies.AdminGetByIdAsync(newId);
+        return CreatedAtAction(nameof(GetCompany), new { id = newId }, created);
+    }
+
     [HttpPut("companies/{id:int}")]
     public async Task<IActionResult> UpdateCompany(int id, [FromBody] Company body)
     {
         if (!CallerIsAdmin) return Forbid();
         body.CompanyId = id;
         await companies.AdminUpdateAsync(body);
-        var updated = await companies.GetByIdAsync(id);
+        var updated = await companies.AdminGetByIdAsync(id);
         return Ok(updated);
     }
 

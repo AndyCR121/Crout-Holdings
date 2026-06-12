@@ -6,19 +6,32 @@ namespace CroutApi.Repositories;
 
 public class CompanyRepository(DbHelper db) : ICompanyRepository
 {
+    private const string SelectCols =
+        "company_id AS CompanyId, user_id AS UserId, CompanyName, Industry, VATNumber, RegistrationNumber, Email, Phone, Address, Active";
+
     public async Task<IEnumerable<Company>> GetByUserAsync(int userId)
     {
         using var conn = db.GetConnection();
         return await conn.QueryAsync<Company>(
-            "SELECT company_id AS CompanyId, user_id AS UserId, CompanyName, Industry, VATNumber, RegistrationNumber, Email, Phone, Address, Active FROM Companies WHERE user_id=@userId AND Active=1",
+            $"SELECT {SelectCols} FROM Companies WHERE user_id=@userId AND Active=1",
             new { userId });
     }
 
+    // Self-service: only returns active records
     public async Task<Company?> GetByIdAsync(int companyId)
     {
         using var conn = db.GetConnection();
         return await conn.QuerySingleOrDefaultAsync<Company>(
-            "SELECT company_id AS CompanyId, user_id AS UserId, CompanyName, Industry, VATNumber, RegistrationNumber, Email, Phone, Address, Active FROM Companies WHERE company_id=@companyId AND Active=1",
+            $"SELECT {SelectCols} FROM Companies WHERE company_id=@companyId AND Active=1",
+            new { companyId });
+    }
+
+    // Admin: returns regardless of Active flag
+    public async Task<Company?> AdminGetByIdAsync(int companyId)
+    {
+        using var conn = db.GetConnection();
+        return await conn.QuerySingleOrDefaultAsync<Company>(
+            $"SELECT {SelectCols} FROM Companies WHERE company_id=@companyId",
             new { companyId });
     }
 
@@ -26,7 +39,9 @@ public class CompanyRepository(DbHelper db) : ICompanyRepository
     {
         using var conn = db.GetConnection();
         return await conn.ExecuteScalarAsync<int>(
-            "INSERT INTO Companies (user_id, CompanyName, Industry, VATNumber, RegistrationNumber, Email, Phone, Address) VALUES (@UserId, @CompanyName, @Industry, @VATNumber, @RegistrationNumber, @Email, @Phone, @Address); SELECT LAST_INSERT_ID();",
+            "INSERT INTO Companies (user_id, CompanyName, Industry, VATNumber, RegistrationNumber, Email, Phone, Address, Active) " +
+            "VALUES (@UserId, @CompanyName, @Industry, @VATNumber, @RegistrationNumber, @Email, @Phone, @Address, @Active); " +
+            "SELECT LAST_INSERT_ID();",
             company);
     }
 
@@ -63,7 +78,7 @@ public class CompanyRepository(DbHelper db) : ICompanyRepository
             new { pattern });
 
         var items = await conn.QueryAsync<Company>(
-            $"SELECT company_id AS CompanyId, user_id AS UserId, CompanyName, Industry, VATNumber, RegistrationNumber, Email, Phone, Address, Active FROM Companies {where} ORDER BY CompanyId DESC LIMIT @pageSize OFFSET @offset",
+            $"SELECT {SelectCols} FROM Companies {where} ORDER BY CompanyId DESC LIMIT @pageSize OFFSET @offset",
             new { pattern, pageSize, offset });
 
         return (items, total);
@@ -73,7 +88,7 @@ public class CompanyRepository(DbHelper db) : ICompanyRepository
     {
         using var conn = db.GetConnection();
         await conn.ExecuteAsync(
-            "UPDATE Companies SET CompanyName=@CompanyName, Industry=@Industry, VATNumber=@VATNumber, RegistrationNumber=@RegistrationNumber, Email=@Email, Phone=@Phone, Address=@Address, user_id=@UserId WHERE company_id=@CompanyId",
+            "UPDATE Companies SET CompanyName=@CompanyName, Industry=@Industry, VATNumber=@VATNumber, RegistrationNumber=@RegistrationNumber, Email=@Email, Phone=@Phone, Address=@Address, Active=@Active, user_id=@UserId WHERE company_id=@CompanyId",
             company);
     }
 

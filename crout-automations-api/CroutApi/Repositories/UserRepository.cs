@@ -17,7 +17,6 @@ public class UserRepository(DbHelper db) : IUserRepository
     public async Task<User?> GetByIdAsync(int userId)
     {
         using var conn = db.GetConnection();
-        // Admin lookups must not filter by Active so we can see/toggle inactive accounts
         return await conn.QuerySingleOrDefaultAsync<User>(
             "SELECT user_id AS UserId, Username, PasswordHash, FirstName, Surname, Email, CellNumber, Active, IsAdmin FROM Users WHERE user_id = @userId",
             new { userId });
@@ -39,15 +38,25 @@ public class UserRepository(DbHelper db) : IUserRepository
     {
         using var conn = db.GetConnection();
         return await conn.ExecuteScalarAsync<int>(
-            "INSERT INTO Users (Username, PasswordHash, FirstName, Surname, Email, CellNumber) VALUES (@Username, @PasswordHash, @FirstName, @Surname, @Email, @CellNumber); SELECT LAST_INSERT_ID();",
+            "INSERT INTO Users (Username, PasswordHash, FirstName, Surname, Email, CellNumber, Active, IsAdmin) VALUES (@Username, @PasswordHash, @FirstName, @Surname, @Email, @CellNumber, @Active, @IsAdmin); SELECT LAST_INSERT_ID();",
             user);
     }
 
+    // Self-service profile update — does NOT change Active or IsAdmin
     public async Task UpdateAsync(User user)
     {
         using var conn = db.GetConnection();
         await conn.ExecuteAsync(
             "UPDATE Users SET FirstName=@FirstName, Surname=@Surname, Email=@Email, CellNumber=@CellNumber WHERE user_id=@UserId",
+            user);
+    }
+
+    // Admin full update — also sets Active and IsAdmin
+    public async Task AdminUpdateAsync(User user)
+    {
+        using var conn = db.GetConnection();
+        await conn.ExecuteAsync(
+            "UPDATE Users SET FirstName=@FirstName, Surname=@Surname, Email=@Email, CellNumber=@CellNumber, Active=@Active, IsAdmin=@IsAdmin WHERE user_id=@UserId",
             user);
     }
 

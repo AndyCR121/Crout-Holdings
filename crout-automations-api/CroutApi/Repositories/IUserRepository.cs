@@ -10,6 +10,7 @@ public interface IUserRepository
     Task<bool> EmailExistsAsync(string email);
     Task<int> CreateAsync(User user);
     Task UpdateAsync(User user);
+    Task AdminUpdateAsync(User user);
     Task UpdatePasswordAsync(int userId, string passwordHash);
 
     // Admin
