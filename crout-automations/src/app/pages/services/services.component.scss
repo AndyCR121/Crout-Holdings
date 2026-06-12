@@ -61,7 +61,7 @@
   }
 
   &__container {
-    max-width: var(100%);
+    width: 100% !important;
     margin-inline: auto;
     padding-inline: var(--space-6);
   }
