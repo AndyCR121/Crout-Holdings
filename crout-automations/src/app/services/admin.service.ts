@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable } from 'rxjs';
 import { EnvironmentService } from './environment.service';
 import { IUser, ICompany, IService, IPackage } from '../interfaces/i-service.interface';
 
@@ -21,6 +21,9 @@ export class AdminService {
   getUsers(page = 1, pageSize = 10, search = ''): Observable<PagedResult<IUser>> {
     const params = `page=${page}&pageSize=${pageSize}${search ? '&search=' + encodeURIComponent(search) : ''}`;
     return this.http.get<PagedResult<IUser>>(`${this.base}/admin/users?${params}`);
+  }
+  createUser(body: Partial<IUser>): Observable<IUser> {
+    return this.http.post<IUser>(`${this.base}/admin/users`, body);
   }
   updateUser(id: number, body: Partial<IUser>): Observable<IUser> {
     return this.http.put<IUser>(`${this.base}/admin/users/${id}`, body);
@@ -67,6 +70,9 @@ export class AdminService {
   getCompanies(page = 1, pageSize = 10, search = ''): Observable<PagedResult<ICompany>> {
     const params = `page=${page}&pageSize=${pageSize}${search ? '&search=' + encodeURIComponent(search) : ''}`;
     return this.http.get<PagedResult<ICompany>>(`${this.base}/admin/companies?${params}`);
+  }
+  createCompany(body: Partial<ICompany>): Observable<ICompany> {
+    return this.http.post<ICompany>(`${this.base}/admin/companies`, body);
   }
   updateCompany(id: number, body: Partial<ICompany>): Observable<ICompany> {
     return this.http.put<ICompany>(`${this.base}/admin/companies/${id}`, body);
