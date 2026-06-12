@@ -27,9 +27,16 @@ export class AdminCompaniesComponent implements OnInit {
   pageSize = 10;
   total    = signal(0);
 
-  // Per-row draft map — fixes the "edit applies to all rows" bug
+  // Per-row draft map
   drafts = new Map<number, Partial<ICompany>>();
   saving = signal(false);
+
+  // Create
+  showCreate   = signal(false);
+  createBuffer = signal<Partial<ICompany>>({
+    companyName: '', industry: null, email: null,
+    phone: null, address: null, active: true,
+  });
 
   get totalPages(): number { return Math.ceil(this.total() / this.pageSize) || 1; }
   get hasMore(): boolean   { return this.page() < this.totalPages; }
@@ -86,6 +93,30 @@ export class AdminCompaniesComponent implements OnInit {
         this.saving.set(false);
       },
       error: () => { this.error.set('Failed to save company.'); this.saving.set(false); }
+    });
+  }
+
+  // ── Create ────────────────────────────────────────────────────────────────
+  openCreate(): void {
+    this.createBuffer.set({ companyName: '', industry: null, email: null, phone: null, address: null, active: true });
+    this.showCreate.set(true);
+  }
+
+  submitCreate(): void {
+    const buf = this.createBuffer();
+    if (!buf.companyName?.trim()) {
+      this.error.set('Company name is required.');
+      return;
+    }
+    this.saving.set(true);
+    this.admin.createCompany(buf).subscribe({
+      next: created => {
+        this.items.update(list => [created, ...list]);
+        this.total.update(t => t + 1);
+        this.showCreate.set(false);
+        this.saving.set(false);
+      },
+      error: () => { this.error.set('Failed to create company.'); this.saving.set(false); }
     });
   }
 

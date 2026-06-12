@@ -27,9 +27,16 @@ export class AdminUsersComponent implements OnInit {
   pageSize = 10;
   total    = signal(0);
 
-  // Per-row draft map — fixes the "edit applies to all rows" bug
+  // Per-row draft map
   drafts = new Map<number, Partial<IUser>>();
   saving = signal(false);
+
+  // Create
+  showCreate   = signal(false);
+  createBuffer = signal<Partial<IUser>>({
+    firstName: '', surname: '', email: '', username: '',
+    cellNumber: null, isAdmin: false, active: true,
+  });
 
   get totalPages(): number { return Math.ceil(this.total() / this.pageSize) || 1; }
   get hasMore(): boolean   { return this.page() < this.totalPages; }
@@ -86,6 +93,30 @@ export class AdminUsersComponent implements OnInit {
         this.saving.set(false);
       },
       error: () => { this.error.set('Failed to save user.'); this.saving.set(false); }
+    });
+  }
+
+  // ── Create ────────────────────────────────────────────────────────────────
+  openCreate(): void {
+    this.createBuffer.set({ firstName: '', surname: '', email: '', username: '', cellNumber: null, isAdmin: false, active: true });
+    this.showCreate.set(true);
+  }
+
+  submitCreate(): void {
+    const buf = this.createBuffer();
+    if (!buf.username?.trim() || !buf.email?.trim() || !buf.firstName?.trim() || !buf.surname?.trim()) {
+      this.error.set('Username, email, first name and surname are required.');
+      return;
+    }
+    this.saving.set(true);
+    this.admin.createUser(buf).subscribe({
+      next: created => {
+        this.users.update(list => [created, ...list]);
+        this.total.update(t => t + 1);
+        this.showCreate.set(false);
+        this.saving.set(false);
+      },
+      error: () => { this.error.set('Failed to create user.'); this.saving.set(false); }
     });
   }
 

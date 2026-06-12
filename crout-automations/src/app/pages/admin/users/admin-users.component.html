@@ -1,7 +1,10 @@
 <div class="admin-page">
   <div class="admin-page-header">
     <h1 class="admin-page-title">Users</h1>
-    <span class="admin-badge">{{ total() }} total</span>
+    <div class="admin-page-header-actions">
+      <span class="admin-badge">{{ total() }} total</span>
+      <button class="btn-create" (click)="openCreate()">+ New User</button>
+    </div>
   </div>
 
   <div *ngIf="error()" class="admin-error">{{ error() }}</div>
@@ -37,7 +40,7 @@
             </td>
           </ng-container>
 
-          <!-- Edit row — bound to isolated getDraft(u.userId), not a shared signal -->
+          <!-- Edit row -->
           <ng-container *ngIf="isEditing(u.userId)">
             <td>{{ u.userId }}</td>
             <td>{{ u.username }}</td>
@@ -81,5 +84,43 @@
       Next
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
+  </div>
+</div>
+
+<!-- Create Modal -->
+<div class="admin-modal-backdrop" *ngIf="showCreate()" (click)="showCreate.set(false)">
+  <div class="admin-modal" (click)="$event.stopPropagation()">
+    <h3>New User</h3>
+    <label>Username <span class="required">*</span>
+      <input [(ngModel)]="createBuffer().username" class="admin-input" autocomplete="off" />
+    </label>
+    <label>First Name <span class="required">*</span>
+      <input [(ngModel)]="createBuffer().firstName" class="admin-input" />
+    </label>
+    <label>Surname <span class="required">*</span>
+      <input [(ngModel)]="createBuffer().surname" class="admin-input" />
+    </label>
+    <label>Email <span class="required">*</span>
+      <input type="email" [(ngModel)]="createBuffer().email" class="admin-input" />
+    </label>
+    <label>Cell Number
+      <input [(ngModel)]="createBuffer().cellNumber" class="admin-input" />
+    </label>
+    <label>Admin
+      <select [(ngModel)]="createBuffer().isAdmin" class="admin-input">
+        <option [ngValue]="false">No</option>
+        <option [ngValue]="true">Yes</option>
+      </select>
+    </label>
+    <label>Status
+      <select [(ngModel)]="createBuffer().active" class="admin-input">
+        <option [ngValue]="true">Active</option>
+        <option [ngValue]="false">Inactive</option>
+      </select>
+    </label>
+    <div class="admin-modal-actions">
+      <button class="btn-save" [disabled]="saving()" (click)="submitCreate()">{{ saving() ? 'Creating…' : 'Create' }}</button>
+      <button class="btn-cancel" (click)="showCreate.set(false)">Cancel</button>
+    </div>
   </div>
 </div>
