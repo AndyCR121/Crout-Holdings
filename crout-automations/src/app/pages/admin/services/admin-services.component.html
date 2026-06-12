@@ -23,6 +23,7 @@
             <td><span class="admin-pill" [class.green]="s.hasAddons">{{ s.hasAddons ? 'Yes' : 'No' }}</span></td>
             <td><span class="admin-pill" [class.green]="s.conditional">{{ s.conditional ? 'Yes' : 'No' }}</span></td>
             <td class="admin-actions">
+              <button class="btn-link" (click)="openLink(s)">Link</button>
               <button class="btn-edit" (click)="startEdit(s)">Edit</button>
               <button class="btn-delete" (click)="confirmDelete(s.serviceId)">Delete</button>
             </td>
@@ -80,6 +81,25 @@
     <div class="admin-modal-actions">
       <button class="btn-delete" (click)="doDelete(deleteConfirmId()!)">Yes, Delete</button>
       <button class="btn-cancel" (click)="cancelDelete()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Link Modal -->
+<div class="admin-modal-backdrop" *ngIf="showLinkModal()" (click)="showLinkModal.set(false)">
+  <div class="admin-modal admin-modal--link" (click)="$event.stopPropagation()">
+    <h3>Linked Addons → {{ linkTarget()?.serviceName }}</h3>
+    <p class="admin-modal-hint">Addons linked to this service. Manage them from the <strong>Addons</strong> page.</p>
+    <div *ngIf="linkLoading()" class="admin-loading"><div class="skeleton-row" *ngFor="let i of [1,2,3]"></div></div>
+    <div *ngIf="!linkLoading()" class="admin-multiselect">
+      <div class="admin-multiselect-item admin-multiselect-item--readonly" *ngFor="let a of linkedAddons()">
+        <span>{{ a.addonName }}</span>
+        <span class="admin-multiselect-price">R{{ a.price | number:'1.2-2' }}</span>
+      </div>
+      <p *ngIf="linkedAddons().length === 0" class="admin-empty">No addons linked yet. Create them from the Addons page.</p>
+    </div>
+    <div class="admin-modal-actions">
+      <button class="btn-cancel" (click)="showLinkModal.set(false)">Close</button>
     </div>
   </div>
 </div>

@@ -1,0 +1,110 @@
+<div class="admin-page">
+  <div class="admin-page-header">
+    <h1 class="admin-page-title">Addons</h1>
+    <button class="btn-create" (click)="showCreate.set(true)">+ New Addon</button>
+  </div>
+
+  <div *ngIf="error()" class="admin-error">{{ error() }}</div>
+
+  <div class="admin-toolbar">
+    <input class="admin-search" type="text" placeholder="Search addons..." [value]="search()" (input)="search.set($any($event.target).value); onSearch()" />
+  </div>
+
+  <div *ngIf="loading()" class="admin-loading">
+    <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
+  </div>
+
+  <div *ngIf="!loading()" class="admin-table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>ID</th><th>Name</th><th>Service</th><th>Description</th><th>Price</th><th>Actions</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let a of items()" [class.editing]="editingId() === a.addonId">
+          <ng-container *ngIf="editingId() !== a.addonId">
+            <td>{{ a.addonId }}</td>
+            <td>{{ a.addonName }}</td>
+            <td>{{ getServiceName(a.serviceId) }}</td>
+            <td class="td-desc">{{ a.addonDescription || '—' }}</td>
+            <td>R{{ a.price | number:'1.2-2' }}</td>
+            <td class="admin-actions">
+              <button class="btn-link" (click)="openLink(a)">Link</button>
+              <button class="btn-edit" (click)="startEdit(a)">Edit</button>
+              <button class="btn-delete" (click)="confirmDelete(a.addonId)">Delete</button>
+            </td>
+          </ng-container>
+          <ng-container *ngIf="editingId() === a.addonId">
+            <td>{{ a.addonId }}</td>
+            <td><input [(ngModel)]="editBuffer().addonName" class="admin-input" /></td>
+            <td>
+              <select [(ngModel)]="editBuffer().serviceId" class="admin-input">
+                <option [ngValue]="null">None</option>
+                <option *ngFor="let s of services()" [ngValue]="s.serviceId">{{ s.serviceName }}</option>
+              </select>
+            </td>
+            <td><input [(ngModel)]="editBuffer().addonDescription" class="admin-input" /></td>
+            <td><input type="number" step="0.01" [(ngModel)]="editBuffer().price" class="admin-input" /></td>
+            <td class="admin-actions">
+              <button class="btn-save" [disabled]="saving()" (click)="saveEdit(a)">{{ saving() ? '...' : 'Save' }}</button>
+              <button class="btn-cancel" (click)="cancelEdit()">Cancel</button>
+            </td>
+          </ng-container>
+        </tr>
+        <tr *ngIf="items().length === 0"><td colspan="6" class="admin-empty">No addons found.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="admin-pagination">
+    <button class="btn-page" [disabled]="page() === 1" (click)="prevPage()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Prev
+    </button>
+    <span>Page {{ page() }}</span>
+    <button class="btn-page" [disabled]="!hasMore()" (click)="nextPage()">
+      Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Create Modal -->
+<div class="admin-modal-backdrop" *ngIf="showCreate()" (click)="showCreate.set(false)">
+  <div class="admin-modal" (click)="$event.stopPropagation()">
+    <h3>New Addon</h3>
+    <label>Name<input [(ngModel)]="createBuffer().addonName" class="admin-input" /></label>
+    <label>Service
+      <select [(ngModel)]="createBuffer().serviceId" class="admin-input">
+        <option [ngValue]="null">None</option>
+        <option *ngFor="let s of services()" [ngValue]="s.serviceId">{{ s.serviceName }}</option>
+      </select>
+    </label>
+    <label>Description<input [(ngModel)]="createBuffer().addonDescription" class="admin-input" /></label>
+    <label>Price (R)<input type="number" step="0.01" [(ngModel)]="createBuffer().price" class="admin-input" /></label>
+    <div class="admin-modal-actions">
+      <button class="btn-save" [disabled]="saving()" (click)="submitCreate()">{{ saving() ? 'Saving...' : 'Create' }}</button>
+      <button class="btn-cancel" (click)="showCreate.set(false)">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm -->
+<div class="admin-modal-backdrop" *ngIf="deleteConfirmId() !== null" (click)="cancelDelete()">
+  <div class="admin-modal" (click)="$event.stopPropagation()">
+    <h3>Delete Addon #{{ deleteConfirmId() }}?</h3>
+    <p>This action cannot be undone.</p>
+    <div class="admin-modal-actions">
+      <button class="btn-delete" (click)="doDelete(deleteConfirmId()!)">Yes, Delete</button>
+      <button class="btn-cancel" (click)="cancelDelete()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Link Modal -->
+<div class="admin-modal-backdrop" *ngIf="showLinkModal()" (click)="showLinkModal.set(false)">
+  <div class="admin-modal admin-modal--link" (click)="$event.stopPropagation()">
+    <h3>Link: {{ linkTarget()?.addonName }}</h3>
+    <p class="admin-modal-hint">Addons are linked to a service via the <strong>Service</strong> field. To change the linked service, use <strong>Edit</strong>.</p>
+    <p>Currently linked to: <strong>{{ getServiceName(linkTarget()?.serviceId ?? null) }}</strong></p>
+    <div class="admin-modal-actions">
+      <button class="btn-cancel" (click)="showLinkModal.set(false)">Close</button>
+      <button class="btn-edit" (click)="showLinkModal.set(false); startEdit(linkTarget()!)">Edit Link</button>
+    </div>
+  </div>
+</div>

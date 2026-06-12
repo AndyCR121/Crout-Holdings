@@ -1,53 +1,18 @@
 <div class="admin-layout">
-
-  <!-- Sidebar -->
-  <aside class="admin-sidebar">
-    <div class="admin-logo">
-      <span class="admin-logo-mark">CA</span>
-      <span class="admin-logo-name">Admin Panel</span>
+  <nav class="admin-nav">
+    <div class="admin-nav-header">
+      <span class="admin-nav-title">Admin</span>
     </div>
-
-    <nav class="admin-nav" aria-label="Admin navigation">
-      <a routerLink="users"     routerLinkActive="active" class="admin-nav-item">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg>
-        Users
-      </a>
-      <a routerLink="services"  routerLinkActive="active" class="admin-nav-item">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 4.5V12c0 5-4 9.3-9 10.5C7 21.3 3 17 3 12V6.5L12 2z"/></svg>
-        Services
-      </a>
-      <a routerLink="packages"  routerLinkActive="active" class="admin-nav-item">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="17"/><line x1="9.5" y1="14.5" x2="14.5" y2="14.5"/></svg>
-        Packages
-      </a>
-      <a routerLink="companies" routerLinkActive="active" class="admin-nav-item">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        Companies
-      </a>
-    </nav>
-
-    <div class="admin-sidebar-footer">
-      <div class="admin-user-chip" *ngIf="user()">
-        <span class="admin-user-avatar">{{ initials() }}</span>
-        <div class="admin-user-info">
-          <span class="admin-user-name">{{ user()!.username }}</span>
-          <span class="admin-user-role">Administrator</span>
-        </div>
-      </div>
-      <a routerLink="/client" class="admin-nav-item" style="margin-bottom:4px">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        Client Portal
-      </a>
-      <button class="admin-logout-btn" (click)="logout()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        Logout
-      </button>
-    </div>
-  </aside>
-
-  <!-- Main -->
-  <main class="admin-main">
+    <ul class="admin-nav-links">
+      <li><a routerLink="users"      routerLinkActive="active">Users</a></li>
+      <li><a routerLink="companies"  routerLinkActive="active">Companies</a></li>
+      <li><a routerLink="packages"   routerLinkActive="active">Packages</a></li>
+      <li><a routerLink="services"   routerLinkActive="active">Services</a></li>
+      <li><a routerLink="addons"     routerLinkActive="active">Addons</a></li>
+      <li><a routerLink="service-features" routerLinkActive="active">Service Features</a></li>
+    </ul>
+  </nav>
+  <main class="admin-content">
     <router-outlet />
   </main>
-
 </div>

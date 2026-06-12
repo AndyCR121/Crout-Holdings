@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { AdminService } from '../../../services/admin.service';
-import { IService } from '../../../interfaces/i-service.interface';
+import { IService, IAddon } from '../../../interfaces/i-service.interface';
 
 @Component({
   selector: 'ca-admin-services',
@@ -31,6 +31,11 @@ export class AdminServicesComponent implements OnInit {
   deleteConfirmId = signal<number | null>(null);
   showCreate      = signal(false);
   createBuffer    = signal<Partial<IService>>({ serviceName: '', serviceDescription: '', price: 0, hasAddons: false, conditional: false });
+
+  showLinkModal = signal(false);
+  linkTarget    = signal<IService | null>(null);
+  linkedAddons  = signal<IAddon[]>([]);
+  linkLoading   = signal(false);
 
   ngOnInit(): void {
     const user = this.auth.currentUser();
@@ -77,6 +82,19 @@ export class AdminServicesComponent implements OnInit {
     this.admin.createService(this.createBuffer()).subscribe({
       next: created => { this.items.update(list => [created, ...list]); this.showCreate.set(false); this.saving.set(false); this.createBuffer.set({ serviceName: '', serviceDescription: '', price: 0, hasAddons: false, conditional: false }); },
       error: () => { this.error.set('Failed to create.'); this.saving.set(false); }
+    });
+  }
+
+  openLink(s: IService): void {
+    this.linkTarget.set(s);
+    this.linkLoading.set(true);
+    this.showLinkModal.set(true);
+    this.admin.getAddons(1, 100, '').subscribe({
+      next: result => {
+        this.linkedAddons.set(result.items.filter(a => a.serviceId === s.serviceId));
+        this.linkLoading.set(false);
+      },
+      error: () => this.linkLoading.set(false)
     });
   }
 }

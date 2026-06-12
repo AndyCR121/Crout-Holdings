@@ -22,6 +22,7 @@
             <td>{{ (p.discount * 100) | number:'1.0-0' }}%</td>
             <td>{{ p.minimumRequiredAddons ?? '—' }}</td>
             <td class="admin-actions">
+              <button class="btn-link" (click)="openLink(p)">Link</button>
               <button class="btn-edit" (click)="startEdit(p)">Edit</button>
               <button class="btn-delete" (click)="confirmDelete(p.packageId)">Delete</button>
             </td>
@@ -77,6 +78,26 @@
     <div class="admin-modal-actions">
       <button class="btn-delete" (click)="doDelete(deleteConfirmId()!)">Yes, Delete</button>
       <button class="btn-cancel" (click)="cancelDelete()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Link Modal -->
+<div class="admin-modal-backdrop" *ngIf="showLinkModal()" (click)="showLinkModal.set(false)">
+  <div class="admin-modal admin-modal--link" (click)="$event.stopPropagation()">
+    <h3>Link Services → {{ linkTarget()?.packageName }}</h3>
+    <p class="admin-modal-hint">Select which services are included in this package.</p>
+    <div class="admin-multiselect">
+      <label class="admin-multiselect-item" *ngFor="let s of services()">
+        <input type="checkbox" [checked]="isLinkSelected(s.serviceId)" (change)="toggleLinkService(s.serviceId)" />
+        <span>{{ s.serviceName }}</span>
+        <span class="admin-multiselect-price">R{{ s.price | number:'1.2-2' }}</span>
+      </label>
+      <p *ngIf="services().length === 0" class="admin-empty">No services available.</p>
+    </div>
+    <div class="admin-modal-actions">
+      <button class="btn-save" [disabled]="linkSaving()" (click)="saveLinks()">{{ linkSaving() ? 'Saving...' : 'Save Links' }}</button>
+      <button class="btn-cancel" (click)="showLinkModal.set(false)">Cancel</button>
     </div>
   </div>
 </div>

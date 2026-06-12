@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { EnvironmentService } from './environment.service';
-import { IUser, ICompany, IService, IPackage } from '../interfaces/i-service.interface';
+import { IUser, ICompany, IService, IPackage, IAddon, IServiceFeature } from '../interfaces/i-service.interface';
 
 export interface PagedResult<T> {
   items: T[];
@@ -56,6 +56,9 @@ export class AdminService {
   getPackages(page = 1, pageSize = 10): Observable<IPackage[]> {
     return this.http.get<IPackage[]>(`${this.base}/services/packages?page=${page}&pageSize=${pageSize}`);
   }
+  getPackage(id: number): Observable<IPackage> {
+    return this.http.get<IPackage>(`${this.base}/admin/packages/${id}`);
+  }
   createPackage(body: Partial<IPackage>): Observable<IPackage> {
     return this.http.post<IPackage>(`${this.base}/admin/packages`, body);
   }
@@ -64,6 +67,43 @@ export class AdminService {
   }
   deletePackage(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/admin/packages/${id}`);
+  }
+  linkServicesToPackage(packageId: number, serviceIds: number[]): Observable<any> {
+    return this.http.put(`${this.base}/admin/packages/${packageId}/services`, { serviceIds });
+  }
+
+  // ── Addons ─────────────────────────────────────────────────────────────────
+  getAddons(page = 1, pageSize = 10, search = ''): Observable<PagedResult<IAddon>> {
+    const params = `page=${page}&pageSize=${pageSize}${search ? '&search=' + encodeURIComponent(search) : ''}`;
+    return this.http.get<PagedResult<IAddon>>(`${this.base}/admin/addons?${params}`);
+  }
+  getAddon(id: number): Observable<IAddon> {
+    return this.http.get<IAddon>(`${this.base}/admin/addons/${id}`);
+  }
+  createAddon(body: Partial<IAddon>): Observable<IAddon> {
+    return this.http.post<IAddon>(`${this.base}/admin/addons`, body);
+  }
+  updateAddon(id: number, body: Partial<IAddon>): Observable<IAddon> {
+    return this.http.put<IAddon>(`${this.base}/admin/addons/${id}`, body);
+  }
+  deleteAddon(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/admin/addons/${id}`);
+  }
+
+  // ── Service Features ───────────────────────────────────────────────────────
+  getServiceFeatures(page = 1, pageSize = 10, serviceId?: number): Observable<PagedResult<IServiceFeature>> {
+    let params = `page=${page}&pageSize=${pageSize}`;
+    if (serviceId) params += `&serviceId=${serviceId}`;
+    return this.http.get<PagedResult<IServiceFeature>>(`${this.base}/admin/service-features?${params}`);
+  }
+  createServiceFeature(body: Partial<IServiceFeature>): Observable<IServiceFeature> {
+    return this.http.post<IServiceFeature>(`${this.base}/admin/service-features`, body);
+  }
+  updateServiceFeature(id: number, body: Partial<IServiceFeature>): Observable<IServiceFeature> {
+    return this.http.put<IServiceFeature>(`${this.base}/admin/service-features/${id}`, body);
+  }
+  deleteServiceFeature(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/admin/service-features/${id}`);
   }
 
   // ── Companies ─────────────────────────────────────────────────────────────

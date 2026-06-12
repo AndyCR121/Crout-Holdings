@@ -1,0 +1,95 @@
+<div class="admin-page">
+  <div class="admin-page-header">
+    <h1 class="admin-page-title">Service Features</h1>
+    <button class="btn-create" (click)="showCreate.set(true)">+ New Feature</button>
+  </div>
+
+  <div *ngIf="error()" class="admin-error">{{ error() }}</div>
+
+  <div class="admin-toolbar">
+    <select class="admin-input" [value]="filterServiceId()" (change)="filterServiceId.set($any($event.target).value ? +$any($event.target).value : undefined); onFilter()">
+      <option [value]="">All Services</option>
+      <option *ngFor="let s of services()" [value]="s.serviceId">{{ s.serviceName }}</option>
+    </select>
+  </div>
+
+  <div *ngIf="loading()" class="admin-loading">
+    <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
+  </div>
+
+  <div *ngIf="!loading()" class="admin-table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>ID</th><th>Feature</th><th>Service</th><th>Sort Order</th><th>Actions</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let f of items()" [class.editing]="editingId() === f.featureId">
+          <ng-container *ngIf="editingId() !== f.featureId">
+            <td>{{ f.featureId }}</td>
+            <td>{{ f.feature }}</td>
+            <td>{{ getServiceName(f.serviceId) }}</td>
+            <td>{{ f.sortOrder }}</td>
+            <td class="admin-actions">
+              <button class="btn-edit" (click)="startEdit(f)">Edit</button>
+              <button class="btn-delete" (click)="confirmDelete(f.featureId)">Delete</button>
+            </td>
+          </ng-container>
+          <ng-container *ngIf="editingId() === f.featureId">
+            <td>{{ f.featureId }}</td>
+            <td><input [(ngModel)]="editBuffer().feature" class="admin-input" /></td>
+            <td>
+              <select [(ngModel)]="editBuffer().serviceId" class="admin-input">
+                <option *ngFor="let s of services()" [ngValue]="s.serviceId">{{ s.serviceName }}</option>
+              </select>
+            </td>
+            <td><input type="number" [(ngModel)]="editBuffer().sortOrder" class="admin-input" /></td>
+            <td class="admin-actions">
+              <button class="btn-save" [disabled]="saving()" (click)="saveEdit(f)">{{ saving() ? '...' : 'Save' }}</button>
+              <button class="btn-cancel" (click)="cancelEdit()">Cancel</button>
+            </td>
+          </ng-container>
+        </tr>
+        <tr *ngIf="items().length === 0"><td colspan="5" class="admin-empty">No features found.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="admin-pagination">
+    <button class="btn-page" [disabled]="page() === 1" (click)="prevPage()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Prev
+    </button>
+    <span>Page {{ page() }}</span>
+    <button class="btn-page" [disabled]="!hasMore()" (click)="nextPage()">
+      Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Create Modal -->
+<div class="admin-modal-backdrop" *ngIf="showCreate()" (click)="showCreate.set(false)">
+  <div class="admin-modal" (click)="$event.stopPropagation()">
+    <h3>New Feature</h3>
+    <label>Service
+      <select [(ngModel)]="createBuffer().serviceId" class="admin-input">
+        <option [ngValue]="undefined" disabled>Select service...</option>
+        <option *ngFor="let s of services()" [ngValue]="s.serviceId">{{ s.serviceName }}</option>
+      </select>
+    </label>
+    <label>Feature Text<input [(ngModel)]="createBuffer().feature" class="admin-input" /></label>
+    <label>Sort Order<input type="number" [(ngModel)]="createBuffer().sortOrder" class="admin-input" /></label>
+    <div class="admin-modal-actions">
+      <button class="btn-save" [disabled]="saving()" (click)="submitCreate()">{{ saving() ? 'Saving...' : 'Create' }}</button>
+      <button class="btn-cancel" (click)="showCreate.set(false)">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm -->
+<div class="admin-modal-backdrop" *ngIf="deleteConfirmId() !== null" (click)="cancelDelete()">
+  <div class="admin-modal" (click)="$event.stopPropagation()">
+    <h3>Delete Feature #{{ deleteConfirmId() }}?</h3>
+    <p>This action cannot be undone.</p>
+    <div class="admin-modal-actions">
+      <button class="btn-delete" (click)="doDelete(deleteConfirmId()!)">Yes, Delete</button>
+      <button class="btn-cancel" (click)="cancelDelete()">Cancel</button>
+    </div>
+  </div>
+</div>

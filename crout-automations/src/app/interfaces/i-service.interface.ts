@@ -1,11 +1,10 @@
 export interface IService {
   serviceId: number;
   serviceName: string;
-  price: number;           // default 3000.00
-  hasAddons: boolean;      // default false
+  price: number;
+  hasAddons: boolean;
   serviceDescription: string;
-  conditional: boolean; // default false, used in conditions if set in config to use parent package or other.
-  /** High-level bullet points shown on the services page card and service sub-page */
+  conditional: boolean;
   features: string[];
 }
 
@@ -14,33 +13,29 @@ export interface IAddon {
   serviceId: number | null;
   addonName: string;
   addonDescription: string;
-  price: number;           // default 200.00
+  price: number;
+}
+
+export interface IServiceFeature {
+  featureId: number;
+  serviceId: number;
+  feature: string;
+  sortOrder: number;
 }
 
 export interface IPackage {
   packageId: number;
-  parentPackageId?: number; // conditional FK to allow nested packages
-  /** One or more service IDs this package is composed of */
-  service_ids?: number[];
+  parentPackageId?: number;
+  serviceIds: number[];
   packageName: string;
   packageDescription: string;
-  discount: number;        // 0–1 (percentage)
-  /**
-   * Minimum number of add-ons that must be enabled before the bundle
-   * discount is applied. When undefined or 0, the discount is always active
-   * regardless of how many add-ons are selected.
-   */
+  discount: number;
   minimumRequiredAddons?: number;
 }
 
-/**
- * A company (business entity) that belongs to a user.
- * A single user (client) may own multiple companies, each with their
- * own set of active services.
- */
 export interface ICompany {
   companyId: number;
-  userId: number;             // FK → IUser.user_id
+  userId: number;
   companyName: string;
   industry?: string | null;
   VATNumber?: string | null;
@@ -61,7 +56,6 @@ export interface IUser {
   cellNumber: string | null;
   active: boolean;
   isAdmin: boolean;
-  /** Optional profile picture URL or base64 data URI */
   profilePicture?: string | null;
 }
 
@@ -69,18 +63,18 @@ export type UserServiceStatus = 0 | 1 | 2 | 3;
 // 0 = Disabled | 1 = In Development | 2 = Live | 3 = Pending
 
 export interface IUserService {
-  companyId: number;          // FK → ICompany.company_id (replaces user_id)
+  companyId: number;
   serviceId: number;
   packageId: number | null;
   subscriptionId: string | null;
-  config: string;              // JSON string
-  active: boolean;             // default true
-  status: UserServiceStatus;   // default 1
+  config: string;
+  active: boolean;
+  status: UserServiceStatus;
 }
 
 export interface IServiceConfig {
   serviceConfigId: number;
   companyId: number;
   serviceId: number;
-  config: string;              // JSON string
+  config: string;
 }
