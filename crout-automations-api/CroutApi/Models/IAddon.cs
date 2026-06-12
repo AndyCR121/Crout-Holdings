@@ -1,10 +1,4 @@
-namespace CroutApi.Models;
-
-public class IAddon
-{
-    public int     AddonId          { get; set; }
-    public int     ServiceId        { get; set; }
-    public string  AddonName        { get; set; } = string.Empty;
-    public string? AddonDescription { get; set; }
-    public decimal Price            { get; set; }
-}
+// This file is intentionally left as a namespace placeholder.
+// The Addon model is defined in Models/Service.cs — see Addon class there.
+// DO NOT add class definitions here.
+namespace CroutApi.Models.Placeholder;
