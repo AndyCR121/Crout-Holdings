@@ -61,7 +61,7 @@
         } @else {
           @for (s of services; track s.serviceId; let i = $index) {
             <a
-              [href]="['/services', s.slug]"
+              [href]="['/services/' + s.slug]"
               class="svc-card"
               [class.svc-card--blue]="s.accent === 'blue'"
               caScrollReveal
