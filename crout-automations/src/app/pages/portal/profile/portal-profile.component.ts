@@ -77,7 +77,7 @@ export class PortalProfileComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const uid = this.user()?.user_id;
+    const uid = this.user()?.userId;
     if (uid == null) { this.loadingCompanies.set(false); return; }
     // Load companies from the authenticated profile endpoint
     this.http
@@ -195,7 +195,7 @@ export class PortalProfileComponent implements OnInit {
     this.editVAT.set(c.VATNumber ?? '');
     this.editReg.set(c.registrationNumber ?? '');
     this.editAddress.set(c.address ?? '');
-    this.editingId.set(c.company_id);
+    this.editingId.set(c.companyId);
   }
 
   cancelEditCompany(): void { this.editingId.set(null); }
@@ -214,10 +214,10 @@ export class PortalProfileComponent implements OnInit {
       address:            this.editAddress().trim() || null,
     };
     this.http
-      .put<ICompany>(`${this.base}/profile/companies/${c.company_id}`, body, { withCredentials: true })
+      .put<ICompany>(`${this.base}/profile/companies/${c.companyId}`, body, { withCredentials: true })
       .subscribe({
         next: (updated) => {
-          this.companies.update(list => list.map(x => x.company_id === c.company_id ? updated : x));
+          this.companies.update(list => list.map(x => x.companyId === c.companyId ? updated : x));
           this.editingId.set(null);
           this.savingCompany.set(false);
           this.toast.success(`Company "${updated.companyName}" updated.`);
@@ -233,10 +233,10 @@ export class PortalProfileComponent implements OnInit {
   removeCompany(c: ICompany): void {
     if (!confirm(`Remove "${c.companyName}"? This cannot be undone.`)) return;
     this.http
-      .delete(`${this.base}/profile/companies/${c.company_id}`, { withCredentials: true })
+      .delete(`${this.base}/profile/companies/${c.companyId}`, { withCredentials: true })
       .subscribe({
         next: () => {
-          this.companies.update(list => list.filter(x => x.company_id !== c.company_id));
+          this.companies.update(list => list.filter(x => x.companyId !== c.companyId));
           this.toast.success(`Company "${c.companyName}" removed.`);
         },
         error: (err) => this.toast.error(err?.error?.error ?? 'Failed to remove company.'),

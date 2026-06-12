@@ -16,7 +16,7 @@
   </div>
 } @else {
   <div class="svc-configurator">
-    @for (view of packageViews; track view.pkg.package_id) {
+    @for (view of packageViews; track view.pkg.packageId) {
       <div class="pricing__suite">
         <div class="pricing__suite-inner">
 
@@ -35,7 +35,7 @@
             <ul class="pricing__suite-items" role="list">
 
               <!-- Base service rows -->
-              @for (svc of activeServices(view); track svc.service_id) {
+              @for (svc of activeServices(view); track svc.serviceId) {
                 @if (!svc.conditional) {
                   <li class="pricing__suite-item">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
@@ -46,7 +46,7 @@
               }
 
               <!-- Addon toggles -->
-              @for (state of view.addonStates; track state.addon.addon_id) {
+              @for (state of view.addonStates; track state.addon.addonId) {
                 <li
                   class="pricing__suite-item pricing__suite-item--optional"
                   [class.pricing__suite-item--active]="state.enabled"

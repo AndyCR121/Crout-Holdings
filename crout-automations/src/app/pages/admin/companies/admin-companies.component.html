@@ -18,11 +18,11 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let c of items()" [class.editing]="isEditing(c.company_id)">
+        <tr *ngFor="let c of items()" [class.editing]="isEditing(c.companyId)">
 
           <!-- View row -->
-          <ng-container *ngIf="!isEditing(c.company_id)">
-            <td>{{ c.company_id }}</td>
+          <ng-container *ngIf="!isEditing(c.companyId)">
+            <td>{{ c.companyId }}</td>
             <td>{{ c.companyName }}</td>
             <td>{{ c.industry ?? '—' }}</td>
             <td>{{ c.email ?? '—' }}</td>
@@ -35,21 +35,21 @@
           </ng-container>
 
           <!-- Edit row — bound to isolated getDraft(c.company_id) -->
-          <ng-container *ngIf="isEditing(c.company_id)">
-            <td>{{ c.company_id }}</td>
-            <td><input [(ngModel)]="getDraft(c.company_id).companyName" class="admin-input" /></td>
-            <td><input [(ngModel)]="getDraft(c.company_id).industry"    class="admin-input" /></td>
-            <td><input [(ngModel)]="getDraft(c.company_id).email"       class="admin-input" /></td>
-            <td><input [(ngModel)]="getDraft(c.company_id).phone"       class="admin-input" /></td>
+          <ng-container *ngIf="isEditing(c.companyId)">
+            <td>{{ c.companyId }}</td>
+            <td><input [(ngModel)]="getDraft(c.companyId).companyName" class="admin-input" /></td>
+            <td><input [(ngModel)]="getDraft(c.companyId).industry"    class="admin-input" /></td>
+            <td><input [(ngModel)]="getDraft(c.companyId).email"       class="admin-input" /></td>
+            <td><input [(ngModel)]="getDraft(c.companyId).phone"       class="admin-input" /></td>
             <td>
-              <select [(ngModel)]="getDraft(c.company_id).active" class="admin-input">
+              <select [(ngModel)]="getDraft(c.companyId).active" class="admin-input">
                 <option [ngValue]="true">Active</option>
                 <option [ngValue]="false">Inactive</option>
               </select>
             </td>
             <td class="admin-actions">
               <button class="btn-save"   [disabled]="saving()" (click)="saveEdit(c)">{{ saving() ? '…' : 'Save' }}</button>
-              <button class="btn-cancel" (click)="cancelEdit(c.company_id)">Cancel</button>
+              <button class="btn-cancel" (click)="cancelEdit(c.companyId)">Cancel</button>
             </td>
           </ng-container>
 

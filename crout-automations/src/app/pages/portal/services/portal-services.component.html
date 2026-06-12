@@ -91,9 +91,9 @@
             </ul>
             <div class="pservices__edit-actions">
               <button class="pservices__btn pservices__btn--ghost" (click)="cancelEdit(row)">Cancel</button>
-              <button class="pservices__btn pservices__btn--primary" (click)="submitConfigRequest(row)" [disabled]="saving() === row.userService.service_id">
-                <span *ngIf="saving() !== row.userService.service_id">Submit Request</span>
-                <span *ngIf="saving() === row.userService.service_id">Submitting…</span>
+              <button class="pservices__btn pservices__btn--primary" (click)="submitConfigRequest(row)" [disabled]="saving() === row.userService.serviceId">
+                <span *ngIf="saving() !== row.userService.serviceId">Submit Request</span>
+                <span *ngIf="saving() === row.userService.serviceId">Submitting…</span>
               </button>
             </div>
           </div>
@@ -112,8 +112,8 @@
                 <div><span>Status</span>
                   <strong [ngClass]="statusClass(row.userService.status)">{{ statusLabel(row.userService.status) }}</strong>
                 </div>
-                <div *ngIf="row.userService.subscription_id">
-                  <span>Subscription</span><strong>{{ row.userService.subscription_id }}</strong>
+                <div *ngIf="row.userService.subscriptionId">
+                  <span>Subscription</span><strong>{{ row.userService.subscriptionId }}</strong>
                 </div>
               </div>
               <div *ngIf="row.service.features?.length">

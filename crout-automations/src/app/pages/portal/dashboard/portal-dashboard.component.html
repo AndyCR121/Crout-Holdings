@@ -16,8 +16,8 @@
     </div>
   } @else {
     <!-- Group services by company -->
-    @for (company of companies(); track company.company_id) {
-      @let companyServices = userServices() | companySvcFilter: company.company_id;
+    @for (company of companies(); track company.companyId) {
+      @let companyServices = userServices() | companySvcFilter: company.companyId;
       @if (companyServices.length > 0) {
         <div class="pd-company-group">
           <!-- Company header -->
@@ -31,8 +31,8 @@
 
           <!-- Service cards for this company -->
           <div class="pd-grid">
-            @for (us of companyServices; track us.service_id) {
-              @let svc = getService(us.service_id);
+            @for (us of companyServices; track us.serviceId) {
+              @let svc = getService(us.serviceId);
               @if (svc) {
                 <div class="pd-card">
                   <!-- Header -->
@@ -60,7 +60,7 @@
                   }
 
                   <!-- n8n runs bar chart -->
-                  @let bars = chartBars(us.service_id);
+                  @let bars = chartBars(us.serviceId);
                   @if (bars.length > 0) {
                     <div class="pd-chart-wrap">
                       <span class="pd-chart-label">Workflow Runs — Last 14 days</span>

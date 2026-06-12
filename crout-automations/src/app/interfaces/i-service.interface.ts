@@ -1,5 +1,5 @@
 export interface IService {
-  service_id: number;
+  serviceId: number;
   serviceName: string;
   price: number;           // default 3000.00
   hasAddons: boolean;      // default false
@@ -10,16 +10,16 @@ export interface IService {
 }
 
 export interface IAddon {
-  addon_id: number;
-  service_id: number | null;
+  addonId: number;
+  serviceId: number | null;
   addonName: string;
   addonDescription: string;
   price: number;           // default 200.00
 }
 
 export interface IPackage {
-  package_id: number;
-  parent_package_id?: number; // conditional FK to allow nested packages
+  packageId: number;
+  parentPackageId?: number; // conditional FK to allow nested packages
   /** One or more service IDs this package is composed of */
   service_ids?: number[];
   packageName: string;
@@ -39,8 +39,8 @@ export interface IPackage {
  * own set of active services.
  */
 export interface ICompany {
-  company_id: number;
-  user_id: number;             // FK → IUser.user_id
+  companyId: number;
+  userId: number;             // FK → IUser.user_id
   companyName: string;
   industry?: string | null;
   VATNumber?: string | null;
@@ -52,7 +52,7 @@ export interface ICompany {
 }
 
 export interface IUser {
-  user_id: number;
+  userId: number;
   username: string;
   password: string;
   firstName: string;
@@ -69,18 +69,18 @@ export type UserServiceStatus = 0 | 1 | 2 | 3;
 // 0 = Disabled | 1 = In Development | 2 = Live | 3 = Pending
 
 export interface IUserService {
-  company_id: number;          // FK → ICompany.company_id (replaces user_id)
-  service_id: number;
-  package_id: number | null;
-  subscription_id: string | null;
+  companyId: number;          // FK → ICompany.company_id (replaces user_id)
+  serviceId: number;
+  packageId: number | null;
+  subscriptionId: string | null;
   config: string;              // JSON string
   active: boolean;             // default true
   status: UserServiceStatus;   // default 1
 }
 
 export interface IServiceConfig {
-  service_config_id: number;
-  company_id: number;
-  service_id: number;
+  serviceConfigId: number;
+  companyId: number;
+  serviceId: number;
   config: string;              // JSON string
 }

@@ -14,9 +14,9 @@
     <table class="admin-table">
       <thead><tr><th>ID</th><th>Name</th><th>Description</th><th>Price</th><th>Add-ons</th><th>Conditional</th><th>Actions</th></tr></thead>
       <tbody>
-        <tr *ngFor="let s of items()" [class.editing]="editingId() === s.service_id">
-          <ng-container *ngIf="editingId() !== s.service_id">
-            <td>{{ s.service_id }}</td>
+        <tr *ngFor="let s of items()" [class.editing]="editingId() === s.serviceId">
+          <ng-container *ngIf="editingId() !== s.serviceId">
+            <td>{{ s.serviceId }}</td>
             <td>{{ s.serviceName }}</td>
             <td class="td-desc">{{ s.serviceDescription }}</td>
             <td>R{{ s.price | number:'1.2-2' }}</td>
@@ -24,11 +24,11 @@
             <td><span class="admin-pill" [class.green]="s.conditional">{{ s.conditional ? 'Yes' : 'No' }}</span></td>
             <td class="admin-actions">
               <button class="btn-edit" (click)="startEdit(s)">Edit</button>
-              <button class="btn-delete" (click)="confirmDelete(s.service_id)">Delete</button>
+              <button class="btn-delete" (click)="confirmDelete(s.serviceId)">Delete</button>
             </td>
           </ng-container>
-          <ng-container *ngIf="editingId() === s.service_id">
-            <td>{{ s.service_id }}</td>
+          <ng-container *ngIf="editingId() === s.serviceId">
+            <td>{{ s.serviceId }}</td>
             <td><input [(ngModel)]="editBuffer().serviceName" class="admin-input" /></td>
             <td><input [(ngModel)]="editBuffer().serviceDescription" class="admin-input" /></td>
             <td><input type="number" [(ngModel)]="editBuffer().price" class="admin-input" /></td>

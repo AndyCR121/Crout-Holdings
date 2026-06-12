@@ -50,15 +50,15 @@ export class AdminPackagesComponent implements OnInit {
   nextPage(): void { if (this.hasMore()) { this.page.update(p => p + 1); this.load(); } }
 
   startEdit(p: IPackage): void {
-    this.editingId.set(p.package_id);
-    this.editBuffer.set({ packageName: p.packageName, packageDescription: p.packageDescription, discount: p.discount, minimumRequiredAddons: p.minimumRequiredAddons });
+    this.editingId.set(p.packageId);
+    this.editBuffer.set({ packageId: p.packageId,packageName: p.packageName, packageDescription: p.packageDescription, discount: p.discount, minimumRequiredAddons: p.minimumRequiredAddons });
   }
   cancelEdit(): void { this.editingId.set(null); }
 
   saveEdit(p: IPackage): void {
     this.saving.set(true);
-    this.admin.updatePackage(p.package_id, this.editBuffer()).subscribe({
-      next: updated => { this.items.update(list => list.map(i => i.package_id === updated.package_id ? updated : i)); this.editingId.set(null); this.saving.set(false); },
+    this.admin.updatePackage(p.packageId, this.editBuffer()).subscribe({
+      next: updated => { this.items.update(list => list.map(i => i.packageId === updated.packageId ? updated : i)); this.editingId.set(null); this.saving.set(false); },
       error: () => { this.error.set('Failed to save.'); this.saving.set(false); }
     });
   }
@@ -67,7 +67,7 @@ export class AdminPackagesComponent implements OnInit {
   cancelDelete(): void { this.deleteConfirmId.set(null); }
   doDelete(id: number): void {
     this.admin.deletePackage(id).subscribe({
-      next: () => { this.items.update(list => list.filter(i => i.package_id !== id)); this.deleteConfirmId.set(null); },
+      next: () => { this.items.update(list => list.filter(i => i.packageId !== id)); this.deleteConfirmId.set(null); },
       error: () => { this.error.set('Failed to delete.'); this.deleteConfirmId.set(null); }
     });
   }

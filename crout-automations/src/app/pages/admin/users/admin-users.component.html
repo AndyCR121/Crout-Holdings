@@ -19,11 +19,11 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let u of users()" [class.editing]="isEditing(u.user_id)">
+        <tr *ngFor="let u of users()" [class.editing]="isEditing(u.userId)">
 
           <!-- View row -->
-          <ng-container *ngIf="!isEditing(u.user_id)">
-            <td>{{ u.user_id }}</td>
+          <ng-container *ngIf="!isEditing(u.userId)">
+            <td>{{ u.userId }}</td>
             <td>{{ u.username }}</td>
             <td>{{ u.firstName }}</td>
             <td>{{ u.surname }}</td>
@@ -37,29 +37,29 @@
             </td>
           </ng-container>
 
-          <!-- Edit row — bound to isolated getDraft(u.user_id), not a shared signal -->
-          <ng-container *ngIf="isEditing(u.user_id)">
-            <td>{{ u.user_id }}</td>
+          <!-- Edit row — bound to isolated getDraft(u.userId), not a shared signal -->
+          <ng-container *ngIf="isEditing(u.userId)">
+            <td>{{ u.userId }}</td>
             <td>{{ u.username }}</td>
-            <td><input [(ngModel)]="getDraft(u.user_id).firstName"  class="admin-input" /></td>
-            <td><input [(ngModel)]="getDraft(u.user_id).surname"    class="admin-input" /></td>
-            <td><input [(ngModel)]="getDraft(u.user_id).email"      class="admin-input" /></td>
-            <td><input [(ngModel)]="getDraft(u.user_id).cellNumber" class="admin-input" /></td>
+            <td><input [(ngModel)]="getDraft(u.userId).firstName"  class="admin-input" /></td>
+            <td><input [(ngModel)]="getDraft(u.userId).surname"    class="admin-input" /></td>
+            <td><input [(ngModel)]="getDraft(u.userId).email"      class="admin-input" /></td>
+            <td><input [(ngModel)]="getDraft(u.userId).cellNumber" class="admin-input" /></td>
             <td>
-              <select [(ngModel)]="getDraft(u.user_id).isAdmin" class="admin-input">
+              <select [(ngModel)]="getDraft(u.userId).isAdmin" class="admin-input">
                 <option [ngValue]="true">Yes</option>
                 <option [ngValue]="false">No</option>
               </select>
             </td>
             <td>
-              <select [(ngModel)]="getDraft(u.user_id).active" class="admin-input">
+              <select [(ngModel)]="getDraft(u.userId).active" class="admin-input">
                 <option [ngValue]="true">Active</option>
                 <option [ngValue]="false">Inactive</option>
               </select>
             </td>
             <td class="admin-actions">
               <button class="btn-save"   [disabled]="saving()" (click)="saveEdit(u)">{{ saving() ? '…' : 'Save' }}</button>
-              <button class="btn-cancel" (click)="cancelEdit(u.user_id)">Cancel</button>
+              <button class="btn-cancel" (click)="cancelEdit(u.userId)">Cancel</button>
             </td>
           </ng-container>
 

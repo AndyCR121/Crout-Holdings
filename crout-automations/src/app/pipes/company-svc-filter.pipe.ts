@@ -10,6 +10,6 @@ import { IUserService } from '../interfaces/i-service.interface';
 export class CompanySvcFilterPipe implements PipeTransform {
   transform(services: IUserService[], companyId: number): IUserService[] {
     if (!services?.length) return [];
-    return services.filter(s => s.company_id === companyId);
+    return services.filter(s => s.companyId === companyId);
   }
 }

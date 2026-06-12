@@ -63,7 +63,7 @@ export class AdminUsersComponent implements OnInit {
   getDraft(id: number): Partial<IUser> { return this.drafts.get(id) ?? {}; }
 
   startEdit(user: IUser): void {
-    this.drafts.set(user.user_id, {
+    this.drafts.set(user.userId, {
       firstName:  user.firstName,
       surname:    user.surname,
       email:      user.email,
@@ -76,13 +76,13 @@ export class AdminUsersComponent implements OnInit {
   cancelEdit(id: number): void { this.drafts.delete(id); }
 
   saveEdit(user: IUser): void {
-    const draft = this.drafts.get(user.user_id);
+    const draft = this.drafts.get(user.userId);
     if (!draft) return;
     this.saving.set(true);
-    this.admin.updateUser(user.user_id, draft).subscribe({
+    this.admin.updateUser(user.userId, draft).subscribe({
       next: updated => {
-        this.users.update(list => list.map(u => u.user_id === updated.user_id ? updated : u));
-        this.drafts.delete(user.user_id);
+        this.users.update(list => list.map(u => u.userId === updated.userId ? updated : u));
+        this.drafts.delete(user.userId);
         this.saving.set(false);
       },
       error: () => { this.error.set('Failed to save user.'); this.saving.set(false); }
@@ -96,9 +96,9 @@ export class AdminUsersComponent implements OnInit {
       `Permanently delete "${user.firstName} ${user.surname}" (${user.username})? This cannot be undone.`
     );
     if (!confirmed) return;
-    this.admin.deleteUser(user.user_id).subscribe({
+    this.admin.deleteUser(user.userId).subscribe({
       next: () => {
-        this.users.update(list => list.filter(u => u.user_id !== user.user_id));
+        this.users.update(list => list.filter(u => u.userId !== user.userId));
         this.total.update(t => t - 1);
       },
       error: () => this.error.set('Failed to delete user.')

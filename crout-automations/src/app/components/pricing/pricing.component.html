@@ -32,7 +32,7 @@
 
     <!-- ===== Service Cards ===== -->
     <div class="pricing__flex" caScrollReveal [staggerChildren]="true">
-      @for (svc of visibleServicesLimited; track svc.service_id; let i = $index) {
+      @for (svc of visibleServicesLimited; track svc.serviceId; let i = $index) {
         <div
           class="pricing__card"
           [class.pricing__card--highlight]="i % 2 === 0"
@@ -50,12 +50,12 @@
           <p class="pricing__card-desc">{{ svc.serviceDescription }}</p>
 
           @if (svc.hasAddons) {
-            @let svcAddons = addons | filterByServiceId : svc.service_id;
+            @let svcAddons = addons | filterByServiceId : svc.serviceId;
             @if (svcAddons.length > 0) {
               <div class="pricing__addons">
                 <p class="pricing__addons-label">Available Add-Ons</p>
                 <ul class="pricing__addons-list" role="list">
-                  @for (addon of svcAddons; track addon.addon_id) {
+                  @for (addon of svcAddons; track addon.addonId) {
                     <li class="pricing__addon-item">
                       <span class="pricing__addon-name">{{ addon.addonName }}</span>
                       <span class="pricing__addon-price">+ R{{ formatPrice(addon.price) }}</span>
@@ -101,7 +101,7 @@
     } @else {
 
     <!-- ===== Package Views ===== -->
-    @for (view of packageViews; track view.pkg.package_id) {
+    @for (view of packageViews; track view.pkg.packageId) {
       <div class="pricing__suite" caScrollReveal>
         <div class="pricing__suite-inner">
 
@@ -120,7 +120,7 @@
             <ul class="pricing__suite-items" role="list">
 
               <!-- Base service rows — one per service in the active package -->
-              @for (svc of activeServices(view); track svc.service_id) {
+              @for (svc of activeServices(view); track svc.serviceId) {
                 @if (!svc.conditional) {
                   <li class="pricing__suite-item">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
@@ -131,7 +131,7 @@
               }
 
               <!-- Addon toggles -->
-              @for (state of view.addonStates; track state.addon.addon_id) {
+              @for (state of view.addonStates; track state.addon.addonId) {
                 <li
                   class="pricing__suite-item pricing__suite-item--optional"
                   [class.pricing__suite-item--active]="state.enabled"

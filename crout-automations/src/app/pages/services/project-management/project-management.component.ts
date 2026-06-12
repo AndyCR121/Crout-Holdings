@@ -63,8 +63,8 @@ export class ProjectManagementComponent implements OnInit {
       const raw = allSvcs?.find(s => s.serviceName === SERVICE_NAME);
       if (raw) {
         const [addons, pkgs] = await Promise.all([
-          this.api.getAddonsByService(raw.service_id).toPromise(),
-          this.api.getPackagesByService(raw.service_id).toPromise(),
+          this.api.getAddonsByService(raw.serviceId).toPromise(),
+          this.api.getPackagesByService(raw.serviceId).toPromise(),
         ]);
         this.addons.set(addons ?? []);
         this.packages.set(pkgs ?? []);

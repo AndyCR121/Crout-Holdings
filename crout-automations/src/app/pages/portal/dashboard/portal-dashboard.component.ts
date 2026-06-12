@@ -28,7 +28,7 @@ export class PortalDashboardComponent implements OnInit {
   readonly loading      = signal(true);
 
   ngOnInit(): void {
-    const uid = this.user()?.user_id;
+    const uid = this.user()?.userId;
     if (uid == null) { this.loading.set(false); return; }
 
     this.api.getServices().pipe(
@@ -40,7 +40,7 @@ export class PortalDashboardComponent implements OnInit {
         this.companies.set(companies);
         if (companies.length === 0) return of([] as IUserService[]);
         return forkJoin(
-          companies.map(c => this.api.getCompanyServices(c.company_id))
+          companies.map(c => this.api.getCompanyServices(c.companyId))
         ).pipe(
           switchMap(results => of(([] as IUserService[]).concat(...results)))
         );
@@ -49,19 +49,19 @@ export class PortalDashboardComponent implements OnInit {
       this.userServices.set(allUserSvcs);
       this.loading.set(false);
       allUserSvcs.forEach(us => {
-        this.n8n.getDailyRuns(`workflow_${us.service_id}`, 14).subscribe(runs => {
-          this.dailyRuns.update(m => ({ ...m, [us.service_id]: runs }));
+        this.n8n.getDailyRuns(`workflow_${us.serviceId}`, 14).subscribe(runs => {
+          this.dailyRuns.update(m => ({ ...m, [us.serviceId]: runs }));
         });
       });
     });
   }
 
   getService(id: number): IService | undefined {
-    return this.allServices().find(s => s.service_id === id);
+    return this.allServices().find(s => s.serviceId === id);
   }
 
   getCompany(id: number): ICompany | undefined {
-    return this.companies().find(c => c.company_id === id);
+    return this.companies().find(c => c.companyId === id);
   }
 
   getAddonNames(config: string): string[] {

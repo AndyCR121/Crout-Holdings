@@ -110,7 +110,7 @@
       <li class="pprofile__company-item" *ngFor="let c of companies()">
 
         <!-- View mode -->
-        <ng-container *ngIf="editingId() !== c.company_id">
+        <ng-container *ngIf="editingId() !== c.companyId">
           <div class="pprofile__company-info">
             <span class="pprofile__company-name">{{ c.companyName }}</span>
             <span class="pprofile__company-industry" *ngIf="c.industry">{{ c.industry }}</span>
@@ -126,7 +126,7 @@
         </ng-container>
 
         <!-- Edit mode (inline) -->
-        <div class="pprofile__company-edit-form" *ngIf="editingId() === c.company_id">
+        <div class="pprofile__company-edit-form" *ngIf="editingId() === c.companyId">
           <div class="pprofile__grid pprofile__grid--company">
             <div class="pprofile__field">
               <label class="pprofile__label">Company Name *</label>

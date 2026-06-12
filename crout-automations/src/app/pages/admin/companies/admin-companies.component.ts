@@ -63,7 +63,7 @@ export class AdminCompaniesComponent implements OnInit {
   getDraft(id: number): Partial<ICompany> { return this.drafts.get(id) ?? {}; }
 
   startEdit(c: ICompany): void {
-    this.drafts.set(c.company_id, {
+    this.drafts.set(c.companyId, {
       companyName: c.companyName,
       industry:    c.industry,
       email:       c.email,
@@ -76,13 +76,13 @@ export class AdminCompaniesComponent implements OnInit {
   cancelEdit(id: number): void { this.drafts.delete(id); }
 
   saveEdit(c: ICompany): void {
-    const draft = this.drafts.get(c.company_id);
+    const draft = this.drafts.get(c.companyId);
     if (!draft) return;
     this.saving.set(true);
-    this.admin.updateCompany(c.company_id, draft).subscribe({
+    this.admin.updateCompany(c.companyId, draft).subscribe({
       next: updated => {
-        this.items.update(list => list.map(i => i.company_id === updated.company_id ? updated : i));
-        this.drafts.delete(c.company_id);
+        this.items.update(list => list.map(i => i.companyId === updated.companyId ? updated : i));
+        this.drafts.delete(c.companyId);
         this.saving.set(false);
       },
       error: () => { this.error.set('Failed to save company.'); this.saving.set(false); }
@@ -96,9 +96,9 @@ export class AdminCompaniesComponent implements OnInit {
       `Permanently delete "${c.companyName}"? This cannot be undone.`
     );
     if (!confirmed) return;
-    this.admin.deleteCompany(c.company_id).subscribe({
+    this.admin.deleteCompany(c.companyId).subscribe({
       next: () => {
-        this.items.update(list => list.filter(i => i.company_id !== c.company_id));
+        this.items.update(list => list.filter(i => i.companyId !== c.companyId));
         this.total.update(t => t - 1);
       },
       error: () => this.error.set('Failed to delete company.')

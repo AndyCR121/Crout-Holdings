@@ -31,7 +31,7 @@ export class PortalSubscriptionsComponent implements OnInit {
   readonly loading = signal(true);
 
   ngOnInit(): void {
-    const uid = this.user()?.user_id;
+    const uid = this.user()?.userId;
     if (uid == null) { this.loading.set(false); return; }
 
     this.api.getServices().pipe(
@@ -42,7 +42,7 @@ export class PortalSubscriptionsComponent implements OnInit {
               return of({ svcs, companies, allUserSvcs: [] as IUserService[] });
             }
             return forkJoin(
-              companies.map(c => this.api.getCompanyServices(c.company_id))
+              companies.map(c => this.api.getCompanyServices(c.companyId))
             ).pipe(
               switchMap(results => of({
                 svcs,
@@ -58,9 +58,9 @@ export class PortalSubscriptionsComponent implements OnInit {
           switchMap(paystackSubs => {
             const built: SubRow[] = allUserSvcs.map((us: IUserService) => ({
               userService:  us,
-              service:      svcs.find((s: IService) => s.service_id === us.service_id),
-              company:      companies.find((c: ICompany) => c.company_id === us.company_id),
-              subscription: paystackSubs.find(ps => ps.subscription_code === us.subscription_id) ?? null,
+              service:      svcs.find((s: IService) => s.serviceId === us.serviceId),
+              company:      companies.find((c: ICompany) => c.companyId === us.companyId),
+              subscription: paystackSubs.find(ps => ps.subscription_code === us.subscriptionId) ?? null,
             }));
             return of(built);
           })

@@ -59,7 +59,7 @@
             </div>
           }
         } @else {
-          @for (s of services; track s.service_id; let i = $index) {
+          @for (s of services; track s.serviceId; let i = $index) {
             <a
               [routerLink]="['/services', s.slug]"
               class="svc-card"

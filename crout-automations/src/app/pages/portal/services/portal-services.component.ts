@@ -42,7 +42,7 @@ export class PortalServicesComponent implements OnInit {
   readonly saving  = signal<number | null>(null);
 
   ngOnInit(): void {
-    const uid = this.user()?.user_id;
+    const uid = this.user()?.userId;
     if (uid == null) { this.loading.set(false); return; }
 
     // Step 1: load services + companies in parallel
@@ -58,9 +58,9 @@ export class PortalServicesComponent implements OnInit {
         return forkJoin({
           svcs:            of(svcs),
           companies:       of(companies),
-          companyServices: forkJoin(companies.map((c: ICompany) => this.api.getCompanyServices(c.company_id))),
+          companyServices: forkJoin(companies.map((c: ICompany) => this.api.getCompanyServices(c.companyId))),
           addons:          svcs.length
-            ? forkJoin(svcs.map((s: IService) => this.api.getAddonsByService(s.service_id)))
+            ? forkJoin(svcs.map((s: IService) => this.api.getAddonsByService(s.serviceId)))
             : of([] as IAddon[][]),
         });
       })
@@ -71,8 +71,8 @@ export class PortalServicesComponent implements OnInit {
         const built: CompanyGroup[] = (companies as ICompany[]).map((company: ICompany, ci: number) => {
           const us: IUserService[] = (companyServices as IUserService[][])[ci] ?? [];
           const rows: ServiceRow[] = us.map((u: IUserService) => {
-            const svc       = (svcs as IService[]).find((s: IService) => s.service_id === u.service_id)!;
-            const rowAddons = allAddons.filter((a: IAddon) => a.service_id === u.service_id);
+            const svc       = (svcs as IService[]).find((s: IService) => s.serviceId === u.serviceId)!;
+            const rowAddons = allAddons.filter((a: IAddon) => a.serviceId === u.serviceId);
             const active    = this._parseConfig(u.config);
             return {
               userService:   u,
@@ -87,7 +87,7 @@ export class PortalServicesComponent implements OnInit {
           return { company, rows, expanded: true };
         });
 
-        built.sort((a, b) => a.company.company_id - b.company.company_id);
+        built.sort((a, b) => a.company.companyId - b.company.companyId);
         this.groups.set(built);
         this.loading.set(false);
       },
@@ -127,10 +127,10 @@ export class PortalServicesComponent implements OnInit {
   }
 
   submitConfigRequest(row: ServiceRow): void {
-    this.saving.set(row.userService.service_id);
+    this.saving.set(row.userService.serviceId);
     const payload = { integrations: row.editConfig };
     this.api['http']?.post?.(
-      `/companies/${row.userService.company_id}/services/${row.userService.service_id}/config-request`,
+      `/companies/${row.userService.companyId}/services/${row.userService.serviceId}/config-request`,
       payload
     ).subscribe?.();
     setTimeout(() => {

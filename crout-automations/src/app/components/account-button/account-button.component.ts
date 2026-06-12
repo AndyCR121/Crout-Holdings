@@ -38,7 +38,7 @@ export class AccountButtonComponent implements OnInit {
   );
 
   ngOnInit(): void {
-    const uid = this.user()?.user_id;
+    const uid = this.user()?.userId;
     if (uid == null) return;
     this.api.getCompaniesByUser(uid).subscribe(c => this.companies.set(c));
   }

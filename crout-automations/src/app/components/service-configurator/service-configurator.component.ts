@@ -43,25 +43,25 @@ export class ServiceConfiguratorComponent implements OnChanges {
     // All IDs that are child packages (pointed to by parent_package_id)
     const childIds = new Set(
       this.packages
-        .filter(p => p.parent_package_id != null)
-        .map(p => p.package_id!)
+        .filter(p => p.parentPackageId != null)
+        .map(p => p.packageId!)
     );
 
-    const rootPackages = this.packages.filter(p => !childIds.has(p.package_id));
+    const rootPackages = this.packages.filter(p => !childIds.has(p.packageId));
 
     this.packageViews = rootPackages.map(pkg => {
-      const childPkg = this.packages.find(p => p.parent_package_id === pkg.package_id) ?? null;
+      const childPkg = this.packages.find(p => p.parentPackageId === pkg.packageId) ?? null;
 
       // Resolve the conditional service from allServices (it has Conditional:true)
       const conditionalService: IService | null = childPkg
         ? (this.allServices.find(
-            s => s.conditional && (childPkg.service_ids ?? []).includes(s.service_id)
+            s => s.conditional && (childPkg.service_ids ?? []).includes(s.serviceId)
           ) ?? null)
         : null;
 
       // Root service rows
       const rootServices: IService[] = (pkg.service_ids ?? []).reduce<IService[]>((acc, id) => {
-        const svc = this.allServices.find(s => s.service_id === id);
+        const svc = this.allServices.find(s => s.serviceId === id);
         if (svc) acc.push(svc);
         return acc;
       }, []);
@@ -69,7 +69,7 @@ export class ServiceConfiguratorComponent implements OnChanges {
       // Root addon states (non-conditional services' addons)
       const rootAddonStates: IAddonState[] = (pkg.service_ids ?? []).flatMap(svcId =>
         this.addons
-          .filter(a => a.service_id === svcId)
+          .filter(a => a.serviceId === svcId)
           .map(a => ({ addon: a, enabled: false }))
       );
 
@@ -97,7 +97,7 @@ export class ServiceConfiguratorComponent implements OnChanges {
       if (view.childAddonStates.length === 0) {
         view.childAddonStates = (view.childPkg.service_ids ?? []).flatMap(svcId =>
           this.addons
-            .filter(a => a.service_id === svcId)
+            .filter(a => a.serviceId === svcId)
             .map(a => ({ addon: a, enabled: false, isConditionalChild: true }))
         );
       }
@@ -123,14 +123,14 @@ export class ServiceConfiguratorComponent implements OnChanges {
   activeServices(view: IPackageView): IService[] {
     if (view.conditionalEnabled && view.childPkg) {
       const childServices = (view.childPkg.service_ids ?? []).reduce<IService[]>((acc, id) => {
-        const svc = this.allServices.find(s => s.service_id === id);
+        const svc = this.allServices.find(s => s.serviceId === id);
         if (svc) acc.push(svc);
         return acc;
       }, []);
-      const seen = new Set(view.rootServices.map(s => s.service_id));
+      const seen = new Set(view.rootServices.map(s => s.serviceId));
       const merged = [...view.rootServices];
       for (const svc of childServices) {
-        if (!seen.has(svc.service_id)) merged.push(svc);
+        if (!seen.has(svc.serviceId)) merged.push(svc);
       }
       return merged;
     }
@@ -161,16 +161,16 @@ export class ServiceConfiguratorComponent implements OnChanges {
 
     if (svcIds.length === 0) {
       const uniqueIds = [...new Set(
-        view.addonStates.map(s => s.addon.service_id).filter((id): id is number => id != null)
+        view.addonStates.map(s => s.addon.serviceId).filter((id): id is number => id != null)
       )];
       return uniqueIds.reduce((sum, id) => {
-        const svc = this.allServices.find(s => s.service_id === id);
+        const svc = this.allServices.find(s => s.serviceId === id);
         return sum + (svc?.price ?? 0);
       }, 0);
     }
 
     const rootTotal = svcIds.reduce((sum, id) => {
-      const svc = this.allServices.find(s => s.service_id === id);
+      const svc = this.allServices.find(s => s.serviceId === id);
       return sum + (svc?.price ?? 0);
     }, 0);
 

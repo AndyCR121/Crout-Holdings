@@ -50,15 +50,15 @@ export class AdminServicesComponent implements OnInit {
   nextPage(): void { if (this.hasMore()) { this.page.update(p => p + 1); this.load(); } }
 
   startEdit(s: IService): void {
-    this.editingId.set(s.service_id);
+    this.editingId.set(s.serviceId);
     this.editBuffer.set({ serviceName: s.serviceName, serviceDescription: s.serviceDescription, price: s.price, hasAddons: s.hasAddons, conditional: s.conditional });
   }
   cancelEdit(): void { this.editingId.set(null); }
 
   saveEdit(s: IService): void {
     this.saving.set(true);
-    this.admin.updateService(s.service_id, this.editBuffer()).subscribe({
-      next: updated => { this.items.update(list => list.map(i => i.service_id === updated.service_id ? updated : i)); this.editingId.set(null); this.saving.set(false); },
+    this.admin.updateService(s.serviceId, this.editBuffer()).subscribe({
+      next: updated => { this.items.update(list => list.map(i => i.serviceId === updated.serviceId ? updated : i)); this.editingId.set(null); this.saving.set(false); },
       error: () => { this.error.set('Failed to save.'); this.saving.set(false); }
     });
   }
@@ -67,7 +67,7 @@ export class AdminServicesComponent implements OnInit {
   cancelDelete(): void { this.deleteConfirmId.set(null); }
   doDelete(id: number): void {
     this.admin.deleteService(id).subscribe({
-      next: () => { this.items.update(list => list.filter(i => i.service_id !== id)); this.deleteConfirmId.set(null); },
+      next: () => { this.items.update(list => list.filter(i => i.serviceId !== id)); this.deleteConfirmId.set(null); },
       error: () => { this.error.set('Failed to delete.'); this.deleteConfirmId.set(null); }
     });
   }
