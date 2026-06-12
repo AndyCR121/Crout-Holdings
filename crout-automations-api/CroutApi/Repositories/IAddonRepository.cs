@@ -4,10 +4,10 @@ namespace CroutApi.Repositories;
 
 public interface IAddonRepository
 {
-    Task<(IEnumerable<IAddon> Items, int Total)> GetAllAsync(int page, int pageSize);
-    Task<IAddon?> GetByIdAsync(int addonId);
-    Task<IEnumerable<IAddon>> GetByServiceAsync(int serviceId);
-    Task<int> CreateAsync(IAddon addon);
-    Task UpdateAsync(IAddon addon);
+    Task<(IEnumerable<Addon> Items, int Total)> GetAllAsync(int page, int pageSize, string? search);
+    Task<Addon?> GetByIdAsync(int addonId);
+    Task<IEnumerable<Addon>> GetByServiceAsync(int serviceId);
+    Task<int> CreateAsync(Addon addon);
+    Task UpdateAsync(Addon addon);
     Task DeleteAsync(int addonId);
 }
