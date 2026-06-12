@@ -1,104 +1,138 @@
 <footer class="ca-footer">
-  <div class="ca-footer-inner">
 
-    <!-- Col 1: Brand -->
-    <div class="ca-footer-brand">
-      <a routerLink="/" class="ca-footer-logo-link" aria-label="Crout Automations Home">
-        <img
-          src="assets/Crout Automations Logo.png"
-          alt="Crout Automations"
-          class="ca-footer-logo"
-          width="160"
-          height="42"
-          loading="lazy"
-        />
-      </a>
-      <p class="ca-footer-tagline">AI that gives you your time back.</p>
-      <p class="ca-footer-desc">
-        We design and deploy AI automations that remove repetitive admin like customer support,
-        quoting, and job card creation, so your team can focus on high-value work and serving more clients.
-      </p>
-      <div class="ca-footer-socials">
-        <!-- LinkedIn -->
-        <a href="https://www.linkedin.com/company/crout-holdings" target="_blank" rel="noopener noreferrer" aria-label="Crout Holdings on LinkedIn">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
-            <rect x="2" y="9" width="4" height="12"/>
-            <circle cx="4" cy="4" r="2"/>
-          </svg>
+  <!-- ── Top gradient accent bar ── -->
+  <div class="ca-footer-accent-bar" aria-hidden="true"></div>
+
+  <div class="ca-footer-body">
+    <div class="ca-footer-inner">
+
+      <!-- Col 1: Brand -->
+      <div class="ca-footer-brand">
+        <a routerLink="/" class="ca-footer-logo-link" aria-label="Crout Automations Home">
+          <div class="ca-footer-logo-lockup">
+            <img
+              src="assets/ShieldOnlyLogo.png"
+              alt="Crout Automations shield"
+              class="ca-footer-logo"
+              width="44"
+              height="44"
+              loading="lazy"
+            />
+            <span class="ca-footer-logo-text">
+              <span class="ca-footer-logo-line">Crout</span>
+              <span class="ca-footer-logo-line ca-footer-logo-line--accent">Automations</span>
+            </span>
+          </div>
         </a>
-        <!-- Website / Holdings -->
-        <a href="https://crout-holdings.com" target="_blank" rel="noopener noreferrer" aria-label="Crout Holdings website">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="2" y1="12" x2="22" y2="12"/>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-          </svg>
-        </a>
+        <p class="ca-footer-tagline">AI that gives you your time back.</p>
+        <p class="ca-footer-desc">
+          We design and deploy AI automations that remove repetitive admin like customer support,
+          quoting, and job card creation, so your team can focus on high&#8209;value work and serving more clients.
+        </p>
+        <div class="ca-footer-socials">
+          <a href="https://www.linkedin.com/company/crout-holdings" target="_blank" rel="noopener noreferrer" aria-label="Crout Holdings on LinkedIn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+              <rect x="2" y="9" width="4" height="12"/>
+              <circle cx="4" cy="4" r="2"/>
+            </svg>
+          </a>
+          <a href="https://crout-holdings.com" target="_blank" rel="noopener noreferrer" aria-label="Crout Holdings website">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Col 2: Navigation -->
+      <div class="ca-footer-col">
+        <h4 class="ca-footer-heading">
+          <span class="ca-footer-heading-dot" aria-hidden="true"></span>
+          Navigation
+        </h4>
+        <ul class="ca-footer-list" role="list">
+          <li *ngFor="let link of navLinks">
+            <a [routerLink]="link.route" class="ca-footer-link">
+              <span class="ca-footer-link-arrow" aria-hidden="true">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+              </span>
+              {{ link.label }}
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Col 3: Services -->
+      <div class="ca-footer-col">
+        <h4 class="ca-footer-heading">
+          <span class="ca-footer-heading-dot" aria-hidden="true"></span>
+          Services
+        </h4>
+        <ul class="ca-footer-list" role="list">
+          <li *ngFor="let svc of services">
+            <a [routerLink]="svc.route" class="ca-footer-link">
+              <span class="ca-footer-link-arrow" aria-hidden="true">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+              </span>
+              {{ svc.label }}
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Col 4: Contact -->
+      <div class="ca-footer-col">
+        <h4 class="ca-footer-heading">
+          <span class="ca-footer-heading-dot" aria-hidden="true"></span>
+          Contact
+        </h4>
+        <ul class="ca-footer-contact-list" role="list">
+          <li>
+            <span class="ca-footer-contact-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </span>
+            <span>Crout Automations</span>
+          </li>
+          <li>
+            <span class="ca-footer-contact-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.65 3.18 2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6.49 6.49l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </span>
+            <a href="tel:+27646569894" class="ca-footer-link">(+27) 64 656 9894</a>
+          </li>
+          <li>
+            <span class="ca-footer-contact-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </span>
+            <span>Bloemfontein, South Africa</span>
+          </li>
+          <li>
+            <span class="ca-footer-contact-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </span>
+            <a href="mailto:support@crout-holdings.com" class="ca-footer-link">support&#64;crout-holdings.com</a>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Bottom bar ── -->
+  <div class="ca-footer-bottom-wrap">
+    <div class="ca-footer-bottom">
+      <span class="ca-footer-copy">&copy; {{ currentYear }} Crout Holdings. All Rights Reserved.</span>
+      <span class="ca-footer-brought">
+        Brought to you by <strong>Crout Holdings</strong>
+      </span>
+      <div class="ca-footer-legal">
+        <a routerLink="/privacy-policy" class="ca-footer-legal-link">Privacy Policy</a>
+        <span class="ca-footer-legal-sep" aria-hidden="true">|</span>
+        <a routerLink="/terms" class="ca-footer-legal-link">Terms of Service</a>
       </div>
     </div>
-
-    <!-- Col 2: Navigation -->
-    <div class="ca-footer-col">
-      <h4 class="ca-footer-heading">Navigation</h4>
-      <ul class="ca-footer-list" role="list">
-        <li *ngFor="let link of navLinks">
-          <a [routerLink]="link.route" class="ca-footer-link">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
-            {{ link.label }}
-          </a>
-        </li>
-      </ul>
-    </div>
-
-    <!-- Col 3: Services -->
-    <div class="ca-footer-col">
-      <h4 class="ca-footer-heading">Services</h4>
-      <ul class="ca-footer-list" role="list">
-        <li *ngFor="let svc of services">
-          <a [routerLink]="svc.route" class="ca-footer-link">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
-            {{ svc.label }}
-          </a>
-        </li>
-      </ul>
-    </div>
-
-    <!-- Col 4: Contact -->
-    <div class="ca-footer-col">
-      <h4 class="ca-footer-heading">Contact</h4>
-      <ul class="ca-footer-contact-list" role="list">
-        <li>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          <span>Crout Automations</span>
-        </li>
-        <li>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.65 3.18 2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6.49 6.49l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-          <a href="tel:+27646569894" class="ca-footer-link">(+27) 64 656 9894</a>
-        </li>
-        <li>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <span>Bloemfontein, South Africa</span>
-        </li>
-        <li>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          <a href="mailto:support@crout-holdings.com" class="ca-footer-link">support&#64;crout-holdings.com</a>
-        </li>
-      </ul>
-    </div>
-
   </div>
 
-  <!-- Bottom bar -->
-  <div class="ca-footer-bottom">
-    <span class="ca-footer-copy">&copy; {{ currentYear }} Crout Holdings. All Rights Reserved.</span>
-    <span class="ca-footer-brought">
-      Brought to you by <strong>Crout Holdings</strong>
-    </span>
-    <div class="ca-footer-legal">
-      <a routerLink="/privacy-policy" class="ca-footer-link">Privacy Policy</a>
-      <span aria-hidden="true">|</span>
-      <a routerLink="/privacy-policy" class="ca-footer-link">Terms of Service</a>
-    </div>
-  </div>
 </footer>
