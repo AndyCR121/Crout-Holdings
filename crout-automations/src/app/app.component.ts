@@ -13,7 +13,7 @@ import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dial
   standalone: true,
   imports: [CommonModule, RouterOutlet, DevNavComponent, NavbarComponent, ToastComponent, ConfirmDialogComponent],
   template: `
-    <ca-dev-nav />
+    <ca-dev-nav *ngIf="!showNavbar" />
     <ca-navbar *ngIf="showNavbar" />
     <router-outlet />
     <ca-toast />
