@@ -11,4 +11,5 @@ public class User
     public string? CellNumber { get; set; }
     public bool Active { get; set; } = true;
     public bool IsAdmin { get; set; }
+    public string? ProfilePicture { get; set; }
 }

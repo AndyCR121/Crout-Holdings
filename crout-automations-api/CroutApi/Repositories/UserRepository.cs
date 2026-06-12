@@ -6,11 +6,14 @@ namespace CroutApi.Repositories;
 
 public class UserRepository(DbHelper db) : IUserRepository
 {
+    private const string SelectCols =
+        "user_id AS UserId, Username, PasswordHash, FirstName, Surname, Email, CellNumber, Active, IsAdmin, ProfilePicture";
+
     public async Task<User?> GetByUsernameAsync(string username)
     {
         using var conn = db.GetConnection();
         return await conn.QuerySingleOrDefaultAsync<User>(
-            "SELECT user_id AS UserId, Username, PasswordHash, FirstName, Surname, Email, CellNumber, Active, IsAdmin FROM Users WHERE Username = @username AND Active = 1",
+            $"SELECT {SelectCols} FROM Users WHERE Username = @username AND Active = 1",
             new { username });
     }
 
@@ -18,7 +21,7 @@ public class UserRepository(DbHelper db) : IUserRepository
     {
         using var conn = db.GetConnection();
         return await conn.QuerySingleOrDefaultAsync<User>(
-            "SELECT user_id AS UserId, Username, PasswordHash, FirstName, Surname, Email, CellNumber, Active, IsAdmin FROM Users WHERE user_id = @userId",
+            $"SELECT {SelectCols} FROM Users WHERE user_id = @userId",
             new { userId });
     }
 
@@ -66,6 +69,14 @@ public class UserRepository(DbHelper db) : IUserRepository
         await conn.ExecuteAsync(
             "UPDATE Users SET PasswordHash=@passwordHash WHERE user_id=@userId",
             new { userId, passwordHash });
+    }
+
+    public async Task UpdatePictureAsync(int userId, string? pictureData)
+    {
+        using var conn = db.GetConnection();
+        await conn.ExecuteAsync(
+            "UPDATE Users SET ProfilePicture=@pictureData WHERE user_id=@userId",
+            new { userId, pictureData });
     }
 
     // ── Admin methods ────────────────────────────────────────────────────────
