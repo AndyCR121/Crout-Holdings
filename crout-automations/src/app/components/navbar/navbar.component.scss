@@ -1,4 +1,4 @@
-// ca-navbar — fixed, centered, pure navigation
+// ca-navbar — fixed, centered, pill nav with logo brand
 .ca-navbar {
   position: fixed;
   top: 1rem;
@@ -17,6 +17,47 @@
   border-radius: 50px;
   padding: 0.35rem 0.5rem;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+}
+
+// Brand logo link
+.ca-navbar-brand {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  text-decoration: none;
+  padding: 0 0.5rem 0 0.25rem;
+  border-radius: 50px;
+  transition: opacity 160ms ease;
+
+  &:hover {
+    opacity: 0.85;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(79, 152, 163, 0.8);
+    outline-offset: 2px;
+  }
+}
+
+.ca-navbar-logo {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
+// Vertical divider between logo and links
+.ca-navbar-divider {
+  display: block;
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+  margin: 0 0.25rem;
+
+  @media (max-width: 640px) {
+    display: none;
+  }
 }
 
 // Desktop link list

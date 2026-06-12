@@ -1,4 +1,19 @@
 <nav class="ca-navbar">
+  <!-- Brand / Logo -->
+  <a routerLink="/" class="ca-navbar-brand" aria-label="Crout Automations Home">
+    <img
+      src="assets/Crout Automations Logo.png"
+      alt="Crout Automations"
+      class="ca-navbar-logo"
+      width="140"
+      height="36"
+      loading="eager"
+    />
+  </a>
+
+  <!-- Divider -->
+  <span class="ca-navbar-divider" aria-hidden="true"></span>
+
   <!-- Desktop Links -->
   <ul class="ca-navbar-links" role="list">
     <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" (click)="closeMenu()">Home</a></li>
