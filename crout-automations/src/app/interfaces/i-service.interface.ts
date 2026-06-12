@@ -60,15 +60,22 @@ export interface IPackage {
   serviceIds: number[];
 }
 
+export type UserServiceStatus = 0 | 1 | 2 | 3;
+// 0 = Disabled | 1 = In Development | 2 = Live | 3 = Pending
+
 /** Represents a service (and its selected addons) assigned to a company. */
 export interface IUserService {
   userServiceId?: number;
   companyId: number;
   serviceId: number;
+  packageId: number;
   addonIds: number[];
   active: boolean;
   service?: IService;
   addons?: IAddon[];
+  config: string;
+  status: UserServiceStatus;
+  subscriptionId?: string;
 }
 
 /** Holds the selected addon IDs for a specific service in a company context. */

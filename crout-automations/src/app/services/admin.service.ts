@@ -66,6 +66,18 @@ export class AdminService {
     return this.http.get<PagedResult<IService>>(`${this.base}/services`, { params, withCredentials: true });
   }
 
+  createService(body: Partial<IService>): Observable<IService> {
+    return this.http.post<IService>(`${this.base}/admin/services`, body);
+  }
+
+  updateService(id: number, body: Partial<IService>): Observable<IService> {
+    return this.http.put<IService>(`${this.base}/admin/services/${id}`, body);
+  }
+
+  deleteService(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/admin/services/${id}`);
+  }
+
   // ── Packages ───────────────────────────────────────────────────────────────
   getPackages(page = 1, pageSize = 20): Observable<PagedResult<IPackage>> {
     const params = new HttpParams().set('page', page).set('pageSize', pageSize);

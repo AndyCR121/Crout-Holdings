@@ -111,7 +111,7 @@ export class PortalProfileComponent implements OnInit {
       firstName:  this.firstName(),
       surname:    this.surname(),
       email:      this.email(),
-      cellNumber: this.cellNumber() || null,
+      cellNumber: this.cellNumber(),
     };
     this.auth.updateProfile(updates).subscribe({
       next:  () => { this.saving.set(false); this.toast.success('Profile updated successfully.'); },
@@ -192,7 +192,7 @@ export class PortalProfileComponent implements OnInit {
     this.editIndustry.set(c.industry ?? '');
     this.editEmail.set(c.email ?? '');
     this.editPhone.set(c.phone ?? '');
-    this.editVAT.set(c.VATNumber ?? '');
+    this.editVAT.set(c.vatNumber ?? '');
     this.editReg.set(c.registrationNumber ?? '');
     this.editAddress.set(c.address ?? '');
     this.editingId.set(c.companyId);

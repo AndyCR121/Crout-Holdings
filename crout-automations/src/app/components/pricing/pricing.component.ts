@@ -107,17 +107,17 @@ export class PricingComponent implements OnInit {
 
       const conditionalService: IService | null = childPkg
         ? (this.services.find(
-            s => s.conditional && (childPkg.service_ids ?? []).includes(s.serviceId)
+            s => s.conditional && (childPkg.serviceIds ?? []).includes(s.serviceId)
           ) ?? null)
         : null;
 
-      const rootServices: IService[] = (pkg.service_ids ?? []).reduce<IService[]>((acc, id) => {
+      const rootServices: IService[] = (pkg.serviceIds ?? []).reduce<IService[]>((acc, id) => {
         const svc = this.services.find(s => s.serviceId === id);
         if (svc) acc.push(svc);
         return acc;
       }, []);
 
-      const rootAddonStates: IAddonState[] = (pkg.service_ids ?? []).flatMap(svcId =>
+      const rootAddonStates: IAddonState[] = (pkg.serviceIds ?? []).flatMap(svcId =>
         this.addons
           .filter(a => a.serviceId === svcId)
           .map(a => ({ addon: a, enabled: false }))
@@ -145,7 +145,7 @@ export class PricingComponent implements OnInit {
     view.conditionalEnabled = !view.conditionalEnabled;
 
     if (view.conditionalEnabled && view.childPkg && view.childAddonStates.length === 0) {
-      view.childAddonStates = (view.childPkg.service_ids ?? []).flatMap(svcId =>
+      view.childAddonStates = (view.childPkg.serviceIds ?? []).flatMap(svcId =>
         this.addons
           .filter(a => a.serviceId === svcId)
           .map(a => ({ addon: a, enabled: false, isConditionalChild: true }))
@@ -166,7 +166,7 @@ export class PricingComponent implements OnInit {
 
   activeServices(view: IPackageView): IService[] {
     if (view.conditionalEnabled && view.childPkg) {
-      const childServices = (view.childPkg.service_ids ?? []).reduce<IService[]>((acc, id) => {
+      const childServices = (view.childPkg.serviceIds ?? []).reduce<IService[]>((acc, id) => {
         const svc = this.services.find(s => s.serviceId === id);
         if (svc) acc.push(svc);
         return acc;
@@ -203,19 +203,19 @@ export class PricingComponent implements OnInit {
   // ── Price helpers ─────────────────────────────────────────────────────────
 
   basePrice(view: IPackageView): number {
-    const svcIds = view.pkg.service_ids ?? [];
+    const svcIds = view.pkg.serviceIds ?? [];
 
     if (svcIds.length === 0) {
       const uniqueIds = [...new Set(
         view.addonStates.map(s => s.addon.serviceId).filter((id): id is number => id != null)
       )];
-      return uniqueIds.reduce((sum, id) => {
+      return uniqueIds.reduce((sum: number, id: number) => {
         const svc = this.services.find(s => s.serviceId === id);
         return sum + (svc?.price ?? 0);
       }, 0);
     }
 
-    const rootTotal = svcIds.reduce((sum, id) => {
+    const rootTotal = svcIds.reduce((sum: number, id: number) => {
       const svc = this.services.find(s => s.serviceId === id);
       return sum + (svc?.price ?? 0);
     }, 0);

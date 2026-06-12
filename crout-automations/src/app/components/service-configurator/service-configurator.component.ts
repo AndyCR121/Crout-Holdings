@@ -55,19 +55,19 @@ export class ServiceConfiguratorComponent implements OnChanges {
       // Resolve the conditional service from allServices (it has Conditional:true)
       const conditionalService: IService | null = childPkg
         ? (this.allServices.find(
-            s => s.conditional && (childPkg.service_ids ?? []).includes(s.serviceId)
+            s => s.conditional && (childPkg.serviceIds ?? []).includes(s.serviceId)
           ) ?? null)
         : null;
 
       // Root service rows
-      const rootServices: IService[] = (pkg.service_ids ?? []).reduce<IService[]>((acc, id) => {
+      const rootServices: IService[] = (pkg.serviceIds ?? []).reduce<IService[]>((acc, id) => {
         const svc = this.allServices.find(s => s.serviceId === id);
         if (svc) acc.push(svc);
         return acc;
       }, []);
 
       // Root addon states (non-conditional services' addons)
-      const rootAddonStates: IAddonState[] = (pkg.service_ids ?? []).flatMap(svcId =>
+      const rootAddonStates: IAddonState[] = (pkg.serviceIds ?? []).flatMap(svcId =>
         this.addons
           .filter(a => a.serviceId === svcId)
           .map(a => ({ addon: a, enabled: false }))
@@ -95,7 +95,7 @@ export class ServiceConfiguratorComponent implements OnChanges {
 
     if (view.conditionalEnabled && view.childPkg) {
       if (view.childAddonStates.length === 0) {
-        view.childAddonStates = (view.childPkg.service_ids ?? []).flatMap(svcId =>
+        view.childAddonStates = (view.childPkg.serviceIds ?? []).flatMap(svcId =>
           this.addons
             .filter(a => a.serviceId === svcId)
             .map(a => ({ addon: a, enabled: false, isConditionalChild: true }))
@@ -122,7 +122,7 @@ export class ServiceConfiguratorComponent implements OnChanges {
 
   activeServices(view: IPackageView): IService[] {
     if (view.conditionalEnabled && view.childPkg) {
-      const childServices = (view.childPkg.service_ids ?? []).reduce<IService[]>((acc, id) => {
+      const childServices = (view.childPkg.serviceIds ?? []).reduce<IService[]>((acc, id) => {
         const svc = this.allServices.find(s => s.serviceId === id);
         if (svc) acc.push(svc);
         return acc;
@@ -157,7 +157,7 @@ export class ServiceConfiguratorComponent implements OnChanges {
 
   // ── Price helpers ─────────────────────────────────────────────────────────
   basePrice(view: IPackageView): number {
-    const svcIds = view.pkg.service_ids ?? [];
+    const svcIds = view.pkg.serviceIds ?? [];
 
     if (svcIds.length === 0) {
       const uniqueIds = [...new Set(
@@ -169,7 +169,7 @@ export class ServiceConfiguratorComponent implements OnChanges {
       }, 0);
     }
 
-    const rootTotal = svcIds.reduce((sum, id) => {
+    const rootTotal = svcIds.reduce((sum: number, id: number) => {
       const svc = this.allServices.find(s => s.serviceId === id);
       return sum + (svc?.price ?? 0);
     }, 0);
