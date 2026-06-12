@@ -42,7 +42,7 @@
 .ca-navbar-logo-lockup {
   display: flex;
   align-items: center;
-  gap: 0;
+  gap: 0;           // text starts 1px from image via margin-left below
 }
 
 .ca-navbar-logo {
@@ -60,7 +60,6 @@
   flex-direction: column;
   gap: 0;
   line-height: 1;
-  justify-content: center;
 }
 
 .ca-navbar-brand-line {
@@ -69,17 +68,14 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   color: #fff;
-  line-height: 1.1;
+  line-height: 1.15;
   white-space: nowrap;
-  margin: 0;
-  padding: 0;
 
   &--accent {
     color: #D4703A;
     font-weight: 700;
     font-size: 0.72rem;
     letter-spacing: 0.06em;
-    margin-top: 1px; // exactly 1px vertical gap between the two text lines
   }
 }
 

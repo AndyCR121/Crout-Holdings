@@ -102,13 +102,12 @@ $ca-white:        #fff8f0;
   filter: brightness(1.05);
 }
 
-// Stacked text block — mirrors navbar lockup exactly
+// Stacked text block (mirrors navbar)
 .ca-footer-logo-text {
   display: flex;
   flex-direction: column;
   gap: 0;
   line-height: 1;
-  justify-content: center;
 }
 
 .ca-footer-logo-line {
@@ -117,17 +116,14 @@ $ca-white:        #fff8f0;
   font-weight: 600;
   letter-spacing: 0.04em;
   color: $ca-white;
-  line-height: 1.1;
+  line-height: 1.15;
   white-space: nowrap;
-  margin: 0;
-  padding: 0;
 
   &--accent {
     color: $ca-orange-light;
     font-weight: 700;
     font-size: 0.875rem;
     letter-spacing: 0.06em;
-    margin-top: 1px; // exactly 1px vertical gap between the two text lines
   }
 }
 
