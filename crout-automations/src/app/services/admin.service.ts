@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { EnvironmentService } from './environment.service';
 import { IUser, ICompany, IService, IPackage } from '../interfaces/i-service.interface';
 
@@ -18,14 +18,21 @@ export class AdminService {
   private get base(): string { return this.env.apiUrl; }
 
   // ── Users ──────────────────────────────────────────────────────────────────
-  getUsers(page = 1, pageSize = 10): Observable<IUser[]> {
-    return this.http.get<IUser[]>(`${this.base}/admin/users?page=${page}&pageSize=${pageSize}`);
+  getUsers(page = 1, pageSize = 10, search = ''): Observable<PagedResult<IUser>> {
+    const params = `page=${page}&pageSize=${pageSize}${search ? '&search=' + encodeURIComponent(search) : ''}`;
+    return this.http.get<PagedResult<IUser>>(`${this.base}/admin/users?${params}`);
   }
   updateUser(id: number, body: Partial<IUser>): Observable<IUser> {
     return this.http.put<IUser>(`${this.base}/admin/users/${id}`, body);
   }
   deleteUser(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/admin/users/${id}`);
+  }
+  toggleUserActive(id: number): Observable<{ active: boolean }> {
+    return this.http.patch<{ active: boolean }>(`${this.base}/admin/users/${id}/toggle-active`, {});
+  }
+  toggleUserAdmin(id: number): Observable<{ isAdmin: boolean }> {
+    return this.http.patch<{ isAdmin: boolean }>(`${this.base}/admin/users/${id}/toggle-admin`, {});
   }
 
   // ── Services ───────────────────────────────────────────────────────────────
@@ -57,8 +64,9 @@ export class AdminService {
   }
 
   // ── Companies ─────────────────────────────────────────────────────────────
-  getCompanies(page = 1, pageSize = 10): Observable<ICompany[]> {
-    return this.http.get<ICompany[]>(`${this.base}/admin/companies?page=${page}&pageSize=${pageSize}`);
+  getCompanies(page = 1, pageSize = 10, search = ''): Observable<PagedResult<ICompany>> {
+    const params = `page=${page}&pageSize=${pageSize}${search ? '&search=' + encodeURIComponent(search) : ''}`;
+    return this.http.get<PagedResult<ICompany>>(`${this.base}/admin/companies?${params}`);
   }
   updateCompany(id: number, body: Partial<ICompany>): Observable<ICompany> {
     return this.http.put<ICompany>(`${this.base}/admin/companies/${id}`, body);

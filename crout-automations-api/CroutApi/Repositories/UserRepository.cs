@@ -17,8 +17,9 @@ public class UserRepository(DbHelper db) : IUserRepository
     public async Task<User?> GetByIdAsync(int userId)
     {
         using var conn = db.GetConnection();
+        // Admin lookups must not filter by Active so we can see/toggle inactive accounts
         return await conn.QuerySingleOrDefaultAsync<User>(
-            "SELECT user_id AS UserId, Username, PasswordHash, FirstName, Surname, Email, CellNumber, Active, IsAdmin FROM Users WHERE user_id = @userId AND Active = 1",
+            "SELECT user_id AS UserId, Username, PasswordHash, FirstName, Surname, Email, CellNumber, Active, IsAdmin FROM Users WHERE user_id = @userId",
             new { userId });
     }
 
@@ -56,5 +57,46 @@ public class UserRepository(DbHelper db) : IUserRepository
         await conn.ExecuteAsync(
             "UPDATE Users SET PasswordHash=@passwordHash WHERE user_id=@userId",
             new { userId, passwordHash });
+    }
+
+    // ── Admin methods ────────────────────────────────────────────────────────
+
+    public async Task<(IEnumerable<User> Items, int Total)> GetAllAsync(int page, int pageSize, string? search)
+    {
+        using var conn = db.GetConnection();
+        var offset = (page - 1) * pageSize;
+        var hasSearch = !string.IsNullOrWhiteSpace(search);
+        var where = hasSearch
+            ? "WHERE Username LIKE @pattern OR Email LIKE @pattern OR FirstName LIKE @pattern OR Surname LIKE @pattern"
+            : "";
+        var pattern = $"%{search}%";
+
+        var total = await conn.ExecuteScalarAsync<int>(
+            $"SELECT COUNT(1) FROM Users {where}",
+            new { pattern });
+
+        var items = await conn.QueryAsync<User>(
+            $"SELECT user_id AS UserId, Username, FirstName, Surname, Email, CellNumber, Active, IsAdmin FROM Users {where} ORDER BY UserId DESC LIMIT @pageSize OFFSET @offset",
+            new { pattern, pageSize, offset });
+
+        return (items, total);
+    }
+
+    public async Task SetActiveAsync(int userId, bool active)
+    {
+        using var conn = db.GetConnection();
+        await conn.ExecuteAsync("UPDATE Users SET Active=@active WHERE user_id=@userId", new { active, userId });
+    }
+
+    public async Task SetAdminAsync(int userId, bool isAdmin)
+    {
+        using var conn = db.GetConnection();
+        await conn.ExecuteAsync("UPDATE Users SET IsAdmin=@isAdmin WHERE user_id=@userId", new { isAdmin, userId });
+    }
+
+    public async Task DeleteAsync(int userId)
+    {
+        using var conn = db.GetConnection();
+        await conn.ExecuteAsync("DELETE FROM Users WHERE user_id=@userId", new { userId });
     }
 }

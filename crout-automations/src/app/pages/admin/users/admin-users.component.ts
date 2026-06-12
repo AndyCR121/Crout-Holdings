@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { AdminService } from '../../../services/admin.service';
+import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
 import { IUser } from '../../../interfaces/i-service.interface';
 
 @Component({
@@ -14,35 +15,39 @@ import { IUser } from '../../../interfaces/i-service.interface';
   styleUrls: ['./admin-users.component.scss'],
 })
 export class AdminUsersComponent implements OnInit {
-  private readonly auth   = inject(AuthService);
-  private readonly admin  = inject(AdminService);
-  private readonly router = inject(Router);
+  private readonly auth    = inject(AuthService);
+  private readonly admin   = inject(AdminService);
+  private readonly router  = inject(Router);
+  private readonly confirm = inject(ConfirmDialogService);
 
-  users      = signal<IUser[]>([]);
-  loading    = signal(true);
-  error      = signal<string | null>(null);
-  page       = signal(1);
-  pageSize   = 10;
-  hasMore    = signal(true);
+  users    = signal<IUser[]>([]);
+  loading  = signal(true);
+  error    = signal<string | null>(null);
+  page     = signal(1);
+  pageSize = 10;
+  total    = signal(0);
 
-  editingId  = signal<number | null>(null);
-  editBuffer = signal<Partial<IUser>>({});
-  saving     = signal(false);
-  deleteConfirmId = signal<number | null>(null);
+  // Per-row draft map — fixes the "edit applies to all rows" bug
+  drafts = new Map<number, Partial<IUser>>();
+  saving = signal(false);
+
+  get totalPages(): number { return Math.ceil(this.total() / this.pageSize) || 1; }
+  get hasMore(): boolean   { return this.page() < this.totalPages; }
 
   ngOnInit(): void {
     const user = this.auth.currentUser();
-    if (!user || !user.isAdmin) { this.router.navigate(['/']); return; }
+    if (!user?.isAdmin) { this.router.navigate(['/']); return; }
     this.load();
   }
 
   load(): void {
     this.loading.set(true);
     this.error.set(null);
+    this.drafts.clear();
     this.admin.getUsers(this.page(), this.pageSize).subscribe({
-      next: data => {
-        this.users.set(data);
-        this.hasMore.set(data.length === this.pageSize);
+      next: result => {
+        this.users.set(result.items);
+        this.total.set(result.total);
         this.loading.set(false);
       },
       error: () => { this.error.set('Failed to load users.'); this.loading.set(false); }
@@ -50,33 +55,53 @@ export class AdminUsersComponent implements OnInit {
   }
 
   prevPage(): void { if (this.page() > 1) { this.page.update(p => p - 1); this.load(); } }
-  nextPage(): void { if (this.hasMore()) { this.page.update(p => p + 1); this.load(); } }
+  nextPage(): void { if (this.hasMore) { this.page.update(p => p + 1); this.load(); } }
+
+  // ── Edit (isolated per row) ───────────────────────────────────────────────
+  isEditing(id: number): boolean { return this.drafts.has(id); }
+
+  getDraft(id: number): Partial<IUser> { return this.drafts.get(id) ?? {}; }
 
   startEdit(user: IUser): void {
-    this.editingId.set(user.user_id);
-    this.editBuffer.set({ firstName: user.firstName, surname: user.surname, email: user.email, cellNumber: user.cellNumber, isAdmin: user.isAdmin, active: user.active });
+    this.drafts.set(user.user_id, {
+      firstName:  user.firstName,
+      surname:    user.surname,
+      email:      user.email,
+      cellNumber: user.cellNumber,
+      isAdmin:    user.isAdmin,
+      active:     user.active,
+    });
   }
-  cancelEdit(): void { this.editingId.set(null); }
+
+  cancelEdit(id: number): void { this.drafts.delete(id); }
 
   saveEdit(user: IUser): void {
+    const draft = this.drafts.get(user.user_id);
+    if (!draft) return;
     this.saving.set(true);
-    this.admin.updateUser(user.user_id, this.editBuffer()).subscribe({
+    this.admin.updateUser(user.user_id, draft).subscribe({
       next: updated => {
         this.users.update(list => list.map(u => u.user_id === updated.user_id ? updated : u));
-        this.editingId.set(null);
+        this.drafts.delete(user.user_id);
         this.saving.set(false);
       },
       error: () => { this.error.set('Failed to save user.'); this.saving.set(false); }
     });
   }
 
-  confirmDelete(id: number): void { this.deleteConfirmId.set(id); }
-  cancelDelete(): void { this.deleteConfirmId.set(null); }
-
-  doDelete(id: number): void {
-    this.admin.deleteUser(id).subscribe({
-      next: () => { this.users.update(list => list.filter(u => u.user_id !== id)); this.deleteConfirmId.set(null); },
-      error: () => { this.error.set('Failed to delete user.'); this.deleteConfirmId.set(null); }
+  // ── Delete ────────────────────────────────────────────────────────────────
+  async onDelete(user: IUser): Promise<void> {
+    const confirmed = await this.confirm.open(
+      'Delete User',
+      `Permanently delete "${user.firstName} ${user.surname}" (${user.username})? This cannot be undone.`
+    );
+    if (!confirmed) return;
+    this.admin.deleteUser(user.user_id).subscribe({
+      next: () => {
+        this.users.update(list => list.filter(u => u.user_id !== user.user_id));
+        this.total.update(t => t - 1);
+      },
+      error: () => this.error.set('Failed to delete user.')
     });
   }
 }

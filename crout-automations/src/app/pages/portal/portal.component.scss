@@ -2,7 +2,6 @@
 // Portal layout — dark navy shell, independent column scroll, styled scrollbar
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Thin dark scrollbar used throughout portal columns
 @mixin portal-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.15) transparent;
@@ -20,7 +19,7 @@
   display:               grid;
   grid-template-columns: 240px 1fr;
   height:                100vh;
-  overflow:              hidden;   // each column scrolls independently
+  overflow:              hidden;
   background:            #0e1c35;
   color:                 rgba(255,255,255,0.85);
   font-family:           inherit;
@@ -98,6 +97,17 @@
     color:      #ea7b32;
     svg { color: #ea7b32; }
   }
+
+  // Admin variant — amber/gold accent to distinguish from regular nav
+  &--admin {
+    color:      rgba(251, 191, 36, 0.75);
+    margin-top: 4px;
+
+    &:hover {
+      background: rgba(251, 191, 36, 0.08);
+      color:      rgba(251, 191, 36, 1);
+    }
+  }
 }
 
 // ── Sidebar footer ──────────────────────────────────────────────────────────
@@ -107,7 +117,7 @@
   border-top:     1px solid rgba(255,255,255,0.07);
   display:        flex;
   flex-direction: column;
-  gap:            10px;
+  gap:            6px;
 }
 
 .portal-user-chip {
@@ -177,9 +187,6 @@
 }
 
 // ── Main area ─────────────────────────────────────────────────────────────────
-// No max-width here — each page component controls its own width.
-// width:100% ensures the column fills its grid track so scrollbar sits
-// flush against the right edge of the viewport.
 .portal-main {
   overflow-y:  auto;
   padding:     32px;
@@ -196,8 +203,8 @@
     overflow:              visible;
   }
   .portal-sidebar {
-    position:      static;
-    height:        auto;
+    position:       static;
+    height:         auto;
     flex-direction: row;
     flex-wrap:      wrap;
     padding:        12px;
@@ -208,8 +215,8 @@
     flex-wrap:      wrap;
   }
   .portal-main {
-    padding:  16px;
-    height:   auto;
+    padding:    16px;
+    height:     auto;
     overflow-y: visible;
   }
 }

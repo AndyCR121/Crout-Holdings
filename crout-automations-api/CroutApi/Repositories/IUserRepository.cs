@@ -11,4 +11,10 @@ public interface IUserRepository
     Task<int> CreateAsync(User user);
     Task UpdateAsync(User user);
     Task UpdatePasswordAsync(int userId, string passwordHash);
+
+    // Admin
+    Task<(IEnumerable<User> Items, int Total)> GetAllAsync(int page, int pageSize, string? search);
+    Task SetActiveAsync(int userId, bool active);
+    Task SetAdminAsync(int userId, bool isAdmin);
+    Task DeleteAsync(int userId);
 }

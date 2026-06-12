@@ -1,7 +1,7 @@
 <div class="admin-page">
   <div class="admin-page-header">
     <h1 class="admin-page-title">Companies</h1>
-    <span class="admin-badge">Page {{ page() }}</span>
+    <span class="admin-badge">{{ total() }} total</span>
   </div>
 
   <div *ngIf="error()" class="admin-error">{{ error() }}</div>
@@ -12,10 +12,16 @@
 
   <div *ngIf="!loading()" class="admin-table-wrap">
     <table class="admin-table">
-      <thead><tr><th>ID</th><th>Name</th><th>Industry</th><th>Email</th><th>Phone</th><th>Active</th><th>Actions</th></tr></thead>
+      <thead>
+        <tr>
+          <th>ID</th><th>Name</th><th>Industry</th><th>Email</th><th>Phone</th><th>Active</th><th>Actions</th>
+        </tr>
+      </thead>
       <tbody>
-        <tr *ngFor="let c of items()" [class.editing]="editingId() === c.company_id">
-          <ng-container *ngIf="editingId() !== c.company_id">
+        <tr *ngFor="let c of items()" [class.editing]="isEditing(c.company_id)">
+
+          <!-- View row -->
+          <ng-container *ngIf="!isEditing(c.company_id)">
             <td>{{ c.company_id }}</td>
             <td>{{ c.companyName }}</td>
             <td>{{ c.industry ?? '—' }}</td>
@@ -23,47 +29,47 @@
             <td>{{ c.phone ?? '—' }}</td>
             <td><span class="admin-pill" [class.green]="c.active">{{ c.active ? 'Active' : 'Inactive' }}</span></td>
             <td class="admin-actions">
-              <button class="btn-edit" (click)="startEdit(c)">Edit</button>
-              <button class="btn-delete" (click)="confirmDelete(c.company_id)">Delete</button>
+              <button class="btn-edit"   (click)="startEdit(c)">Edit</button>
+              <button class="btn-delete" (click)="onDelete(c)">Delete</button>
             </td>
           </ng-container>
-          <ng-container *ngIf="editingId() === c.company_id">
+
+          <!-- Edit row — bound to isolated getDraft(c.company_id) -->
+          <ng-container *ngIf="isEditing(c.company_id)">
             <td>{{ c.company_id }}</td>
-            <td><input [(ngModel)]="editBuffer().companyName" class="admin-input" /></td>
-            <td><input [(ngModel)]="editBuffer().industry" class="admin-input" /></td>
-            <td><input [(ngModel)]="editBuffer().email" class="admin-input" /></td>
-            <td><input [(ngModel)]="editBuffer().phone" class="admin-input" /></td>
-            <td><select [(ngModel)]="editBuffer().active" class="admin-input"><option [ngValue]="true">Active</option><option [ngValue]="false">Inactive</option></select></td>
+            <td><input [(ngModel)]="getDraft(c.company_id).companyName" class="admin-input" /></td>
+            <td><input [(ngModel)]="getDraft(c.company_id).industry"    class="admin-input" /></td>
+            <td><input [(ngModel)]="getDraft(c.company_id).email"       class="admin-input" /></td>
+            <td><input [(ngModel)]="getDraft(c.company_id).phone"       class="admin-input" /></td>
+            <td>
+              <select [(ngModel)]="getDraft(c.company_id).active" class="admin-input">
+                <option [ngValue]="true">Active</option>
+                <option [ngValue]="false">Inactive</option>
+              </select>
+            </td>
             <td class="admin-actions">
-              <button class="btn-save" [disabled]="saving()" (click)="saveEdit(c)">{{ saving() ? '...' : 'Save' }}</button>
-              <button class="btn-cancel" (click)="cancelEdit()">Cancel</button>
+              <button class="btn-save"   [disabled]="saving()" (click)="saveEdit(c)">{{ saving() ? '…' : 'Save' }}</button>
+              <button class="btn-cancel" (click)="cancelEdit(c.company_id)">Cancel</button>
             </td>
           </ng-container>
+
         </tr>
-        <tr *ngIf="items().length === 0"><td colspan="7" class="admin-empty">No companies found.</td></tr>
+        <tr *ngIf="items().length === 0">
+          <td colspan="7" class="admin-empty">No companies found.</td>
+        </tr>
       </tbody>
     </table>
   </div>
 
   <div class="admin-pagination">
     <button class="btn-page" [disabled]="page() === 1" (click)="prevPage()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Prev
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Prev
     </button>
-    <span>Page {{ page() }}</span>
-    <button class="btn-page" [disabled]="!hasMore()" (click)="nextPage()">
-      Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    <span>Page {{ page() }} of {{ totalPages }}</span>
+    <button class="btn-page" [disabled]="!hasMore" (click)="nextPage()">
+      Next
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
-  </div>
-</div>
-
-<!-- Delete Confirm -->
-<div class="admin-modal-backdrop" *ngIf="deleteConfirmId() !== null" (click)="cancelDelete()">
-  <div class="admin-modal" (click)="$event.stopPropagation()">
-    <h3>Delete Company #{{ deleteConfirmId() }}?</h3>
-    <p>This action cannot be undone.</p>
-    <div class="admin-modal-actions">
-      <button class="btn-delete" (click)="doDelete(deleteConfirmId()!)">Yes, Delete</button>
-      <button class="btn-cancel" (click)="cancelDelete()">Cancel</button>
-    </div>
   </div>
 </div>

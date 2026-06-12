@@ -9,4 +9,9 @@ public interface ICompanyRepository
     Task<int> CreateAsync(Company company);
     Task UpdateAsync(Company company);
     Task DeleteAsync(int companyId, int userId);
+
+    // Admin
+    Task<(IEnumerable<Company> Items, int Total)> GetAllAsync(int page, int pageSize, string? search);
+    Task AdminUpdateAsync(Company company);
+    Task AdminDeleteAsync(int companyId);
 }
