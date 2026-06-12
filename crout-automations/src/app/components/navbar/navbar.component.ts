@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -13,6 +13,7 @@ import { AuthService } from '../../services/auth.service';
 export class NavbarComponent {
   readonly auth = inject(AuthService);
   menuOpen = false;
+  @Input() assetsBase: string = '/assets/';
 
   toggleMenu(): void {
     this.menuOpen = !this.menuOpen;
