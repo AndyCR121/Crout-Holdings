@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using CroutApi.DTOs;
 using CroutApi.DTOs.Auth;
+using CroutApi.Helpers;
 using CroutApi.Models;
 using CroutApi.Repositories;
 using Microsoft.AspNetCore.Authorization;
@@ -17,7 +18,8 @@ public class AdminController(
     IPackageRepository packages,
     IAddonRepository addons,
     IServiceFeatureRepository serviceFeatures,
-    IServiceRepository services) : ControllerBase
+    IServiceRepository services,
+    EncryptionHelper enc) : ControllerBase
 {
     private int CallerId =>
         int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)
@@ -77,7 +79,7 @@ public class AdminController(
             CellNumber   = dto.CellNumber?.Trim(),
             Active       = dto.Active,
             IsAdmin      = dto.IsAdmin,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString()),
+            PasswordHash = enc.Hash(Guid.NewGuid().ToString()),
         };
 
         var newId   = await users.CreateAsync(user);
