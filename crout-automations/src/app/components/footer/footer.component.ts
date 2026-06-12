@@ -13,11 +13,11 @@ export class FooterComponent {
   currentYear = new Date().getFullYear();
 
   services = [
-    { label: 'Lead Capture & CRM Sync',      route: '/services' },
+    { label: 'WhatsApp Agent',                route: '/services' },
+    { label: 'Quote Automation',              route: '/services' },
+    { label: 'Job Card Automation',           route: '/services' },
+    { label: 'Lead Capture & CRM Sync',       route: '/services' },
     { label: 'Invoice & Payment Workflows',   route: '/services' },
-    { label: 'Client Onboarding',             route: '/services' },
-    { label: 'Reporting & Dashboards',        route: '/services' },
-    { label: 'Internal Notifications & Alerts', route: '/services' },
     { label: 'AI Agent Workflows',            route: '/services' },
   ];
 
