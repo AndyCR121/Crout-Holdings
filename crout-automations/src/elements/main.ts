@@ -45,6 +45,7 @@ import { PortalComponent } from '../app/pages/portal/portal.component';
 import { ContactComponent } from '../app/pages/contact/contact.component';
 import { ServicesComponent } from '../app/pages/services/services.component';
 import { provideHttpClient, withFetch } from '@angular/common/http';
+import { NotFoundComponent } from '../app/pages/not-found/not-found.component';
 
 (async () => {
   const app = await createApplication({
@@ -65,6 +66,7 @@ import { provideHttpClient, withFetch } from '@angular/common/http';
     ['ca-cta-banner',          CtaBannerComponent],
     ['ca-privacy-policy',      PrivacyPolicyComponent],
     ['ca-service-configurator', ServiceConfiguratorComponent],
+    ['ca-not-found',          NotFoundComponent],
 
     // ── Auth / Account ─────────────────────────────────────────────────
     ['ca-account-button',      AccountButtonComponent],
