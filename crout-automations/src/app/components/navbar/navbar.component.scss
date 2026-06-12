@@ -40,9 +40,24 @@
   }
 }
 
+.ca-navbar-brand-text {
+    color: white;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+}
+
+.ca-navbar-brand-text-focus {
+    color:   #D4703A;
+    font-weight: 600;
+    padding: 0;
+    margin: 0 !important;
+
+}
+
 .ca-navbar-logo {
-  height: 42px;
-  border-radius: 20px;
+  height: 38px;
   width: auto;
   object-fit: contain;
   display: block;
