@@ -9,5 +9,6 @@ public record UserDto(
     string Surname,
     string Email,
     string? CellNumber,
-    bool IsAdmin
+    bool IsAdmin,
+    string? ProfilePicture = null
 );
