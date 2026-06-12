@@ -86,6 +86,17 @@ export class AuthService {
       );
   }
 
+  /**
+   * Patch specific fields into the cached user session (signal + cookie).
+   * Use after operations that return an updated user object (e.g. avatar upload)
+   * without needing to call the full PUT /profile endpoint.
+   */
+  patchUser(partial: Partial<IUser>): void {
+    const current = this.currentUser();
+    if (!current) return;
+    this._setSession({ ...current, ...partial });
+  }
+
   // ── Logout ─────────────────────────────────────────────────────────────────
   logout(): void {
     this.http.post(`${this.base}/auth/logout`, {}, { withCredentials: true })

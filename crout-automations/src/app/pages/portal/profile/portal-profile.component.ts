@@ -31,7 +31,15 @@ export class PortalProfileComponent implements OnInit {
   surname    = signal('');
   email      = signal('');
   cellNumber = signal('');
-  avatarUrl  = signal<string | null>(null);
+
+  /** Local preview shown immediately after the user picks a file. */
+  avatarPreview = signal<string | null>(null);
+  readonly uploadingAvatar = signal(false);
+
+  /** Resolved avatar: local preview first, then persisted URL from user session. */
+  readonly resolvedAvatar = computed(
+    () => this.avatarPreview() ?? this.user()?.profilePicture ?? null
+  );
 
   readonly saving = signal(false);
 
@@ -79,7 +87,6 @@ export class PortalProfileComponent implements OnInit {
   ngOnInit(): void {
     const uid = this.user()?.userId;
     if (uid == null) { this.loadingCompanies.set(false); return; }
-    // Load companies from the authenticated profile endpoint
     this.http
       .get<ICompany[]>(`${this.base}/profile/companies`, { withCredentials: true })
       .subscribe({
@@ -94,13 +101,42 @@ export class PortalProfileComponent implements OnInit {
     return ((u.firstName?.[0] ?? '') + (u.surname?.[0] ?? '')).toUpperCase() || u.username[0].toUpperCase();
   });
 
+  // ── Avatar upload ──────────────────────────────────────────────────
   onAvatarChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file  = input.files?.[0];
     if (!file) return;
+
+    // 1. Show an instant local preview so the UI responds immediately
     const reader = new FileReader();
-    reader.onload = () => this.avatarUrl.set(reader.result as string);
+    reader.onload = () => this.avatarPreview.set(reader.result as string);
     reader.readAsDataURL(file);
+
+    // 2. Upload to backend
+    this.uploadingAvatar.set(true);
+    const form = new FormData();
+    form.append('file', file);
+
+    this.http
+      .post<IUser>(`${this.base}/profile/avatar`, form, { withCredentials: true })
+      .subscribe({
+        next: (updatedUser) => {
+          // Persist the returned profilePicture into the auth signal + cookie
+          this.auth.patchUser({ profilePicture: updatedUser.profilePicture });
+          // Clear the local preview — the signal now serves from the session
+          this.avatarPreview.set(null);
+          this.uploadingAvatar.set(false);
+          this.toast.success('Profile picture updated.');
+          // Reset input so the same file can be re-selected if needed
+          input.value = '';
+        },
+        error: (err) => {
+          this.uploadingAvatar.set(false);
+          this.avatarPreview.set(null);
+          this.toast.error(err?.error?.error ?? 'Failed to upload image.');
+          input.value = '';
+        },
+      });
   }
 
   // ── Profile save ───────────────────────────────────────────────────
@@ -120,7 +156,6 @@ export class PortalProfileComponent implements OnInit {
   }
 
   // ── Password save ─────────────────────────────────────────────────
-  // Calls POST /api/profile/change-password with { currentPassword, newPassword }
   savePassword(): void {
     if (!this.currentPw() || !this.newPw()) { this.toast.error('All password fields are required.'); return; }
     if (this.newPw() !== this.confirmPw())   { this.toast.error('New passwords do not match.'); return; }
@@ -156,7 +191,6 @@ export class PortalProfileComponent implements OnInit {
 
   cancelAddCompany(): void { this.showAddForm.set(false); }
 
-  // POST /api/profile/companies (auth via interceptor)
   saveNewCompany(): void {
     if (!this.addName().trim()) { this.toast.error('Company name is required.'); return; }
     this.savingCompany.set(true);
@@ -185,7 +219,6 @@ export class PortalProfileComponent implements OnInit {
       });
   }
 
-  // ── Company: open edit form ────────────────────────────────────────────
   openEditCompany(c: ICompany): void {
     this.showAddForm.set(false);
     this.editName.set(c.companyName);
@@ -200,7 +233,6 @@ export class PortalProfileComponent implements OnInit {
 
   cancelEditCompany(): void { this.editingId.set(null); }
 
-  // PUT /api/profile/companies/:id (auth via interceptor)
   saveEditCompany(c: ICompany): void {
     if (!this.editName().trim()) { this.toast.error('Company name is required.'); return; }
     this.savingCompany.set(true);
@@ -229,7 +261,6 @@ export class PortalProfileComponent implements OnInit {
       });
   }
 
-  // DELETE /api/profile/companies/:id (auth via interceptor)
   removeCompany(c: ICompany): void {
     if (!confirm(`Remove "${c.companyName}"? This cannot be undone.`)) return;
     this.http

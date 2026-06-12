@@ -12,8 +12,6 @@ namespace CroutApi.Controllers;
 [Authorize]
 public class ProfileController(IProfileService profile) : ControllerBase
 {
-    // JwtHelper.GetUserId reads the 'sub' claim, which is what JwtHelper.GenerateToken writes.
-    // ClaimTypes.NameIdentifier is a different string and would always return null here.
     private int UserId => JwtHelper.GetUserId(User);
 
     /// <summary>GET /api/profile</summary>
@@ -29,6 +27,29 @@ public class ProfileController(IProfileService profile) : ControllerBase
     public async Task<IActionResult> Update([FromBody] UpdateProfileRequest request)
     {
         var dto = await profile.UpdateProfileAsync(UserId, request);
+        return Ok(dto);
+    }
+
+    /// <summary>POST /api/profile/avatar — accepts multipart/form-data with field "file"</summary>
+    [HttpPost("avatar")]
+    [RequestSizeLimit(5 * 1024 * 1024)] // 5 MB
+    public async Task<IActionResult> UploadAvatar(IFormFile file)
+    {
+        if (file is null || file.Length == 0)
+            return BadRequest(new { error = "No file provided." });
+
+        var allowed = new[] { "image/jpeg", "image/png", "image/webp", "image/gif" };
+        if (!allowed.Contains(file.ContentType.ToLowerInvariant()))
+            return BadRequest(new { error = "Only JPEG, PNG, WebP and GIF images are accepted." });
+
+        if (file.Length > 5 * 1024 * 1024)
+            return BadRequest(new { error = "Image must be 5 MB or smaller." });
+
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms);
+        var base64 = $"data:{file.ContentType};base64,{Convert.ToBase64String(ms.ToArray())}";
+
+        var dto = await profile.UpdateAvatarAsync(UserId, base64);
         return Ok(dto);
     }
 

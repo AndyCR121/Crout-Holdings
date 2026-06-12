@@ -21,9 +21,9 @@ public class ProfileService(
     public async Task<UserDto> UpdateProfileAsync(int userId, UpdateProfileRequest request)
     {
         var user = await users.GetByIdAsync(userId) ?? throw new KeyNotFoundException();
-        user.FirstName = request.FirstName;
-        user.Surname = request.Surname;
-        user.Email = request.Email;
+        user.FirstName  = request.FirstName;
+        user.Surname    = request.Surname;
+        user.Email      = request.Email;
         user.CellNumber = request.CellNumber;
         await users.UpdateAsync(user);
         return ToDto(user);
@@ -35,6 +35,13 @@ public class ProfileService(
         if (user.PasswordHash != enc.Hash(request.CurrentPassword))
             throw new UnauthorizedAccessException("Current password is incorrect.");
         await users.UpdatePasswordAsync(userId, enc.Hash(request.NewPassword));
+    }
+
+    public async Task<UserDto> UpdateAvatarAsync(int userId, string base64Data)
+    {
+        await users.UpdatePictureAsync(userId, base64Data);
+        var user = await users.GetByIdAsync(userId) ?? throw new KeyNotFoundException();
+        return ToDto(user);
     }
 
     public async Task<IEnumerable<Company>> GetCompaniesAsync(int userId) =>
@@ -68,5 +75,5 @@ public class ProfileService(
     };
 
     private static UserDto ToDto(User u) =>
-        new(u.UserId, u.Username, u.FirstName, u.Surname, u.Email, u.CellNumber, u.IsAdmin);
+        new(u.UserId, u.Username, u.FirstName, u.Surname, u.Email, u.CellNumber, u.IsAdmin, u.ProfilePicture);
 }

@@ -12,6 +12,7 @@ public interface IUserRepository
     Task UpdateAsync(User user);
     Task AdminUpdateAsync(User user);
     Task UpdatePasswordAsync(int userId, string passwordHash);
+    Task UpdatePictureAsync(int userId, string? pictureData);
 
     // Admin
     Task<(IEnumerable<User> Items, int Total)> GetAllAsync(int page, int pageSize, string? search);
