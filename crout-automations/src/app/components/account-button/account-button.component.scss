@@ -3,8 +3,20 @@
   =====================
   Styles are entirely self-contained and prefixed with `ca-`.
   Safe for Elementor: no global resets, no body/html rules,
-  no ID selectors. Works as a floating custom widget in the header.
+  no ID selectors.
+
+  The :host block positions the element fixed top-right so it
+  behaves identically whether dropped into Elementor or rendered
+  inside app.component on localhost.
 */
+
+:host {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  display: block;
+}
 
 .ca-account-btn-wrap {
   position: relative;
@@ -62,7 +74,7 @@
   }
 }
 
-// ── Avatar ─────────────────────────────────────────────────────────────────
+// ── Avatar ───────────────────────────────────────────────────────────────────
 .ca-avatar {
   width:         36px;
   height:        36px;
@@ -128,7 +140,7 @@
   }
 }
 
-// ── Dropdown ────────────────────────────────────────────────────────────────
+// ── Dropdown ────────────────────────────────────────────────────────────────────
 .ca-account-dropdown {
   position:      absolute;
   top:           calc(100% + 8px);
