@@ -16,12 +16,21 @@ import { AccountButtonComponent } from './components/account-button/account-butt
   template: `
     <ca-dev-nav *ngIf="!showNavbar" />
     <ca-navbar *ngIf="showNavbar" />
-    <ca-account-button />
+    <ca-account-button class="ca-account-fixed" />
     <router-outlet />
     <ca-toast />
     <ca-confirm-dialog />
   `,
-  styles: [`:host { display: block; position: relative; }`]
+  styles: [`
+    :host { display: block; position: relative; }
+
+    .ca-account-fixed {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 1000;
+    }
+  `]
 })
 export class AppComponent implements OnInit {
   private readonly seo    = inject(SeoService);
