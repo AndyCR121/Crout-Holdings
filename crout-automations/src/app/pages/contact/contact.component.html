@@ -62,6 +62,7 @@
               [class.contact-form--loading]="formState() === 'loading'"
               (ngSubmit)="submit()"
               novalidate
+              [formGroup]="form"
               aria-label="Contact form">
 
               <div class="form-row">

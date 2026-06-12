@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, FormsModule, FormGroupDirective } from '@angular/forms';
 import { FormValidatorService } from '../../services/form-validator.service';
 import { WebhookService } from '../../services/webhook.service';
 
@@ -9,7 +9,7 @@ type FormState = 'idle' | 'loading' | 'success' | 'error';
 @Component({
   selector: 'ca-contact',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './contact.component.html',
   styleUrl: './contact.component.scss'
 })
@@ -29,7 +29,7 @@ export class ContactComponent {
     'Not sure yet — I need advice'
   ];
 
-  form = this.fb.group({
+  public form = this.fb.group({
     name:     ['', [Validators.required, Validators.minLength(2), Validators.maxLength(80)]],
     email:    ['', [Validators.required, Validators.email]],
     phone:    ['', [this.validator.saPhone()]],
