@@ -20,36 +20,44 @@
   align-items:    center;
   gap:            10px;
   padding:        8px 14px 8px 8px;
-  background:     rgba(255,255,255,0.08);
-  border:         1px solid rgba(255,255,255,0.14);
+
+  // Dark glass pill — readable on ANY page background (light or dark)
+  background:     rgba(15, 25, 50, 0.82);
+  border:         1px solid rgba(255, 255, 255, 0.14);
   border-radius:  50px;
+  box-shadow:     0 2px 16px rgba(0, 0, 0, 0.30), 0 1px 4px rgba(0, 0, 0, 0.20);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
   cursor:         pointer;
   color:          #fff;
   font-size:      14px;
   font-weight:    500;
   transition:     background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
   white-space:    nowrap;
-  backdrop-filter: blur(6px);
 
   &:hover {
-    background:   rgba(255,255,255,0.14);
-    border-color: rgba(255,255,255,0.28);
-    box-shadow:   0 2px 12px rgba(0,0,0,0.18);
+    background:   rgba(15, 25, 50, 0.95);
+    border-color: rgba(255, 255, 255, 0.28);
+    box-shadow:   0 4px 20px rgba(0, 0, 0, 0.40), 0 1px 4px rgba(0, 0, 0, 0.20);
   }
 
   &:active {
-    background:   rgba(255,255,255,0.20);
+    background: rgba(15, 25, 50, 1);
   }
 
-  // Logged-out variant: slightly different padding
+  // Logged-out variant: orange solid pill
   &:not(.is-logged-in) {
-    padding: 9px 16px;
-    gap: 8px;
-    background: rgba(234, 123, 50, 0.90);
-    border-color: rgba(234, 123, 50, 1);
+    padding:      9px 16px;
+    gap:          8px;
+    background:   rgba(224, 123, 34, 0.95);
+    border-color: rgba(224, 123, 34, 1);
+    box-shadow:   0 2px 16px rgba(224, 123, 34, 0.35), 0 1px 4px rgba(0, 0, 0, 0.20);
 
     &:hover {
-      background: rgba(234, 123, 50, 1);
+      background:   rgba(201, 106, 16, 1);
+      border-color: rgba(201, 106, 16, 1);
+      box-shadow:   0 4px 20px rgba(224, 123, 34, 0.45), 0 1px 4px rgba(0, 0, 0, 0.20);
     }
   }
 }
@@ -99,7 +107,7 @@
 
 .ca-account-company {
   font-size:   11px;
-  color:       rgba(255,255,255,0.60);
+  color:       rgba(255, 255, 255, 0.60);
   line-height: 1.2;
 }
 
@@ -112,7 +120,7 @@
 // ── Caret ──────────────────────────────────────────────────────────────────
 .ca-caret {
   transition: transform 200ms ease;
-  color: rgba(255,255,255,0.6);
+  color: rgba(255, 255, 255, 0.6);
   flex-shrink: 0;
 
   &.open {
@@ -122,17 +130,19 @@
 
 // ── Dropdown ────────────────────────────────────────────────────────────────
 .ca-account-dropdown {
-  position:   absolute;
-  top:        calc(100% + 8px);
-  right:      0;
-  min-width:  200px;
-  background: #1a2744;
-  border:     1px solid rgba(255,255,255,0.12);
+  position:      absolute;
+  top:           calc(100% + 8px);
+  right:         0;
+  min-width:     200px;
+  background:    rgba(12, 20, 44, 0.97);
+  border:        1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.20);
-  padding:    6px;
-  z-index:    1001;
-  animation:  caDropIn 160ms cubic-bezier(0.16,1,0.3,1);
+  box-shadow:    0 8px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding:       6px;
+  z-index:       1001;
+  animation:     caDropIn 160ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes caDropIn {
@@ -149,23 +159,23 @@
   border:         none;
   background:     transparent;
   border-radius:  8px;
-  color:          rgba(255,255,255,0.88);
+  color:          rgba(255, 255, 255, 0.88);
   font-size:      14px;
   font-weight:    500;
   cursor:         pointer;
   text-align:     left;
   transition:     background 120ms ease, color 120ms ease;
 
-  svg { color: rgba(255,255,255,0.55); flex-shrink: 0; }
+  svg { color: rgba(255, 255, 255, 0.55); flex-shrink: 0; }
 
   &:hover {
-    background: rgba(255,255,255,0.07);
+    background: rgba(255, 255, 255, 0.07);
     color:      #fff;
-    svg { color: rgba(255,255,255,0.90); }
+    svg { color: rgba(255, 255, 255, 0.90); }
   }
 
   &:active {
-    background: rgba(255,255,255,0.12);
+    background: rgba(255, 255, 255, 0.12);
   }
 }
 
@@ -174,7 +184,7 @@
   svg { color: #ff7070; }
 
   &:hover {
-    background: rgba(255,100,100,0.10);
+    background: rgba(255, 100, 100, 0.10);
     color: #ff9090;
     svg { color: #ff9090; }
   }
@@ -182,6 +192,6 @@
 
 .ca-dd-divider {
   height:     1px;
-  background: rgba(255,255,255,0.10);
+  background: rgba(255, 255, 255, 0.10);
   margin:     4px 6px;
 }
