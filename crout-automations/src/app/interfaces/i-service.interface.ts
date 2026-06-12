@@ -59,3 +59,27 @@ export interface IPackage {
   minimumRequiredAddons?: number;
   serviceIds: number[];
 }
+
+/** Represents a service (and its selected addons) assigned to a company. */
+export interface IUserService {
+  userServiceId?: number;
+  companyId: number;
+  serviceId: number;
+  addonIds: number[];
+  active: boolean;
+  service?: IService;
+  addons?: IAddon[];
+}
+
+/** Holds the selected addon IDs for a specific service in a company context. */
+export interface IServiceConfig {
+  serviceId: number;
+  addonIds: number[];
+}
+
+export interface IPagedResult<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+}

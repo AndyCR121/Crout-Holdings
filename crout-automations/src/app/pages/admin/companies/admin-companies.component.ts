@@ -34,8 +34,8 @@ export class AdminCompaniesComponent implements OnInit {
   // Create
   showCreate   = signal(false);
   createBuffer = signal<Partial<ICompany>>({
-    companyName: '', industry: null, email: null,
-    phone: null, address: null, active: true,
+    companyName: '', industry: undefined, email: undefined,
+    phone: undefined, address: undefined, active: true,
   });
 
   get totalPages(): number { return Math.ceil(this.total() / this.pageSize) || 1; }
@@ -98,7 +98,7 @@ export class AdminCompaniesComponent implements OnInit {
 
   // ── Create ────────────────────────────────────────────────────────────────
   openCreate(): void {
-    this.createBuffer.set({ companyName: '', industry: null, email: null, phone: null, address: null, active: true });
+    this.createBuffer.set({ companyName: '', industry: undefined, email: undefined, phone: undefined, address: undefined, active: true });
     this.showCreate.set(true);
   }
 

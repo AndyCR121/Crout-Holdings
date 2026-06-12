@@ -1,7 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { IUserService } from '../interfaces/i-service.interface';
 
-/** Filters a list of IUserService to only those belonging to a given company_id. */
+/** Filters a list of IUserService to only those belonging to a given companyId. */
 @Pipe({
   name: 'companySvcFilter',
   standalone: true,

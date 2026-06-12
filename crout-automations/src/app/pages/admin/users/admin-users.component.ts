@@ -35,7 +35,7 @@ export class AdminUsersComponent implements OnInit {
   showCreate   = signal(false);
   createBuffer = signal<Partial<IUser>>({
     firstName: '', surname: '', email: '', username: '',
-    cellNumber: null, isAdmin: false, active: true,
+    cellNumber: undefined, isAdmin: false, active: true,
   });
 
   get totalPages(): number { return Math.ceil(this.total() / this.pageSize) || 1; }
@@ -98,7 +98,7 @@ export class AdminUsersComponent implements OnInit {
 
   // ── Create ────────────────────────────────────────────────────────────────
   openCreate(): void {
-    this.createBuffer.set({ firstName: '', surname: '', email: '', username: '', cellNumber: null, isAdmin: false, active: true });
+    this.createBuffer.set({ firstName: '', surname: '', email: '', username: '', cellNumber: undefined, isAdmin: false, active: true });
     this.showCreate.set(true);
   }
 

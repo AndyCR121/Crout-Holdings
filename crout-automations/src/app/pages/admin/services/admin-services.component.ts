@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
-import { AdminService } from '../../../services/admin.service';
+import { AdminService, PagedResult } from '../../../services/admin.service';
 import { IService, IAddon } from '../../../interfaces/i-service.interface';
 
 @Component({
@@ -46,7 +46,7 @@ export class AdminServicesComponent implements OnInit {
   load(): void {
     this.loading.set(true);
     this.admin.getServices(this.page(), this.pageSize).subscribe({
-      next: data => { this.items.set(data); this.hasMore.set(data.length === this.pageSize); this.loading.set(false); },
+      next: (data: IService[]) => { this.items.set(data); this.hasMore.set(data.length === this.pageSize); this.loading.set(false); },
       error: () => { this.error.set('Failed to load services.'); this.loading.set(false); }
     });
   }
@@ -63,7 +63,7 @@ export class AdminServicesComponent implements OnInit {
   saveEdit(s: IService): void {
     this.saving.set(true);
     this.admin.updateService(s.serviceId, this.editBuffer()).subscribe({
-      next: updated => { this.items.update(list => list.map(i => i.serviceId === updated.serviceId ? updated : i)); this.editingId.set(null); this.saving.set(false); },
+      next: (updated: IService) => { this.items.update(list => list.map(i => i.serviceId === updated.serviceId ? updated : i)); this.editingId.set(null); this.saving.set(false); },
       error: () => { this.error.set('Failed to save.'); this.saving.set(false); }
     });
   }
@@ -80,7 +80,7 @@ export class AdminServicesComponent implements OnInit {
   submitCreate(): void {
     this.saving.set(true);
     this.admin.createService(this.createBuffer()).subscribe({
-      next: created => { this.items.update(list => [created, ...list]); this.showCreate.set(false); this.saving.set(false); this.createBuffer.set({ serviceName: '', serviceDescription: '', price: 0, hasAddons: false, conditional: false }); },
+      next: (created: IService) => { this.items.update(list => [created, ...list]); this.showCreate.set(false); this.saving.set(false); this.createBuffer.set({ serviceName: '', serviceDescription: '', price: 0, hasAddons: false, conditional: false }); },
       error: () => { this.error.set('Failed to create.'); this.saving.set(false); }
     });
   }
@@ -89,8 +89,8 @@ export class AdminServicesComponent implements OnInit {
     this.linkTarget.set(s);
     this.linkLoading.set(true);
     this.showLinkModal.set(true);
-    this.admin.getAddons(1, 100, '').subscribe({
-      next: result => {
+    this.admin.getAddons(1, 100).subscribe({
+      next: (result: PagedResult<IAddon>) => {
         this.linkedAddons.set(result.items.filter(a => a.serviceId === s.serviceId));
         this.linkLoading.set(false);
       },

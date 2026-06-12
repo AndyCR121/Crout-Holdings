@@ -57,7 +57,7 @@
     <div class="pprofile__actions">
       <button class="pprofile__btn pprofile__btn--primary" (click)="saveProfile()" [disabled]="saving()">
         <span *ngIf="!saving()">Save Changes</span>
-        <span *ngIf="saving()">Saving…</span>
+        <span *ngIf="saving()">Saving&#8230;</span>
       </button>
     </div>
   </section>
@@ -83,7 +83,7 @@
     <div class="pprofile__actions">
       <button class="pprofile__btn pprofile__btn--primary" (click)="savePassword()" [disabled]="savingPw()">
         <span *ngIf="!savingPw()">Update Password</span>
-        <span *ngIf="savingPw()">Updating…</span>
+        <span *ngIf="savingPw()">Updating&#8230;</span>
       </button>
     </div>
   </section>
@@ -102,7 +102,7 @@
     <!-- Loading -->
     <div class="pprofile__companies-loading" *ngIf="loadingCompanies()">
       <div class="pprofile__spinner"></div>
-      <span>Loading companies…</span>
+      <span>Loading companies&#8230;</span>
     </div>
 
     <!-- Company list -->
@@ -116,7 +116,7 @@
             <span class="pprofile__company-industry" *ngIf="c.industry">{{ c.industry }}</span>
             <span class="pprofile__company-meta" *ngIf="c.email">{{ c.email }}</span>
             <span class="pprofile__company-meta" *ngIf="c.phone">{{ c.phone }}</span>
-            <span class="pprofile__company-meta" *ngIf="c.VATNumber">VAT: {{ c.VATNumber }}</span>
+            <span class="pprofile__company-meta" *ngIf="c.vatNumber">VAT: {{ c.vatNumber }}</span>
             <span class="pprofile__company-meta" *ngIf="c.registrationNumber">Reg: {{ c.registrationNumber }}</span>
           </div>
           <div class="pprofile__company-actions">
@@ -161,7 +161,7 @@
             <button class="pprofile__btn pprofile__btn--ghost" (click)="cancelEditCompany()">Cancel</button>
             <button class="pprofile__btn pprofile__btn--primary" (click)="saveEditCompany(c)" [disabled]="savingCompany()">
               <span *ngIf="!savingCompany()">Save Company</span>
-              <span *ngIf="savingCompany()">Saving…</span>
+              <span *ngIf="savingCompany()">Saving&#8230;</span>
             </button>
           </div>
         </div>
@@ -215,7 +215,7 @@
         <button class="pprofile__btn pprofile__btn--ghost" (click)="cancelAddCompany()">Cancel</button>
         <button class="pprofile__btn pprofile__btn--primary" (click)="saveNewCompany()" [disabled]="savingCompany()">
           <span *ngIf="!savingCompany()">Add Company</span>
-          <span *ngIf="savingCompany()">Adding…</span>
+          <span *ngIf="savingCompany()">Adding&#8230;</span>
         </button>
       </div>
     </div>

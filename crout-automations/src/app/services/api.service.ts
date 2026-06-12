@@ -14,14 +14,10 @@ import {
 } from '../interfaces/i-service.interface';
 
 // ─── Field-name normalizers ───────────────────────────────────────────────────
-// The live API returns PascalCase while IService/IAddon/IPackage use a
-// mixed camelCase/snake_case convention. These mappers accept EITHER shape
-// so nothing breaks whether the server changes casing or the demo data is used.
 
 function normalizeService(raw: any): IService {
   return {
-    serviceId:         raw.serviceId          ?? raw.serviceId          ?? raw.id,
-    // ⚠️  Must map to lowercase keys to match IService + buildViews() checks
+    serviceId:         raw.serviceId          ?? raw.id,
     serviceName:        raw.ServiceName         ?? raw.serviceName        ?? raw.name        ?? '',
     price:              raw.Price               ?? raw.price              ?? 0,
     hasAddons:          raw.HasAddons           ?? raw.hasAddons          ?? false,
@@ -33,8 +29,8 @@ function normalizeService(raw: any): IService {
 
 function normalizeAddon(raw: any): IAddon {
   return {
-    addonId:         raw.addonId         ?? raw.addonId          ?? raw.id,
-    serviceId:       raw.serviceId       ?? raw.serviceId        ?? null,
+    addonId:          raw.addonId          ?? raw.id,
+    serviceId:        raw.serviceId        ?? null,
     addonName:        raw.AddonName        ?? raw.addonName        ?? raw.name        ?? '',
     addonDescription: raw.AddonDescription ?? raw.addonDescription ?? raw.description ?? '',
     price:            raw.Price            ?? raw.price            ?? 0,
@@ -43,12 +39,12 @@ function normalizeAddon(raw: any): IAddon {
 
 function normalizePackage(raw: any): IPackage {
   return {
-    packageId:            raw.packageId           ?? raw.packageId          ?? raw.id,
-    parentPackageId:     raw.parentPackageId    ?? raw.parentPackageId    ?? undefined,
-    service_ids:           raw.service_ids          ?? raw.serviceIds         ?? [],
-    packageName:           raw.PackageName          ?? raw.packageName        ?? raw.name        ?? '',
-    packageDescription:    raw.PackageDescription   ?? raw.packageDescription ?? raw.description ?? '',
-    discount:              raw.Discount             ?? raw.discount           ?? 0,
+    packageId:            raw.packageId           ?? raw.id,
+    parentPackageId:      raw.parentPackageId      ?? undefined,
+    serviceIds:           raw.serviceIds           ?? raw.service_ids ?? [],
+    packageName:          raw.PackageName          ?? raw.packageName        ?? raw.name        ?? '',
+    packageDescription:   raw.PackageDescription   ?? raw.packageDescription ?? raw.description ?? '',
+    discount:             raw.Discount             ?? raw.discount           ?? 0,
     minimumRequiredAddons: raw.minimumRequiredAddons ?? raw.minimumrequiredaddons ?? undefined,
   };
 }

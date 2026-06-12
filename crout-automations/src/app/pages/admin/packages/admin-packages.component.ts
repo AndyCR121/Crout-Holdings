@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
-import { AdminService } from '../../../services/admin.service';
+import { AdminService, PagedResult } from '../../../services/admin.service';
 import { IPackage, IService } from '../../../interfaces/i-service.interface';
 
 @Component({
@@ -24,6 +24,7 @@ export class AdminPackagesComponent implements OnInit {
   error    = signal<string | null>(null);
   page     = signal(1);
   pageSize = 10;
+  total    = signal(0);
   hasMore  = signal(true);
 
   editingId       = signal<number | null>(null);
@@ -48,13 +49,18 @@ export class AdminPackagesComponent implements OnInit {
   load(): void {
     this.loading.set(true);
     this.admin.getPackages(this.page(), this.pageSize).subscribe({
-      next: data => { this.items.set(data); this.hasMore.set(data.length === this.pageSize); this.loading.set(false); },
+      next: (data: PagedResult<IPackage>) => {
+        this.items.set(data.items);
+        this.total.set(data.total);
+        this.hasMore.set(data.items.length === this.pageSize);
+        this.loading.set(false);
+      },
       error: () => { this.error.set('Failed to load packages.'); this.loading.set(false); }
     });
   }
 
   loadServices(): void {
-    this.admin.getServices(1, 100).subscribe({ next: data => this.services.set(data) });
+    this.admin.getServices(1, 100).subscribe({ next: (data: IService[]) => this.services.set(data) });
   }
 
   prevPage(): void { if (this.page() > 1) { this.page.update(p => p - 1); this.load(); } }
@@ -69,7 +75,7 @@ export class AdminPackagesComponent implements OnInit {
   saveEdit(p: IPackage): void {
     this.saving.set(true);
     this.admin.updatePackage(p.packageId, this.editBuffer()).subscribe({
-      next: updated => { this.items.update(list => list.map(i => i.packageId === updated.packageId ? updated : i)); this.editingId.set(null); this.saving.set(false); },
+      next: (updated: IPackage) => { this.items.update(list => list.map(i => i.packageId === updated.packageId ? updated : i)); this.editingId.set(null); this.saving.set(false); },
       error: () => { this.error.set('Failed to save.'); this.saving.set(false); }
     });
   }
@@ -86,14 +92,14 @@ export class AdminPackagesComponent implements OnInit {
   submitCreate(): void {
     this.saving.set(true);
     this.admin.createPackage(this.createBuffer()).subscribe({
-      next: created => { this.items.update(list => [created, ...list]); this.showCreate.set(false); this.saving.set(false); this.createBuffer.set({ packageName: '', packageDescription: '', discount: 0, serviceIds: [] }); },
+      next: (created: IPackage) => { this.items.update(list => [created, ...list]); this.showCreate.set(false); this.saving.set(false); this.createBuffer.set({ packageName: '', packageDescription: '', discount: 0, serviceIds: [] }); },
       error: () => { this.error.set('Failed to create.'); this.saving.set(false); }
     });
   }
 
   openLink(p: IPackage): void {
     this.linkTarget.set(p);
-    this.admin.getPackage(p.packageId).subscribe(full => {
+    this.admin.getPackage(p.packageId).subscribe((full: IPackage) => {
       this.linkSelected.set(new Set(full.serviceIds ?? []));
     });
     this.showLinkModal.set(true);
