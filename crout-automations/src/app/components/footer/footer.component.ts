@@ -24,7 +24,6 @@ export class FooterComponent {
   navLinks = [
     { label: 'Home',       route: '/' },
     { label: 'Services',   route: '/services' },
-    { label: 'FAQ',        route: '/faq' },
     { label: 'Contact Us', route: '/contact-us' },
   ];
 }
