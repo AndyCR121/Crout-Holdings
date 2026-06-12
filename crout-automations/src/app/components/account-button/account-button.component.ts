@@ -2,23 +2,22 @@ import {
   Component, inject, signal, computed, HostListener, OnInit
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
 import { AuthModalComponent } from '../auth-modal/auth-modal.component';
+import { ToastComponent } from '../toast/toast.component';
 import { ICompany } from '../../interfaces/i-service.interface';
 
 @Component({
   selector: 'ca-account-button',
   standalone: true,
-  imports: [CommonModule, AuthModalComponent],
+  imports: [CommonModule, AuthModalComponent, ToastComponent],
   templateUrl: './account-button.component.html',
   styleUrls: ['./account-button.component.scss'],
 })
 export class AccountButtonComponent implements OnInit {
-  private readonly auth   = inject(AuthService);
-  private readonly api    = inject(ApiService);
-  private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
+  private readonly api  = inject(ApiService);
 
   readonly loggedIn      = computed(() => this.auth.isLoggedIn());
   readonly user          = computed(() => this.auth.currentUser());
@@ -32,7 +31,6 @@ export class AccountButtonComponent implements OnInit {
     return ((u.firstName?.[0] ?? '') + (u.surname?.[0] ?? '')).toUpperCase() || u.username[0].toUpperCase();
   });
 
-  /** First active company name — shown in the account button identity row. */
   readonly primaryCompany = computed(() =>
     this.companies().find(c => c.active)?.companyName ?? null
   );
@@ -53,14 +51,16 @@ export class AccountButtonComponent implements OnInit {
 
   closeModal(): void { this.showAuthModal.set(false); }
 
+  /** Use window.location — Angular Router is not available in Custom Elements context (WordPress). */
   navigate(path: string): void {
     this.open.set(false);
-    this.router.navigate([path]);
+    window.location.href = path;
   }
 
   logout(): void {
     this.open.set(false);
     this.auth.logout();
+    window.location.href = '/';
   }
 
   @HostListener('document:click', ['$event'])

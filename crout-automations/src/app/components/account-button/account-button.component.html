@@ -72,3 +72,7 @@
 @if (showAuthModal()) {
   <ca-auth-modal (close)="closeModal()" />
 }
+
+<!-- Toast outlet — must live in the same component tree as ca-auth-modal
+     so they share the same injector and ToastService instance. -->
+<ca-toast />
