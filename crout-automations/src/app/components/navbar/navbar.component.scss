@@ -9,6 +9,7 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
+  height: 52px !important;
 
   background: rgba(10, 37, 64, 0.92);
   backdrop-filter: blur(10px);
@@ -40,7 +41,8 @@
 }
 
 .ca-navbar-logo {
-  height: 32px;
+  height: 54px;
+  border-radius: 20px;
   width: auto;
   object-fit: contain;
   display: block;
