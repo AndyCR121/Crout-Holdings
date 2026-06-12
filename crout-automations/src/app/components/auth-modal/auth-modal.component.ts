@@ -3,7 +3,6 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 
@@ -17,21 +16,20 @@ type AuthTab = 'login' | 'signup';
   styleUrls: ['./auth-modal.component.scss'],
 })
 export class AuthModalComponent {
-  readonly close  = output<void>();
+  readonly close = output<void>();
 
   private readonly auth     = inject(AuthService);
-  private readonly router   = inject(Router);
   private readonly toastSvc = inject(ToastService);
 
-  tab        = signal<AuthTab>('login');
-  loading    = signal(false);
-  error      = signal<string | null>(null);
+  tab     = signal<AuthTab>('login');
+  loading = signal(false);
+  error   = signal<string | null>(null);
 
   // Login form
   loginId  = '';
   loginPwd = '';
 
-  // Sign-up form — company is created post-signup via Profile > Companies
+  // Sign-up form
   signupUsername  = '';
   signupEmail     = '';
   signupFirstName = '';
@@ -57,7 +55,8 @@ export class AuthModalComponent {
           this.loading.set(false);
           this.close.emit();
           this.toastSvc.success(`Welcome back, ${user.firstName || user.username}!`);
-          this.router.navigate(['/client/dashboard']);
+          /** Navigate without Angular Router — not available in WP Custom Elements context. */
+          window.location.href = '/client/dashboard';
         },
         error: (e: any) => {
           this.loading.set(false);
@@ -90,7 +89,8 @@ export class AuthModalComponent {
         this.loading.set(false);
         this.close.emit();
         this.toastSvc.success(`Account created! Welcome, ${user.firstName || user.username}.`);
-        this.router.navigate(['/client/dashboard']);
+        /** Navigate without Angular Router — not available in WP Custom Elements context. */
+        window.location.href = '/client/dashboard';
       },
       error: (e: any) => {
         this.loading.set(false);
