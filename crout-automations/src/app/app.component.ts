@@ -7,14 +7,16 @@ import { DevNavComponent } from './components/dev-nav/dev-nav.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { ToastComponent } from './components/toast/toast.component';
 import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dialog.component';
+import { AccountButtonComponent } from './components/account-button/account-button.component';
 
 @Component({
   selector: 'ca-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, DevNavComponent, NavbarComponent, ToastComponent, ConfirmDialogComponent],
+  imports: [CommonModule, RouterOutlet, DevNavComponent, NavbarComponent, ToastComponent, ConfirmDialogComponent, AccountButtonComponent],
   template: `
     <ca-dev-nav *ngIf="!showNavbar" />
     <ca-navbar *ngIf="showNavbar" />
+    <ca-account-button />
     <router-outlet />
     <ca-toast />
     <ca-confirm-dialog />
