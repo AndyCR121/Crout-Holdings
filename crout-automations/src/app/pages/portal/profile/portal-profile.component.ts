@@ -117,13 +117,17 @@ export class PortalProfileComponent implements OnInit {
     const form = new FormData();
     form.append('file', file);
 
+    // Response is a profile DTO — type as `any` and read profilePicture directly
     this.http
-      .post<IUser>(`${this.base}/profile/avatar`, form, { withCredentials: true })
+      .post<any>(`${this.base}/profile/avatar`, form, { withCredentials: true })
       .subscribe({
-        next: (updatedUser) => {
-          // Persist the returned profilePicture into the auth signal + cookie
-          this.auth.patchUser({ profilePicture: updatedUser.profilePicture });
-          // Clear the local preview — the signal now serves from the session
+        next: (res) => {
+          const url: string | undefined = res?.profilePicture;
+          if (url) {
+            // Persist into the auth signal + cookie so it survives navigation
+            this.auth.patchUser({ profilePicture: url });
+          }
+          // Clear local preview — resolvedAvatar now reads from the session
           this.avatarPreview.set(null);
           this.uploadingAvatar.set(false);
           this.toast.success('Profile picture updated.');
