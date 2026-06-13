@@ -3,5 +3,5 @@
 // This keeps everything same-origin so cookies (ca_jwt) work without the Secure flag.
 export const environment = {
   production: false,
-  apiUrl: '/api',
+  apiUrl: 'http://localhost:5000/api',
 };
