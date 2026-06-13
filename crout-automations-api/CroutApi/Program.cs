@@ -2,8 +2,10 @@ using CroutApi.Helpers;
 using CroutApi.Repositories;
 using CroutApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,6 +56,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
       ValidIssuer              = jwtIssuer,
       ValidAudience            = jwtAudience,
       IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+      // Prevent ASP.NET from remapping standard JWT claims to legacy XML claim URIs
+      NameClaimType            = "unique_name",
+      RoleClaimType            = "role",
     };
   });
 
@@ -73,6 +78,34 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// -- Global exception handler — always returns JSON with error details --------
+app.UseExceptionHandler(errApp =>
+{
+  errApp.Run(async ctx =>
+  {
+    ctx.Response.ContentType = "application/json";
+    var feature = ctx.Features.Get<IExceptionHandlerFeature>();
+    var ex      = feature?.Error;
+
+    var isDev = app.Environment.IsDevelopment();
+
+    ctx.Response.StatusCode = ex switch
+    {
+      UnauthorizedAccessException => 403,
+      KeyNotFoundException        => 404,
+      ArgumentException           => 400,
+      _                           => 500,
+    };
+
+    var payload = isDev
+      ? new { error = ex?.Message, type = ex?.GetType().Name, stack = ex?.StackTrace }
+      : (object)new { error = ex?.Message ?? "An unexpected error occurred." };
+
+    await ctx.Response.WriteAsync(JsonSerializer.Serialize(payload));
+  });
+});
+
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();

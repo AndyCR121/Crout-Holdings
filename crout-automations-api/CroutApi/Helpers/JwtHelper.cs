@@ -43,8 +43,18 @@ public sealed class JwtHelper
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    /// <summary>Extracts user_id from the JWT sub claim on an authenticated principal.</summary>
+    /// <summary>
+    /// Extracts user_id from the JWT sub claim on an authenticated principal.
+    /// ASP.NET's JWT middleware remaps "sub" to ClaimTypes.NameIdentifier, so we
+    /// check both to be safe.
+    /// </summary>
     public static int GetUserId(ClaimsPrincipal principal)
-        => int.Parse(principal.FindFirstValue(JwtRegisteredClaimNames.Sub)
-                     ?? throw new InvalidOperationException("sub claim missing"));
+    {
+        // ASP.NET remaps "sub" → ClaimTypes.NameIdentifier at middleware level
+        var value = principal.FindFirstValue(ClaimTypes.NameIdentifier)
+                 ?? principal.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                 ?? throw new InvalidOperationException("sub claim missing");
+
+        return int.Parse(value);
+    }
 }
