@@ -59,6 +59,8 @@ export class AccountButtonComponent implements OnInit {
 
   logout(): void {
     this.open.set(false);
+    // auth.logout() now clears cookies synchronously before returning,
+    // so it is safe to navigate immediately after.
     this.auth.logout();
     window.location.href = '/';
   }

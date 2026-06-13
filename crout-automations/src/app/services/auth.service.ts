@@ -98,15 +98,22 @@ export class AuthService {
   }
 
   // ── Logout ─────────────────────────────────────────────────────────────────
+  /**
+   * Clears the session immediately (cookies + signal), then fires the
+   * server-side logout in the background. Navigation happens right away
+   * so the user is never stuck waiting for the API call.
+   */
   logout(): void {
-    this.http.post(`${this.base}/auth/logout`, {}, { withCredentials: true })
+    // Clear client state first — do not wait for the API
+    deleteCookie('ca_user');
+    deleteCookie('ca_jwt');
+    this.currentUser.set(null);
+
+    // Fire-and-forget server logout (invalidates HttpOnly cookie if any)
+    this.http
+      .post(`${this.base}/auth/logout`, {}, { withCredentials: true })
       .pipe(catchError(() => of(null)))
-      .subscribe(() => {
-        deleteCookie('ca_user');
-        deleteCookie('ca_jwt');
-        this.currentUser.set(null);
-        this.router.navigate(['/']);
-      });
+      .subscribe();
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
