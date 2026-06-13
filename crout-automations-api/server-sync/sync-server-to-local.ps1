@@ -20,9 +20,10 @@ $LOCAL_DB    = "crout_automations"
 # ── Dump path ───────────────────────────────────────────────
 $DUMP_FILE = "$env:TEMP\crout_server_dump.sql"
 
-Write-Host ">>> Dumping server DB to $DUMP_FILE ..." -ForegroundColor Cyan
+# ── Step 1: Dump server DB using mysqldump inside local container ──
+Write-Host ">>> Dumping server DB via docker exec..." -ForegroundColor Cyan
 
-mysqldump `
+docker exec $LOCAL_CONTAINER mysqldump `
   -h $SERVER_HOST `
   -P $SERVER_PORT `
   -u $SERVER_USER `
@@ -35,25 +36,40 @@ mysqldump `
   $SERVER_DB | Out-File -FilePath $DUMP_FILE -Encoding utf8
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Host ">>> ERROR: mysqldump failed. Check server credentials & connectivity." -ForegroundColor Red
+    Write-Host ">>> ERROR: Dump failed. Check server host/credentials and that crout_db container is running." -ForegroundColor Red
     exit 1
 }
 
-Write-Host ">>> Dump complete. Injecting into local Docker DB..." -ForegroundColor Cyan
+Write-Host ">>> Dump saved to $DUMP_FILE" -ForegroundColor Gray
 
-Get-Content $DUMP_FILE | mysql `
-  -h $LOCAL_HOST `
-  -P $LOCAL_PORT `
-  -u $LOCAL_USER `
-  "-p$LOCAL_PASS" `
-  $LOCAL_DB
+# ── Step 2: Copy dump into the container ────────────────────
+Write-Host ">>> Copying dump into container..." -ForegroundColor Cyan
+docker cp $DUMP_FILE "${LOCAL_CONTAINER}:/tmp/server_dump.sql"
+
+# ── Step 3: Import into local DB ────────────────────────────
+Write-Host ">>> Importing into local DB..." -ForegroundColor Cyan
+
+docker exec $LOCAL_CONTAINER bash -c `
+  "mysql -u $LOCAL_USER -p'$LOCAL_PASS' $LOCAL_DB < /tmp/server_dump.sql"
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Host ">>> ERROR: Import failed. Is your Docker container running? (docker ps)" -ForegroundColor Red
+    Write-Host ">>> ERROR: Import failed." -ForegroundColor Red
     exit 1
 }
 
-Write-Host ">>> Cleaning up dump file..." -ForegroundColor Gray
+# ── Step 4: Cleanup ─────────────────────────────────────────
+Write-Host ">>> Cleaning up..." -ForegroundColor Gray
+docker exec $LOCAL_CONTAINER rm /tmp/server_dump.sql
 Remove-Item $DUMP_FILE -Force
 
-Write-Host ">>> Sync complete! Local DB now mirrors server." -ForegroundColor Green
+Write-Host ">>> Done! Local DB now mirrors the server." -ForegroundColor Green
+Before running — quick checklist
+powershell
+# 1. Confirm crout_db container is running:
+docker ps --filter "name=crout_db"
+
+# 2. Confirm the container can reach your server (replace with your actual server host):
+docker exec crout_db mysqladmin ping -h your.server.host -u crout_user -pyour_server_password
+
+# 3. Then run the sync:
+.\sync-server-to-local.ps1
