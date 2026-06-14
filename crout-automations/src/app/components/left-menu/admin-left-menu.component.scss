@@ -1,13 +1,26 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// Admin Left Menu — extracted from admin.component.scss
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────────
+// Admin Left Menu — sidebar component
+// Width is controlled by .portal-page-layout in styles.scss (240px fixed).
+// This file only styles the internal content of the sidebar.
+// ────────────────────────────────────────────────────────────────────────────────
 
-@mixin admin-scrollbar {
+:host {
+  display: block;
+  width:   100%;
+  height:  100%;
+}
+
+@mixin portal-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.15) transparent;
+
   &::-webkit-scrollbar        { width: 4px; }
   &::-webkit-scrollbar-track  { background: transparent; }
-  &::-webkit-scrollbar-thumb  { background: rgba(255,255,255,0.15); border-radius: 4px; &:hover { background: rgba(255,255,255,0.30); } }
+  &::-webkit-scrollbar-thumb  {
+    background:    rgba(255,255,255,0.15);
+    border-radius: 4px;
+    &:hover { background: rgba(255,255,255,0.30); }
+  }
 }
 
 .admin-sidebar {
@@ -16,24 +29,25 @@
   display:        flex;
   flex-direction: column;
   padding:        24px 16px;
+  width:          100%;
   height:         100%;
   overflow-y:     auto;
-  @include admin-scrollbar;
+  @include portal-scrollbar;
 }
 
-.admin-logo {
-  display:        flex;
-  align-items:    center;
-  gap:            10px;
-  padding:        4px 8px 24px;
-  border-bottom:  1px solid rgba(255,255,255,0.07);
-  margin-bottom:  20px;
+.portal-logo {
+  display:       flex;
+  align-items:   center;
+  gap:           10px;
+  padding:       4px 8px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  margin-bottom: 20px;
 }
 
-.admin-logo-mark {
+.portal-logo-mark {
   width:           34px;
   height:          34px;
-  background:      #c0392b;
+  background:      #ea7b32;
   border-radius:   8px;
   display:         flex;
   align-items:     center;
@@ -44,20 +58,20 @@
   flex-shrink:     0;
 }
 
-.admin-logo-name {
+.portal-logo-name {
   font-size:   14px;
   font-weight: 700;
   color:       rgba(255,255,255,0.90);
 }
 
-.admin-nav {
+.portal-nav {
   display:        flex;
   flex-direction: column;
   gap:            4px;
   flex:           1;
 }
 
-.admin-nav-item {
+.portal-nav-item {
   display:         flex;
   align-items:     center;
   gap:             10px;
@@ -68,12 +82,22 @@
   font-weight:     500;
   text-decoration: none;
   transition:      background 140ms ease, color 140ms ease;
+
   svg { flex-shrink: 0; }
-  &:hover  { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.90); }
-  &.active { background: rgba(192,57,43,0.18); color: #e74c3c; svg { color: #e74c3c; } }
+
+  &:hover {
+    background: rgba(255,255,255,0.06);
+    color:      rgba(255,255,255,0.90);
+  }
+
+  &.active {
+    background: rgba(234,123,50,0.15);
+    color:      #ea7b32;
+    svg { color: #ea7b32; }
+  }
 }
 
-.admin-sidebar-footer {
+.portal-sidebar-footer {
   margin-top:     auto;
   padding-top:    16px;
   border-top:     1px solid rgba(255,255,255,0.07);
@@ -82,18 +106,18 @@
   gap:            6px;
 }
 
-.admin-user-chip {
+.portal-user-chip {
   display:     flex;
   align-items: center;
   gap:         10px;
   padding:     8px;
 }
 
-.admin-user-avatar {
+.portal-user-avatar {
   width:           32px;
   height:          32px;
   border-radius:   50%;
-  background:      #c0392b;
+  background:      #ea7b32;
   display:         flex;
   align-items:     center;
   justify-content: center;
@@ -103,14 +127,14 @@
   flex-shrink:     0;
 }
 
-.admin-user-info {
+.portal-user-info {
   display:        flex;
   flex-direction: column;
   gap:            2px;
   overflow:       hidden;
 }
 
-.admin-user-name {
+.portal-user-name {
   font-size:     13px;
   font-weight:   600;
   color:         rgba(255,255,255,0.90);
@@ -119,15 +143,15 @@
   text-overflow: ellipsis;
 }
 
-.admin-user-role {
-  font-size:      11px;
-  color:          #e74c3c;
-  font-weight:    600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+.portal-user-company {
+  font-size:     11px;
+  color:         rgba(255,255,255,0.45);
+  white-space:   nowrap;
+  overflow:      hidden;
+  text-overflow: ellipsis;
 }
 
-.admin-logout-btn {
+.portal-logout-btn {
   display:       flex;
   align-items:   center;
   gap:           8px;
@@ -141,20 +165,28 @@
   cursor:        pointer;
   transition:    background 140ms ease, color 140ms ease;
   width:         100%;
-  &:hover { background: rgba(255,80,80,0.10); color: #ff8080; }
+
+  &:hover {
+    background: rgba(255,80,80,0.10);
+    color:      #ff8080;
+  }
 }
 
+// Mobile: collapse to horizontal bar
 @media (max-width: 768px) {
   .admin-sidebar {
-    position:       static;
-    height:         auto;
     flex-direction: row;
     flex-wrap:      wrap;
     padding:        12px;
     gap:            8px;
+    height:         auto;
   }
-  .admin-nav {
+
+  .portal-nav {
     flex-direction: row;
     flex-wrap:      wrap;
   }
+
+  .portal-logo,
+  .portal-sidebar-footer { display: none; }
 }

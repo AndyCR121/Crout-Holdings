@@ -1,6 +1,14 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// Portal Left Menu — extracted from portal.component.scss
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────────
+// Portal Left Menu — sidebar component
+// Width is controlled by .portal-page-layout in styles.scss (240px fixed).
+// This file only styles the internal content of the sidebar.
+// ────────────────────────────────────────────────────────────────────────────────
+
+:host {
+  display: block;
+  width:   100%;
+  height:  100%;
+}
 
 @mixin portal-scrollbar {
   scrollbar-width: thin;
@@ -21,18 +29,19 @@
   display:        flex;
   flex-direction: column;
   padding:        24px 16px;
+  width:          100%;
   height:         100%;
   overflow-y:     auto;
   @include portal-scrollbar;
 }
 
 .portal-logo {
-  display:        flex;
-  align-items:    center;
-  gap:            10px;
-  padding:        4px 8px 24px;
-  border-bottom:  1px solid rgba(255,255,255,0.07);
-  margin-bottom:  20px;
+  display:       flex;
+  align-items:   center;
+  gap:           10px;
+  padding:       4px 8px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  margin-bottom: 20px;
 }
 
 .portal-logo-mark {
@@ -153,19 +162,19 @@
 }
 
 .portal-logout-btn {
-  display:        flex;
-  align-items:    center;
-  gap:            8px;
-  padding:        9px 12px;
-  border:         none;
-  border-radius:  8px;
-  background:     transparent;
-  color:          rgba(255,100,100,0.80);
-  font-size:      13px;
-  font-weight:    500;
-  cursor:         pointer;
-  transition:     background 140ms ease, color 140ms ease;
-  width:          100%;
+  display:       flex;
+  align-items:   center;
+  gap:           8px;
+  padding:       9px 12px;
+  border:        none;
+  border-radius: 8px;
+  background:    transparent;
+  color:         rgba(255,100,100,0.80);
+  font-size:     13px;
+  font-weight:   500;
+  cursor:        pointer;
+  transition:    background 140ms ease, color 140ms ease;
+  width:         100%;
 
   &:hover {
     background: rgba(255,80,80,0.10);
@@ -173,17 +182,21 @@
   }
 }
 
+// Mobile: sidebar collapses to a horizontal top bar
 @media (max-width: 768px) {
   .portal-sidebar {
-    position:       static;
-    height:         auto;
     flex-direction: row;
     flex-wrap:      wrap;
     padding:        12px;
     gap:            8px;
+    height:         auto;
   }
+
   .portal-nav {
     flex-direction: row;
     flex-wrap:      wrap;
   }
+
+  .portal-logo,
+  .portal-sidebar-footer { display: none; }
 }
