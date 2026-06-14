@@ -10,9 +10,11 @@
  *   - polyfills.js   (zone.js)
  *   - styles.css
  *
- * WordPress usage — in your Elementor page / theme:
+ * WordPress / Elementor usage:
  *   <script defer src="/wp-content/themes/your-theme/crout-elements/polyfills.js"></script>
  *   <script defer src="/wp-content/themes/your-theme/crout-elements/main.js"></script>
+ *
+ * ── Public ──────────────────────────────────────────────────────────
  *   <ca-hero></ca-hero>
  *   <ca-pain-point></ca-pain-point>
  *   <ca-services-overview></ca-services-overview>
@@ -22,13 +24,34 @@
  *   <ca-cta-banner></ca-cta-banner>
  *   <ca-privacy-policy></ca-privacy-policy>
  *
+ * ── Client Portal (auth-guarded shell + sub-pages) ───────────────────
+ *   <ca-portal></ca-portal>                        ← shell (layout + router-outlet)
+ *   <ca-portal-dashboard></ca-portal-dashboard>
+ *   <ca-portal-services></ca-portal-services>
+ *   <ca-portal-profile></ca-portal-profile>
+ *   <ca-portal-billing></ca-portal-billing>
+ *   <ca-portal-subscriptions></ca-portal-subscriptions>
+ *   <ca-portal-payment-methods></ca-portal-payment-methods>
+ *
+ * ── Admin Portal (auth + admin guard) ───────────────────────────────
+ *   <ca-admin></ca-admin>                          ← shell (layout + router-outlet)
+ *   <ca-admin-users></ca-admin-users>
+ *   <ca-admin-services></ca-admin-services>
+ *   <ca-admin-packages></ca-admin-packages>
+ *   <ca-admin-companies></ca-admin-companies>
+ *   <ca-admin-addons></ca-admin-addons>
+ *   <ca-admin-service-features></ca-admin-service-features>
+ *
  * NOTE: <ca-nav> and <ca-footer> are intentionally excluded.
  * They live in wordpress-theme/ and are handled by the WP theme layer.
  */
 import { createApplication } from '@angular/platform-browser';
 import { createCustomElement } from '@angular/elements';
 import { provideAnimations } from '@angular/platform-browser/animations';
+import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideRouter } from '@angular/router';
 
+// ── Public components ──────────────────────────────────────────────────────────
 import { HeroComponent } from '../app/components/hero/hero.component';
 import { PainPointComponent } from '../app/components/pain-point/pain-point.component';
 import { ServicesOverviewComponent } from '../app/components/services-overview/services-overview.component';
@@ -40,20 +63,40 @@ import { PrivacyPolicyComponent } from '../app/components/privacy-policy/privacy
 import { AccountButtonComponent } from '../app/components/account-button/account-button.component';
 import { AuthModalComponent } from '../app/components/auth-modal/auth-modal.component';
 import { ServiceConfiguratorComponent } from '../app/components/service-configurator/service-configurator.component';
-import { AdminComponent } from '../app/pages/admin/admin.component';
-import { PortalComponent } from '../app/pages/portal/portal.component';
+import { NavbarComponent } from '../app/components/navbar/navbar.component';
+import { FooterComponent } from '../app/components/footer/footer.component';
+
+// ── Pages (public) ─────────────────────────────────────────────────────────────
+import { HomeComponent } from '../app/pages/home/home.component';
 import { ContactComponent } from '../app/pages/contact/contact.component';
 import { ServicesComponent } from '../app/pages/services/services.component';
-import { provideHttpClient, withFetch } from '@angular/common/http';
-import { NotFoundComponent } from '../app/pages/not-found/not-found.component';
-import { provideRouter } from '@angular/router';
-import { HomeComponent } from '../app/pages/home/home.component';
 import { MarketingSystemsComponent } from '../app/pages/services/marketing-systems/marketing-systems.component';
 import { ProjectManagementComponent } from '../app/pages/services/project-management/project-management.component';
 import { QuoteSystemComponent } from '../app/pages/services/quote-system/quote-system.component';
 import { WhatsappAgentComponent } from '../app/pages/services/whatsapp-agent/whatsapp-agent.component';
-import { NavbarComponent } from '../app/components/navbar/navbar.component';
-import { FooterComponent } from '../app/components/footer/footer.component';
+import { NotFoundComponent } from '../app/pages/not-found/not-found.component';
+
+// ── Shared left-menu components ────────────────────────────────────────────────
+import { PortalLeftMenuComponent } from '../app/components/left-menu/portal-left-menu.component';
+import { AdminLeftMenuComponent } from '../app/components/left-menu/admin-left-menu.component';
+
+// ── Client Portal: shell + sub-pages ──────────────────────────────────────────
+import { PortalComponent } from '../app/pages/portal/portal.component';
+import { PortalDashboardComponent } from '../app/pages/portal/dashboard/portal-dashboard.component';
+import { PortalServicesComponent } from '../app/pages/portal/services/portal-services.component';
+import { PortalProfileComponent } from '../app/pages/portal/profile/portal-profile.component';
+import { PortalBillingComponent } from '../app/pages/portal/billing/portal-billing.component';
+import { PortalSubscriptionsComponent } from '../app/pages/portal/billing/subscriptions/portal-subscriptions.component';
+import { PortalPaymentMethodsComponent } from '../app/pages/portal/billing/payment-methods/portal-payment-methods.component';
+
+// ── Admin Portal: shell + sub-pages ───────────────────────────────────────────
+import { AdminComponent } from '../app/pages/admin/admin.component';
+import { AdminUsersComponent } from '../app/pages/admin/users/admin-users.component';
+import { AdminServicesComponent } from '../app/pages/admin/services/admin-services.component';
+import { AdminPackagesComponent } from '../app/pages/admin/packages/admin-packages.component';
+import { AdminCompaniesComponent } from '../app/pages/admin/companies/admin-companies.component';
+import { AdminAddonsComponent } from '../app/pages/admin/addons/admin-addons.component';
+import { AdminServiceFeaturesComponent } from '../app/pages/admin/service-features/admin-service-features.component';
 
 (async () => {
   const app = await createApplication({
@@ -65,31 +108,55 @@ import { FooterComponent } from '../app/components/footer/footer.component';
   });
 
   const elements: [string, any][] = [
-    // ── Public section components ──────────────────────────────────────
-    ['ca-privacy-policy',      PrivacyPolicyComponent],
-    ['ca-service-configurator', ServiceConfiguratorComponent],
-    ['ca-not-found',          NotFoundComponent],
-    ['ca-home',              HomeComponent],
-    
-    // ── Services section components ────────────────────────────────────
-    ['ca-quote-system',       QuoteSystemComponent],
-    ['ca-whatsapp-agent',       WhatsappAgentComponent],
-    ['ca-project-management',       ProjectManagementComponent],
-    ['ca-marketing-systems',       MarketingSystemsComponent],
+    // ── Public section components ──────────────────────────────────────────────
+    ['ca-privacy-policy',         PrivacyPolicyComponent],
+    ['ca-service-configurator',   ServiceConfiguratorComponent],
+    ['ca-not-found',              NotFoundComponent],
+    ['ca-home',                   HomeComponent],
 
-    // ── Auth / Account ─────────────────────────────────────────────────
-    ['ca-account-button',      AccountButtonComponent],
-    ['ca-auth-modal',          AuthModalComponent],
-    
-    // ── NavBar / Footer ────────────────────────────────────────────────
-    ['ca-navbar',             NavbarComponent],
-    ['ca-footer',              FooterComponent],
+    // ── Services section components ────────────────────────────────────────────
+    ['ca-quote-system',           QuoteSystemComponent],
+    ['ca-whatsapp-agent',         WhatsappAgentComponent],
+    ['ca-project-management',     ProjectManagementComponent],
+    ['ca-marketing-systems',      MarketingSystemsComponent],
 
-    // ── Full page shells (handle their own internal routing) ───────────
-    ['ca-admin',               AdminComponent],
-    ['ca-portal',              PortalComponent],
-    ['ca-contact',             ContactComponent],
-    ['ca-services',            ServicesComponent],
+    // ── Auth / Account ─────────────────────────────────────────────────────────
+    ['ca-account-button',         AccountButtonComponent],
+    ['ca-auth-modal',             AuthModalComponent],
+
+    // ── NavBar / Footer ────────────────────────────────────────────────────────
+    ['ca-navbar',                 NavbarComponent],
+    ['ca-footer',                 FooterComponent],
+
+    // ── Full page shells ───────────────────────────────────────────────────────
+    ['ca-contact',                ContactComponent],
+    ['ca-services',               ServicesComponent],
+
+    // ── Shared left-menu components ────────────────────────────────────────────
+    ['ca-portal-left-menu',       PortalLeftMenuComponent],
+    ['ca-admin-left-menu',        AdminLeftMenuComponent],
+
+    // ── Client Portal shell ────────────────────────────────────────────────────
+    ['ca-portal',                 PortalComponent],
+
+    // ── Client Portal sub-pages ────────────────────────────────────────────────
+    ['ca-portal-dashboard',       PortalDashboardComponent],
+    ['ca-portal-services',        PortalServicesComponent],
+    ['ca-portal-profile',         PortalProfileComponent],
+    ['ca-portal-billing',         PortalBillingComponent],
+    ['ca-portal-subscriptions',   PortalSubscriptionsComponent],
+    ['ca-portal-payment-methods', PortalPaymentMethodsComponent],
+
+    // ── Admin Portal shell ─────────────────────────────────────────────────────
+    ['ca-admin',                  AdminComponent],
+
+    // ── Admin Portal sub-pages ─────────────────────────────────────────────────
+    ['ca-admin-users',            AdminUsersComponent],
+    ['ca-admin-services',         AdminServicesComponent],
+    ['ca-admin-packages',         AdminPackagesComponent],
+    ['ca-admin-companies',        AdminCompaniesComponent],
+    ['ca-admin-addons',           AdminAddonsComponent],
+    ['ca-admin-service-features', AdminServiceFeaturesComponent],
   ];
 
   for (const [tag, component] of elements) {
