@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, of, throwError } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
 import { EnvironmentService } from './environment.service';
 import { environment } from '../../environments/environment';
 
@@ -63,19 +63,37 @@ export class PaystackService {
   getSubscriptions(): Observable<ICompanySubscriptions[]> {
     return this.http
       .get<ICompanySubscriptions[]>(`${this.base}/paystack/subscriptions`, { withCredentials: true })
-      .pipe(catchError(() => of([])));
+      .pipe(
+        tap(data => console.debug('[PaystackService] getSubscriptions ->', data)),
+        catchError((err: HttpErrorResponse) => {
+          console.error('[PaystackService] getSubscriptions failed', err.status, err.message);
+          return of([]);
+        }),
+      );
   }
 
-  /** Returns all companies with their saved Paystack cards */
+  /**
+   * Fetch all companies with their saved Paystack cards.
+   * Hits GET /api/paystack/companies which calls Paystack
+   * GET /customer/{email} per company (then falls back to transaction scan).
+   */
   getCompanyBilling(): Observable<ICompanyBilling[]> {
     return this.http
       .get<ICompanyBilling[]>(`${this.base}/paystack/companies`, { withCredentials: true })
-      .pipe(catchError(() => of([])));
+      .pipe(
+        tap(data => console.debug('[PaystackService] getCompanyBilling ->', data)),
+        // Map to ensure cards is always an array even if backend omits it
+        map(companies => companies.map(c => ({ ...c, cards: c.cards ?? [] }))),
+        catchError((err: HttpErrorResponse) => {
+          console.error('[PaystackService] getCompanyBilling failed', err.status, err.message);
+          return of([]);
+        }),
+      );
   }
 
   /**
    * Initialise a card-capture transaction for a specific company.
-   * The company's email is resolved server-side — never guessed on the frontend.
+   * The company's email is resolved server-side.
    */
   getCardCaptureCode(companyId: number): Observable<ICardCaptureResult | null> {
     return this.http
@@ -84,13 +102,18 @@ export class PaystackService {
         { companyId },
         { withCredentials: true },
       )
-      .pipe(catchError(() => of(null)));
+      .pipe(
+        tap(res => console.debug('[PaystackService] getCardCaptureCode ->', res)),
+        catchError((err: HttpErrorResponse) => {
+          console.error('[PaystackService] getCardCaptureCode failed', err.status, err.message);
+          return of(null);
+        }),
+      );
   }
 
   /**
    * Open Paystack inline popup.
-   * Public key is passed here — it is safe to be client-side visible.
-   * Secret key lives ONLY in the backend.
+   * Public key is client-side safe. Secret key lives ONLY in the backend.
    */
   openPopup(
     accessCode: string,
@@ -106,7 +129,7 @@ export class PaystackService {
     const handler = PaystackPop.setup({
       key:         environment.paystackPublicKey,
       access_code: accessCode,
-      email,                              // ← required by Paystack popup validation
+      email,
       callback:    (res: { reference: string }) => onSuccess(res.reference),
       onClose:     onClose ?? (() => {}),
     });
