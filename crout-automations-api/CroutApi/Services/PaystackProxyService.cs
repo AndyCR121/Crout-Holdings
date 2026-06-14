@@ -6,99 +6,129 @@ using CroutApi.Repositories;
 namespace CroutApi.Services;
 
 /// <summary>
-/// Server-side proxy for Paystack API.
-/// The secret key NEVER reaches the frontend — all Paystack calls go through here.
+/// Server-side proxy for the Paystack API.
+/// Secret key NEVER reaches the frontend.
 ///
-/// Email strategy:
-///   Users are looked up by their COMPANY email (Companies.Email).
-///   This is the email they use on Paystack when subscribing.
-///   Company emails must be unique (enforced at registration — see UserRepository).
-///   If a user has no company, we fall back to their personal User.Email.
+/// Per-company billing model:
+///   Each Company has its own Email used on Paystack.
+///   Cards and subscriptions are scoped to that company's email.
+///   Company emails must be unique (enforced at DB level).
 /// </summary>
 public class PaystackProxyService(
-    IUserRepository      users,
-    ICompanyRepository   companies,
-    IConfiguration       config,
-    HttpClient           http) : IPaystackProxyService
+    IUserRepository    users,
+    ICompanyRepository companies,
+    IConfiguration     config,
+    HttpClient         http) : IPaystackProxyService
 {
     private string SecretKey =>
         config["Paystack:SecretKey"]
         ?? Environment.GetEnvironmentVariable("PAYSTACK_SECRET_KEY")
         ?? throw new InvalidOperationException(
-            "Paystack secret key not configured. "
-            + "Set PAYSTACK_SECRET_KEY env var or Paystack:SecretKey in appsettings.");
+            "Paystack secret key not configured. Set PAYSTACK_SECRET_KEY env var.");
 
     private void AddAuth() =>
         http.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", SecretKey);
 
-    // ── Resolve the billing email for a user ──────────────────────────────────
-    /// <summary>
-    /// Returns the company email if the user has a company, otherwise their personal email.
-    /// This email must match what they used when subscribing on Paystack.
-    /// </summary>
-    private async Task<string> ResolveBillingEmailAsync(int userId)
+    // ── Validate company belongs to user ───────────────────────────────────────
+    private async Task<CroutApi.Models.Company> GetOwnedCompanyAsync(int userId, int companyId)
     {
-        var user = await users.GetByIdAsync(userId)
-            ?? throw new KeyNotFoundException("User not found.");
-
-        // Try to get the company email first
-        var company = await companies.GetByUserIdAsync(userId);
-        if (company is not null && !string.IsNullOrWhiteSpace(company.Email))
-            return company.Email;
-
-        // Fallback to personal email
-        return user.Email;
+        var userCompanies = await companies.GetByUserAsync(userId);
+        var company = userCompanies.FirstOrDefault(c => c.CompanyId == companyId)
+            ?? throw new UnauthorizedAccessException("Company not found or does not belong to this user.");
+        if (string.IsNullOrWhiteSpace(company.Email))
+            throw new ArgumentException($"Company '{company.CompanyName}' has no email address set. Please update it in your profile.");
+        return company;
     }
 
-    // ── Subscriptions ───────────────────────────────────────────────────────
+    // ── Subscriptions (across all user companies) ────────────────────────────
     public async Task<object> GetSubscriptionsAsync(int userId)
     {
-        var email = await ResolveBillingEmailAsync(userId);
+        var userCompanies = await companies.GetByUserAsync(userId);
         AddAuth();
-        var response = await http.GetAsync(
-            $"https://api.paystack.co/subscription?email={Uri.EscapeDataString(email)}");
-        var json = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<object>(json)!;
-    }
 
-    // ── Saved Cards (Authorizations) ─────────────────────────────────────────
-    public async Task<object> GetCardsAsync(int userId)
-    {
-        var email = await ResolveBillingEmailAsync(userId);
-        AddAuth();
-        var response = await http.GetAsync(
-            $"https://api.paystack.co/customer/{Uri.EscapeDataString(email)}");
-        var json = await response.Content.ReadAsStringAsync();
-
-        using var doc = JsonDocument.Parse(json);
-        if (doc.RootElement.TryGetProperty("data", out var data) &&
-            data.TryGetProperty("authorizations", out var auths))
+        var results = new List<object>();
+        foreach (var company in userCompanies.Where(c => !string.IsNullOrWhiteSpace(c.Email)))
         {
-            return JsonSerializer.Deserialize<object>(auths.GetRawText())!;
+            var response = await http.GetAsync(
+                $"https://api.paystack.co/subscription?email={Uri.EscapeDataString(company.Email!)}");
+            var json = await response.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.TryGetProperty("data", out var data))
+            {
+                results.Add(new
+                {
+                    companyId   = company.CompanyId,
+                    companyName = company.CompanyName,
+                    email       = company.Email,
+                    subscriptions = JsonSerializer.Deserialize<object>(data.GetRawText()),
+                });
+            }
         }
-        return Array.Empty<object>();
+        return results;
     }
 
-    // ── Initialise card-capture transaction ─────────────────────────────────
-    public async Task<object> InitialiseCardCaptureAsync(int userId)
+    // ── Per-company cards ───────────────────────────────────────────────────
+    public async Task<object> GetCompanyBillingAsync(int userId)
     {
-        var email = await ResolveBillingEmailAsync(userId);
+        var userCompanies = await companies.GetByUserAsync(userId);
+        AddAuth();
+
+        var results = new List<object>();
+        foreach (var company in userCompanies)
+        {
+            var cards = new List<object>();
+
+            if (!string.IsNullOrWhiteSpace(company.Email))
+            {
+                var response = await http.GetAsync(
+                    $"https://api.paystack.co/customer/{Uri.EscapeDataString(company.Email!)}");
+                var json = await response.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(json);
+                if (doc.RootElement.TryGetProperty("data", out var data) &&
+                    data.TryGetProperty("authorizations", out var auths))
+                {
+                    var allCards = JsonSerializer.Deserialize<List<JsonElement>>(auths.GetRawText()) ?? [];
+                    // Only return reusable cards
+                    cards = allCards
+                        .Where(c => c.TryGetProperty("reusable", out var r) && r.GetBoolean())
+                        .Select(c => (object)JsonSerializer.Deserialize<object>(c.GetRawText())!)
+                        .ToList();
+                }
+            }
+
+            results.Add(new
+            {
+                companyId   = company.CompanyId,
+                companyName = company.CompanyName,
+                email       = company.Email ?? "",
+                hasEmail    = !string.IsNullOrWhiteSpace(company.Email),
+                cards,
+            });
+        }
+        return results;
+    }
+
+    // ── Initialise card-capture for a specific company ───────────────────────
+    public async Task<object> InitialiseCardCaptureAsync(int userId, int companyId)
+    {
+        var company = await GetOwnedCompanyAsync(userId, companyId);
         AddAuth();
 
         var body = JsonSerializer.Serialize(new
         {
-            email    = email,
+            email    = company.Email,
             amount   = 5000,
             currency = "ZAR",
             channels = new[] { "card" },
             metadata = new
             {
-                purpose = "card_capture",
-                user_id = userId,
+                purpose    = "card_capture",
+                user_id    = userId,
+                company_id = companyId,
                 custom_fields = new[]
                 {
-                    new { display_name = "Purpose", variable_name = "purpose", value = "Card capture" }
+                    new { display_name = "Company", variable_name = "company", value = company.CompanyName },
                 }
             },
         });
@@ -110,9 +140,19 @@ public class PaystackProxyService(
         var json = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(json);
 
+        // Return data + email so frontend can confirm which company this is for
         if (doc.RootElement.TryGetProperty("data", out var d))
-            return JsonSerializer.Deserialize<object>(d.GetRawText())!;
-
+        {
+            var data = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(d.GetRawText())!;
+            return new
+            {
+                access_code       = data.GetValueOrDefault("access_code").GetString(),
+                reference         = data.GetValueOrDefault("reference").GetString(),
+                authorization_url = data.GetValueOrDefault("authorization_url").GetString(),
+                email             = company.Email,
+                companyName       = company.CompanyName,
+            };
+        }
         return JsonSerializer.Deserialize<object>(json)!;
     }
 }

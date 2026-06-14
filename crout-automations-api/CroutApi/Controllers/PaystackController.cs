@@ -12,7 +12,7 @@ public class PaystackController(IPaystackProxyService paystack) : ControllerBase
 {
     private int UserId => JwtHelper.GetUserId(User);
 
-    /// <summary>GET /api/paystack/subscriptions</summary>
+    /// <summary>GET /api/paystack/subscriptions — all subscriptions across all user's companies</summary>
     [HttpGet("subscriptions")]
     public async Task<IActionResult> GetSubscriptions()
     {
@@ -20,23 +20,26 @@ public class PaystackController(IPaystackProxyService paystack) : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>GET /api/paystack/cards</summary>
-    [HttpGet("cards")]
-    public async Task<IActionResult> GetCards()
+    /// <summary>GET /api/paystack/companies — list user's companies with their Paystack cards</summary>
+    [HttpGet("companies")]
+    public async Task<IActionResult> GetCompanyBilling()
     {
-        var result = await paystack.GetCardsAsync(UserId);
+        var result = await paystack.GetCompanyBillingAsync(UserId);
         return Ok(result);
     }
 
     /// <summary>
     /// POST /api/paystack/manage-card-url
-    /// Initialises a Paystack transaction for card capture.
-    /// Returns { access_code, reference } for the frontend popup embed.
+    /// Body: { "companyId": 3 }
+    /// Initialises a Paystack transaction for card capture using the company's email.
+    /// Returns { access_code, reference, email } for the frontend popup.
     /// </summary>
     [HttpPost("manage-card-url")]
-    public async Task<IActionResult> ManageCardUrl()
+    public async Task<IActionResult> ManageCardUrl([FromBody] ManageCardRequest req)
     {
-        var result = await paystack.InitialiseCardCaptureAsync(UserId);
+        var result = await paystack.InitialiseCardCaptureAsync(UserId, req.CompanyId);
         return Ok(result);
     }
 }
+
+public record ManageCardRequest(int CompanyId);

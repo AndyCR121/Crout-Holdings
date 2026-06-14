@@ -1,6 +1,6 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PaystackService, IPaystackCard } from '../../../../services/paystack.service';
+import { PaystackService, ICompanyBilling, IPaystackCard } from '../../../../services/paystack.service';
 import { ToastService } from '../../../../services/toast.service';
 
 @Component({
@@ -14,27 +14,34 @@ export class PortalPaymentMethodsComponent implements OnInit {
   private readonly paystack = inject(PaystackService);
   private readonly toast    = inject(ToastService);
 
-  readonly cards   = signal<IPaystackCard[]>([]);
-  readonly loading = signal(true);
-  readonly adding  = signal(false);
+  readonly companies = signal<ICompanyBilling[]>([]);
+  readonly loading   = signal(true);
+
+  // Track which company is currently opening the popup
+  readonly addingFor = signal<number | null>(null);
 
   ngOnInit(): void {
-    this.loadCards();
+    this.loadBilling();
   }
 
-  addCard(): void {
-    this.adding.set(true);
-    this.paystack.getCardCaptureCode().subscribe(res => {
-      this.adding.set(false);
+  addCard(company: ICompanyBilling): void {
+    if (!company.hasEmail) {
+      this.toast.error(`${company.companyName} has no email set. Please update it in your profile first.`);
+      return;
+    }
+    this.addingFor.set(company.companyId);
+    this.paystack.getCardCaptureCode(company.companyId).subscribe(res => {
+      this.addingFor.set(null);
       if (!res?.access_code) {
         this.toast.error('Could not open payment setup. Please try again.');
         return;
       }
       this.paystack.openPopup(
         res.access_code,
+        res.email,                           // ← company's email passed to popup
         (_ref) => {
-          this.toast.success('Card saved successfully!');
-          this.loadCards();
+          this.toast.success(`Card added to ${res.companyName}!`);
+          this.loadBilling();               // Refresh all cards
         },
         () => this.toast.info('Card setup cancelled.'),
       );
@@ -50,10 +57,14 @@ export class PortalPaymentMethodsComponent implements OnInit {
     return `${c.exp_month}/${c.exp_year}`;
   }
 
-  private loadCards(): void {
+  isAdding(companyId: number): boolean {
+    return this.addingFor() === companyId;
+  }
+
+  private loadBilling(): void {
     this.loading.set(true);
-    this.paystack.getSavedCards().subscribe(c => {
-      this.cards.set(c);
+    this.paystack.getCompanyBilling().subscribe(data => {
+      this.companies.set(data);
       this.loading.set(false);
     });
   }
