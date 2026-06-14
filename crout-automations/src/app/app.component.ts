@@ -3,7 +3,6 @@ import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { SeoService } from './services/seo.service';
-import { DevNavComponent } from './components/dev-nav/dev-nav.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { FooterComponent } from './components/footer/footer.component';
 import { ToastComponent } from './components/toast/toast.component';
@@ -13,9 +12,8 @@ import { AccountButtonComponent } from './components/account-button/account-butt
 @Component({
   selector: 'ca-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, DevNavComponent, NavbarComponent, FooterComponent, ToastComponent, ConfirmDialogComponent, AccountButtonComponent],
+  imports: [CommonModule, RouterOutlet, NavbarComponent, FooterComponent, ToastComponent, ConfirmDialogComponent, AccountButtonComponent],
   template: `
-    <ca-dev-nav *ngIf="!showNavbar" />
     <ca-navbar *ngIf="showNavbar" />
     <ca-account-button class="ca-account-fixed" />
     <router-outlet />
@@ -38,7 +36,8 @@ export class AppComponent implements OnInit {
   private readonly seo    = inject(SeoService);
   private readonly router = inject(Router);
 
-  // ca-navbar & ca-footer show on all public routes (not admin)
+  // ca-navbar & ca-footer are hidden on portal & admin routes —
+  // both have their own left-menu navigation.
   showNavbar = true;
 
   ngOnInit(): void {
@@ -47,7 +46,7 @@ export class AppComponent implements OnInit {
       .pipe(filter(e => e instanceof NavigationEnd))
       .subscribe((e: any) => {
         const url: string = e.urlAfterRedirects;
-        this.showNavbar = !url.startsWith('/admin');
+        this.showNavbar = !url.startsWith('/admin') && !url.startsWith('/client');
       });
   }
 }
