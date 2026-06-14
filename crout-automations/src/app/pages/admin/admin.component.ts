@@ -1,12 +1,13 @@
 import { Component, inject, computed, OnInit } from '@angular/core';
-import { RouterOutlet, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { AdminLeftMenuComponent } from '../../components/left-menu/admin-left-menu.component';
 
 @Component({
   selector: 'ca-admin',
   standalone: true,
-  imports: [CommonModule, RouterOutlet],
+  imports: [CommonModule, AdminLeftMenuComponent],
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.scss'],
 })
@@ -14,17 +15,10 @@ export class AdminComponent implements OnInit {
   private readonly auth   = inject(AuthService);
   private readonly router = inject(Router);
 
-  readonly user     = computed(() => this.auth.currentUser());
-  readonly initials = computed(() => {
-    const u = this.user();
-    if (!u) return '';
-    return ((u.firstName?.[0] ?? '') + (u.surname?.[0] ?? '')).toUpperCase() || u.username[0].toUpperCase();
-  });
+  readonly user = computed(() => this.auth.currentUser());
 
   ngOnInit(): void {
     const user = this.user();
     if (!user || !user.isAdmin) this.router.navigate(['/']);
   }
-
-  logout(): void { this.auth.logout(); }
 }
