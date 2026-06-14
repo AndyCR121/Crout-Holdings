@@ -13,11 +13,11 @@ import {
   IServiceConfig,
 } from '../interfaces/i-service.interface';
 
-// ─── Field-name normalizers ───────────────────────────────────────────────────
+// ─── Field-name normalizers ─────────────────────────────────────────────────────────
 
 function normalizeService(raw: any): IService {
   return {
-    serviceId:         raw.serviceId          ?? raw.id,
+    serviceId:          raw.serviceId          ?? raw.id,
     serviceName:        raw.ServiceName         ?? raw.serviceName        ?? raw.name        ?? '',
     price:              raw.Price               ?? raw.price              ?? 0,
     hasAddons:          raw.HasAddons           ?? raw.hasAddons          ?? false,
@@ -39,13 +39,13 @@ function normalizeAddon(raw: any): IAddon {
 
 function normalizePackage(raw: any): IPackage {
   return {
-    packageId:            raw.packageId           ?? raw.id,
-    parentPackageId:      raw.parentPackageId      ?? undefined,
-    serviceIds:           raw.serviceIds           ?? raw.service_ids ?? [],
-    packageName:          raw.PackageName          ?? raw.packageName        ?? raw.name        ?? '',
-    packageDescription:   raw.PackageDescription   ?? raw.packageDescription ?? raw.description ?? '',
-    discount:             raw.Discount             ?? raw.discount           ?? 0,
-    minimumRequiredAddons: raw.minimumRequiredAddons ?? raw.minimumrequiredaddons ?? undefined,
+    packageId:             raw.packageId            ?? raw.id,
+    parentPackageId:       raw.parentPackageId       ?? undefined,
+    serviceIds:            raw.serviceIds            ?? raw.service_ids ?? [],
+    packageName:           raw.PackageName           ?? raw.packageName        ?? raw.name        ?? '',
+    packageDescription:    raw.PackageDescription    ?? raw.packageDescription ?? raw.description ?? '',
+    discount:              raw.Discount              ?? raw.discount           ?? 0,
+    minimumRequiredAddons: raw.minimumRequiredAddons  ?? raw.minimumrequiredaddons ?? undefined,
   };
 }
 
@@ -55,7 +55,7 @@ export class ApiService {
   private readonly env  = inject(EnvironmentService);
   private get base(): string { return this.env.apiUrl; }
 
-  // ─── Services ────────────────────────────────────────────────────────────
+  // ─ Services ────────────────────────────────────────────────────────────────
 
   getServices(): Observable<IService[]> {
     return this.http
@@ -75,7 +75,7 @@ export class ApiService {
       );
   }
 
-  // ─── Addons ───────────────────────────────────────────────────────────────
+  // ─ Addons ──────────────────────────────────────────────────────────────────
 
   getAddonsByService(serviceId: number): Observable<IAddon[]> {
     return this.http
@@ -86,7 +86,7 @@ export class ApiService {
       );
   }
 
-  // ─── Packages ─────────────────────────────────────────────────────────────
+  // ─ Packages ────────────────────────────────────────────────────────────────
 
   getAllPackages(): Observable<IPackage[]> {
     return this.http
@@ -106,7 +106,7 @@ export class ApiService {
       );
   }
 
-  // ─── Users ────────────────────────────────────────────────────────────────
+  // ─ Users ───────────────────────────────────────────────────────────────────
 
   getUser(id: number): Observable<IUser> {
     return this.http
@@ -114,7 +114,7 @@ export class ApiService {
       .pipe(catchError(err => throwError(() => err)));
   }
 
-  // ─── Companies ────────────────────────────────────────────────────────────
+  // ─ Companies ───────────────────────────────────────────────────────────────
 
   getCompaniesByUser(userId: number): Observable<ICompany[]> {
     return this.http
@@ -128,7 +128,7 @@ export class ApiService {
       .pipe(catchError(err => throwError(() => err)));
   }
 
-  // ─── Company Services ─────────────────────────────────────────────────────
+  // ─ Company Services ─────────────────────────────────────────────────────────
 
   getCompanyServices(companyId: number): Observable<IUserService[]> {
     return this.http
@@ -136,7 +136,13 @@ export class ApiService {
       .pipe(catchError(err => throwError(() => err)));
   }
 
-  // ─── Service Config ───────────────────────────────────────────────────────
+  updateUserService(userServiceId: number, dto: Partial<IUserService>): Observable<IUserService> {
+    return this.http
+      .put<IUserService>(`${this.base}/user-services/${userServiceId}`, dto, { withCredentials: true })
+      .pipe(catchError(err => throwError(() => err)));
+  }
+
+  // ─ Service Config ───────────────────────────────────────────────────────────
 
   getServiceConfig(companyId: number, serviceId: number): Observable<IServiceConfig | null> {
     return this.http
