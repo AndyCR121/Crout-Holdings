@@ -1,82 +1,61 @@
-.pbilling {
-  padding: 2rem 2.5rem;
+// ── Layout wrapper ─────────────────────────────────────────────────────────────
+:host { display: block; }
 
-  &__header {
-    margin-bottom: 2rem;
+.portal-page-layout {
+  display:    flex;
+  min-height: 100vh;
+  background: #081222;
+}
+
+.portal-page-main {
+  flex:       1;
+  min-width:  0;
+  overflow-y: auto;
+  padding:    48px 40px;
+  background: #081222;
+}
+
+// ── Billing hub ───────────────────────────────────────────────────────────────
+.portal-billing {
+  display:        flex;
+  flex-direction: column;
+  gap:            32px;
+  color:          rgba(255,255,255,0.85);
+
+  h1 {
+    font-size:   28px;
+    font-weight: 800;
+    color:       #fff;
+    margin:      0 0 4px;
   }
 
-  &__title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #e2e8f0;
-    margin: 0 0 0.25rem;
+  p {
+    font-size: 15px;
+    color:     rgba(255,255,255,0.50);
+    margin:    0;
   }
+}
 
-  &__subtitle {
-    font-size: 0.875rem;
-    color: #8892a4;
-    margin: 0;
-  }
+.billing-nav {
+  display: flex;
+  gap:     8px;
 
-  &__layout {
-    display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 1.5rem;
-    align-items: start;
-  }
-
-  // ── Sub-nav ──────────────────────────────────────────────────────────────
-  &__nav {
-    background: #0f1929;
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 12px;
-    padding: 0.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    position: sticky;
-    top: 1.5rem;
-  }
-
-  &__nav-item {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    padding: 0.6rem 0.85rem;
+  a {
+    padding:       10px 18px;
     border-radius: 8px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #8892a4;
+    font-size:     14px;
+    font-weight:   600;
+    color:         rgba(255,255,255,0.55);
     text-decoration: none;
-    transition: background 150ms, color 150ms;
+    transition:    background 140ms, color 140ms;
+    background:    rgba(255,255,255,0.05);
 
-    &:hover {
-      background: rgba(255,255,255,0.05);
-      color: #e2e8f0;
-    }
-
-    &.active {
-      background: rgba(59,130,246,0.12);
-      color: #60a5fa;
-    }
+    &:hover  { background: rgba(255,255,255,0.09); color: #fff; }
+    &.active { background: rgba(234,123,50,0.15);  color: #ea7b32; }
   }
+}
 
-  // ── Content area ─────────────────────────────────────────────────────────
-  &__content {
-    min-width: 0;
-  }
-
-  // ── Responsive ────────────────────────────────────────────────────────────
-  @media (max-width: 700px) {
-    padding: 1.25rem 1rem;
-
-    &__layout {
-      grid-template-columns: 1fr;
-    }
-
-    &__nav {
-      flex-direction: row;
-      position: static;
-    }
-  }
+@media (max-width: 768px) {
+  .portal-page-layout { flex-direction: column; }
+  .portal-page-main   { padding: 24px 16px; }
 }

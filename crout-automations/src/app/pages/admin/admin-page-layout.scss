@@ -1,0 +1,23 @@
+// ── Shared admin page layout — imported by every admin page component SCSS ────
+// Using @use so styles are included per-component (ViewEncapsulation safe).
+
+:host { display: block; }
+
+.portal-page-layout {
+  display:    flex;
+  min-height: 100vh;
+  background: #081222;
+}
+
+.portal-page-main {
+  flex:       1;
+  min-width:  0;
+  overflow-y: auto;
+  padding:    48px 40px;
+  background: #081222;
+}
+
+@media (max-width: 768px) {
+  .portal-page-layout { flex-direction: column; }
+  .portal-page-main   { padding: 24px 16px; }
+}

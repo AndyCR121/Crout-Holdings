@@ -1,214 +1,95 @@
+// ── Layout wrapper ─────────────────────────────────────────────────────────────
+:host { display: block; }
+
+.portal-page-layout {
+  display:    flex;
+  min-height: 100vh;
+  background: #081222;
+}
+
+.portal-page-main {
+  flex:       1;
+  min-width:  0;
+  overflow-y: auto;
+  padding:    48px 40px;
+  background: #081222;
+}
+
+// ── Subscriptions ─────────────────────────────────────────────────────────────
 .psubs {
-  &__header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-  }
+  display:        flex;
+  flex-direction: column;
+  gap:            28px;
+  color:          rgba(255,255,255,0.85);
+}
 
-  &__title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #e2e8f0;
-    margin: 0 0 0.25rem;
-  }
+.psubs__header { margin-bottom: 4px; }
 
-  &__hint {
-    font-size: 0.8rem;
-    color: #8892a4;
-    margin: 0;
-    line-height: 1.5;
-  }
+.psubs__title {
+  font-size:   28px;
+  font-weight: 800;
+  color:       #fff;
+  margin:      0 0 4px;
+}
 
-  &__count {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #60a5fa;
-    background: rgba(96, 165, 250, 0.1);
-    padding: 3px 10px;
-    border-radius: 999px;
-    white-space: nowrap;
-    align-self: center;
-  }
+.psubs__subtitle {
+  font-size: 15px;
+  color:     rgba(255,255,255,0.50);
+  margin:    0;
+}
 
-  // ── Skeleton ────────────────────────────────────────────────────────────
-  &__skeleton {
-    height: 110px;
-    background: linear-gradient(90deg, #0f1929 25%, #19273d 50%, #0f1929 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
-    border-radius: 10px;
-    margin-bottom: 0.875rem;
-  }
+.psubs__empty {
+  padding:    48px 0;
+  color:      rgba(255,255,255,0.35);
+  font-size:  14px;
+  text-align: center;
+}
 
-  @keyframes shimmer {
-    0%   { background-position: -200% 0; }
-    100% { background-position:  200% 0; }
-  }
+.psubs__list {
+  display:        flex;
+  flex-direction: column;
+  gap:            12px;
+}
 
-  // ── Empty / Error ────────────────────────────────────────────────────────
-  &__empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 3rem 1rem;
-    color: #4a5568;
-    text-align: center;
+.psubs__card {
+  background:    rgba(255,255,255,0.04);
+  border:        1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding:       20px;
+  display:       grid;
+  grid-template-columns: 1fr auto;
+  gap:           12px 16px;
+  align-items:   start;
+}
 
-    &--error {
-      color: #f87171;
-      svg { stroke: #f87171; }
-    }
-  }
+.psubs__card-name {
+  font-size:   16px;
+  font-weight: 700;
+  color:       #fff;
+  margin:      0;
+}
 
-  // ── Company group ────────────────────────────────────────────────────────
-  &__company {
-    margin-bottom: 1.75rem;
+.psubs__card-meta {
+  font-size: 13px;
+  color:     rgba(255,255,255,0.45);
+}
 
-    &:last-child { margin-bottom: 0; }
-  }
+.psubs__badge {
+  padding:        4px 12px;
+  border-radius:  20px;
+  font-size:      11px;
+  font-weight:    700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 
-  &__company-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-    margin-bottom: 0.75rem;
-    padding-bottom: 0.6rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  }
+  &.status-live    { background: rgba(80,200,120,0.15);  color: #50cc78; }
+  &.status-pending { background: rgba(100,150,255,0.15); color: #7aaeff; }
+  &.status-dev     { background: rgba(234,195,50,0.15);  color: #e8c232; }
+  &.status-disabled{ background: rgba(150,150,150,0.15); color: #aaa; }
+}
 
-  &__company-name {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #cbd5e1;
-  }
-
-  &__company-email {
-    font-size: 0.75rem;
-    color: #4a5568;
-  }
-
-  &__company-count {
-    margin-left: auto;
-    font-size: 0.7rem;
-    color: #4a5568;
-    font-weight: 500;
-  }
-
-  &__company-empty {
-    font-size: 0.8rem;
-    color: #4a5568;
-    padding: 0.75rem 0;
-  }
-
-  // ── Subscription row ─────────────────────────────────────────────────────
-  &__row {
-    background: #0f1929;
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 12px;
-    padding: 1.25rem 1.5rem;
-    margin-bottom: 0.875rem;
-
-    &:last-child { margin-bottom: 0; }
-  }
-
-  &__row-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
-
-  &__row-title-group {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
-
-  &__service-name {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #e2e8f0;
-  }
-
-  // ── Badges ───────────────────────────────────────────────────────────────
-  &__badge {
-    font-size: 0.68rem;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 999px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    white-space: nowrap;
-
-    // Paystack status badges
-    &.badge--active    { background: rgba(74, 222, 128, 0.12);  color: #4ade80; }
-    &.badge--cancelled { background: rgba(248, 113, 113, 0.12); color: #f87171; }
-    &.badge--warning   { background: rgba(251, 191, 36, 0.12);  color: #fbbf24; }
-    &.badge--unknown   { background: rgba(156, 163, 175, 0.1);  color: #6b7280; }
-
-    // DB service status badges
-    &.status-live      { background: rgba(74, 222, 128, 0.12);  color: #4ade80; }
-    &.status-dev       { background: rgba(251, 191, 36, 0.12);  color: #fbbf24; }
-    &.status-pending   { background: rgba(96, 165, 250, 0.12);  color: #60a5fa; }
-    &.status-disabled  { background: rgba(156, 163, 175, 0.1);  color: #6b7280; }
-
-    // Unlinked warning
-    &.badge--unlinked  { background: rgba(251, 146, 60, 0.12);  color: #fb923c; }
-  }
-
-  // ── Price ─────────────────────────────────────────────────────────────────
-  &__price {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #60a5fa;
-    white-space: nowrap;
-  }
-
-  &__price-interval {
-    font-size: 0.75rem;
-    font-weight: 400;
-    color: #8892a4;
-    margin-left: 0.1rem;
-  }
-
-  // ── Meta grid ─────────────────────────────────────────────────────────────
-  &__row-meta {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 0.75rem;
-  }
-
-  &__meta-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-  }
-
-  &__meta-label {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #4a5568;
-    font-weight: 500;
-  }
-
-  &__meta-value {
-    font-size: 0.85rem;
-    color: #8892a4;
-
-    &.code {
-      font-family: monospace;
-      font-size: 0.75rem;
-      color: #60a5fa;
-      word-break: break-all;
-    }
-  }
+@media (max-width: 768px) {
+  .portal-page-layout { flex-direction: column; }
+  .portal-page-main   { padding: 24px 16px; }
+  .psubs__card        { grid-template-columns: 1fr; }
 }

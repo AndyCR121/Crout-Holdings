@@ -1,453 +1,406 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// Portal Services — dark-portal BEM styles matching the .pservices__ template
-// ─────────────────────────────────────────────────────────────────────────────
+// ── Layout wrapper (same pattern as dashboard) ────────────────────────────────
+:host { display: block; }
 
-$surface:      rgba(255,255,255,0.04);
-$surface-2:    rgba(255,255,255,0.02);
-$border:       rgba(255,255,255,0.09);
-$text:         rgba(255,255,255,0.90);
-$text-muted:   rgba(255,255,255,0.50);
-$text-faint:   rgba(255,255,255,0.30);
-$accent:       #ea7b32;
-$accent-hover: #d06820;
-$teal:         #4fa3b8;
-$radius:       14px;
-$radius-sm:    8px;
+.portal-page-layout {
+  display:    flex;
+  min-height: 100vh;
+  background: #081222;
+}
 
+.portal-page-main {
+  flex:       1;
+  min-width:  0;
+  overflow-y: auto;
+  padding:    48px 40px;
+  background: #081222;
+}
+
+// ── Services page ─────────────────────────────────────────────────────────────
 .pservices {
-  padding: 54px 0;
   display:        flex;
   flex-direction: column;
-  gap:            0;
+  gap:            28px;
+  color:          rgba(255,255,255,0.85);
+}
 
-  // ── Page header ──────────────────────────────────────────────────────────
-  &__header { margin-bottom: 28px; }
+.pservices__header { margin-bottom: 4px; }
 
-  &__title {
-    font-size:   28px;
-    font-weight: 800;
-    color:       $text;
-    margin:      0 0 4px;
+.pservices__title {
+  font-size:   28px;
+  font-weight: 800;
+  color:       #fff;
+  margin:      0 0 4px;
+}
+
+.pservices__subtitle {
+  font-size: 15px;
+  color:     rgba(255,255,255,0.50);
+  margin:    0;
+}
+
+// ── Empty / loading ───────────────────────────────────────────────────────────
+.pservices__empty {
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  gap:            12px;
+  padding:        48px 0;
+  color:          rgba(255,255,255,0.35);
+  font-size:      14px;
+  text-align:     center;
+
+  h3   { color: rgba(255,255,255,0.65); font-size: 17px; margin: 0; }
+  p    { margin: 0; max-width: 36ch; }
+  svg  { opacity: 0.35; }
+
+  &--inline { padding: 16px 0; }
+}
+
+.pservices__spinner {
+  width:         32px;
+  height:        32px;
+  border:        3px solid rgba(255,255,255,0.10);
+  border-top:    3px solid #ea7b32;
+  border-radius: 50%;
+  animation:     spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+// ── Company group ─────────────────────────────────────────────────────────────
+.pservices__group {
+  background:    rgba(255,255,255,0.03);
+  border:        1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  overflow:      hidden;
+}
+
+.pservices__group-header {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  padding:         16px 20px;
+  cursor:          pointer;
+  transition:      background 140ms;
+
+  &:hover { background: rgba(255,255,255,0.04); }
+}
+
+.pservices__group-meta {
+  display:        flex;
+  flex-direction: column;
+  gap:            3px;
+}
+
+.pservices__group-name {
+  font-size:   16px;
+  font-weight: 700;
+  color:       #fff;
+}
+
+.pservices__group-industry {
+  font-size: 12px;
+  color:     rgba(255,255,255,0.40);
+}
+
+.pservices__group-right {
+  display:     flex;
+  align-items: center;
+  gap:         10px;
+  color:       rgba(255,255,255,0.40);
+  font-size:   13px;
+}
+
+.pservices__group-chevron {
+  transition: transform 220ms ease;
+  &--open { transform: rotate(180deg); }
+}
+
+// ── Service cards list ────────────────────────────────────────────────────────
+.pservices__list {
+  display:        flex;
+  flex-direction: column;
+  gap:            1px;
+  padding:        0 12px 12px;
+}
+
+.pservices__card {
+  background:     rgba(255,255,255,0.04);
+  border:         1px solid rgba(255,255,255,0.08);
+  border-radius:  10px;
+  padding:        18px;
+  display:        flex;
+  flex-direction: column;
+  gap:            14px;
+}
+
+.pservices__card-header { display: flex; flex-direction: column; gap: 6px; }
+
+.pservices__card-title-row {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  gap:             10px;
+}
+
+.pservices__card-title {
+  font-size:   16px;
+  font-weight: 700;
+  color:       #fff;
+  margin:      0;
+}
+
+.pservices__card-desc {
+  font-size: 13px;
+  color:     rgba(255,255,255,0.45);
+  margin:    0;
+}
+
+// ── Status badge ──────────────────────────────────────────────────────────────
+.pservices__status {
+  padding:        3px 10px;
+  border-radius:  20px;
+  font-size:      11px;
+  font-weight:    700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink:    0;
+  white-space:    nowrap;
+
+  &.status-disabled { background: rgba(150,150,150,0.15); color: #aaa; }
+  &.status-dev      { background: rgba(234,195,50,0.15);  color: #e8c232; }
+  &.status-live     { background: rgba(80,200,120,0.15);  color: #50cc78; }
+  &.status-pending  { background: rgba(100,150,255,0.15); color: #7aaeff; }
+}
+
+// ── Addons ────────────────────────────────────────────────────────────────────
+.pservices__addons {
+  display:        flex;
+  flex-direction: column;
+  gap:            6px;
+}
+
+.pservices__addons-label {
+  font-size:   11px;
+  font-weight: 600;
+  color:       rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pservices__addons-list {
+  display:     flex;
+  flex-wrap:   wrap;
+  gap:         6px;
+  list-style:  none;
+  margin:      0;
+  padding:     0;
+
+  li {
+    padding:       3px 10px;
+    background:    rgba(79,163,184,0.12);
+    border:        1px solid rgba(79,163,184,0.25);
+    border-radius: 20px;
+    font-size:     12px;
+    color:         #4fa3b8;
   }
+}
 
-  &__subtitle {
-    font-size: 15px;
-    color:     $text-muted;
-    margin:    0;
-  }
+// ── Card actions ──────────────────────────────────────────────────────────────
+.pservices__card-actions {
+  display: flex;
+  gap:     10px;
+}
 
-  // ── Loading / empty ──────────────────────────────────────────────────────
-  &__empty {
-    display:        flex;
-    flex-direction: column;
-    align-items:    center;
-    text-align:     center;
-    padding:        64px 24px;
-    color:          $text-faint;
-    gap:            12px;
+.pservices__btn {
+  padding:       8px 16px;
+  border-radius: 8px;
+  font-size:     13px;
+  font-weight:   600;
+  border:        none;
+  cursor:        pointer;
+  transition:    background 140ms, color 140ms;
 
-    h3 { color: rgba(255,255,255,0.70); font-size: 18px; font-weight: 700; margin: 0; }
-    p  { font-size: 14px; margin: 0; max-width: 36ch; color: $text-muted; }
+  &--primary    { background: #ea7b32; color: #fff; &:hover { background: #d06b25; } }
+  &--secondary  { background: rgba(234,123,50,0.15); color: #ea7b32; border: 1px solid rgba(234,123,50,0.3); &:hover { background: rgba(234,123,50,0.25); } }
+  &--ghost      { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.70); &:hover { background: rgba(255,255,255,0.10); } }
 
-    &--inline {
-      padding:    20px 24px;
-      align-items: flex-start;
-      text-align:  left;
-      border-top:  1px solid $border;
-    }
-  }
+  &:disabled    { opacity: 0.5; cursor: not-allowed; }
+}
 
-  &__spinner {
-    width:        36px;
-    height:       36px;
-    border:       3px solid rgba(255,255,255,0.10);
-    border-top-color: $accent;
-    border-radius: 50%;
-    animation:    psvc-spin 0.7s linear infinite;
-  }
+// ── Edit mode ─────────────────────────────────────────────────────────────────
+.pservices__edit {
+  display:        flex;
+  flex-direction: column;
+  gap:            14px;
+  padding:        16px;
+  background:     rgba(255,255,255,0.03);
+  border-radius:  10px;
+}
 
-  @keyframes psvc-spin { to { transform: rotate(360deg); } }
+.pservices__edit-hint {
+  font-size: 13px;
+  color:     rgba(255,255,255,0.50);
+  margin:    0;
+}
 
-  // ── Company group ────────────────────────────────────────────────────────
-  &__group {
-    margin-bottom: 20px;
-    border:        1px solid $border;
-    border-radius: $radius;
-    overflow:      hidden;
-  }
+.pservices__addon-toggle-list {
+  list-style: none;
+  margin:     0;
+  padding:    0;
+  display:    flex;
+  flex-direction: column;
+  gap:        8px;
+}
 
-  &__group-header {
+.pservices__addon-toggle {
+  display:       flex;
+  align-items:   flex-start;
+  gap:           10px;
+  padding:       10px 12px;
+  border:        1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  cursor:        pointer;
+  transition:    background 140ms, border-color 140ms;
+
+  &:hover           { background: rgba(255,255,255,0.04); }
+  &--active         { background: rgba(234,123,50,0.10); border-color: rgba(234,123,50,0.30); }
+}
+
+.pservices__addon-check {
+  width:           18px;
+  height:          18px;
+  border:          2px solid rgba(255,255,255,0.20);
+  border-radius:   4px;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  flex-shrink:     0;
+  margin-top:      1px;
+  color:           #ea7b32;
+
+  .pservices__addon-toggle--active & { border-color: #ea7b32; background: rgba(234,123,50,0.15); }
+}
+
+.pservices__addon-info {
+  display:        flex;
+  flex-direction: column;
+  gap:            2px;
+
+  strong { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85); }
+  small  { font-size: 12px; color: rgba(255,255,255,0.40); }
+}
+
+.pservices__edit-actions {
+  display: flex;
+  gap:     10px;
+  justify-content: flex-end;
+}
+
+// ── Side panel ────────────────────────────────────────────────────────────────
+.pservices__side-panel {
+  position:   fixed;
+  inset:      0;
+  z-index:    200;
+  visibility: hidden;
+  pointer-events: none;
+
+  &--open { visibility: visible; pointer-events: all; }
+}
+
+.pservices__side-panel-backdrop {
+  position:   absolute;
+  inset:      0;
+  background: rgba(0,0,0,0.55);
+  opacity:    0;
+  transition: opacity 220ms;
+
+  .pservices__side-panel--open & { opacity: 1; }
+}
+
+.pservices__side-panel-drawer {
+  position:       absolute;
+  right:          0;
+  top:            0;
+  bottom:         0;
+  width:          min(420px, 90vw);
+  background:     #0d1f38;
+  border-left:    1px solid rgba(255,255,255,0.08);
+  padding:        32px 24px;
+  overflow-y:     auto;
+  transform:      translateX(100%);
+  transition:     transform 260ms cubic-bezier(0.16,1,0.3,1);
+  display:        flex;
+  flex-direction: column;
+  gap:            18px;
+
+  .pservices__side-panel--open & { transform: translateX(0); }
+
+  h3   { font-size: 20px; font-weight: 700; color: #fff; margin: 0; }
+}
+
+.pservices__side-panel-close {
+  align-self:  flex-end;
+  background:  transparent;
+  border:      none;
+  color:       rgba(255,255,255,0.50);
+  cursor:      pointer;
+  padding:     4px;
+  &:hover { color: #fff; }
+}
+
+.pservices__side-desc {
+  font-size: 14px;
+  color:     rgba(255,255,255,0.55);
+  margin:    0;
+}
+
+.pservices__side-meta {
+  display:        flex;
+  flex-direction: column;
+  gap:            10px;
+
+  > div {
     display:         flex;
-    align-items:     center;
     justify-content: space-between;
-    padding:         16px 20px;
-    background:      rgba(255,255,255,0.03);
-    cursor:          pointer;
-    user-select:     none;
-    transition:      background 140ms ease;
-
-    &:hover { background: rgba(255,255,255,0.06); }
+    font-size:       13px;
+    span  { color: rgba(255,255,255,0.40); }
+    strong { color: rgba(255,255,255,0.85); font-weight: 600; }
   }
+}
 
-  &__group-meta {
-    display:        flex;
-    flex-direction: column;
-    gap:            2px;
-  }
+.pservices__side-section-label {
+  font-size:      11px;
+  font-weight:    600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color:          rgba(255,255,255,0.35);
+  margin:         0 0 8px;
+}
 
-  &__group-name {
-    font-size:   15px;
-    font-weight: 700;
-    color:       $text;
-  }
+.pservices__side-features {
+  list-style: none;
+  margin:     0;
+  padding:    0;
+  display:    flex;
+  flex-direction: column;
+  gap:        6px;
 
-  &__group-industry {
-    font-size:  12px;
-    color:      $teal;
-    font-weight: 500;
-  }
-
-  &__group-right {
-    display:     flex;
-    align-items: center;
-    gap:         10px;
-  }
-
-  &__group-count {
-    font-size:  12px;
-    color:      $text-muted;
-  }
-
-  &__group-chevron {
-    color:      $text-faint;
-    transition: transform 200ms ease;
-
-    &--open { transform: rotate(180deg); }
-  }
-
-  // ── Service list inside a group ──────────────────────────────────────────
-  &__list {
-    display:        flex;
-    flex-direction: column;
-    border-top:     1px solid $border;
-  }
-
-  // ── Service card ─────────────────────────────────────────────────────────
-  &__card {
-    border-bottom: 1px solid $border;
-    &:last-child  { border-bottom: none; }
-  }
-
-  &__card-header {
-    padding:        18px 20px 16px;
-    display:        flex;
-    flex-direction: column;
-    gap:            8px;
-  }
-
-  &__card-title-row {
-    display:         flex;
-    align-items:     flex-start;
-    justify-content: space-between;
-    gap:             12px;
-  }
-
-  &__card-title {
-    font-size:   17px;
-    font-weight: 700;
-    color:       $text;
-    margin:      0;
-  }
-
-  &__card-desc {
+  li {
     font-size:  13px;
-    color:      $text-muted;
-    margin:     0;
-    max-width:  60ch;
-    line-height: 1.5;
+    color:      rgba(255,255,255,0.65);
+    padding:    6px 10px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 6px;
   }
+}
 
-  // ── Status badge ─────────────────────────────────────────────────────────
-  &__status {
-    padding:        4px 10px;
-    border-radius:  20px;
-    font-size:      11px;
-    font-weight:    700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    flex-shrink:    0;
-    white-space:    nowrap;
+// ── Status colours shared with side panel ─────────────────────────────────────
+.status-disabled { color: #aaa !important; }
+.status-dev      { color: #e8c232 !important; }
+.status-live     { color: #50cc78 !important; }
+.status-pending  { color: #7aaeff !important; }
 
-    &.status-disabled { background: rgba(150,150,150,0.15); color: #aaa; }
-    &.status-dev      { background: rgba(234,195,50,0.15);  color: #e8c232; }
-    &.status-live     { background: rgba(80,200,120,0.15);  color: #50cc78; }
-    &.status-pending  { background: rgba(100,150,255,0.15); color: #7aaeff; }
-  }
-
-  // ── Active addons ────────────────────────────────────────────────────────
-  &__addons {
-    padding:     0 20px 14px;
-    display:     flex;
-    flex-wrap:   wrap;
-    align-items: baseline;
-    gap:         8px;
-  }
-
-  &__addons-label {
-    font-size:      11px;
-    font-weight:    700;
-    text-transform: uppercase;
-    letter-spacing: 0.7px;
-    color:          $text-faint;
-    flex-shrink:    0;
-  }
-
-  &__addons-list {
-    list-style: none;
-    display:    flex;
-    flex-wrap:  wrap;
-    gap:        6px;
-
-    li {
-      padding:       3px 10px;
-      background:    rgba(79,163,184,0.12);
-      border:        1px solid rgba(79,163,184,0.25);
-      border-radius: 20px;
-      font-size:     12px;
-      color:         $teal;
-    }
-  }
-
-  // ── Card actions row ─────────────────────────────────────────────────────
-  &__card-actions {
-    padding:     0 20px 18px;
-    display:     flex;
-    align-items: center;
-    gap:         8px;
-    flex-wrap:   wrap;
-  }
-
-  // ── Edit section ─────────────────────────────────────────────────────────
-  &__edit {
-    border-top:     1px solid $border;
-    padding:        18px 20px 20px;
-    background:     $surface-2;
-    display:        flex;
-    flex-direction: column;
-    gap:            14px;
-  }
-
-  &__edit-hint {
-    font-size:  13px;
-    color:      $text-muted;
-    margin:     0;
-  }
-
-  &__addon-toggle-list {
-    list-style:            none;
-    display:               grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap:                   10px;
-  }
-
-  &__addon-toggle {
-    display:        flex;
-    align-items:    flex-start;
-    gap:            10px;
-    padding:        12px 14px;
-    background:     $surface;
-    border:         1px solid $border;
-    border-radius:  10px;
-    cursor:         pointer;
-    transition:     background 120ms ease, border-color 120ms ease;
-
-    &:hover { background: rgba(255,255,255,0.07); }
-
-    &--active {
-      background:   rgba(234,123,50,0.10);
-      border-color: rgba(234,123,50,0.40);
-    }
-  }
-
-  &__addon-check {
-    width:           18px;
-    height:          18px;
-    border:          1px solid rgba(255,255,255,0.20);
-    border-radius:   4px;
-    display:         flex;
-    align-items:     center;
-    justify-content: center;
-    flex-shrink:     0;
-    margin-top:      1px;
-    transition:      background 120ms ease, border-color 120ms ease;
-
-    .pservices__addon-toggle--active & {
-      background:   $accent;
-      border-color: $accent;
-    }
-  }
-
-  &__addon-info {
-    display:        flex;
-    flex-direction: column;
-    gap:            3px;
-
-    strong { font-size: 13px; font-weight: 600; color: $text; }
-    small  { font-size: 12px; color: $text-faint; }
-  }
-
-  &__edit-actions {
-    display:     flex;
-    align-items: center;
-    gap:         10px;
-  }
-
-  // ── Buttons ──────────────────────────────────────────────────────────────
-  &__btn {
-    display:       inline-flex;
-    align-items:   center;
-    gap:           6px;
-    border-radius: $radius-sm;
-    font-size:     13px;
-    font-weight:   600;
-    cursor:        pointer;
-    padding:       8px 16px;
-    border:        1px solid transparent;
-    transition:    background 140ms ease, border-color 140ms ease, color 140ms ease;
-
-    &--primary {
-      background:   $accent;
-      color:        #fff;
-      border-color: $accent;
-      &:hover:not(:disabled)  { background: $accent-hover; border-color: $accent-hover; }
-      &:disabled { opacity: 0.50; cursor: not-allowed; }
-    }
-
-    &--secondary {
-      background:   rgba(255,255,255,0.07);
-      border-color: rgba(255,255,255,0.14);
-      color:        rgba(255,255,255,0.80);
-      &:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
-    }
-
-    &--ghost {
-      background:   transparent;
-      border-color: rgba(255,255,255,0.14);
-      color:        rgba(255,255,255,0.50);
-      &:hover:not(:disabled) { background: rgba(255,255,255,0.06); color: $text; }
-    }
-  }
-
-  // ── Side-panel drawer ────────────────────────────────────────────────────
-  &__side-panel {
-    display: none;
-
-    &--open { display: block; }
-  }
-
-  &__side-panel-backdrop {
-    position:   fixed;
-    inset:      0;
-    background: rgba(0,0,0,0.55);
-    z-index:    500;
-    animation:  psvc-fade 160ms ease;
-  }
-
-  @keyframes psvc-fade { from { opacity: 0; } to { opacity: 1; } }
-
-  &__side-panel-drawer {
-    position:       fixed;
-    top:            0;
-    right:          0;
-    width:          420px;
-    max-width:      100vw;
-    height:         100%;
-    background:     #0e1c35;
-    border-left:    1px solid $border;
-    z-index:        501;
-    display:        flex;
-    flex-direction: column;
-    padding:        24px;
-    gap:            16px;
-    overflow-y:     auto;
-    animation:      psvc-slide 220ms cubic-bezier(0.16,1,0.3,1);
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255,255,255,0.15) transparent;
-  }
-
-  @keyframes psvc-slide {
-    from { transform: translateX(40px); opacity: 0; }
-    to   { transform: translateX(0);    opacity: 1; }
-  }
-
-  &__side-panel-close {
-    align-self:    flex-end;
-    padding:       8px;
-    background:    transparent;
-    border:        none;
-    border-radius: 8px;
-    color:         $text-muted;
-    cursor:        pointer;
-    &:hover { background: rgba(255,255,255,0.08); color: $text; }
-  }
-
-  h3 { font-size: 17px; font-weight: 700; color: $text; margin: 0; }
-
-  &__side-desc {
-    font-size:   14px;
-    color:       $text-muted;
-    margin:      0;
-    line-height: 1.6;
-  }
-
-  &__side-meta {
-    display:        flex;
-    flex-direction: column;
-    gap:            8px;
-    padding:        14px;
-    background:     $surface;
-    border:         1px solid $border;
-    border-radius:  $radius-sm;
-
-    div {
-      display:   flex;
-      gap:       8px;
-      font-size: 13px;
-
-      span  { color: $text-muted; min-width: 90px; }
-      strong { color: $text; font-weight: 600; }
-    }
-  }
-
-  &__side-section-label {
-    font-size:      11px;
-    font-weight:    700;
-    text-transform: uppercase;
-    letter-spacing: 0.7px;
-    color:          $text-faint;
-    margin:         0 0 8px;
-  }
-
-  &__side-features {
-    list-style:     none;
-    display:        flex;
-    flex-direction: column;
-    gap:            6px;
-
-    li {
-      font-size:  13px;
-      color:      $text-muted;
-      padding-left: 14px;
-      position:   relative;
-
-      &::before {
-        content:    '→';
-        position:   absolute;
-        left:       0;
-        color:      $accent;
-        font-size:  11px;
-        top:        1px;
-      }
-    }
-  }
+@media (max-width: 768px) {
+  .portal-page-layout { flex-direction: column; }
+  .portal-page-main   { padding: 24px 16px; }
 }
