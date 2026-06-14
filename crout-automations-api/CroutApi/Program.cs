@@ -43,6 +43,15 @@ builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IServiceCatalogService, ServiceCatalogService>();
 builder.Services.AddScoped<IServiceRequestService, ServiceRequestService>();
 
+// -- Paystack proxy -----------------------------------------------------------
+// Uses a named HttpClient scoped to the Paystack base URL.
+// Secret key is read from PAYSTACK_SECRET_KEY env var or appsettings Paystack:SecretKey.
+builder.Services.AddHttpClient<IPaystackProxyService, PaystackProxyService>(client =>
+{
+    client.BaseAddress = new Uri("https://api.paystack.co");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
 // -- JWT Auth -----------------------------------------------------------------
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
   .AddJwtBearer(o =>
@@ -56,7 +65,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
       ValidIssuer              = jwtIssuer,
       ValidAudience            = jwtAudience,
       IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
-      // Prevent ASP.NET from remapping standard JWT claims to legacy XML claim URIs
       NameClaimType            = "unique_name",
       RoleClaimType            = "role",
     };
@@ -79,7 +87,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// -- Global exception handler — always returns JSON with error details --------
+// -- Global exception handler -------------------------------------------------
 app.UseExceptionHandler(errApp =>
 {
   errApp.Run(async ctx =>
@@ -87,8 +95,7 @@ app.UseExceptionHandler(errApp =>
     ctx.Response.ContentType = "application/json";
     var feature = ctx.Features.Get<IExceptionHandlerFeature>();
     var ex      = feature?.Error;
-
-    var isDev = app.Environment.IsDevelopment();
+    var isDev   = app.Environment.IsDevelopment();
 
     ctx.Response.StatusCode = ex switch
     {

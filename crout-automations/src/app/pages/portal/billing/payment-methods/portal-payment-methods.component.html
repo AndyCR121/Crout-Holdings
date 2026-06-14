@@ -1,15 +1,62 @@
-<div class="pmethods">
+<div class="ppm">
 
-  <h2 class="pmethods__title">Payment Methods</h2>
-  <p class="pmethods__hint">Cards saved to your Paystack account for automatic subscription billing.</p>
-
-  <!-- TODO: integrate Paystack — render saved cards once Paystack is connected -->
-  <div class="pmethods__coming-soon">
-    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
-    </svg>
-    <p>Payment method management coming soon.</p>
-    <span class="pmethods__empty-hint">Paystack integration is in progress. Your saved cards will appear here once billing is live.</span>
+  <div class="ppm__header">
+    <div>
+      <h2 class="ppm__title">Payment Methods</h2>
+      <p class="ppm__hint">Cards saved to your Paystack account.</p>
+    </div>
+    <button class="ppm__add-btn" (click)="addCard()" [disabled]="adding()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      {{ adding() ? 'Opening...' : 'Add Billing Option' }}
+    </button>
   </div>
+
+  <!-- Loading skeletons -->
+  @if (loading()) {
+    <div class="ppm__skeleton-list">
+      @for (_ of [1, 2]; track $index) {
+        <div class="ppm__skeleton"></div>
+      }
+    </div>
+  }
+
+  <!-- Card list -->
+  @else if (cards().length > 0) {
+    <ul class="ppm__list">
+      @for (card of cards(); track card.authorization_code) {
+        <li class="ppm__card">
+          <div class="ppm__card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="5" width="20" height="14" rx="2"/>
+              <path d="M2 10h20"/>
+            </svg>
+          </div>
+          <div class="ppm__card-body">
+            <span class="ppm__card-number">{{ cardLabel(card) }}</span>
+            <span class="ppm__card-brand">{{ card.bank || card.channel }} &middot; Expires {{ cardExpiry(card) }}</span>
+          </div>
+          @if (card.reusable) {
+            <span class="ppm__card-badge">Saved</span>
+          } @else {
+            <span class="ppm__card-badge ppm__card-badge--single">Single-use</span>
+          }
+        </li>
+      }
+    </ul>
+  }
+
+  <!-- Empty state -->
+  @else {
+    <div class="ppm__empty">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <rect x="2" y="5" width="20" height="14" rx="2"/>
+        <path d="M2 10h20"/>
+      </svg>
+      <p>No saved payment methods yet.</p>
+      <p class="ppm__empty-hint">Click <strong>Add Billing Option</strong> to securely add a card via Paystack.</p>
+    </div>
+  }
 
 </div>
