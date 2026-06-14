@@ -1,101 +1,101 @@
-.pd-wrap {
-  padding: 54px 0;
-  height:  100%;
+// ───────────────────────────────────────────────────────────────────────────────
+// Portal Dashboard — styles matching portal-dashboard.component.html
+// ───────────────────────────────────────────────────────────────────────────────
+
+// The outer .portal-page-layout + .portal-page-main layout lives in styles.scss.
+// Angular's ViewEncapsulation means child-component host elements (ca-portal-left-menu)
+// inside THIS component's template ARE reachable via :host → .portal-page-layout.
+
+:host {
+  display: block;
 }
 
-.pd-title {
+// ─ Page-level layout wrapper (rendered inside this component's template) ────────
+.portal-page-layout {
+  display:    flex;
+  min-height: 100vh;
+  background: #081222;
+}
+
+.portal-page-main {
+  flex:       1;
+  min-width:  0;
+  overflow-y: auto;
+  padding:    48px 40px;
+  background: #081222;
+}
+
+// ─ Dashboard content ─────────────────────────────────────────────────────────────
+.dash-root {
+  display:        flex;
+  flex-direction: column;
+  gap:            32px;
+}
+
+.dash-loading {
+  padding:    48px 0;
+  color:      rgba(255,255,255,0.40);
+  font-size:  15px;
+  text-align: center;
+}
+
+// ─ Header ─────────────────────────────────────────────────────────────────────
+.dash-header { margin-bottom: 4px; }
+
+.dash-title {
   font-size:   28px;
   font-weight: 800;
   color:       #fff;
   margin:      0 0 4px;
 }
 
-.pd-sub {
+.dash-sub {
   font-size: 15px;
   color:     rgba(255,255,255,0.55);
-  margin:    0 0 32px;
+  margin:    0;
 
   strong { color: rgba(255,255,255,0.85); }
 }
 
-// ── Company group ────────────────────────────────────────────────────────────
-.pd-company-group {
-  margin-bottom: 28px;
-}
-
-.pd-company-header {
-  display:         flex;
-  align-items:     center;
-  justify-content: space-between;
-  padding:         10px 0 12px;
-  border-bottom:   1px solid rgba(255,255,255,0.09);
-  margin-bottom:   16px;
-}
-
-.pd-company-meta {
-  display:        flex;
-  flex-direction: column;
-  gap:            2px;
-}
-
-.pd-company-name {
-  font-size:   16px;
-  font-weight: 700;
-  color:       rgba(255,255,255,0.90);
-}
-
-.pd-company-industry {
-  font-size:  12px;
-  color:      #4fa3b8;
-  font-weight: 500;
-}
-
-.pd-company-count {
-  font-size: 12px;
-  color:     rgba(255,255,255,0.40);
-}
-
-// ── Service cards grid ───────────────────────────────────────────────────────
-.pd-grid {
+// ─ Services grid ────────────────────────────────────────────────────────────────
+.dash-services {
   display:               grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap:                   16px;
 }
 
-.pd-card {
+// ─ Service card ─────────────────────────────────────────────────────────────────
+.service-card {
   background:     rgba(255,255,255,0.04);
   border:         1px solid rgba(255,255,255,0.09);
   border-radius:  14px;
   padding:        22px;
   display:        flex;
   flex-direction: column;
-  gap:            16px;
+  gap:            14px;
 }
 
-.pd-card-header {
+.service-card-header {
   display:         flex;
   align-items:     flex-start;
   justify-content: space-between;
-  gap:             14px;
+  gap:             12px;
 }
 
-.pd-card-name {
+.service-name {
   font-size:   17px;
   font-weight: 700;
   color:       #fff;
-  margin:      0 0 4px;
 }
 
-.pd-card-desc {
+.service-company {
   font-size:  13px;
-  color:      rgba(255,255,255,0.50);
+  color:      rgba(255,255,255,0.45);
   margin:     0;
-  max-width:  50ch;
-  line-height: 1.5;
 }
 
-// ── Status badge ─────────────────────────────────────────────────────────────
-.pd-status-badge {
+// ─ Status badge ─────────────────────────────────────────────────────────────────
+.service-status {
   padding:        4px 12px;
   border-radius:  20px;
   font-size:      12px;
@@ -111,100 +111,49 @@
   &.status-pending  { background: rgba(100,150,255,0.15); color: #7aaeff; }
 }
 
-// ── Config chips ─────────────────────────────────────────────────────────────
-.pd-addons {
-  display:     flex;
-  align-items: baseline;
-  gap:         10px;
-  flex-wrap:   wrap;
-}
-
-.pd-addons-label {
-  font-size:      11px;
-  font-weight:    700;
-  text-transform: uppercase;
-  letter-spacing: 0.7px;
-  color:          rgba(255,255,255,0.40);
-  flex-shrink:    0;
-}
-
-.pd-chips {
+// ─ Addons ───────────────────────────────────────────────────────────────────────
+.service-addons {
   display:  flex;
   flex-wrap: wrap;
   gap:       6px;
 }
 
-.pd-chip {
+.addon-chip {
   padding:       3px 10px;
-  background:    rgba(79,163,184,0.15);
-  border:        1px solid rgba(79,163,184,0.30);
+  background:    rgba(79,163,184,0.12);
+  border:        1px solid rgba(79,163,184,0.25);
   border-radius: 20px;
   font-size:     12px;
   color:         #4fa3b8;
   font-weight:   500;
 }
 
-// ── Chart ────────────────────────────────────────────────────────────────────
-.pd-chart-wrap {
-  display:        flex;
-  flex-direction: column;
-  gap:            6px;
-}
-
-.pd-chart-label {
-  font-size:      11px;
-  font-weight:    700;
-  text-transform: uppercase;
-  letter-spacing: 0.7px;
-  color:          rgba(255,255,255,0.40);
-}
-
-.pd-chart {
+// ─ Chart ─────────────────────────────────────────────────────────────────────────
+.service-chart svg {
   width:    100%;
-  height:   90px;
+  height:   80px;
   overflow: visible;
 }
 
-.pd-chart-dates {
-  display:         flex;
-  justify-content: space-between;
-  font-size:       10px;
-  color:           rgba(255,255,255,0.30);
+.bar-ok    { fill: rgba(80,200,120,0.60); }
+.bar-error { fill: rgba(255,100,100,0.60); }
 
-  span { flex: 1; text-align: center; }
+// ─ Empty state ─────────────────────────────────────────────────────────────────
+.dash-empty {
+  padding:   48px 0;
+  color:     rgba(255,255,255,0.40);
+  font-size: 14px;
+
+  a {
+    color:           #ea7b32;
+    text-decoration: none;
+    &:hover { text-decoration: underline; }
+  }
 }
 
-// ── Skeleton & empty ─────────────────────────────────────────────────────────
-.pd-skeleton-grid {
-  display:        flex;
-  flex-direction: column;
-  gap:            16px;
-}
-
-.pd-skeleton-card {
-  height:        180px;
-  border-radius: 14px;
-  background:    linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
-  background-size: 200% 100%;
-  animation:     shimmer 1.5s ease-in-out infinite;
-}
-
-@keyframes shimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position:  200% 0; }
-}
-
-.pd-empty {
-  width:           100%;
-  display:         flex;
-  flex-direction:  column;
-  align-items:     center;
-  justify-content: center;
-  text-align:      center;
-  padding:         64px 24px;
-  color:           rgba(255,255,255,0.40);
-  gap:             12px;
-
-  h3 { color: rgba(255,255,255,0.70); font-size: 18px; font-weight: 700; margin: 0; }
-  p  { font-size: 14px; margin: 0; max-width: 36ch; }
+// ─ Mobile ───────────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .portal-page-layout { flex-direction: column; }
+  .portal-page-main   { padding: 24px 16px; }
+  .dash-services      { grid-template-columns: 1fr; }
 }

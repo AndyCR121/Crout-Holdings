@@ -1,50 +1,5 @@
 /* You can add global styles to this file, and also import other style files */
 
-/* ── Shared portal/admin page layout ────────────────────────────────────────────
-   Every portal and admin sub-page wraps its content in .portal-page-layout.
-   ca-portal-left-menu / ca-admin-left-menu renders the sidebar on the left;
-   .portal-page-main takes the remaining space.
-────────────────────────────────────────────────────────────────── */
-.portal-page-layout {
-  display:    flex;
-  min-height: 100vh;
-  background: #081222;
-
-  ca-portal-left-menu,
-  ca-admin-left-menu {
-    width:      240px;
-    min-width:  240px;
-    flex-shrink: 0;
-    position:   sticky;
-    top:        0;
-    height:     100vh;
-  }
-
-  .portal-page-main {
-    flex:       1;
-    min-width:  0;
-    overflow-y: auto;
-    padding:    0 2rem 2rem;
-    background: #081222;
-  }
-
-  @media (max-width: 768px) {
-    flex-direction: column;
-
-    ca-portal-left-menu,
-    ca-admin-left-menu {
-      width:     100%;
-      min-width: 0;
-      position:  static;
-      height:    auto;
-    }
-
-    .portal-page-main {
-      padding: 1rem;
-    }
-  }
-}
-
 /* ── Shared admin page chrome ───────────────────────────────────────────────────
    Re-usable classes used across all admin sub-pages.
 ────────────────────────────────────────────────────────────────── */
