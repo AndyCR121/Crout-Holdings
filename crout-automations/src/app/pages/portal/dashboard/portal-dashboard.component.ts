@@ -20,6 +20,12 @@ export class PortalDashboardComponent implements OnInit {
   private readonly api  = inject(ApiService);
   private readonly n8n  = inject(N8nService);
 
+  /**
+   * Toggle this flag to show/hide N8N workflow graphs.
+   * Set to false once N8N is integrated into the site.
+   */
+  readonly development = true;
+
   readonly user         = computed(() => this.auth.currentUser());
   readonly companies    = signal<ICompany[]>([]);
   readonly userServices = signal<IUserService[]>([]);
@@ -48,11 +54,14 @@ export class PortalDashboardComponent implements OnInit {
     ).subscribe(allUserSvcs => {
       this.userServices.set(allUserSvcs);
       this.loading.set(false);
-      allUserSvcs.forEach(us => {
-        this.n8n.getDailyRuns(`workflow_${us.serviceId}`, 14).subscribe(runs => {
-          this.dailyRuns.update(m => ({ ...m, [us.serviceId]: runs }));
+      // Only fetch N8N run data when graphs are enabled
+      if (!this.development) {
+        allUserSvcs.forEach(us => {
+          this.n8n.getDailyRuns(`workflow_${us.serviceId}`, 14).subscribe(runs => {
+            this.dailyRuns.update(m => ({ ...m, [us.serviceId]: runs }));
+          });
         });
-      });
+      }
     });
   }
 

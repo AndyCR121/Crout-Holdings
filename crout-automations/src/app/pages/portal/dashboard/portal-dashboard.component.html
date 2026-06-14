@@ -59,29 +59,31 @@
                     </div>
                   }
 
-                  <!-- n8n runs bar chart -->
-                  @let bars = chartBars(us.serviceId);
-                  @if (bars.length > 0) {
-                    <div class="pd-chart-wrap">
-                      <span class="pd-chart-label">Workflow Runs — Last 14 days</span>
-                      <svg class="pd-chart" viewBox="0 0 560 90" preserveAspectRatio="none">
-                        @for (bar of bars; track bar.x) {
-                          <rect
-                            [attr.x]="bar.x"
-                            [attr.y]="90 - bar.h"
-                            [attr.width]="bar.w"
-                            [attr.height]="bar.h"
-                            [attr.fill]="bar.isError ? '#e05c5c' : '#4fa3b8'"
-                            rx="2"
-                          />
-                        }
-                      </svg>
-                      <div class="pd-chart-dates">
-                        @for (bar of bars; track bar.x) {
-                          <span>{{ bar.label }}</span>
-                        }
+                  <!-- n8n runs bar chart — hidden while development = true -->
+                  @if (!development) {
+                    @let bars = chartBars(us.serviceId);
+                    @if (bars.length > 0) {
+                      <div class="pd-chart-wrap">
+                        <span class="pd-chart-label">Workflow Runs — Last 14 days</span>
+                        <svg class="pd-chart" viewBox="0 0 560 90" preserveAspectRatio="none">
+                          @for (bar of bars; track bar.x) {
+                            <rect
+                              [attr.x]="bar.x"
+                              [attr.y]="90 - bar.h"
+                              [attr.width]="bar.w"
+                              [attr.height]="bar.h"
+                              [attr.fill]="bar.isError ? '#e05c5c' : '#4fa3b8'"
+                              rx="2"
+                            />
+                          }
+                        </svg>
+                        <div class="pd-chart-dates">
+                          @for (bar of bars; track bar.x) {
+                            <span>{{ bar.label }}</span>
+                          }
+                        </div>
                       </div>
-                    </div>
+                    }
                   }
 
                 </div>
