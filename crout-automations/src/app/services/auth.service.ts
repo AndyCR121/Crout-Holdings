@@ -18,8 +18,8 @@ function readCookie(name: string): string | null {
   return match ? decodeURIComponent(match[1]) : null;
 }
 function writeCookie(name: string, value: string, days = 7): void {
-  const exp      = new Date(Date.now() + days * 864e5).toUTCString();
-  const secure   = location.protocol === 'https:' ? ';Secure' : '';
+  const exp    = new Date(Date.now() + days * 864e5).toUTCString();
+  const secure = location.protocol === 'https:' ? ';Secure' : '';
   document.cookie = `${name}=${encodeURIComponent(value)};expires=${exp};path=/;SameSite=Lax${secure}`;
 }
 function deleteCookie(name: string): void {
@@ -50,9 +50,9 @@ function deleteAvatar(): void {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly http   = inject(HttpClient);
+  private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
-  private readonly env    = inject(EnvironmentService);
+  private readonly env  = inject(EnvironmentService);
   private get base(): string { return this.env.apiUrl; }
 
   // ── Signals ──────────────────────────────────────────────────────────────
@@ -70,6 +70,22 @@ export class AuthService {
       if (avatar) user.profilePicture = avatar;
       return user;
     } catch { return null; }
+  }
+
+  /**
+   * Refresh the current user's full profile from the API.
+   * Called once on app bootstrap (AppComponent) so the signal always
+   * reflects the latest DB state — including a freshly uploaded profilePicture.
+   */
+  refreshUser(): void {
+    const uid = this.currentUser()?.userId;
+    if (uid == null) return;
+    this.http
+      .get<IUser>(`${this.base}/users/${uid}`, { withCredentials: true })
+      .pipe(catchError(() => of(null)))
+      .subscribe(user => {
+        if (user) this._setSession(user);
+      });
   }
 
   // ── Login ─────────────────────────────────────────────────────────────────
@@ -92,14 +108,14 @@ export class AuthService {
       );
   }
 
-  // ── Password Reset Request ─────────────────────────────────────────────────
+  // ── Password Reset Request ────────────────────────────────────────────────
   requestPasswordReset(email: string): Observable<void> {
     return this.http
       .post<void>(`${this.base}/auth/reset-password`, { email })
       .pipe(catchError(() => of(undefined as void)));
   }
 
-  // ── Update Profile ─────────────────────────────────────────────────────────
+  // ── Update Profile ────────────────────────────────────────────────────────
   updateProfile(updates: Partial<IUser>): Observable<IUser> {
     return this.http
       .put<IUser>(`${this.base}/profile`, updates, { withCredentials: true })
@@ -124,11 +140,7 @@ export class AuthService {
     this._setSession({ ...current, ...partial });
   }
 
-  // ── Logout ─────────────────────────────────────────────────────────────────
-  /**
-   * Clears the session immediately (cookies + localStorage + signal), then fires
-   * the server-side logout in the background.
-   */
+  // ── Logout ────────────────────────────────────────────────────────────────
   logout(): void {
     deleteCookie('ca_user');
     deleteCookie('ca_jwt');
@@ -141,21 +153,19 @@ export class AuthService {
       .subscribe();
   }
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
+  // ── Helpers ──────────────────────────────────────────────────────────────
   /**
    * Persist session:
    * - profilePicture → localStorage (can be hundreds of KB as base64)
    * - everything else → ca_user cookie (stays well under 4 KB)
    */
   private _setSession(user: IUser, token?: string): void {
-    // Separate the picture before writing to the cookie
     const { profilePicture, password, ...lean } = user as any;
 
     writeAvatar(profilePicture);
     writeCookie('ca_user', JSON.stringify({ ...lean, password: '' }), 7);
     if (token) writeCookie('ca_jwt', token, 7);
 
-    // Signal always carries the full user including picture
     this.currentUser.set({ ...lean, profilePicture: profilePicture ?? readAvatar() ?? undefined });
   }
 }

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../../services/auth.service';
-import { ApiService } from '../../../services/api.service';
+import { CompanyService } from '../../../services/company.service';
 import { ToastService } from '../../../services/toast.service';
 import { EnvironmentService } from '../../../services/environment.service';
 import { IUser, ICompany } from '../../../interfaces/i-service.interface';
@@ -16,11 +16,11 @@ import { IUser, ICompany } from '../../../interfaces/i-service.interface';
   styleUrls: ['./portal-profile.component.scss'],
 })
 export class PortalProfileComponent implements OnInit {
-  private readonly auth  = inject(AuthService);
-  private readonly api   = inject(ApiService);
-  private readonly toast = inject(ToastService);
-  private readonly http  = inject(HttpClient);
-  private readonly env   = inject(EnvironmentService);
+  private readonly auth       = inject(AuthService);
+  private readonly companySvc = inject(CompanyService);
+  private readonly toast      = inject(ToastService);
+  private readonly http       = inject(HttpClient);
+  private readonly env        = inject(EnvironmentService);
   private get base(): string { return this.env.apiUrl; }
 
   readonly user = computed(() => this.auth.currentUser());
@@ -47,12 +47,11 @@ export class PortalProfileComponent implements OnInit {
   currentPw = signal('');
   newPw     = signal('');
   confirmPw = signal('');
-
   readonly savingPw = signal(false);
 
-  // ── Company management ────────────────────────────────────────────
-  readonly companies        = signal<ICompany[]>([]);
-  readonly loadingCompanies = signal(true);
+  // ── Company management — read from shared cache ───────────────────
+  readonly companies        = this.companySvc.companies;
+  readonly loadingCompanies = this.companySvc.loading;
   readonly savingCompany    = signal(false);
 
   readonly showAddForm = signal(false);
@@ -86,13 +85,11 @@ export class PortalProfileComponent implements OnInit {
 
   ngOnInit(): void {
     const uid = this.user()?.userId;
-    if (uid == null) { this.loadingCompanies.set(false); return; }
-    this.http
-      .get<ICompany[]>(`${this.base}/profile/companies`, { withCredentials: true })
-      .subscribe({
-        next:  c => { this.companies.set(c); this.loadingCompanies.set(false); },
-        error: () => this.loadingCompanies.set(false),
-      });
+    if (uid == null) return;
+    // Load from cache — only hits the network if not already fetched this session.
+    this.companySvc.load(uid);
+    // Also refresh the user's own details (incl. profilePicture) from the API.
+    this.auth.refreshUser();
   }
 
   readonly initials = computed(() => {
@@ -117,21 +114,19 @@ export class PortalProfileComponent implements OnInit {
     const form = new FormData();
     form.append('file', file);
 
-    // Response is a profile DTO — type as `any` and read profilePicture directly
     this.http
       .post<any>(`${this.base}/profile/avatar`, form, { withCredentials: true })
       .subscribe({
         next: (res) => {
           const url: string | undefined = res?.profilePicture;
           if (url) {
-            // Persist into the auth signal + cookie so it survives navigation
+            // Persist into the auth signal + localStorage so it survives navigation
             this.auth.patchUser({ profilePicture: url });
           }
           // Clear local preview — resolvedAvatar now reads from the session
           this.avatarPreview.set(null);
           this.uploadingAvatar.set(false);
           this.toast.success('Profile picture updated.');
-          // Reset input so the same file can be re-selected if needed
           input.value = '';
         },
         error: (err) => {
@@ -185,7 +180,7 @@ export class PortalProfileComponent implements OnInit {
       });
   }
 
-  // ── Company: open add form ─────────────────────────────────────────────
+  // ── Company: open add form ─────────────────────────────────────────
   openAddCompany(): void {
     this.editingId.set(null);
     this.addName.set(''); this.addIndustry.set(''); this.addEmail.set('');
@@ -211,7 +206,7 @@ export class PortalProfileComponent implements OnInit {
       .post<ICompany>(`${this.base}/profile/companies`, body, { withCredentials: true })
       .subscribe({
         next: (company) => {
-          this.companies.update(c => [...c, company]);
+          this.companySvc.upsert(company);
           this.showAddForm.set(false);
           this.savingCompany.set(false);
           this.toast.success(`Company "${company.companyName}" added.`);
@@ -253,7 +248,7 @@ export class PortalProfileComponent implements OnInit {
       .put<ICompany>(`${this.base}/profile/companies/${c.companyId}`, body, { withCredentials: true })
       .subscribe({
         next: (updated) => {
-          this.companies.update(list => list.map(x => x.companyId === c.companyId ? updated : x));
+          this.companySvc.upsert(updated);
           this.editingId.set(null);
           this.savingCompany.set(false);
           this.toast.success(`Company "${updated.companyName}" updated.`);
@@ -271,7 +266,7 @@ export class PortalProfileComponent implements OnInit {
       .delete(`${this.base}/profile/companies/${c.companyId}`, { withCredentials: true })
       .subscribe({
         next: () => {
-          this.companies.update(list => list.filter(x => x.companyId !== c.companyId));
+          this.companySvc.remove(c.companyId);
           this.toast.success(`Company "${c.companyName}" removed.`);
         },
         error: (err) => this.toast.error(err?.error?.error ?? 'Failed to remove company.'),

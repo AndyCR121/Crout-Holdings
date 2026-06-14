@@ -3,10 +3,9 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
-import { ApiService } from '../../services/api.service';
+import { CompanyService } from '../../services/company.service';
 import { AuthModalComponent } from '../auth-modal/auth-modal.component';
 import { ToastComponent } from '../toast/toast.component';
-import { ICompany } from '../../interfaces/i-service.interface';
 
 @Component({
   selector: 'ca-account-button',
@@ -16,14 +15,16 @@ import { ICompany } from '../../interfaces/i-service.interface';
   styleUrls: ['./account-button.component.scss'],
 })
 export class AccountButtonComponent implements OnInit {
-  private readonly auth = inject(AuthService);
-  private readonly api  = inject(ApiService);
+  private readonly auth     = inject(AuthService);
+  private readonly companySvc = inject(CompanyService);
 
   readonly loggedIn      = computed(() => this.auth.isLoggedIn());
   readonly user          = computed(() => this.auth.currentUser());
   readonly open          = signal(false);
   readonly showAuthModal = signal(false);
-  readonly companies     = signal<ICompany[]>([]);
+
+  /** Read from shared cache — no extra HTTP call. */
+  readonly primaryCompany = this.companySvc.primaryCompany;
 
   readonly initials = computed(() => {
     const u = this.user();
@@ -31,14 +32,11 @@ export class AccountButtonComponent implements OnInit {
     return ((u.firstName?.[0] ?? '') + (u.surname?.[0] ?? '')).toUpperCase() || u.username[0].toUpperCase();
   });
 
-  readonly primaryCompany = computed(() =>
-    this.companies().find(c => c.active)?.companyName ?? null
-  );
-
   ngOnInit(): void {
     const uid = this.user()?.userId;
     if (uid == null) return;
-    this.api.getCompaniesByUser(uid).subscribe(c => this.companies.set(c));
+    // Reads from cache — only fires an HTTP request if not already loaded.
+    this.companySvc.load(uid);
   }
 
   toggleDropdown(): void {
@@ -59,8 +57,7 @@ export class AccountButtonComponent implements OnInit {
 
   logout(): void {
     this.open.set(false);
-    // auth.logout() now clears cookies synchronously before returning,
-    // so it is safe to navigate immediately after.
+    this.companySvc.clear();
     this.auth.logout();
     window.location.href = '/';
   }
