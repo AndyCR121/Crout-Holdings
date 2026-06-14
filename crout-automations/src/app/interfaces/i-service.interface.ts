@@ -33,6 +33,10 @@ export interface IService {
   hasAddons: boolean;
   conditional: boolean;
   serviceDescription?: string;
+  /** Alias used by admin forms — maps to serviceDescription on the API */
+  description?: string;
+  /** Whether the service is active/enabled */
+  active?: boolean;
   features?: string[];
 }
 

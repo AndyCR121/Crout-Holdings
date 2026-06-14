@@ -24,8 +24,11 @@
  *   <ca-cta-banner></ca-cta-banner>
  *   <ca-privacy-policy></ca-privacy-policy>
  *
- * ── Client Portal (auth-guarded shell + sub-pages) ───────────────────
- *   <ca-portal></ca-portal>                        ← shell (layout + router-outlet)
+ * ── Shared sidebar components ────────────────────────────────────────
+ *   <ca-portal-left-menu></ca-portal-left-menu>
+ *   <ca-admin-left-menu></ca-admin-left-menu>
+ *
+ * ── Client Portal sub-pages (each self-contained with sidebar) ───────
  *   <ca-portal-dashboard></ca-portal-dashboard>
  *   <ca-portal-services></ca-portal-services>
  *   <ca-portal-profile></ca-portal-profile>
@@ -33,8 +36,7 @@
  *   <ca-portal-subscriptions></ca-portal-subscriptions>
  *   <ca-portal-payment-methods></ca-portal-payment-methods>
  *
- * ── Admin Portal (auth + admin guard) ───────────────────────────────
- *   <ca-admin></ca-admin>                          ← shell (layout + router-outlet)
+ * ── Admin Portal sub-pages (each self-contained with sidebar) ────────
  *   <ca-admin-users></ca-admin-users>
  *   <ca-admin-services></ca-admin-services>
  *   <ca-admin-packages></ca-admin-packages>
@@ -42,8 +44,9 @@
  *   <ca-admin-addons></ca-admin-addons>
  *   <ca-admin-service-features></ca-admin-service-features>
  *
- * NOTE: <ca-nav> and <ca-footer> are intentionally excluded.
- * They live in wordpress-theme/ and are handled by the WP theme layer.
+ * NOTE: <ca-portal> and <ca-admin> shell components have been removed.
+ * Each sub-page is now standalone and includes its own sidebar.
+ * <ca-nav> and <ca-footer> are handled by the WP theme layer.
  */
 import { createApplication } from '@angular/platform-browser';
 import { createCustomElement } from '@angular/elements';
@@ -80,8 +83,7 @@ import { NotFoundComponent } from '../app/pages/not-found/not-found.component';
 import { PortalLeftMenuComponent } from '../app/components/left-menu/portal-left-menu.component';
 import { AdminLeftMenuComponent } from '../app/components/left-menu/admin-left-menu.component';
 
-// ── Client Portal: shell + sub-pages ──────────────────────────────────────────
-import { PortalComponent } from '../app/pages/portal/portal.component';
+// ── Client Portal sub-pages ────────────────────────────────────────────────────
 import { PortalDashboardComponent } from '../app/pages/portal/dashboard/portal-dashboard.component';
 import { PortalServicesComponent } from '../app/pages/portal/services/portal-services.component';
 import { PortalProfileComponent } from '../app/pages/portal/profile/portal-profile.component';
@@ -89,8 +91,7 @@ import { PortalBillingComponent } from '../app/pages/portal/billing/portal-billi
 import { PortalSubscriptionsComponent } from '../app/pages/portal/billing/subscriptions/portal-subscriptions.component';
 import { PortalPaymentMethodsComponent } from '../app/pages/portal/billing/payment-methods/portal-payment-methods.component';
 
-// ── Admin Portal: shell + sub-pages ───────────────────────────────────────────
-import { AdminComponent } from '../app/pages/admin/admin.component';
+// ── Admin Portal sub-pages ─────────────────────────────────────────────────────
 import { AdminUsersComponent } from '../app/pages/admin/users/admin-users.component';
 import { AdminServicesComponent } from '../app/pages/admin/services/admin-services.component';
 import { AdminPackagesComponent } from '../app/pages/admin/packages/admin-packages.component';
@@ -136,9 +137,6 @@ import { AdminServiceFeaturesComponent } from '../app/pages/admin/service-featur
     ['ca-portal-left-menu',       PortalLeftMenuComponent],
     ['ca-admin-left-menu',        AdminLeftMenuComponent],
 
-    // ── Client Portal shell ────────────────────────────────────────────────────
-    ['ca-portal',                 PortalComponent],
-
     // ── Client Portal sub-pages ────────────────────────────────────────────────
     ['ca-portal-dashboard',       PortalDashboardComponent],
     ['ca-portal-services',        PortalServicesComponent],
@@ -146,9 +144,6 @@ import { AdminServiceFeaturesComponent } from '../app/pages/admin/service-featur
     ['ca-portal-billing',         PortalBillingComponent],
     ['ca-portal-subscriptions',   PortalSubscriptionsComponent],
     ['ca-portal-payment-methods', PortalPaymentMethodsComponent],
-
-    // ── Admin Portal shell ─────────────────────────────────────────────────────
-    ['ca-admin',                  AdminComponent],
 
     // ── Admin Portal sub-pages ─────────────────────────────────────────────────
     ['ca-admin-users',            AdminUsersComponent],

@@ -38,7 +38,12 @@ export class AdminService {
   }
 
   // ── Companies ──────────────────────────────────────────────────────────────
-  getCompanies(page = 1, pageSize = 20, search = ''): Observable<PagedResult<ICompany>> {
+  getCompanies(page = 1, pageSize = 20, search = ''): Observable<ICompany[]> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize).set('search', search);
+    return this.http.get<PagedResult<ICompany>>(`${this.base}/companies`, { params, withCredentials: true })
+      .pipe(map(r => r.items));
+  }
+  getCompaniesPaged(page = 1, pageSize = 20, search = ''): Observable<PagedResult<ICompany>> {
     const params = new HttpParams().set('page', page).set('pageSize', pageSize).set('search', search);
     return this.http.get<PagedResult<ICompany>>(`${this.base}/companies`, { params, withCredentials: true });
   }
@@ -65,21 +70,23 @@ export class AdminService {
     const params = new HttpParams().set('page', page).set('pageSize', pageSize);
     return this.http.get<PagedResult<IService>>(`${this.base}/services`, { params, withCredentials: true });
   }
-
   createService(body: Partial<IService>): Observable<IService> {
-    return this.http.post<IService>(`${this.base}/admin/services`, body);
+    return this.http.post<IService>(`${this.base}/services`, body, { withCredentials: true });
   }
-
   updateService(id: number, body: Partial<IService>): Observable<IService> {
-    return this.http.put<IService>(`${this.base}/admin/services/${id}`, body);
+    return this.http.put<IService>(`${this.base}/services/${id}`, body, { withCredentials: true });
   }
-
   deleteService(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.base}/admin/services/${id}`);
+    return this.http.delete<void>(`${this.base}/services/${id}`, { withCredentials: true });
   }
 
   // ── Packages ───────────────────────────────────────────────────────────────
-  getPackages(page = 1, pageSize = 20): Observable<PagedResult<IPackage>> {
+  getPackages(page = 1, pageSize = 20): Observable<IPackage[]> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.http.get<PagedResult<IPackage>>(`${this.base}/packages`, { params, withCredentials: true })
+      .pipe(map(r => r.items));
+  }
+  getPackagesPaged(page = 1, pageSize = 20): Observable<PagedResult<IPackage>> {
     const params = new HttpParams().set('page', page).set('pageSize', pageSize);
     return this.http.get<PagedResult<IPackage>>(`${this.base}/packages`, { params, withCredentials: true });
   }
@@ -100,7 +107,12 @@ export class AdminService {
   }
 
   // ── Addons ─────────────────────────────────────────────────────────────────
-  getAddons(page = 1, pageSize = 20): Observable<PagedResult<IAddon>> {
+  getAddons(page = 1, pageSize = 20): Observable<IAddon[]> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.http.get<PagedResult<IAddon>>(`${this.base}/addons`, { params, withCredentials: true })
+      .pipe(map(r => r.items));
+  }
+  getAddonsPaged(page = 1, pageSize = 20): Observable<PagedResult<IAddon>> {
     const params = new HttpParams().set('page', page).set('pageSize', pageSize);
     return this.http.get<PagedResult<IAddon>>(`${this.base}/addons`, { params, withCredentials: true });
   }
@@ -118,7 +130,13 @@ export class AdminService {
   }
 
   // ── Service Features ───────────────────────────────────────────────────────
-  getServiceFeatures(page = 1, pageSize = 20, serviceId?: number): Observable<PagedResult<IServiceFeature>> {
+  getServiceFeatures(page = 1, pageSize = 20, serviceId?: number): Observable<IServiceFeature[]> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    if (serviceId) params = params.set('serviceId', serviceId);
+    return this.http.get<PagedResult<IServiceFeature>>(`${this.base}/service-features`, { params, withCredentials: true })
+      .pipe(map(r => r.items));
+  }
+  getServiceFeaturesPaged(page = 1, pageSize = 20, serviceId?: number): Observable<PagedResult<IServiceFeature>> {
     let params = new HttpParams().set('page', page).set('pageSize', pageSize);
     if (serviceId) params = params.set('serviceId', serviceId);
     return this.http.get<PagedResult<IServiceFeature>>(`${this.base}/service-features`, { params, withCredentials: true });

@@ -1,9 +1,7 @@
 <div class="portal-page-layout">
   <ca-portal-left-menu />
   <main class="portal-page-main portal-profile">
-    <ng-include src="'portal-profile.content.html'"></ng-include>
+    <!-- Profile content renders here directly -->
+    <ng-content />
   </main>
 </div>
-
-<!-- NOTE: Move existing portal-profile content (all the form sections)
-     inside the <main> block above. The outer wrapper just adds the sidebar. -->

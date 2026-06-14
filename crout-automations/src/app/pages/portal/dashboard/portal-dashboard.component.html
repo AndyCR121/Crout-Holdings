@@ -1,9 +1,6 @@
 <div class="portal-page-layout">
   <ca-portal-left-menu />
   <main class="portal-page-main">
-    <!-- ─────────────────────────────────────────────────────────────────
-         Original dashboard content below — unchanged
-    ───────────────────────────────────────────────────────────────────── -->
     <ng-container *ngIf="loading(); else dashContent">
       <div class="dash-loading">Loading your dashboard…</div>
     </ng-container>
@@ -20,8 +17,8 @@
               <span class="service-status" [ngClass]="statusClass(us.status)">{{ statusLabel(us.status) }}</span>
             </div>
             <p class="service-company" *ngIf="getCompany(us.companyId) as c">{{ c.companyName }}</p>
-            <div class="service-addons" *ngIf="getAddonNames(us.addonConfig).length">
-              <span class="addon-chip" *ngFor="let a of getAddonNames(us.addonConfig)">{{ a }}</span>
+            <div class="service-addons" *ngIf="getAddonNames(us.config).length">
+              <span class="addon-chip" *ngFor="let a of getAddonNames(us.config)">{{ a }}</span>
             </div>
             <div class="service-chart" *ngIf="!development">
               <svg width="100%" height="80" viewBox="0 0 560 80" preserveAspectRatio="none">
