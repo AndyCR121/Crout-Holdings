@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, of, tap, catchError, map } from 'rxjs';
+import { Observable, of, tap, catchError, map, switchMap } from 'rxjs';
 import { IUser } from '../interfaces/i-service.interface';
 import { EnvironmentService } from './environment.service';
 
@@ -55,16 +55,16 @@ export class AuthService {
   private readonly env    = inject(EnvironmentService);
   private get base(): string { return this.env.apiUrl; }
 
-  // ── Signals ──────────────────────────────────────────────────────────────
+  // ── Signals ───────────────────────────────────────────────────────────────
   readonly currentUser = signal<IUser | null>(this._restoreUser());
   readonly isLoggedIn  = computed(() => this.currentUser() !== null);
 
-  // ── Restore from cookie + localStorage on init ───────────────────────────
+  // ── Restore from cookie + localStorage on init ────────────────────────────
   private _restoreUser(): IUser | null {
     const raw = readCookie('ca_user');
     if (!raw) return null;
     try {
-      const user  = JSON.parse(raw) as IUser;
+      const user   = JSON.parse(raw) as IUser;
       const avatar = readAvatar();
       if (avatar) user.profilePicture = avatar;
       return user;
@@ -72,55 +72,62 @@ export class AuthService {
   }
 
   /**
-   * Fetch the latest user record from GET /api/users/{id}.
-   * Called after login and on profile page init so the signal always
-   * reflects the current DB state, including profilePicture.
+   * Fetch the latest user record from GET /api/users/{id} and update the
+   * session. Returns an Observable<IUser> so callers can await completion
+   * before redirecting (e.g. login / signup flows).
+   * Falls back silently — if the request fails the existing session is kept.
    */
-  refreshUser(): void {
+  refreshUser(): Observable<IUser | null> {
     const uid = this.currentUser()?.userId;
-    if (uid == null) return;
-    this.http
+    if (uid == null) return of(null);
+    return this.http
       .get<IUser>(`${this.base}/users/${uid}`, { withCredentials: true })
-      .pipe(catchError(() => of(null)))
-      .subscribe(user => { if (user) this._setSession(user); });
+      .pipe(
+        tap(user => this._setSession(user)),
+        catchError(() => of(null)),
+      );
   }
 
-  // ── Login ─────────────────────────────────────────────────────────────────
+  // ── Login ──────────────────────────────────────────────────────────────────
   login(payload: ILoginPayload): Observable<IUser> {
     return this.http
       .post<IAuthResponse>(`${this.base}/auth/login`, payload, { withCredentials: true })
       .pipe(
-        tap(r => {
-          this._setSession(r.user, r.token);
-          // Immediately pull fresh user data (incl. profilePicture) from the API
-          this.refreshUser();
-        }),
-        map(r => r.user),
+        // 1. Persist JWT + basic user from auth response
+        tap(r => this._setSession(r.user, r.token)),
+        // 2. Wait for refreshUser() to complete — profilePicture is now in
+        //    localStorage before the subscriber's next() callback fires,
+        //    so the redirect happens with a fully-hydrated session.
+        switchMap(r =>
+          this.refreshUser().pipe(
+            map(refreshed => refreshed ?? r.user),
+          )
+        ),
       );
   }
 
-  // ── Sign Up ───────────────────────────────────────────────────────────────
+  // ── Sign Up ────────────────────────────────────────────────────────────────
   signup(payload: ISignupPayload): Observable<IUser> {
     return this.http
       .post<IAuthResponse>(`${this.base}/auth/signup`, payload, { withCredentials: true })
       .pipe(
-        tap(r => {
-          this._setSession(r.user, r.token);
-          // Immediately pull fresh user data (incl. profilePicture) from the API
-          this.refreshUser();
-        }),
-        map(r => r.user),
+        tap(r => this._setSession(r.user, r.token)),
+        switchMap(r =>
+          this.refreshUser().pipe(
+            map(refreshed => refreshed ?? r.user),
+          )
+        ),
       );
   }
 
-  // ── Password Reset Request ────────────────────────────────────────────────
+  // ── Password Reset Request ─────────────────────────────────────────────────
   requestPasswordReset(email: string): Observable<void> {
     return this.http
       .post<void>(`${this.base}/auth/reset-password`, { email })
       .pipe(catchError(() => of(undefined as void)));
   }
 
-  // ── Update Profile ────────────────────────────────────────────────────────
+  // ── Update Profile ─────────────────────────────────────────────────────────
   updateProfile(updates: Partial<IUser>): Observable<IUser> {
     return this.http
       .put<IUser>(`${this.base}/profile`, updates, { withCredentials: true })
@@ -144,7 +151,7 @@ export class AuthService {
     this._setSession({ ...current, ...partial });
   }
 
-  // ── Logout ────────────────────────────────────────────────────────────────
+  // ── Logout ─────────────────────────────────────────────────────────────────
   logout(): void {
     deleteCookie('ca_user');
     deleteCookie('ca_jwt');
