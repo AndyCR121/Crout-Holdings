@@ -10,12 +10,11 @@ namespace CroutApi.Services;
 /// Secret key NEVER reaches the frontend.
 ///
 /// Card-save flow:
-///   1. POST /transaction/initialize  → get access_code + reference
-///   2. Frontend opens popup with access_code
+///   1. POST /transaction/initialize  → access_code + reference
+///   2. Frontend opens Paystack popup
 ///   3. Popup fires onSuccess(reference)
-///   4. Frontend calls POST /api/paystack/verify  ←  THIS STEP WAS MISSING
-///      Paystack commits the authorization to the customer record here.
-///   5. GET /customer/{email} now returns authorizations[] with the card.
+///   4. POST /api/paystack/verify      → commits authorization to customer record
+///   5. GET  /api/paystack/companies   → customer authorizations now visible
 /// </summary>
 public class PaystackProxyService(
     IUserRepository    users,
@@ -46,34 +45,43 @@ public class PaystackProxyService(
     }
 
     // ── Fetch reusable cards for a given email ────────────────────────────────
-    private async Task<List<JsonElement>> FetchReusableCardsAsync(string email)
+    /// <summary>
+    /// Deserializes card objects to plain CLR objects INSIDE the using block
+    /// so they are never dependent on a disposed JsonDocument.
+    /// Primary:  GET /customer/{email}  →  authorizations[]
+    /// Fallback: GET /transaction?customer={code}  →  scan unique reusable auths
+    /// </summary>
+    private async Task<List<object>> FetchReusableCardsAsync(string email)
     {
+        var cards = new List<object>();
+        string? customerCode = null;
+
+        // ── Primary: customer authorizations ────────────────────────────────────
         var custResponse = await http.GetAsync(
             $"https://api.paystack.co/customer/{Uri.EscapeDataString(email)}");
         var custJson = await custResponse.Content.ReadAsStringAsync();
 
-        var cards = new List<JsonElement>();
-        string? customerCode = null;
-
         using (var custDoc = JsonDocument.Parse(custJson))
         {
-            if (!custDoc.RootElement.TryGetProperty("data", out var custData))
-                return cards;
-
-            if (custData.TryGetProperty("customer_code", out var cc))
-                customerCode = cc.GetString();
-
-            if (custData.TryGetProperty("authorizations", out var auths))
+            if (custDoc.RootElement.TryGetProperty("data", out var custData))
             {
-                foreach (var auth in auths.EnumerateArray())
+                if (custData.TryGetProperty("customer_code", out var cc))
+                    customerCode = cc.GetString();
+
+                if (custData.TryGetProperty("authorizations", out var auths))
                 {
-                    if (!auth.TryGetProperty("reusable", out var r) || !r.GetBoolean()) continue;
-                    cards.Add(auth.Clone());
+                    foreach (var auth in auths.EnumerateArray())
+                    {
+                        if (!auth.TryGetProperty("reusable", out var r) || !r.GetBoolean()) continue;
+                        // Deserialize to object INSIDE the using block — same pattern as original
+                        var card = JsonSerializer.Deserialize<object>(auth.GetRawText());
+                        if (card is not null) cards.Add(card);
+                    }
                 }
             }
-        }
+        } // custDoc disposed — safe, cards are plain CLR objects now
 
-        // Fallback: scan transactions if authorizations[] was empty
+        // ── Fallback: scan transactions if authorizations[] was empty ───────────
         if (cards.Count == 0 && !string.IsNullOrWhiteSpace(customerCode))
         {
             var txResponse = await http.GetAsync(
@@ -91,16 +99,18 @@ public class PaystackProxyService(
                         if (!auth.TryGetProperty("reusable", out var reusable) || !reusable.GetBoolean()) continue;
                         var authCode = auth.TryGetProperty("authorization_code", out var ac) ? ac.GetString() : null;
                         if (authCode is null || !seen.Add(authCode)) continue;
-                        cards.Add(auth.Clone());
+                        // Deserialize to object INSIDE the using block
+                        var card = JsonSerializer.Deserialize<object>(auth.GetRawText());
+                        if (card is not null) cards.Add(card);
                     }
                 }
-            }
+            } // txDoc disposed — safe
         }
 
         return cards;
     }
 
-    // ── Verify transaction (CRITICAL — must be called after popup onSuccess) ──────
+    // ── Verify transaction (must be called after popup onSuccess) ─────────────
     public async Task<object> VerifyTransactionAsync(string reference)
     {
         AddAuth();
@@ -109,11 +119,10 @@ public class PaystackProxyService(
         var json = await response.Content.ReadAsStringAsync();
 
         using var doc = JsonDocument.Parse(json);
-        var status  = doc.RootElement.TryGetProperty("data", out var data)
-                      && data.TryGetProperty("status", out var s)
-                      ? s.GetString() : "unknown";
-        var message = doc.RootElement.TryGetProperty("message", out var m)
-                      ? m.GetString() : null;
+        var status = doc.RootElement.TryGetProperty("data", out var data)
+                     && data.TryGetProperty("status", out var s)
+                     ? s.GetString() : "unknown";
+        var message = doc.RootElement.TryGetProperty("message", out var m) ? m.GetString() : null;
 
         return new { verified = status == "success", status, message };
     }
@@ -134,6 +143,7 @@ public class PaystackProxyService(
             using var doc = JsonDocument.Parse(json);
             if (doc.RootElement.TryGetProperty("data", out var data))
             {
+                // Deserialize inside using block
                 var subs = JsonSerializer.Deserialize<object>(data.GetRawText());
                 results.Add(new
                 {
@@ -159,12 +169,7 @@ public class PaystackProxyService(
             var cards = new List<object>();
 
             if (!string.IsNullOrWhiteSpace(company.Email))
-            {
-                var fetched = await FetchReusableCardsAsync(company.Email!);
-                cards = fetched
-                    .Select(el => JsonSerializer.Deserialize<object>(el.GetRawText())!)
-                    .ToList();
-            }
+                cards = await FetchReusableCardsAsync(company.Email!);
 
             results.Add(new
             {
