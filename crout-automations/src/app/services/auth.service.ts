@@ -27,6 +27,27 @@ function deleteCookie(name: string): void {
   document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Lax${secure}`;
 }
 
+/**
+ * profilePicture is stored as a raw base64 data URI which can exceed the
+ * 4 KB browser cookie limit, silently truncating or failing the write.
+ * We store it in localStorage under a separate key and rehydrate it onto
+ * the user object after reading the lean cookie.
+ */
+const AVATAR_KEY = 'ca_avatar';
+
+function readAvatar(): string | null {
+  try { return localStorage.getItem(AVATAR_KEY); } catch { return null; }
+}
+function writeAvatar(url: string | null | undefined): void {
+  try {
+    if (url) { localStorage.setItem(AVATAR_KEY, url); }
+    else      { localStorage.removeItem(AVATAR_KEY); }
+  } catch { /* storage unavailable — fail silently */ }
+}
+function deleteAvatar(): void {
+  try { localStorage.removeItem(AVATAR_KEY); } catch { /* ignore */ }
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http   = inject(HttpClient);
@@ -38,11 +59,17 @@ export class AuthService {
   readonly currentUser = signal<IUser | null>(this._restoreUser());
   readonly isLoggedIn  = computed(() => this.currentUser() !== null);
 
-  // ── Restore from cookie on init ──────────────────────────────────────────
+  // ── Restore from cookie + localStorage on init ───────────────────────────
   private _restoreUser(): IUser | null {
     const raw = readCookie('ca_user');
     if (!raw) return null;
-    try { return JSON.parse(raw) as IUser; } catch { return null; }
+    try {
+      const user = JSON.parse(raw) as IUser;
+      // Rehydrate the picture from localStorage (not stored in cookie)
+      const avatar = readAvatar();
+      if (avatar) user.profilePicture = avatar;
+      return user;
+    } catch { return null; }
   }
 
   // ── Login ─────────────────────────────────────────────────────────────────
@@ -99,17 +126,15 @@ export class AuthService {
 
   // ── Logout ─────────────────────────────────────────────────────────────────
   /**
-   * Clears the session immediately (cookies + signal), then fires the
-   * server-side logout in the background. Navigation happens right away
-   * so the user is never stuck waiting for the API call.
+   * Clears the session immediately (cookies + localStorage + signal), then fires
+   * the server-side logout in the background.
    */
   logout(): void {
-    // Clear client state first — do not wait for the API
     deleteCookie('ca_user');
     deleteCookie('ca_jwt');
+    deleteAvatar();
     this.currentUser.set(null);
 
-    // Fire-and-forget server logout (invalidates HttpOnly cookie if any)
     this.http
       .post(`${this.base}/auth/logout`, {}, { withCredentials: true })
       .pipe(catchError(() => of(null)))
@@ -117,11 +142,20 @@ export class AuthService {
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
-  /** Persist session: write both the user object and the JWT cookie. */
+  /**
+   * Persist session:
+   * - profilePicture → localStorage (can be hundreds of KB as base64)
+   * - everything else → ca_user cookie (stays well under 4 KB)
+   */
   private _setSession(user: IUser, token?: string): void {
-    const safe: Partial<IUser> = { ...user, password: '' };
-    writeCookie('ca_user', JSON.stringify(safe), 7);
+    // Separate the picture before writing to the cookie
+    const { profilePicture, password, ...lean } = user as any;
+
+    writeAvatar(profilePicture);
+    writeCookie('ca_user', JSON.stringify({ ...lean, password: '' }), 7);
     if (token) writeCookie('ca_jwt', token, 7);
-    this.currentUser.set(user);
+
+    // Signal always carries the full user including picture
+    this.currentUser.set({ ...lean, profilePicture: profilePicture ?? readAvatar() ?? undefined });
   }
 }
