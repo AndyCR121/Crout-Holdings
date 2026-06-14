@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { catchError, map, switchMap, tap } from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
 import { EnvironmentService } from './environment.service';
 import { environment } from '../../environments/environment';
 
@@ -22,13 +22,20 @@ export interface IPaystackPlan {
   amount:   number;
 }
 
+/** Shape returned by the enriched /paystack/subscriptions endpoint */
 export interface IPaystackSubscription {
-  subscription_code: string;
-  status:            string;
-  amount:            number;
-  next_payment_date: string | null;
-  plan:              IPaystackPlan | null;
-  createdAt:         string;
+  subscription_code:  string;
+  status:             string;            // 'active' | 'cancelled' | 'non-renewing'
+  amount:             number;
+  next_payment_date:  string | null;
+  plan:               IPaystackPlan | null;
+  createdAt:          string;
+  // DB-enriched fields
+  linked:             boolean;
+  userServiceId:      number | null;
+  serviceId:          number | null;
+  serviceName:        string | null;
+  serviceStatus:      number | null;     // 0 Disabled | 1 In Dev | 2 Live | 3 Pending
 }
 
 export interface ICompanySubscriptions {
@@ -143,7 +150,6 @@ export class PaystackService {
       access_code: accessCode,
       email,
       callback: (res: { reference: string }) => {
-        // Verify server-side first — this is what commits the card to Paystack's customer record
         this.verifyTransaction(res.reference).subscribe(result => {
           console.debug('[PaystackService] popup callback verified:', result);
           onSuccess(res.reference);
