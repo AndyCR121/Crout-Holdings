@@ -97,10 +97,12 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/privacy-policy/privacy-policy.page').then(m => m.PrivacyPolicyPageComponent)
   },
-  // ── Client Portal (auth-guarded, flat children — no parent shell router-outlet) ──
+  // ── Client Portal (auth-guarded) ────────────────────────────────────────────────────
   {
     path: 'client',
     canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/portal/portal.component').then(m => m.PortalComponent),
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
@@ -122,23 +124,28 @@ export const routes: Routes = [
         path: 'billing',
         loadComponent: () =>
           import('./pages/portal/billing/portal-billing.component').then(m => m.PortalBillingComponent),
-      },
-      {
-        path: 'billing/subscriptions',
-        loadComponent: () =>
-          import('./pages/portal/billing/subscriptions/portal-subscriptions.component').then(m => m.PortalSubscriptionsComponent),
-      },
-      {
-        path: 'billing/payment-methods',
-        loadComponent: () =>
-          import('./pages/portal/billing/payment-methods/portal-payment-methods.component').then(m => m.PortalPaymentMethodsComponent),
+        children: [
+          { path: '', redirectTo: 'subscriptions', pathMatch: 'full' },
+          {
+            path: 'subscriptions',
+            loadComponent: () =>
+              import('./pages/portal/billing/subscriptions/portal-subscriptions.component').then(m => m.PortalSubscriptionsComponent),
+          },
+          {
+            path: 'payment-methods',
+            loadComponent: () =>
+              import('./pages/portal/billing/payment-methods/portal-payment-methods.component').then(m => m.PortalPaymentMethodsComponent),
+          },
+        ],
       },
     ],
   },
-  // ── Admin Portal (auth + admin guard, flat children — no parent shell router-outlet) ──
+  // ── Admin Portal (auth + admin guard) ──────────────────────────────────────────────
   {
     path: 'admin',
     canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./pages/admin/admin.component').then(m => m.AdminComponent),
     children: [
       { path: '', redirectTo: 'users', pathMatch: 'full' },
       {
