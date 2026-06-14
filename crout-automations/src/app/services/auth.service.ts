@@ -50,9 +50,9 @@ function deleteAvatar(): void {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly http = inject(HttpClient);
+  private readonly http   = inject(HttpClient);
   private readonly router = inject(Router);
-  private readonly env  = inject(EnvironmentService);
+  private readonly env    = inject(EnvironmentService);
   private get base(): string { return this.env.apiUrl; }
 
   // ── Signals ──────────────────────────────────────────────────────────────
@@ -64,8 +64,7 @@ export class AuthService {
     const raw = readCookie('ca_user');
     if (!raw) return null;
     try {
-      const user = JSON.parse(raw) as IUser;
-      // Rehydrate the picture from localStorage (not stored in cookie)
+      const user  = JSON.parse(raw) as IUser;
       const avatar = readAvatar();
       if (avatar) user.profilePicture = avatar;
       return user;
@@ -73,9 +72,9 @@ export class AuthService {
   }
 
   /**
-   * Refresh the current user's full profile from the API.
-   * Called once on app bootstrap (AppComponent) so the signal always
-   * reflects the latest DB state — including a freshly uploaded profilePicture.
+   * Fetch the latest user record from GET /api/users/{id}.
+   * Called after login and on profile page init so the signal always
+   * reflects the current DB state, including profilePicture.
    */
   refreshUser(): void {
     const uid = this.currentUser()?.userId;
@@ -83,9 +82,7 @@ export class AuthService {
     this.http
       .get<IUser>(`${this.base}/users/${uid}`, { withCredentials: true })
       .pipe(catchError(() => of(null)))
-      .subscribe(user => {
-        if (user) this._setSession(user);
-      });
+      .subscribe(user => { if (user) this._setSession(user); });
   }
 
   // ── Login ─────────────────────────────────────────────────────────────────
@@ -93,7 +90,11 @@ export class AuthService {
     return this.http
       .post<IAuthResponse>(`${this.base}/auth/login`, payload, { withCredentials: true })
       .pipe(
-        tap(r => this._setSession(r.user, r.token)),
+        tap(r => {
+          this._setSession(r.user, r.token);
+          // Immediately pull fresh user data (incl. profilePicture) from the API
+          this.refreshUser();
+        }),
         map(r => r.user),
       );
   }
@@ -103,7 +104,11 @@ export class AuthService {
     return this.http
       .post<IAuthResponse>(`${this.base}/auth/signup`, payload, { withCredentials: true })
       .pipe(
-        tap(r => this._setSession(r.user, r.token)),
+        tap(r => {
+          this._setSession(r.user, r.token);
+          // Immediately pull fresh user data (incl. profilePicture) from the API
+          this.refreshUser();
+        }),
         map(r => r.user),
       );
   }
@@ -131,8 +136,7 @@ export class AuthService {
 
   /**
    * Patch specific fields into the cached user session (signal + cookie).
-   * Use after operations that return an updated user object (e.g. avatar upload)
-   * without needing to call the full PUT /profile endpoint.
+   * Use after operations that return an updated user object (e.g. avatar upload).
    */
   patchUser(partial: Partial<IUser>): void {
     const current = this.currentUser();
@@ -153,7 +157,7 @@ export class AuthService {
       .subscribe();
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
+  // ── Helpers ────────────────────────────────────────────────────────────────
   /**
    * Persist session:
    * - profilePicture → localStorage (can be hundreds of KB as base64)
@@ -161,11 +165,9 @@ export class AuthService {
    */
   private _setSession(user: IUser, token?: string): void {
     const { profilePicture, password, ...lean } = user as any;
-
     writeAvatar(profilePicture);
     writeCookie('ca_user', JSON.stringify({ ...lean, password: '' }), 7);
     if (token) writeCookie('ca_jwt', token, 7);
-
     this.currentUser.set({ ...lean, profilePicture: profilePicture ?? readAvatar() ?? undefined });
   }
 }
