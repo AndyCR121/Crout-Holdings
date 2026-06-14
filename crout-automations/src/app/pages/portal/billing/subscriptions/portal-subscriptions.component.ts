@@ -2,7 +2,7 @@ import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../../services/auth.service';
 import { ApiService } from '../../../../services/api.service';
-import { PaystackService, IPaystackSubscription } from '../../../../services/paystack.service';
+import { PaystackService, IPaystackSubscription, ICompanySubscriptions } from '../../../../services/paystack.service';
 import { IUserService, IService, ICompany } from '../../../../interfaces/i-service.interface';
 import { forkJoin, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
@@ -55,12 +55,15 @@ export class PortalSubscriptionsComponent implements OnInit {
       ),
       switchMap(({ svcs, companies, allUserSvcs }) =>
         this.paystack.getSubscriptions().pipe(
-          switchMap(paystackSubs => {
+          switchMap((grouped: ICompanySubscriptions[]) => {
+            // Flatten company-grouped subscriptions into a single array for lookup
+            const flatSubs: IPaystackSubscription[] = grouped.flatMap(g => g.subscriptions);
+
             const built: SubRow[] = allUserSvcs.map((us: IUserService) => ({
               userService:  us,
               service:      svcs.find((s: IService) => s.serviceId === us.serviceId),
               company:      companies.find((c: ICompany) => c.companyId === us.companyId),
-              subscription: paystackSubs.find(ps => ps.subscription_code === us.subscriptionId) ?? null,
+              subscription: flatSubs.find(ps => ps.subscription_code === us.subscriptionId) ?? null,
             }));
             return of(built);
           })
