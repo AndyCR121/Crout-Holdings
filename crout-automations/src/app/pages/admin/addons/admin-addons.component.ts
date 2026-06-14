@@ -1,102 +1,92 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { AdminService } from '../../../services/admin.service';
-import { IAddon, IService } from '../../../interfaces/i-service.interface';
+import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
+import { AdminLeftMenuComponent } from '../../../components/left-menu/admin-left-menu.component';
 
 @Component({
   selector: 'ca-admin-addons',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AdminLeftMenuComponent],
   templateUrl: './admin-addons.component.html',
   styleUrls: ['./admin-addons.component.scss'],
 })
 export class AdminAddonsComponent implements OnInit {
-  private readonly auth   = inject(AuthService);
-  private readonly admin  = inject(AdminService);
-  private readonly router = inject(Router);
+  private readonly auth    = inject(AuthService);
+  private readonly admin   = inject(AdminService);
+  private readonly confirm = inject(ConfirmDialogService);
 
-  items    = signal<IAddon[]>([]);
-  services = signal<IService[]>([]);
-  total    = signal(0);
+  addons   = signal<any[]>([]);
   loading  = signal(true);
   error    = signal<string | null>(null);
-  page     = signal(1);
-  pageSize = 10;
-  hasMore  = signal(true);
-
-  editingId       = signal<number | null>(null);
-  editBuffer      = signal<Partial<IAddon>>({});
-  saving          = signal(false);
-  deleteConfirmId = signal<number | null>(null);
-  showCreate      = signal(false);
-  createBuffer    = signal<Partial<IAddon>>({ addonName: '', addonDescription: '', price: 0, serviceId: null });
-
-  showLinkModal = signal(false);
-  linkTarget    = signal<IAddon | null>(null);
+  saving   = signal(false);
+  drafts   = new Map<number, any>();
+  showCreate   = signal(false);
+  createBuffer = signal<any>({ addonName: '', description: '', price: 0, active: true });
 
   ngOnInit(): void {
-    const user = this.auth.currentUser();
-    if (!user || !user.isAdmin) { this.router.navigate(['/']); return; }
-    this.loadServices();
+    if (!this.auth.currentUser()?.isAdmin) return;
     this.load();
   }
 
   load(): void {
     this.loading.set(true);
-    this.admin.getAddons(this.page(), this.pageSize).subscribe({
-      next: data => { this.items.set(data.items); this.total.set(data.total); this.hasMore.set(data.items.length === this.pageSize); this.loading.set(false); },
+    this.admin.getAddons().subscribe({
+      next:  a  => { this.addons.set(a); this.loading.set(false); },
       error: () => { this.error.set('Failed to load addons.'); this.loading.set(false); }
     });
   }
 
-  loadServices(): void {
-    this.admin.getServices(1, 100).subscribe({ next: data => this.services.set(data) });
+  isEditing(id: number): boolean { return this.drafts.has(id); }
+  getDraft(id: number): any { return this.drafts.get(id) ?? {}; }
+
+  startEdit(a: any): void {
+    this.drafts.set(a.addonId, { addonName: a.addonName, description: a.description, price: a.price, active: a.active });
   }
 
-  prevPage(): void { if (this.page() > 1) { this.page.update(p => p - 1); this.load(); } }
-  nextPage(): void { if (this.hasMore()) { this.page.update(p => p + 1); this.load(); } }
+  cancelEdit(id: number): void { this.drafts.delete(id); }
 
-  startEdit(a: IAddon): void {
-    this.editingId.set(a.addonId);
-    this.editBuffer.set({ addonName: a.addonName, addonDescription: a.addonDescription, price: a.price, serviceId: a.serviceId });
-  }
-  cancelEdit(): void { this.editingId.set(null); }
-
-  saveEdit(a: IAddon): void {
+  saveEdit(a: any): void {
+    const draft = this.drafts.get(a.addonId);
+    if (!draft) return;
     this.saving.set(true);
-    this.admin.updateAddon(a.addonId, this.editBuffer()).subscribe({
-      next: updated => { this.items.update(list => list.map(i => i.addonId === updated.addonId ? updated : i)); this.editingId.set(null); this.saving.set(false); },
-      error: () => { this.error.set('Failed to save.'); this.saving.set(false); }
+    this.admin.updateAddon(a.addonId, draft).subscribe({
+      next: updated => {
+        this.addons.update(list => list.map(x => x.addonId === updated.addonId ? updated : x));
+        this.drafts.delete(a.addonId);
+        this.saving.set(false);
+      },
+      error: () => { this.error.set('Failed to save addon.'); this.saving.set(false); }
     });
   }
 
-  confirmDelete(id: number): void { this.deleteConfirmId.set(id); }
-  cancelDelete(): void { this.deleteConfirmId.set(null); }
-  doDelete(id: number): void {
-    this.admin.deleteAddon(id).subscribe({
-      next: () => { this.items.update(list => list.filter(i => i.addonId !== id)); this.deleteConfirmId.set(null); },
-      error: () => { this.error.set('Failed to delete.'); this.deleteConfirmId.set(null); }
-    });
+  openCreate(): void {
+    this.createBuffer.set({ addonName: '', description: '', price: 0, active: true });
+    this.showCreate.set(true);
   }
 
   submitCreate(): void {
+    const buf = this.createBuffer();
+    if (!buf.addonName?.trim()) { this.error.set('Addon name is required.'); return; }
     this.saving.set(true);
-    this.admin.createAddon(this.createBuffer()).subscribe({
-      next: created => { this.items.update(list => [created, ...list]); this.showCreate.set(false); this.saving.set(false); this.createBuffer.set({ addonName: '', addonDescription: '', price: 0, serviceId: null }); },
-      error: () => { this.error.set('Failed to create.'); this.saving.set(false); }
+    this.admin.createAddon(buf).subscribe({
+      next: created => {
+        this.addons.update(list => [created, ...list]);
+        this.showCreate.set(false);
+        this.saving.set(false);
+      },
+      error: () => { this.error.set('Failed to create addon.'); this.saving.set(false); }
     });
   }
 
-  openLink(a: IAddon): void {
-    this.linkTarget.set(a);
-    this.showLinkModal.set(true);
-  }
-
-  getServiceName(id: number | null): string {
-    if (!id) return '—';
-    return this.services().find(s => s.serviceId === id)?.serviceName ?? `Service #${id}`;
+  async onDelete(a: any): Promise<void> {
+    const ok = await this.confirm.open('Delete Addon', `Delete "${a.addonName}"? This cannot be undone.`);
+    if (!ok) return;
+    this.admin.deleteAddon(a.addonId).subscribe({
+      next: () => this.addons.update(list => list.filter(x => x.addonId !== a.addonId)),
+      error: () => this.error.set('Failed to delete addon.')
+    });
   }
 }

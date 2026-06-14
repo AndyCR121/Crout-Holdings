@@ -1,100 +1,96 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
-import { AdminService, PagedResult } from '../../../services/admin.service';
-import { IService, IAddon } from '../../../interfaces/i-service.interface';
+import { AdminService } from '../../../services/admin.service';
+import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
+import { IService } from '../../../interfaces/i-service.interface';
+import { AdminLeftMenuComponent } from '../../../components/left-menu/admin-left-menu.component';
 
 @Component({
   selector: 'ca-admin-services',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AdminLeftMenuComponent],
   templateUrl: './admin-services.component.html',
   styleUrls: ['./admin-services.component.scss'],
 })
 export class AdminServicesComponent implements OnInit {
-  private readonly auth   = inject(AuthService);
-  private readonly admin  = inject(AdminService);
-  private readonly router = inject(Router);
+  private readonly auth    = inject(AuthService);
+  private readonly admin   = inject(AdminService);
+  private readonly confirm = inject(ConfirmDialogService);
 
-  items    = signal<IService[]>([]);
+  services = signal<IService[]>([]);
   loading  = signal(true);
   error    = signal<string | null>(null);
-  page     = signal(1);
-  pageSize = 10;
-  hasMore  = signal(true);
+  saving   = signal(false);
 
-  editingId       = signal<number | null>(null);
-  editBuffer      = signal<Partial<IService>>({});
-  saving          = signal(false);
-  deleteConfirmId = signal<number | null>(null);
-  showCreate      = signal(false);
-  createBuffer    = signal<Partial<IService>>({ serviceName: '', serviceDescription: '', price: 0, hasAddons: false, conditional: false });
+  drafts = new Map<number, Partial<IService>>();
 
-  showLinkModal = signal(false);
-  linkTarget    = signal<IService | null>(null);
-  linkedAddons  = signal<IAddon[]>([]);
-  linkLoading   = signal(false);
+  showCreate   = signal(false);
+  createBuffer = signal<Partial<IService>>({ serviceName: '', description: '', price: 0, active: true });
 
   ngOnInit(): void {
     const user = this.auth.currentUser();
-    if (!user || !user.isAdmin) { this.router.navigate(['/']); return; }
+    if (!user?.isAdmin) return;
     this.load();
   }
 
   load(): void {
     this.loading.set(true);
-    this.admin.getServices(this.page(), this.pageSize).subscribe({
-      next: (data: IService[]) => { this.items.set(data); this.hasMore.set(data.length === this.pageSize); this.loading.set(false); },
+    this.admin.getServices().subscribe({
+      next:  s  => { this.services.set(s); this.loading.set(false); },
       error: () => { this.error.set('Failed to load services.'); this.loading.set(false); }
     });
   }
 
-  prevPage(): void { if (this.page() > 1) { this.page.update(p => p - 1); this.load(); } }
-  nextPage(): void { if (this.hasMore()) { this.page.update(p => p + 1); this.load(); } }
+  isEditing(id: number): boolean { return this.drafts.has(id); }
+  getDraft(id: number): Partial<IService> { return this.drafts.get(id) ?? {}; }
 
   startEdit(s: IService): void {
-    this.editingId.set(s.serviceId);
-    this.editBuffer.set({ serviceName: s.serviceName, serviceDescription: s.serviceDescription, price: s.price, hasAddons: s.hasAddons, conditional: s.conditional });
+    this.drafts.set(s.serviceId, { serviceName: s.serviceName, description: s.description, price: s.price, active: s.active });
   }
-  cancelEdit(): void { this.editingId.set(null); }
+
+  cancelEdit(id: number): void { this.drafts.delete(id); }
 
   saveEdit(s: IService): void {
+    const draft = this.drafts.get(s.serviceId);
+    if (!draft) return;
     this.saving.set(true);
-    this.admin.updateService(s.serviceId, this.editBuffer()).subscribe({
-      next: (updated: IService) => { this.items.update(list => list.map(i => i.serviceId === updated.serviceId ? updated : i)); this.editingId.set(null); this.saving.set(false); },
-      error: () => { this.error.set('Failed to save.'); this.saving.set(false); }
+    this.admin.updateService(s.serviceId, draft).subscribe({
+      next: updated => {
+        this.services.update(list => list.map(x => x.serviceId === updated.serviceId ? updated : x));
+        this.drafts.delete(s.serviceId);
+        this.saving.set(false);
+      },
+      error: () => { this.error.set('Failed to save service.'); this.saving.set(false); }
     });
   }
 
-  confirmDelete(id: number): void { this.deleteConfirmId.set(id); }
-  cancelDelete(): void { this.deleteConfirmId.set(null); }
-  doDelete(id: number): void {
-    this.admin.deleteService(id).subscribe({
-      next: () => { this.items.update(list => list.filter(i => i.serviceId !== id)); this.deleteConfirmId.set(null); },
-      error: () => { this.error.set('Failed to delete.'); this.deleteConfirmId.set(null); }
-    });
+  openCreate(): void {
+    this.createBuffer.set({ serviceName: '', description: '', price: 0, active: true });
+    this.showCreate.set(true);
   }
 
   submitCreate(): void {
+    const buf = this.createBuffer();
+    if (!buf.serviceName?.trim()) { this.error.set('Service name is required.'); return; }
     this.saving.set(true);
-    this.admin.createService(this.createBuffer()).subscribe({
-      next: (created: IService) => { this.items.update(list => [created, ...list]); this.showCreate.set(false); this.saving.set(false); this.createBuffer.set({ serviceName: '', serviceDescription: '', price: 0, hasAddons: false, conditional: false }); },
-      error: () => { this.error.set('Failed to create.'); this.saving.set(false); }
+    this.admin.createService(buf).subscribe({
+      next: created => {
+        this.services.update(list => [created, ...list]);
+        this.showCreate.set(false);
+        this.saving.set(false);
+      },
+      error: () => { this.error.set('Failed to create service.'); this.saving.set(false); }
     });
   }
 
-  openLink(s: IService): void {
-    this.linkTarget.set(s);
-    this.linkLoading.set(true);
-    this.showLinkModal.set(true);
-    this.admin.getAddons(1, 100).subscribe({
-      next: (result: PagedResult<IAddon>) => {
-        this.linkedAddons.set(result.items.filter(a => a.serviceId === s.serviceId));
-        this.linkLoading.set(false);
-      },
-      error: () => this.linkLoading.set(false)
+  async onDelete(s: IService): Promise<void> {
+    const ok = await this.confirm.open('Delete Service', `Delete "${s.serviceName}"? This cannot be undone.`);
+    if (!ok) return;
+    this.admin.deleteService(s.serviceId).subscribe({
+      next: () => this.services.update(list => list.filter(x => x.serviceId !== s.serviceId)),
+      error: () => this.error.set('Failed to delete service.')
     });
   }
 }

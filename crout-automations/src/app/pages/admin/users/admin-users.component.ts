@@ -6,11 +6,12 @@ import { AuthService } from '../../../services/auth.service';
 import { AdminService } from '../../../services/admin.service';
 import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
 import { IUser } from '../../../interfaces/i-service.interface';
+import { AdminLeftMenuComponent } from '../../../components/left-menu/admin-left-menu.component';
 
 @Component({
   selector: 'ca-admin-users',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AdminLeftMenuComponent],
   templateUrl: './admin-users.component.html',
   styleUrls: ['./admin-users.component.scss'],
 })
@@ -27,11 +28,9 @@ export class AdminUsersComponent implements OnInit {
   pageSize = 10;
   total    = signal(0);
 
-  // Per-row draft map
   drafts = new Map<number, Partial<IUser>>();
   saving = signal(false);
 
-  // Create
   showCreate   = signal(false);
   createBuffer = signal<Partial<IUser>>({
     firstName: '', surname: '', email: '', username: '',
@@ -64,9 +63,7 @@ export class AdminUsersComponent implements OnInit {
   prevPage(): void { if (this.page() > 1) { this.page.update(p => p - 1); this.load(); } }
   nextPage(): void { if (this.hasMore) { this.page.update(p => p + 1); this.load(); } }
 
-  // ── Edit (isolated per row) ───────────────────────────────────────────────
   isEditing(id: number): boolean { return this.drafts.has(id); }
-
   getDraft(id: number): Partial<IUser> { return this.drafts.get(id) ?? {}; }
 
   startEdit(user: IUser): void {
@@ -96,7 +93,6 @@ export class AdminUsersComponent implements OnInit {
     });
   }
 
-  // ── Create ────────────────────────────────────────────────────────────────
   openCreate(): void {
     this.createBuffer.set({ firstName: '', surname: '', email: '', username: '', cellNumber: undefined, isAdmin: false, active: true });
     this.showCreate.set(true);
@@ -120,7 +116,6 @@ export class AdminUsersComponent implements OnInit {
     });
   }
 
-  // ── Delete ────────────────────────────────────────────────────────────────
   async onDelete(user: IUser): Promise<void> {
     const confirmed = await this.confirm.open(
       'Delete User',
