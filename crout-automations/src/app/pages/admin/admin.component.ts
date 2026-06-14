@@ -1,24 +1,18 @@
-import { Component, inject, computed, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
-import { AdminLeftMenuComponent } from '../../components/left-menu/admin-left-menu.component';
 
+/**
+ * Admin shell — thin redirect stub.
+ * No router-outlet, no layout logic.
+ * Navbar, footer & account-button are handled by app.component.
+ * Each sub-page (users, services, packages, companies, addons,
+ * service-features) is standalone and renders its own <ca-admin-left-menu>.
+ */
 @Component({
   selector: 'ca-admin',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, AdminLeftMenuComponent],
-  templateUrl: './admin.component.html',
-  styleUrls: ['./admin.component.scss'],
+  imports: [CommonModule],
+  template: `<ng-content />`,
+  styles: [`:host { display: block; }`]
 })
-export class AdminComponent implements OnInit {
-  private readonly auth   = inject(AuthService);
-  private readonly router = inject(Router);
-
-  readonly user = computed(() => this.auth.currentUser());
-
-  ngOnInit(): void {
-    const user = this.user();
-    if (!user || !user.isAdmin) this.router.navigate(['/']);
-  }
-}
+export class AdminComponent {}

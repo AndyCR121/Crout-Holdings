@@ -5,13 +5,14 @@ import { ApiService } from '../../../services/api.service';
 import { N8nService, IDailyRun } from '../../../services/n8n.service';
 import { IUserService, IService, ICompany } from '../../../interfaces/i-service.interface';
 import { CompanySvcFilterPipe } from '../../../pipes/company-svc-filter.pipe';
+import { PortalLeftMenuComponent } from '../../../components/left-menu/portal-left-menu.component';
 import { forkJoin, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'ca-portal-dashboard',
   standalone: true,
-  imports: [CommonModule, CompanySvcFilterPipe],
+  imports: [CommonModule, CompanySvcFilterPipe, PortalLeftMenuComponent],
   templateUrl: './portal-dashboard.component.html',
   styleUrls: ['./portal-dashboard.component.scss'],
 })
@@ -54,7 +55,6 @@ export class PortalDashboardComponent implements OnInit {
     ).subscribe(allUserSvcs => {
       this.userServices.set(allUserSvcs);
       this.loading.set(false);
-      // Only fetch N8N run data when graphs are enabled
       if (!this.development) {
         allUserSvcs.forEach(us => {
           this.n8n.getDailyRuns(`workflow_${us.serviceId}`, 14).subscribe(runs => {

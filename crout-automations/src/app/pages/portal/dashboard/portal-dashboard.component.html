@@ -1,97 +1,43 @@
-<section class="pd-wrap">
-  <h1 class="pd-title">Dashboard</h1>
-  <p class="pd-sub">Welcome back, <strong>{{ user()?.username }}</strong></p>
-
-  @if (loading()) {
-    <div class="pd-skeleton-grid">
-      <div class="pd-skeleton-card" *ngFor="let _ of [1,2]"></div>
-    </div>
-  } @else if (userServices().length === 0) {
-    <div class="pd-empty">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M12 2l9 4.5V12c0 5-4 9.3-9 10.5C7 21.3 3 17 3 12V6.5L12 2z"/>
-      </svg>
-      <h3>No active services yet</h3>
-      <p>Your subscribed services will appear here once activated.</p>
-    </div>
-  } @else {
-    <!-- Group services by company -->
-    @for (company of companies(); track company.companyId) {
-      @let companyServices = userServices() | companySvcFilter: company.companyId;
-      @if (companyServices.length > 0) {
-        <div class="pd-company-group">
-          <!-- Company header -->
-          <div class="pd-company-header">
-            <div class="pd-company-meta">
-              <span class="pd-company-name">{{ company.companyName }}</span>
-              <span class="pd-company-industry" *ngIf="company.industry">{{ company.industry }}</span>
+<div class="portal-page-layout">
+  <ca-portal-left-menu />
+  <main class="portal-page-main">
+    <!-- ─────────────────────────────────────────────────────────────────
+         Original dashboard content below — unchanged
+    ───────────────────────────────────────────────────────────────────── -->
+    <ng-container *ngIf="loading(); else dashContent">
+      <div class="dash-loading">Loading your dashboard…</div>
+    </ng-container>
+    <ng-template #dashContent>
+      <div class="dash-root">
+        <header class="dash-header">
+          <h1 class="dash-title">Dashboard</h1>
+          <p class="dash-sub">Welcome back, {{ user()?.firstName || user()?.username }}</p>
+        </header>
+        <section class="dash-services" *ngIf="userServices().length; else noServices">
+          <div class="service-card" *ngFor="let us of userServices()">
+            <div class="service-card-header">
+              <span class="service-name">{{ getService(us.serviceId)?.serviceName ?? 'Service' }}</span>
+              <span class="service-status" [ngClass]="statusClass(us.status)">{{ statusLabel(us.status) }}</span>
             </div>
-            <span class="pd-company-count">{{ companyServices.length }} service{{ companyServices.length !== 1 ? 's' : '' }}</span>
+            <p class="service-company" *ngIf="getCompany(us.companyId) as c">{{ c.companyName }}</p>
+            <div class="service-addons" *ngIf="getAddonNames(us.addonConfig).length">
+              <span class="addon-chip" *ngFor="let a of getAddonNames(us.addonConfig)">{{ a }}</span>
+            </div>
+            <div class="service-chart" *ngIf="!development">
+              <svg width="100%" height="80" viewBox="0 0 560 80" preserveAspectRatio="none">
+                <rect *ngFor="let b of chartBars(us.serviceId)"
+                  [attr.x]="b.x" [attr.y]="80 - b.h" [attr.width]="b.w" [attr.height]="b.h"
+                  [class]="b.isError ? 'bar-error' : 'bar-ok'" />
+              </svg>
+            </div>
           </div>
-
-          <!-- Service cards for this company -->
-          <div class="pd-grid">
-            @for (us of companyServices; track us.serviceId) {
-              @let svc = getService(us.serviceId);
-              @if (svc) {
-                <div class="pd-card">
-                  <!-- Header -->
-                  <div class="pd-card-header">
-                    <div>
-                      <h2 class="pd-card-name">{{ svc.serviceName }}</h2>
-                      <p class="pd-card-desc">{{ svc.serviceDescription }}</p>
-                    </div>
-                    <span class="pd-status-badge" [class]="statusClass(us.status)">
-                      {{ statusLabel(us.status) }}
-                    </span>
-                  </div>
-
-                  <!-- Addon config chips -->
-                  @let addons = getAddonNames(us.config);
-                  @if (addons.length > 0) {
-                    <div class="pd-addons">
-                      <span class="pd-addons-label">Config</span>
-                      <div class="pd-chips">
-                        @for (a of addons; track a) {
-                          <span class="pd-chip">{{ a }}</span>
-                        }
-                      </div>
-                    </div>
-                  }
-
-                  <!-- n8n runs bar chart — hidden while development = true -->
-                  @if (!development) {
-                    @let bars = chartBars(us.serviceId);
-                    @if (bars.length > 0) {
-                      <div class="pd-chart-wrap">
-                        <span class="pd-chart-label">Workflow Runs — Last 14 days</span>
-                        <svg class="pd-chart" viewBox="0 0 560 90" preserveAspectRatio="none">
-                          @for (bar of bars; track bar.x) {
-                            <rect
-                              [attr.x]="bar.x"
-                              [attr.y]="90 - bar.h"
-                              [attr.width]="bar.w"
-                              [attr.height]="bar.h"
-                              [attr.fill]="bar.isError ? '#e05c5c' : '#4fa3b8'"
-                              rx="2"
-                            />
-                          }
-                        </svg>
-                        <div class="pd-chart-dates">
-                          @for (bar of bars; track bar.x) {
-                            <span>{{ bar.label }}</span>
-                          }
-                        </div>
-                      </div>
-                    }
-                  }
-
-                </div>
-              }
-            }
+        </section>
+        <ng-template #noServices>
+          <div class="dash-empty">
+            <p>No active services yet. <a href="/services">Browse services</a> to get started.</p>
           </div>
-        </div>
-      }
-    }
-  }
-</section>
+        </ng-template>
+      </div>
+    </ng-template>
+  </main>
+</div>

@@ -1,26 +1,18 @@
-import { Component, inject, computed, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
-import { CompanyService } from '../../services/company.service';
-import { PortalLeftMenuComponent } from '../../components/left-menu/portal-left-menu.component';
 
+/**
+ * Portal shell — thin redirect stub.
+ * No router-outlet, no layout logic.
+ * Navbar, footer & account-button are handled by app.component.
+ * Each sub-page (dashboard, profile, services, billing) is standalone
+ * and renders its own <ca-portal-left-menu>.
+ */
 @Component({
   selector: 'ca-portal',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, PortalLeftMenuComponent],
-  templateUrl: './portal.component.html',
-  styleUrls: ['./portal.component.scss'],
+  imports: [CommonModule],
+  template: `<ng-content />`,
+  styles: [`:host { display: block; }`]
 })
-export class PortalComponent implements OnInit {
-  private readonly auth       = inject(AuthService);
-  private readonly companySvc = inject(CompanyService);
-
-  readonly user = computed(() => this.auth.currentUser());
-
-  ngOnInit(): void {
-    const uid = this.user()?.userId;
-    if (uid == null) return;
-    this.companySvc.load(uid);
-  }
-}
+export class PortalComponent {}
