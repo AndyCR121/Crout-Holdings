@@ -12,7 +12,7 @@ public class PaystackController(IPaystackProxyService paystack) : ControllerBase
 {
     private int UserId => JwtHelper.GetUserId(User);
 
-    /// <summary>GET /api/paystack/subscriptions — all subscriptions across all user's companies</summary>
+    /// <summary>GET /api/paystack/subscriptions</summary>
     [HttpGet("subscriptions")]
     public async Task<IActionResult> GetSubscriptions()
     {
@@ -20,7 +20,7 @@ public class PaystackController(IPaystackProxyService paystack) : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>GET /api/paystack/companies — list user's companies with their Paystack cards</summary>
+    /// <summary>GET /api/paystack/companies — list user's companies with their saved cards</summary>
     [HttpGet("companies")]
     public async Task<IActionResult> GetCompanyBilling()
     {
@@ -31,8 +31,6 @@ public class PaystackController(IPaystackProxyService paystack) : ControllerBase
     /// <summary>
     /// POST /api/paystack/manage-card-url
     /// Body: { "companyId": 3 }
-    /// Initialises a Paystack transaction for card capture using the company's email.
-    /// Returns { access_code, reference, email } for the frontend popup.
     /// </summary>
     [HttpPost("manage-card-url")]
     public async Task<IActionResult> ManageCardUrl([FromBody] ManageCardRequest req)
@@ -40,6 +38,25 @@ public class PaystackController(IPaystackProxyService paystack) : ControllerBase
         var result = await paystack.InitialiseCardCaptureAsync(UserId, req.CompanyId);
         return Ok(result);
     }
+
+    /// <summary>
+    /// POST /api/paystack/verify
+    /// Body: { "reference": "abc123" }
+    /// Called immediately after the Paystack popup fires onSuccess.
+    /// Verifies the transaction server-side so Paystack commits the
+    /// authorization to the customer record — this is what makes the
+    /// card appear on GET /customer/{email}.
+    /// </summary>
+    [HttpPost("verify")]
+    public async Task<IActionResult> VerifyTransaction([FromBody] VerifyRequest req)
+    {
+        if (string.IsNullOrWhiteSpace(req.Reference))
+            return BadRequest(new { message = "Reference is required." });
+
+        var result = await paystack.VerifyTransactionAsync(req.Reference);
+        return Ok(result);
+    }
 }
 
 public record ManageCardRequest(int CompanyId);
+public record VerifyRequest(string Reference);

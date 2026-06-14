@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, of, throwError } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { EnvironmentService } from './environment.service';
 import { environment } from '../../environments/environment';
 
@@ -72,17 +72,11 @@ export class PaystackService {
       );
   }
 
-  /**
-   * Fetch all companies with their saved Paystack cards.
-   * Hits GET /api/paystack/companies which calls Paystack
-   * GET /customer/{email} per company (then falls back to transaction scan).
-   */
   getCompanyBilling(): Observable<ICompanyBilling[]> {
     return this.http
       .get<ICompanyBilling[]>(`${this.base}/paystack/companies`, { withCredentials: true })
       .pipe(
         tap(data => console.debug('[PaystackService] getCompanyBilling ->', data)),
-        // Map to ensure cards is always an array even if backend omits it
         map(companies => companies.map(c => ({ ...c, cards: c.cards ?? [] }))),
         catchError((err: HttpErrorResponse) => {
           console.error('[PaystackService] getCompanyBilling failed', err.status, err.message);
@@ -91,10 +85,6 @@ export class PaystackService {
       );
   }
 
-  /**
-   * Initialise a card-capture transaction for a specific company.
-   * The company's email is resolved server-side.
-   */
   getCardCaptureCode(companyId: number): Observable<ICardCaptureResult | null> {
     return this.http
       .post<ICardCaptureResult>(
@@ -112,8 +102,30 @@ export class PaystackService {
   }
 
   /**
+   * Verify a transaction reference server-side.
+   * MUST be called after the Paystack popup fires onSuccess —
+   * without this Paystack does not commit the authorization to
+   * the customer record, so the card won't appear on future fetches.
+   */
+  verifyTransaction(reference: string): Observable<{ verified: boolean; status: string }> {
+    return this.http
+      .post<{ verified: boolean; status: string }>(
+        `${this.base}/paystack/verify`,
+        { reference },
+        { withCredentials: true },
+      )
+      .pipe(
+        tap(res => console.debug('[PaystackService] verifyTransaction ->', res)),
+        catchError((err: HttpErrorResponse) => {
+          console.error('[PaystackService] verifyTransaction failed', err.status, err.message);
+          return of({ verified: false, status: 'error' });
+        }),
+      );
+  }
+
+  /**
    * Open Paystack inline popup.
-   * Public key is client-side safe. Secret key lives ONLY in the backend.
+   * Calls verifyTransaction automatically in onSuccess before invoking the callback.
    */
   openPopup(
     accessCode: string,
@@ -130,8 +142,14 @@ export class PaystackService {
       key:         environment.paystackPublicKey,
       access_code: accessCode,
       email,
-      callback:    (res: { reference: string }) => onSuccess(res.reference),
-      onClose:     onClose ?? (() => {}),
+      callback: (res: { reference: string }) => {
+        // Verify server-side first — this is what commits the card to Paystack's customer record
+        this.verifyTransaction(res.reference).subscribe(result => {
+          console.debug('[PaystackService] popup callback verified:', result);
+          onSuccess(res.reference);
+        });
+      },
+      onClose: onClose ?? (() => {}),
     });
     handler.openIframe();
   }
