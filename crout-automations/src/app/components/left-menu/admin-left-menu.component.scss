@@ -1,19 +1,6 @@
-// ────────────────────────────────────────────────────────────────────────────────
-// Admin Left Menu — sidebar component
-// Width is controlled by .portal-page-layout in styles.scss (240px fixed).
-// This file only styles the internal content of the sidebar.
-// ────────────────────────────────────────────────────────────────────────────────
-
-:host {
-  display: block;
-  width:   100%;
-  height:  100%;
-}
-
 @mixin portal-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.15) transparent;
-
   &::-webkit-scrollbar        { width: 4px; }
   &::-webkit-scrollbar-track  { background: transparent; }
   &::-webkit-scrollbar-thumb  {
@@ -23,7 +10,17 @@
   }
 }
 
-.admin-sidebar {
+:host {
+  display:     block;
+  width:       240px;
+  min-width:   240px;
+  flex-shrink: 0;
+  height:      100vh;
+  position:    sticky;
+  top:         0;
+}
+
+.portal-sidebar {
   background:     #0a1628;
   border-right:   1px solid rgba(255,255,255,0.07);
   display:        flex;
@@ -94,6 +91,15 @@
     background: rgba(234,123,50,0.15);
     color:      #ea7b32;
     svg { color: #ea7b32; }
+  }
+
+  &--back {
+    color:      rgba(100,180,255,0.75);
+    margin-top: 4px;
+    &:hover {
+      background: rgba(100,180,255,0.08);
+      color:      rgba(100,180,255,1);
+    }
   }
 }
 
@@ -172,9 +178,15 @@
   }
 }
 
-// Mobile: collapse to horizontal bar
 @media (max-width: 768px) {
-  .admin-sidebar {
+  :host {
+    width:    100%;
+    min-width: 0;
+    height:   auto;
+    position: static;
+  }
+
+  .portal-sidebar {
     flex-direction: row;
     flex-wrap:      wrap;
     padding:        12px;
