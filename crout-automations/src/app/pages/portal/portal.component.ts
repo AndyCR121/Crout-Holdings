@@ -1,5 +1,5 @@
 import { Component, inject, computed, OnInit } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { RouterOutlet, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { CompanyService } from '../../services/company.service';
@@ -7,7 +7,7 @@ import { CompanyService } from '../../services/company.service';
 @Component({
   selector: 'ca-portal',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet],
   templateUrl: './portal.component.html',
   styleUrls: ['./portal.component.scss'],
 })
