@@ -3,11 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { EnvironmentService } from './environment.service';
+import { environment } from '../../environments/environment';
 
 export interface IPaystackPlan {
-  name: string;
+  name:     string;
   interval: string;
-  amount: number;
+  amount:   number;
 }
 
 export interface IPaystackSubscription {
@@ -42,12 +43,12 @@ export class PaystackService {
   private readonly env  = inject(EnvironmentService);
   private get base() { return this.env.apiUrl; }
 
-  /** Fetch all Paystack subscriptions for the logged-in user's email */
+  /** Fetch all Paystack subscriptions matched to the user's company email */
   getSubscriptions(): Observable<IPaystackSubscription[]> {
     return this.http
       .get<{ data: IPaystackSubscription[] }>(
         `${this.base}/paystack/subscriptions`,
-        { withCredentials: true }
+        { withCredentials: true },
       )
       .pipe(
         map(r => r?.data ?? []),
@@ -55,12 +56,12 @@ export class PaystackService {
       );
   }
 
-  /** Fetch all reusable saved cards (authorizations) for the logged-in user */
+  /** Fetch all reusable saved cards linked to the user's company email */
   getSavedCards(): Observable<IPaystackCard[]> {
     return this.http
       .get<IPaystackCard[]>(
         `${this.base}/paystack/cards`,
-        { withCredentials: true }
+        { withCredentials: true },
       )
       .pipe(catchError(() => of([])));
   }
@@ -74,13 +75,17 @@ export class PaystackService {
       .post<IPaystackAccessCode>(
         `${this.base}/paystack/manage-card-url`,
         {},
-        { withCredentials: true }
+        { withCredentials: true },
       )
       .pipe(catchError(() => of(null)));
   }
 
   /**
-   * Open Paystack's inline popup.
+   * Open Paystack inline popup.
+   *
+   * The public key is passed here — it is designed to be client-side visible.
+   * The SECRET key lives ONLY in the backend and is never sent to the browser.
+   *
    * Requires <script src="https://js.paystack.co/v1/inline.js"> in index.html.
    */
   openPopup(
@@ -90,11 +95,15 @@ export class PaystackService {
   ): void {
     const PaystackPop = (window as any).PaystackPop;
     if (!PaystackPop) {
-      console.error('[PaystackService] PaystackPop not found. Ensure https://js.paystack.co/v1/inline.js is loaded in index.html.');
+      console.error(
+        '[PaystackService] PaystackPop not found. '
+        + 'Ensure https://js.paystack.co/v1/inline.js is loaded in index.html.',
+      );
       return;
     }
     const handler = PaystackPop.setup({
-      access_code: accessCode,
+      key:         environment.paystackPublicKey,   // ← public key required by popup
+      access_code: accessCode,                      // ← pre-initialised transaction
       callback:    (res: { reference: string }) => onSuccess(res.reference),
       onClose:     onClose ?? (() => {}),
     });
