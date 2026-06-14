@@ -10,13 +10,12 @@ namespace CroutApi.Services;
 /// Secret key NEVER reaches the frontend.
 ///
 /// Card fetching flow (Paystack):
-///   1. GET /customer/{email}            — resolve customer_code + authorizations[].
-///      Paystack returns authorizations directly on the customer object from
-///      transactions that have run through that customer. This is the canonical
-///      way to list saved cards.
+///   1. GET /customer/{email} — reads authorizations[] directly from the customer object.
+///      Each JsonElement is .Clone()'d before the JsonDocument is disposed so the
+///      data survives outside the using block.
 ///   2. If authorizations is empty/missing, fall back to
-///      GET /transaction?customer={code} — scan transactions for unique reusable
-///      authorizations (covers edge cases where the customer object lags).
+///      GET /transaction?customer={code}&status=success — scan for unique reusable
+///      authorizations. Also cloned before disposal.
 /// </summary>
 public class PaystackProxyService(
     IUserRepository    users,
@@ -48,55 +47,72 @@ public class PaystackProxyService(
 
     // ── Fetch reusable cards for a given email ────────────────────────────────
     /// <summary>
-    /// Primary: reads authorizations[] from GET /customer/{email}.
-    /// Fallback: scans GET /transaction?customer={code} for unique reusable auths.
-    /// Returns a deduplicated list of reusable authorization objects.
+    /// Returns a deduplicated list of reusable authorization objects as cloned
+    /// JsonElements (safe to use after their source JsonDocument is disposed).
+    ///
+    /// Primary:  GET /customer/{email}  →  authorizations[]
+    /// Fallback: GET /transaction?customer={code}&amp;status=success  →  scan for unique auths
     /// </summary>
     private async Task<List<JsonElement>> FetchReusableCardsAsync(string email)
     {
-        // Step 1 — fetch the customer record
+        // ── Step 1: fetch customer record ───────────────────────────────────────
         var custResponse = await http.GetAsync(
             $"https://api.paystack.co/customer/{Uri.EscapeDataString(email)}");
         var custJson = await custResponse.Content.ReadAsStringAsync();
 
-        using var custDoc = JsonDocument.Parse(custJson);
-        if (!custDoc.RootElement.TryGetProperty("data", out var custData))
-            return [];
-
-        var customerCode = custData.TryGetProperty("customer_code", out var cc)
-            ? cc.GetString() : null;
-
-        // Step 2 — try authorizations directly on the customer object
         var cards = new List<JsonElement>();
-        if (custData.TryGetProperty("authorizations", out var auths))
-        {
-            var all = JsonSerializer.Deserialize<List<JsonElement>>(auths.GetRawText()) ?? [];
-            cards = all
-                .Where(c => c.TryGetProperty("reusable", out var r) && r.GetBoolean())
-                .ToList();
-        }
+        string? customerCode = null;
 
-        // Step 3 — if still empty and we have a customer code, scan transactions
+        // Parse customer doc — clone every element we need BEFORE disposing
+        using (var custDoc = JsonDocument.Parse(custJson))
+        {
+            if (!custDoc.RootElement.TryGetProperty("data", out var custData))
+                return cards; // no data at all — email not on Paystack yet
+
+            // Grab customer_code for fallback
+            if (custData.TryGetProperty("customer_code", out var cc))
+                customerCode = cc.GetString();
+
+            // Primary path: authorizations[] on the customer object
+            if (custData.TryGetProperty("authorizations", out var auths))
+            {
+                foreach (var auth in auths.EnumerateArray())
+                {
+                    if (!auth.TryGetProperty("reusable", out var r) || !r.GetBoolean())
+                        continue;
+                    // .Clone() copies the element out of the document's memory buffer
+                    cards.Add(auth.Clone());
+                }
+            }
+        } // custDoc disposed here — safe because we cloned above
+
+        // ── Step 2: fallback — scan transactions if no cards found yet ────────────
         if (cards.Count == 0 && !string.IsNullOrWhiteSpace(customerCode))
         {
             var txResponse = await http.GetAsync(
                 $"https://api.paystack.co/transaction?customer={Uri.EscapeDataString(customerCode!)}&status=success&perPage=100");
             var txJson = await txResponse.Content.ReadAsStringAsync();
 
-            using var txDoc = JsonDocument.Parse(txJson);
-            if (txDoc.RootElement.TryGetProperty("data", out var txData))
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            using (var txDoc = JsonDocument.Parse(txJson))
             {
-                var seen = new HashSet<string>();
-                foreach (var tx in txData.EnumerateArray())
+                if (txDoc.RootElement.TryGetProperty("data", out var txData))
                 {
-                    if (!tx.TryGetProperty("authorization", out var auth)) continue;
-                    if (!auth.TryGetProperty("reusable", out var reusable) || !reusable.GetBoolean()) continue;
-                    var authCode = auth.TryGetProperty("authorization_code", out var ac)
-                        ? ac.GetString() : null;
-                    if (authCode is null || !seen.Add(authCode)) continue;
-                    cards.Add(auth.Clone()); // .Clone() detaches from the disposed doc
+                    foreach (var tx in txData.EnumerateArray())
+                    {
+                        if (!tx.TryGetProperty("authorization", out var auth)) continue;
+                        if (!auth.TryGetProperty("reusable", out var reusable) || !reusable.GetBoolean()) continue;
+
+                        var authCode = auth.TryGetProperty("authorization_code", out var ac)
+                            ? ac.GetString() : null;
+                        if (authCode is null || !seen.Add(authCode)) continue;
+
+                        // Clone before txDoc is disposed
+                        cards.Add(auth.Clone());
+                    }
                 }
-            }
+            } // txDoc disposed here — safe because we cloned above
         }
 
         return cards;
@@ -114,15 +130,18 @@ public class PaystackProxyService(
             var response = await http.GetAsync(
                 $"https://api.paystack.co/subscription?email={Uri.EscapeDataString(company.Email!)}");
             var json = await response.Content.ReadAsStringAsync();
+
             using var doc = JsonDocument.Parse(json);
             if (doc.RootElement.TryGetProperty("data", out var data))
             {
+                // Deserialize immediately while doc is still in scope
+                var subs = JsonSerializer.Deserialize<object>(data.GetRawText());
                 results.Add(new
                 {
                     companyId     = company.CompanyId,
                     companyName   = company.CompanyName,
                     email         = company.Email,
-                    subscriptions = JsonSerializer.Deserialize<object>(data.GetRawText()),
+                    subscriptions = subs,
                 });
             }
         }
@@ -143,8 +162,9 @@ public class PaystackProxyService(
             if (!string.IsNullOrWhiteSpace(company.Email))
             {
                 var fetched = await FetchReusableCardsAsync(company.Email!);
+                // Deserialize each cloned element into a plain object for JSON serialization
                 cards = fetched
-                    .Select(c => (object)JsonSerializer.Deserialize<object>(c.GetRawText())!)
+                    .Select(el => JsonSerializer.Deserialize<object>(el.GetRawText())!)
                     .ToList();
             }
 
@@ -193,6 +213,7 @@ public class PaystackProxyService(
 
         if (doc.RootElement.TryGetProperty("data", out var d))
         {
+            // Deserialize while doc is in scope
             var data = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(d.GetRawText())!;
             return new
             {
