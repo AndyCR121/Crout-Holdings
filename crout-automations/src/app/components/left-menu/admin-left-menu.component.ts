@@ -24,5 +24,8 @@ export class AdminLeftMenuComponent {
       || u.username[0].toUpperCase();
   });
 
-  logout(): void { this.auth.logout(); }
+  logout(): void { 
+    this.auth.logout(); 
+    window.location.href = '/';
+  }
 }

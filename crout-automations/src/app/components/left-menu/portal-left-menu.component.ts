@@ -38,5 +38,6 @@ export class PortalLeftMenuComponent implements OnInit {
   logout(): void {
     this.companySvc.clear();
     this.auth.logout();
+    window.location.href = '/';
   }
 }
