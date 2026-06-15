@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { EnvironmentService } from './environment.service';
@@ -67,9 +67,16 @@ export class PaystackService {
   private readonly env  = inject(EnvironmentService);
   private get base() { return this.env.apiUrl; }
 
+  /** Read ca_jwt cookie and return Authorization headers. */
+  private authHeaders(): HttpHeaders {
+    const match = document.cookie.match(/(?:^|;\s*)ca_jwt=([^;]*)/);
+    const token = match ? decodeURIComponent(match[1]) : '';
+    return new HttpHeaders({ Authorization: `Bearer ${token}` });
+  }
+
   getSubscriptions(): Observable<ICompanySubscriptions[]> {
     return this.http
-      .get<ICompanySubscriptions[]>(`${this.base}/paystack/subscriptions`, { withCredentials: true })
+      .get<ICompanySubscriptions[]>(`${this.base}/paystack/subscriptions`, { headers: this.authHeaders(), withCredentials: true })
       .pipe(
         tap(data => console.debug('[PaystackService] getSubscriptions ->', data)),
         catchError((err: HttpErrorResponse) => {
@@ -81,7 +88,7 @@ export class PaystackService {
 
   getCompanyBilling(): Observable<ICompanyBilling[]> {
     return this.http
-      .get<ICompanyBilling[]>(`${this.base}/paystack/companies`, { withCredentials: true })
+      .get<ICompanyBilling[]>(`${this.base}/paystack/companies`, { headers: this.authHeaders(), withCredentials: true })
       .pipe(
         tap(data => console.debug('[PaystackService] getCompanyBilling ->', data)),
         map(companies => companies.map(c => ({ ...c, cards: c.cards ?? [] }))),
@@ -97,7 +104,7 @@ export class PaystackService {
       .post<ICardCaptureResult>(
         `${this.base}/paystack/manage-card-url`,
         { companyId },
-        { withCredentials: true },
+        { headers: this.authHeaders(), withCredentials: true },
       )
       .pipe(
         tap(res => console.debug('[PaystackService] getCardCaptureCode ->', res)),
@@ -119,7 +126,7 @@ export class PaystackService {
       .post<{ verified: boolean; status: string }>(
         `${this.base}/paystack/verify`,
         { reference },
-        { withCredentials: true },
+        { headers: this.authHeaders(), withCredentials: true },
       )
       .pipe(
         tap(res => console.debug('[PaystackService] verifyTransaction ->', res)),

@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { EnvironmentService } from './environment.service';
@@ -24,15 +24,22 @@ export class N8nService {
   private readonly env  = inject(EnvironmentService);
   private get base(): string { return this.env.apiUrl; }
 
+  /** Read ca_jwt cookie and return Authorization headers. */
+  private authHeaders(): HttpHeaders {
+    const match = document.cookie.match(/(?:^|;\s*)ca_jwt=([^;]*)/);
+    const token = match ? decodeURIComponent(match[1]) : '';
+    return new HttpHeaders({ Authorization: `Bearer ${token}` });
+  }
+
   getExecutions(workflowId: string, limit = 100): Observable<IN8nExecution[]> {
     return this.http
-      .get<IN8nExecution[]>(`${this.base}/n8n/executions/${workflowId}?limit=${limit}`, { withCredentials: true })
+      .get<IN8nExecution[]>(`${this.base}/n8n/executions/${workflowId}?limit=${limit}`, { headers: this.authHeaders(), withCredentials: true })
       .pipe(catchError(() => of(this._demoExecutions(workflowId))));
   }
 
   getDailyRuns(workflowId: string, days = 14): Observable<IDailyRun[]> {
     return this.http
-      .get<IDailyRun[]>(`${this.base}/n8n/daily-runs/${workflowId}?days=${days}`, { withCredentials: true })
+      .get<IDailyRun[]>(`${this.base}/n8n/daily-runs/${workflowId}?days=${days}`, { headers: this.authHeaders(), withCredentials: true })
       .pipe(catchError(() => of(this._demoDailyRuns(days))));
   }
 
