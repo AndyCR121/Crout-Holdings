@@ -1,6 +1,7 @@
-// ── Layout wrapper ─────────────────────────────────────────────────────────────
+// ── Root host ------------------------------------------------------------------
 :host { display: block; }
 
+// ── Layout wrapper ------------------------------------------------------------
 .portal-page-layout {
   display:    flex;
   min-height: 100vh;
@@ -15,97 +16,354 @@
   background: #081222;
 }
 
-// ── Profile page ──────────────────────────────────────────────────────────────
+// ── Profile page --------------------------------------------------------------
 .portal-profile {
   display:        flex;
   flex-direction: column;
   gap:            28px;
   color:          rgba(255,255,255,0.85);
+}
 
-  h1 {
-    font-size:   28px;
-    font-weight: 800;
-    color:       #fff;
-    margin:      0 0 4px;
-  }
+// ── Page header ---------------------------------------------------------------
+.pprofile__header {
+  display:        flex;
+  flex-direction: column;
+  gap:            4px;
+}
 
-  p {
-    font-size: 15px;
-    color:     rgba(255,255,255,0.50);
-    margin:    0;
-  }
+.pprofile__title {
+  font-size:   28px;
+  font-weight: 800;
+  color:       #fff;
+  margin:      0;
+}
 
-  section {
-    background:    rgba(255,255,255,0.04);
-    border:        1px solid rgba(255,255,255,0.08);
-    border-radius: 14px;
-    padding:       24px;
-  }
+.pprofile__subtitle {
+  font-size: 15px;
+  color:     rgba(255,255,255,0.50);
+  margin:    0;
+}
 
-  h2 {
-    font-size:     16px;
-    font-weight:   700;
-    color:         #fff;
-    margin:        0 0 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid rgba(255,255,255,0.07);
-  }
+// ── Avatar row ----------------------------------------------------------------
+.pprofile__avatar-row {
+  display:     flex;
+  align-items: center;
+  gap:         18px;
+}
 
-  label {
-    display:        flex;
-    flex-direction: column;
-    gap:            6px;
-    font-size:      13px;
-    color:          rgba(255,255,255,0.50);
-  }
+// Avatar wrapper — fixed size, click triggers hidden input
+.pprofile__avatar-wrap {
+  position:    relative;
+  width:       80px;
+  height:      80px;
+  flex-shrink: 0;
+  cursor:      pointer;
+  border-radius: 50%;
 
-  input, select {
-    padding:       10px 14px;
-    background:    rgba(255,255,255,0.06);
-    border:        1px solid rgba(255,255,255,0.12);
-    border-radius: 8px;
-    color:         #fff;
-    font-size:     14px;
-
-    &:focus {
-      outline:        2px solid #ea7b32;
-      outline-offset: 1px;
-    }
-  }
-
-  .form-grid {
-    display:               grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap:                   14px;
-  }
-
-  button {
-    padding:       10px 20px;
-    background:    #ea7b32;
-    border:        none;
-    border-radius: 8px;
-    color:         #fff;
-    font-size:     14px;
-    font-weight:   600;
-    cursor:        pointer;
-    transition:    background 140ms;
-
-    &:hover { background: #d06b25; }
-    &:disabled { opacity: 0.5; cursor: not-allowed; }
-  }
-
-  .error {
-    color:     #ff8080;
-    font-size: 13px;
-  }
-
-  .success {
-    color:     #50cc78;
-    font-size: 13px;
+  // Show overlay on hover of the wrapper
+  &:hover .pprofile__avatar-overlay {
+    opacity: 1;
   }
 }
 
+// The circle itself — strictly 80×80, clips image
+.pprofile__avatar-img {
+  display:       block;
+  width:         80px;
+  height:        80px;
+  border-radius: 50%;
+  object-fit:    cover;
+  object-position: center;
+}
+
+.pprofile__avatar-initials {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  width:           80px;
+  height:          80px;
+  border-radius:   50%;
+  background:      rgba(234,123,50,0.18);
+  color:           #ea7b32;
+  font-size:       26px;
+  font-weight:     800;
+  line-height:     1;
+  user-select:     none;
+}
+
+// Camera overlay — hidden by default, shown on hover
+.pprofile__avatar-overlay {
+  position:        absolute;
+  inset:           0;
+  border-radius:   50%;
+  background:      rgba(0,0,0,0.60);
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  justify-content: center;
+  gap:             4px;
+  color:           #fff;
+  font-size:       10px;
+  font-weight:     600;
+  letter-spacing:  0.3px;
+  opacity:         0;
+  transition:      opacity 160ms ease;
+  pointer-events:  none;  // click passes through to the label
+
+  svg { display: block; }
+}
+
+// Completely hidden file input — triggered by label click
+.pprofile__avatar-input {
+  display: none;
+}
+
+.pprofile__avatar-meta {
+  display:        flex;
+  flex-direction: column;
+  gap:            2px;
+}
+
+.pprofile__avatar-name {
+  font-size:   17px;
+  font-weight: 700;
+  color:       #fff;
+}
+
+.pprofile__avatar-email {
+  font-size: 13px;
+  color:     rgba(255,255,255,0.45);
+}
+
+// ── Cards ---------------------------------------------------------------------
+.pprofile__card {
+  background:    rgba(255,255,255,0.04);
+  border:        1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding:       24px;
+
+  &--companies { gap: 0; }
+}
+
+.pprofile__card-title-row {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  gap:             12px;
+  margin-bottom:   16px;
+  padding-bottom:  12px;
+  border-bottom:   1px solid rgba(255,255,255,0.07);
+}
+
+.pprofile__card-title {
+  font-size:      16px;
+  font-weight:    700;
+  color:          #fff;
+  margin:         0 0 16px;
+  padding-bottom: 12px;
+  border-bottom:  1px solid rgba(255,255,255,0.07);
+
+  // When inside card-title-row, remove its own bottom margin/border
+  .pprofile__card-title-row & {
+    margin:         0;
+    padding-bottom: 0;
+    border-bottom:  none;
+  }
+}
+
+.pprofile__card-hint {
+  font-size:     13px;
+  color:         rgba(255,255,255,0.40);
+  margin:        0 0 18px;
+  line-height:   1.5;
+}
+
+// ── Form grid -----------------------------------------------------------------
+.pprofile__grid {
+  display:               grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap:                   14px;
+  margin-bottom:         18px;
+
+  &--single { grid-template-columns: 1fr; max-width: 400px; }
+
+  &--company { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+}
+
+.pprofile__field {
+  display:        flex;
+  flex-direction: column;
+  gap:            6px;
+
+  &--full { grid-column: 1 / -1; }
+}
+
+.pprofile__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.pprofile__input {
+  padding:       10px 14px;
+  background:    rgba(255,255,255,0.06);
+  border:        1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  color:         #fff;
+  font-size:     14px;
+  transition:    border-color 140ms, outline 140ms;
+
+  &:focus {
+    outline:        2px solid #ea7b32;
+    outline-offset: 1px;
+    border-color:   transparent;
+  }
+
+  &::placeholder { color: rgba(255,255,255,0.20); }
+}
+
+// ── Buttons -------------------------------------------------------------------
+.pprofile__actions {
+  display:    flex;
+  gap:        10px;
+
+  &--inline { margin-top: 16px; justify-content: flex-end; }
+}
+
+.pprofile__btn {
+  display:       inline-flex;
+  align-items:   center;
+  gap:           6px;
+  padding:       9px 18px;
+  border-radius: 8px;
+  font-size:     14px;
+  font-weight:   600;
+  cursor:        pointer;
+  border:        none;
+  transition:    background 140ms, color 140ms, border-color 140ms;
+
+  &--primary {
+    background: #ea7b32;
+    color:      #fff;
+    &:hover:not(:disabled)  { background: #d06b25; }
+    &:disabled { opacity: 0.45; cursor: not-allowed; }
+  }
+
+  &--secondary {
+    background:   rgba(255,255,255,0.06);
+    color:        rgba(255,255,255,0.75);
+    border:       1px solid rgba(255,255,255,0.12);
+    &:hover:not(:disabled) { background: rgba(255,255,255,0.10); color: #fff; }
+  }
+
+  &--ghost {
+    background: transparent;
+    color:      rgba(255,255,255,0.55);
+    border:     1px solid rgba(255,255,255,0.10);
+    &:hover:not(:disabled) { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.85); }
+  }
+
+  &--danger {
+    background: rgba(255,80,80,0.10);
+    color:      #ff7070;
+    border:     1px solid rgba(255,80,80,0.15);
+    &:hover:not(:disabled) { background: rgba(255,80,80,0.18); }
+  }
+
+  &--sm { padding: 6px 12px; font-size: 13px; }
+}
+
+// ── Companies list ------------------------------------------------------------
+.pprofile__companies-loading {
+  display:     flex;
+  align-items: center;
+  gap:         10px;
+  padding:     20px 0;
+  color:       rgba(255,255,255,0.40);
+  font-size:   14px;
+}
+
+.pprofile__spinner {
+  width:        18px;
+  height:       18px;
+  border:       2px solid rgba(255,255,255,0.12);
+  border-top-color: #ea7b32;
+  border-radius: 50%;
+  animation:    spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.pprofile__company-list {
+  display:     flex;
+  flex-direction: column;
+  gap:         10px;
+  list-style:  none;
+  padding:     0;
+  margin:      0;
+}
+
+.pprofile__company-item {
+  background:    rgba(255,255,255,0.03);
+  border:        1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  padding:       14px 16px;
+  display:       flex;
+  align-items:   flex-start;
+  justify-content: space-between;
+  gap:           12px;
+}
+
+.pprofile__company-info {
+  display:        flex;
+  flex-direction: column;
+  gap:            2px;
+  flex:           1;
+  min-width:      0;
+}
+
+.pprofile__company-name     { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.85); }
+.pprofile__company-industry { font-size: 12px; color: rgba(255,255,255,0.45); }
+.pprofile__company-meta     { font-size: 12px; color: rgba(255,255,255,0.35); }
+
+.pprofile__company-actions {
+  display:    flex;
+  gap:        6px;
+  flex-shrink: 0;
+}
+
+.pprofile__company-empty {
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  gap:            10px;
+  padding:        32px 0;
+  color:          rgba(255,255,255,0.25);
+  font-size:      13px;
+  text-align:     center;
+  list-style:     none;
+  p { margin: 0; }
+}
+
+.pprofile__company-edit-form,
+.pprofile__company-add-form {
+  width: 100%;
+}
+
+.pprofile__company-form-title {
+  font-size:     14px;
+  font-weight:   700;
+  color:         rgba(255,255,255,0.70);
+  margin:        0 0 14px;
+}
+
+// ── Responsive ----------------------------------------------------------------
 @media (max-width: 768px) {
   .portal-page-layout { flex-direction: column; }
   .portal-page-main   { padding: 24px 16px; }
+  .pprofile__grid     { grid-template-columns: 1fr; }
+  .pprofile__company-item { flex-direction: column; }
+  .pprofile__company-actions { align-self: flex-start; }
 }
