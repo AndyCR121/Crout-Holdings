@@ -1,12 +1,60 @@
-// ── Layout wrapper ─────────────────────────────────────────────────────────────
+// ── Root host ------------------------------------------------------------------
 :host { display: block; }
 
+// ── Outer 3-panel layout (left-menu | billing-subnav | content) ---------------
 .portal-page-layout {
   display:    flex;
   min-height: 100vh;
   background: #081222;
 }
 
+// ── Billing body: subnav + content side-by-side --------------------------------
+.billing-body {
+  display: flex;
+  flex:    1;
+  min-width: 0;
+}
+
+// ── Billing sub-nav -----------------------------------------------------------
+.billing-subnav {
+  width:            200px;
+  flex-shrink:      0;
+  padding:          32px 16px;
+  border-right:     1px solid rgba(255,255,255,0.07);
+  display:          flex;
+  flex-direction:   column;
+  gap:              4px;
+  background:       rgba(255,255,255,0.015);
+
+  &__link {
+    display:         flex;
+    align-items:     center;
+    gap:             10px;
+    padding:         10px 14px;
+    border-radius:   8px;
+    font-size:       14px;
+    font-weight:     600;
+    color:           rgba(255,255,255,0.50);
+    text-decoration: none;
+    transition:      background 140ms, color 140ms;
+
+    svg { flex-shrink: 0; opacity: 0.6; transition: opacity 140ms; }
+
+    &:hover {
+      background: rgba(255,255,255,0.06);
+      color:      rgba(255,255,255,0.85);
+      svg { opacity: 1; }
+    }
+
+    &.active {
+      background: rgba(234,123,50,0.14);
+      color:      #ea7b32;
+      svg { opacity: 1; color: #ea7b32; }
+    }
+  }
+}
+
+// ── Main content area ---------------------------------------------------------
 .portal-page-main {
   flex:       1;
   min-width:  0;
@@ -15,7 +63,7 @@
   background: #081222;
 }
 
-// ── Subscriptions ─────────────────────────────────────────────────────────────
+// ── Subscriptions content -----------------------------------------------------
 .psubs {
   display:        flex;
   flex-direction: column;
@@ -23,7 +71,12 @@
   color:          rgba(255,255,255,0.85);
 }
 
-.psubs__header { margin-bottom: 4px; }
+.psubs__header {
+  display:     flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap:         16px;
+}
 
 .psubs__title {
   font-size:   28px;
@@ -32,64 +85,165 @@
   margin:      0 0 4px;
 }
 
-.psubs__subtitle {
+.psubs__hint {
   font-size: 15px;
   color:     rgba(255,255,255,0.50);
   margin:    0;
 }
 
-.psubs__empty {
-  padding:    48px 0;
-  color:      rgba(255,255,255,0.35);
-  font-size:  14px;
-  text-align: center;
+.psubs__count {
+  font-size:     13px;
+  font-weight:   600;
+  color:         rgba(255,255,255,0.40);
+  white-space:   nowrap;
+  padding-top:   6px;
 }
 
-.psubs__list {
+.psubs__skeleton {
+  height:        80px;
+  border-radius: 12px;
+  background:    rgba(255,255,255,0.05);
+  animation:     shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%   { opacity: 0.5; }
+  50%  { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+.psubs__empty {
   display:        flex;
   flex-direction: column;
+  align-items:    center;
   gap:            12px;
+  padding:        64px 0;
+  color:          rgba(255,255,255,0.30);
+  font-size:      14px;
+  text-align:     center;
+
+  &--error { color: rgba(255,100,100,0.70); }
+
+  p { margin: 0; }
 }
 
-.psubs__card {
+.psubs__company {
+  display:        flex;
+  flex-direction: column;
+  gap:            10px;
+}
+
+.psubs__company-header {
+  display:     flex;
+  align-items: center;
+  gap:         12px;
+  padding:     8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  margin-bottom: 4px;
+}
+
+.psubs__company-name  { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.70); }
+.psubs__company-email { font-size: 12px; color: rgba(255,255,255,0.35); flex: 1; }
+.psubs__company-count { font-size: 11px; color: rgba(255,255,255,0.30); }
+.psubs__company-empty { font-size: 13px; color: rgba(255,255,255,0.25); margin: 0; padding: 8px 0; }
+
+.psubs__row {
   background:    rgba(255,255,255,0.04);
-  border:        1px solid rgba(255,255,255,0.08);
-  border-radius: 14px;
-  padding:       20px;
-  display:       grid;
-  grid-template-columns: 1fr auto;
-  gap:           12px 16px;
-  align-items:   start;
+  border:        1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  padding:       18px 20px;
+  display:       flex;
+  flex-direction: column;
+  gap:           14px;
 }
 
-.psubs__card-name {
-  font-size:   16px;
+.psubs__row-header {
+  display:         flex;
+  align-items:     flex-start;
+  justify-content: space-between;
+  gap:             16px;
+}
+
+.psubs__row-title-group {
+  display:     flex;
+  align-items: center;
+  flex-wrap:   wrap;
+  gap:         8px;
+}
+
+.psubs__service-name {
+  font-size:   15px;
   font-weight: 700;
   color:       #fff;
-  margin:      0;
 }
 
-.psubs__card-meta {
-  font-size: 13px;
-  color:     rgba(255,255,255,0.45);
+.psubs__price {
+  font-size:   16px;
+  font-weight: 800;
+  color:       #fff;
+  white-space: nowrap;
+}
+
+.psubs__price-interval {
+  font-size:   12px;
+  font-weight: 400;
+  color:       rgba(255,255,255,0.45);
+  margin-left: 2px;
 }
 
 .psubs__badge {
-  padding:        4px 12px;
+  padding:        3px 10px;
   border-radius:  20px;
   font-size:      11px;
   font-weight:    700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
 
-  &.status-live    { background: rgba(80,200,120,0.15);  color: #50cc78; }
-  &.status-pending { background: rgba(100,150,255,0.15); color: #7aaeff; }
-  &.status-dev     { background: rgba(234,195,50,0.15);  color: #e8c232; }
-  &.status-disabled{ background: rgba(150,150,150,0.15); color: #aaa; }
+  &.badge--active    { background: rgba(80,200,120,0.15);  color: #50cc78; }
+  &.badge--cancelled { background: rgba(255,100,100,0.15); color: #ff6464; }
+  &.badge--warning   { background: rgba(234,195,50,0.15);  color: #e8c232; }
+  &.badge--unknown   { background: rgba(150,150,150,0.12); color: #999; }
+  &.badge--unlinked  { background: rgba(234,123,50,0.15);  color: #ea7b32; }
+  &.status-live      { background: rgba(80,200,120,0.15);  color: #50cc78; }
+  &.status-pending   { background: rgba(100,150,255,0.15); color: #7aaeff; }
+  &.status-dev       { background: rgba(234,195,50,0.15);  color: #e8c232; }
+  &.status-disabled  { background: rgba(150,150,150,0.12); color: #aaa; }
+}
+
+.psubs__row-meta {
+  display:               grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap:                   10px 16px;
+}
+
+.psubs__meta-item {
+  display:        flex;
+  flex-direction: column;
+  gap:            2px;
+}
+
+.psubs__meta-label {
+  font-size:      11px;
+  font-weight:    600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color:          rgba(255,255,255,0.30);
+}
+
+.psubs__meta-value {
+  font-size: 13px;
+  color:     rgba(255,255,255,0.70);
+  &.code { font-family: monospace; font-size: 12px; }
+}
+
+@media (max-width: 900px) {
+  .billing-subnav { width: 160px; padding: 24px 10px; }
 }
 
 @media (max-width: 768px) {
   .portal-page-layout { flex-direction: column; }
+  .billing-body       { flex-direction: column; }
+  .billing-subnav     { width: 100%; flex-direction: row; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.07); padding: 12px 16px; }
   .portal-page-main   { padding: 24px 16px; }
-  .psubs__card        { grid-template-columns: 1fr; }
+  .psubs__row-meta    { grid-template-columns: 1fr 1fr; }
 }

@@ -3,11 +3,12 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { PaystackService, ICompanyBilling, IPaystackCard } from '../../../../services/paystack.service';
 import { ToastService } from '../../../../services/toast.service';
+import { PortalLeftMenuComponent } from '../../../../components/left-menu/portal-left-menu.component';
 
 @Component({
   selector: 'ca-portal-payment-methods',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, PortalLeftMenuComponent],
   templateUrl: './portal-payment-methods.component.html',
   styleUrls: ['./portal-payment-methods.component.scss'],
 })
@@ -19,8 +20,6 @@ export class PortalPaymentMethodsComponent implements OnInit {
   readonly companies = signal<ICompanyBilling[]>([]);
   readonly loading   = signal(true);
   readonly error     = signal<string | null>(null);
-
-  // Track which company is currently opening the popup
   readonly addingFor = signal<number | null>(null);
 
   ngOnInit(): void {
@@ -73,12 +72,10 @@ export class PortalPaymentMethodsComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: data => {
-          console.debug('[PaymentMethods] companies loaded:', data);
           this.companies.set(data);
           this.loading.set(false);
         },
         error: err => {
-          console.error('[PaymentMethods] failed to load billing:', err);
           this.error.set('Failed to load payment methods. Please refresh.');
           this.loading.set(false);
         },

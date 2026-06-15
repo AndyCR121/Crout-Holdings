@@ -118,10 +118,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/portal/profile/portal-profile.component').then(m => m.PortalProfileComponent),
       },
+      // /client/billing → redirect straight to subscriptions (no shell page)
       {
         path: 'billing',
-        loadComponent: () =>
-          import('./pages/portal/billing/portal-billing.component').then(m => m.PortalBillingComponent),
+        redirectTo: 'billing/subscriptions',
+        pathMatch: 'full',
       },
       {
         path: 'billing/subscriptions',

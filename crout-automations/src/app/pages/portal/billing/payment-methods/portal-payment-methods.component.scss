@@ -1,12 +1,60 @@
-// ── Layout wrapper ─────────────────────────────────────────────────────────────
+// ── Root host ------------------------------------------------------------------
 :host { display: block; }
 
+// ── Outer 3-panel layout (left-menu | billing-subnav | content) ---------------
 .portal-page-layout {
   display:    flex;
   min-height: 100vh;
   background: #081222;
 }
 
+// ── Billing body: subnav + content side-by-side --------------------------------
+.billing-body {
+  display:  flex;
+  flex:     1;
+  min-width: 0;
+}
+
+// ── Billing sub-nav -----------------------------------------------------------
+.billing-subnav {
+  width:          200px;
+  flex-shrink:    0;
+  padding:        32px 16px;
+  border-right:   1px solid rgba(255,255,255,0.07);
+  display:        flex;
+  flex-direction: column;
+  gap:            4px;
+  background:     rgba(255,255,255,0.015);
+
+  &__link {
+    display:         flex;
+    align-items:     center;
+    gap:             10px;
+    padding:         10px 14px;
+    border-radius:   8px;
+    font-size:       14px;
+    font-weight:     600;
+    color:           rgba(255,255,255,0.50);
+    text-decoration: none;
+    transition:      background 140ms, color 140ms;
+
+    svg { flex-shrink: 0; opacity: 0.6; transition: opacity 140ms; }
+
+    &:hover {
+      background: rgba(255,255,255,0.06);
+      color:      rgba(255,255,255,0.85);
+      svg { opacity: 1; }
+    }
+
+    &.active {
+      background: rgba(234,123,50,0.14);
+      color:      #ea7b32;
+      svg { opacity: 1; color: #ea7b32; }
+    }
+  }
+}
+
+// ── Main content area ---------------------------------------------------------
 .portal-page-main {
   flex:       1;
   min-width:  0;
@@ -15,91 +63,173 @@
   background: #081222;
 }
 
-// ── Payment methods ───────────────────────────────────────────────────────────
-.ppay {
+// ── Payment Methods -----------------------------------------------------------
+.ppm {
   display:        flex;
   flex-direction: column;
   gap:            28px;
   color:          rgba(255,255,255,0.85);
 }
 
-.ppay__title {
+.ppm__page-header { margin-bottom: 4px; }
+
+.ppm__title {
   font-size:   28px;
   font-weight: 800;
   color:       #fff;
   margin:      0 0 4px;
 }
 
-.ppay__subtitle {
+.ppm__hint {
   font-size: 15px;
   color:     rgba(255,255,255,0.50);
   margin:    0;
 }
 
-.ppay__empty {
-  padding:    48px 0;
-  color:      rgba(255,255,255,0.35);
-  font-size:  14px;
-  text-align: center;
+.ppm__skeleton-list {
+  display:        flex;
+  flex-direction: column;
+  gap:            20px;
 }
 
-.ppay__list {
+.ppm__skeleton-block {
   display:        flex;
   flex-direction: column;
   gap:            10px;
 }
 
-.ppay__card {
+.ppm__skeleton {
+  border-radius: 8px;
+  background:    rgba(255,255,255,0.05);
+  animation:     shimmer 1.4s ease-in-out infinite;
+  &--title { height: 20px; width: 180px; }
+  &--card  { height: 64px; }
+}
+
+@keyframes shimmer {
+  0%   { opacity: 0.5; }
+  50%  { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+.ppm__company {
+  display:        flex;
+  flex-direction: column;
+  gap:            12px;
+}
+
+.ppm__company-header {
   display:         flex;
   align-items:     center;
   justify-content: space-between;
-  background:      rgba(255,255,255,0.04);
-  border:          1px solid rgba(255,255,255,0.08);
-  border-radius:   12px;
-  padding:         16px 20px;
   gap:             16px;
+  padding-bottom:  12px;
+  border-bottom:   1px solid rgba(255,255,255,0.07);
 }
 
-.ppay__card-brand {
-  font-size:   14px;
-  font-weight: 700;
-  color:       #fff;
+.ppm__company-meta {
+  display:        flex;
+  flex-direction: column;
+  gap:            2px;
 }
 
-.ppay__card-last4 {
-  font-size: 13px;
-  color:     rgba(255,255,255,0.50);
+.ppm__company-name     { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.80); }
+.ppm__company-email    { font-size: 12px; color: rgba(255,255,255,0.40); }
+.ppm__company-no-email { font-size: 12px; color: rgba(234,123,50,0.70); }
+
+.ppm__add-btn {
+  display:       flex;
+  align-items:   center;
+  gap:           6px;
+  padding:       8px 14px;
+  border-radius: 8px;
+  border:        1px solid rgba(255,255,255,0.12);
+  background:    rgba(255,255,255,0.04);
+  color:         rgba(255,255,255,0.70);
+  font-size:     13px;
+  font-weight:   600;
+  cursor:        pointer;
+  transition:    background 140ms, color 140ms, border-color 140ms;
+  white-space:   nowrap;
+
+  &:hover:not(:disabled) { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.20); }
+  &:disabled { opacity: 0.35; cursor: not-allowed; }
 }
 
-.ppay__card-exp {
-  font-size: 12px;
-  color:     rgba(255,255,255,0.35);
+.ppm__card-list {
+  display:        flex;
+  flex-direction: column;
+  gap:            8px;
+  list-style:     none;
+  padding:        0;
+  margin:         0;
 }
 
-.ppay__default-badge {
+.ppm__card {
+  display:       flex;
+  align-items:   center;
+  gap:           14px;
+  background:    rgba(255,255,255,0.04);
+  border:        1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  padding:       14px 18px;
+}
+
+.ppm__card-icon  { color: rgba(255,255,255,0.40); flex-shrink: 0; }
+
+.ppm__card-body {
+  flex:           1;
+  display:        flex;
+  flex-direction: column;
+  gap:            2px;
+}
+
+.ppm__card-number { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.85); }
+.ppm__card-sub    { font-size: 12px; color: rgba(255,255,255,0.40); }
+
+.ppm__card-badge {
   padding:       3px 10px;
-  background:    rgba(80,200,120,0.15);
+  background:    rgba(80,200,120,0.12);
   color:         #50cc78;
   border-radius: 20px;
   font-size:     11px;
   font-weight:   700;
+  white-space:   nowrap;
 }
 
-.ppay__remove-btn {
-  background:  transparent;
-  border:      none;
-  color:       rgba(255,100,100,0.60);
-  cursor:      pointer;
-  font-size:   13px;
-  padding:     6px 10px;
-  border-radius: 6px;
-  transition:  background 140ms, color 140ms;
+.ppm__empty {
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  gap:            10px;
+  padding:        32px 0;
+  color:          rgba(255,255,255,0.25);
+  font-size:      13px;
+  text-align:     center;
+  p { margin: 0; }
+}
 
-  &:hover { background: rgba(255,80,80,0.10); color: #ff8080; }
+.ppm__no-companies {
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  gap:            12px;
+  padding:        64px 0;
+  color:          rgba(255,255,255,0.25);
+  text-align:     center;
+  p { margin: 0; }
+}
+
+.ppm__empty-hint { font-size: 12px; color: rgba(255,255,255,0.20); }
+
+@media (max-width: 900px) {
+  .billing-subnav { width: 160px; padding: 24px 10px; }
 }
 
 @media (max-width: 768px) {
   .portal-page-layout { flex-direction: column; }
+  .billing-body       { flex-direction: column; }
+  .billing-subnav     { width: 100%; flex-direction: row; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.07); padding: 12px 16px; }
   .portal-page-main   { padding: 24px 16px; }
-  .ppay__card         { flex-wrap: wrap; }
+  .ppm__card          { flex-wrap: wrap; }
 }
