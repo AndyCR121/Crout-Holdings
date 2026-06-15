@@ -33,7 +33,7 @@ export class PortalSidebarComponent implements OnInit {
   }
 
   isActive(path: string): boolean {
-    return typeof window !== 'undefined' && window.location.pathname === path;
+    return typeof window !== 'undefined' && (window.location.pathname === path || window.location.pathname.startsWith(path));
   }
 
   logout(): void { this.shell.logout(); }
