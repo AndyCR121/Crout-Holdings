@@ -1,3 +1,85 @@
+@use '../portal-billing.component' as billing;
+
+.pbilling {
+  padding: 2rem 2.5rem;
+
+  &__header {
+    margin-bottom: 2rem;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin: 0 0 0.25rem;
+  }
+
+  &__subtitle {
+    font-size: 0.875rem;
+    color: #8892a4;
+    margin: 0;
+  }
+
+  &__layout {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  &__nav {
+    background: #0f1929;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    position: sticky;
+    top: 1.5rem;
+  }
+
+  &__nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.6rem 0.85rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #8892a4;
+    text-decoration: none;
+    transition: background 150ms, color 150ms;
+
+    &:hover {
+      background: rgba(255,255,255,0.05);
+      color: #e2e8f0;
+    }
+
+    &.active {
+      background: rgba(59,130,246,0.12);
+      color: #60a5fa;
+    }
+  }
+
+  &__content {
+    min-width: 0;
+  }
+
+  @media (max-width: 700px) {
+    padding: 1.25rem 1rem;
+
+    &__layout {
+      grid-template-columns: 1fr;
+    }
+
+    &__nav {
+      flex-direction: row;
+      position: static;
+    }
+  }
+}
+
 .psubs {
   &__header {
     display: flex;
@@ -33,7 +115,6 @@
     align-self: center;
   }
 
-  // ── Skeleton ────────────────────────────────────────────────────────────
   &__skeleton {
     height: 110px;
     background: linear-gradient(90deg, #0f1929 25%, #19273d 50%, #0f1929 75%);
@@ -48,7 +129,6 @@
     100% { background-position:  200% 0; }
   }
 
-  // ── Empty / Error ────────────────────────────────────────────────────────
   &__empty {
     display: flex;
     flex-direction: column;
@@ -64,10 +144,8 @@
     }
   }
 
-  // ── Company group ────────────────────────────────────────────────────────
   &__company {
     margin-bottom: 1.75rem;
-
     &:last-child { margin-bottom: 0; }
   }
 
@@ -105,14 +183,12 @@
     padding: 0.75rem 0;
   }
 
-  // ── Subscription row ─────────────────────────────────────────────────────
   &__row {
     background: #0f1929;
     border: 1px solid rgba(255, 255, 255, 0.07);
     border-radius: 12px;
     padding: 1.25rem 1.5rem;
     margin-bottom: 0.875rem;
-
     &:last-child { margin-bottom: 0; }
   }
 
@@ -138,7 +214,6 @@
     color: #e2e8f0;
   }
 
-  // ── Badges ───────────────────────────────────────────────────────────────
   &__badge {
     font-size: 0.68rem;
     font-weight: 600;
@@ -148,23 +223,17 @@
     letter-spacing: 0.05em;
     white-space: nowrap;
 
-    // Paystack status badges
     &.badge--active    { background: rgba(74, 222, 128, 0.12);  color: #4ade80; }
     &.badge--cancelled { background: rgba(248, 113, 113, 0.12); color: #f87171; }
     &.badge--warning   { background: rgba(251, 191, 36, 0.12);  color: #fbbf24; }
     &.badge--unknown   { background: rgba(156, 163, 175, 0.1);  color: #6b7280; }
-
-    // DB service status badges
     &.status-live      { background: rgba(74, 222, 128, 0.12);  color: #4ade80; }
     &.status-dev       { background: rgba(251, 191, 36, 0.12);  color: #fbbf24; }
     &.status-pending   { background: rgba(96, 165, 250, 0.12);  color: #60a5fa; }
     &.status-disabled  { background: rgba(156, 163, 175, 0.1);  color: #6b7280; }
-
-    // Unlinked warning
     &.badge--unlinked  { background: rgba(251, 146, 60, 0.12);  color: #fb923c; }
   }
 
-  // ── Price ─────────────────────────────────────────────────────────────────
   &__price {
     font-size: 1.1rem;
     font-weight: 700;
@@ -179,7 +248,6 @@
     margin-left: 0.1rem;
   }
 
-  // ── Meta grid ─────────────────────────────────────────────────────────────
   &__row-meta {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));

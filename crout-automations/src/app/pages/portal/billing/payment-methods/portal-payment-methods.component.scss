@@ -1,3 +1,83 @@
+.pbilling {
+  padding: 2rem 2.5rem;
+
+  &__header {
+    margin-bottom: 2rem;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin: 0 0 0.25rem;
+  }
+
+  &__subtitle {
+    font-size: 0.875rem;
+    color: #8892a4;
+    margin: 0;
+  }
+
+  &__layout {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  &__nav {
+    background: #0f1929;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    position: sticky;
+    top: 1.5rem;
+  }
+
+  &__nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.6rem 0.85rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #8892a4;
+    text-decoration: none;
+    transition: background 150ms, color 150ms;
+
+    &:hover {
+      background: rgba(255,255,255,0.05);
+      color: #e2e8f0;
+    }
+
+    &.active {
+      background: rgba(59,130,246,0.12);
+      color: #60a5fa;
+    }
+  }
+
+  &__content {
+    min-width: 0;
+  }
+
+  @media (max-width: 700px) {
+    padding: 1.25rem 1rem;
+
+    &__layout {
+      grid-template-columns: 1fr;
+    }
+
+    &__nav {
+      flex-direction: row;
+      position: static;
+    }
+  }
+}
+
 .ppm {
   &__page-header {
     margin-bottom: 1.75rem;
@@ -17,7 +97,6 @@
     line-height: 1.5;
   }
 
-  // ── Skeletons ──────────────────────────────────────────
   &__skeleton-list {
     display: flex;
     flex-direction: column;
@@ -45,7 +124,6 @@
     100% { background-position:  200% 0; }
   }
 
-  // ── Company section ────────────────────────────────────
   &__company {
     border: 1px solid rgba(255,255,255,0.07);
     border-radius: 14px;
@@ -86,7 +164,6 @@
     font-style: italic;
   }
 
-  // ── Add Card button ─────────────────────────────────────
   &__add-btn {
     display: inline-flex;
     align-items: center;
@@ -114,7 +191,6 @@
     }
   }
 
-  // ── Card list ───────────────────────────────────────────
   &__card-list {
     display: flex;
     flex-direction: column;
@@ -180,7 +256,6 @@
     flex-shrink: 0;
   }
 
-  // ── Empty states ────────────────────────────────────────
   &__empty {
     display: flex;
     align-items: center;

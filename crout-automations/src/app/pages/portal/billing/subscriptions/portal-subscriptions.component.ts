@@ -2,11 +2,12 @@ import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../../services/auth.service';
 import { PaystackService, ICompanySubscriptions, IPaystackSubscription } from '../../../../services/paystack.service';
+import { PortalSidebarComponent } from '../../../../components/portal-sidebar/portal-sidebar.component';
 
 @Component({
   selector: 'ca-portal-subscriptions',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, PortalSidebarComponent],
   templateUrl: './portal-subscriptions.component.html',
   styleUrls: ['./portal-subscriptions.component.scss'],
 })

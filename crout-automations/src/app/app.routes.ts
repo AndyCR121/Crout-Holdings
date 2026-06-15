@@ -131,21 +131,18 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/portal/billing/portal-billing.component').then(m => m.PortalBillingComponent),
-    children: [
-      { path: '', redirectTo: 'subscriptions', pathMatch: 'full' },
-      {
-        path: 'subscriptions',
-        canActivate: [authGuard],
-        loadComponent: () =>
-          import('./pages/portal/billing/subscriptions/portal-subscriptions.component').then(m => m.PortalSubscriptionsComponent),
-      },
-      {
-        path: 'payment-methods',
-        canActivate: [authGuard],
-        loadComponent: () =>
-          import('./pages/portal/billing/payment-methods/portal-payment-methods.component').then(m => m.PortalPaymentMethodsComponent),
-      },
-    ],
+  },
+  {
+    path: 'client/billing/subscriptions',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/portal/billing/subscriptions/portal-subscriptions.component').then(m => m.PortalSubscriptionsComponent),
+  },
+  {
+    path: 'client/billing/payment-methods',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/portal/billing/payment-methods/portal-payment-methods.component').then(m => m.PortalPaymentMethodsComponent),
   },
   // ── Admin Portal (auth + admin guard) ───────────────────────────────────────
   { path: '', redirectTo: 'users', pathMatch: 'full' },

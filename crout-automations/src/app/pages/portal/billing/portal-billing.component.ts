@@ -1,12 +1,17 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { PortalSidebarComponent } from '../../../components/portal-sidebar/portal-sidebar.component';
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'ca-portal-billing',
   standalone: true,
-  imports: [RouterOutlet, PortalSidebarComponent],
+  imports: [],
   templateUrl: './portal-billing.component.html',
   styleUrls: ['./portal-billing.component.scss'],
 })
-export class PortalBillingComponent {}
+export class PortalBillingComponent implements OnInit {
+  private readonly router = inject(Router);
+
+  ngOnInit(): void {
+    this.router.navigate(['/client/billing/subscriptions'], { replaceUrl: true });
+  }
+}
