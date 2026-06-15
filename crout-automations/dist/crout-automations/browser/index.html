@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en-ZA" data-beasties-container>
+<head>
+  <meta charset="utf-8">
+  <base href="/app/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Primary SEO (defaults, overridden per-route by SeoService) -->
+  <title>Crout Automations — Business Automation for SA SMEs</title>
+  <meta name="description" content="Custom n8n automation workflows for South African businesses. WhatsApp AI agents, quoting, job card systems, and more. Based in Bloemfontein.">
+  <meta name="robots" content="index,follow">
+  <meta name="theme-color" content="#2C3E6B">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Crout Automations">
+  <meta property="og:title" content="Crout Automations — Business Automation for SA SMEs">
+  <meta property="og:description" content="Custom n8n automation workflows for South African businesses.">
+  <meta property="og:url" content="https://crout-automations.co.za">
+  <meta property="og:image" content="https://crout-automations.co.za/assets/og-image.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Crout Automations — Business Automation for SA SMEs">
+  <meta name="twitter:description" content="Custom n8n automation workflows for South African businesses.">
+  <meta name="twitter:image" content="https://crout-automations.co.za/assets/og-image.jpg">
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https://crout-automations.co.za">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23D4703A'/><path d='M22 11a8 8 0 100 10' stroke='white' stroke-width='2.5' stroke-linecap='round' fill='none'/><circle cx='24' cy='16' r='2' fill='white'/></svg>">
+
+  <!-- Fonts: Cabinet Grotesk (display) + General Sans (body) -->
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,700,800,900&amp;f[]=general-sans@400,500,600,700&amp;display=swap" rel="stylesheet">
+
+  <!-- Paystack inline JS — required for card-capture popup embed -->
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+<style>:root{--color-orange:#D4703A;--color-orange-hover:#C05F2A;--color-orange-active:#A84E20;--color-orange-highlight:rgba(212, 112, 58, .12);--color-blue:#4A7BAF;--color-blue-hover:#3A6A9E;--color-blue-active:#2C5A8E;--color-blue-highlight:rgba(74, 123, 175, .12);--color-navy:#2C3E6B;--color-navy-hover:#1E2E55;--color-navy-active:#131E3A;--color-bg:#FFFFFF;--color-surface:#F9F9F9;--color-surface-2:#F3F3F3;--color-surface-offset:#ECECEC;--color-surface-dynamic:#E4E4E4;--color-divider:#E0E0E0;--color-border:rgba(44, 62, 107, .12);--color-text:#1A1A2E;--color-text-muted:#5A5A72;--color-text-faint:#9A9AB0;--color-text-inverse:#FFFFFF;--color-text-on-orange:#FFFFFF;--color-primary:var(--color-orange);--color-primary-hover:var(--color-orange-hover);--color-primary-active:var(--color-orange-active);--radius-sm:.375rem;--radius-md:.5rem;--radius-lg:.75rem;--radius-xl:1rem;--radius-2xl:1.5rem;--radius-full:9999px;--space-1:.25rem;--space-2:.5rem;--space-3:.75rem;--space-4:1rem;--space-5:1.25rem;--space-6:1.5rem;--space-8:2rem;--space-10:2.5rem;--space-12:3rem;--space-16:4rem;--space-20:5rem;--space-24:6rem;--space-32:8rem;--text-xs:clamp(.75rem, .7rem + .25vw, .875rem);--text-sm:clamp(.875rem, .8rem + .35vw, 1rem);--text-base:clamp(1rem, .95rem + .25vw, 1.125rem);--text-lg:clamp(1.125rem, 1rem + .75vw, 1.5rem);--text-xl:clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);--text-2xl:clamp(2rem, 1.2rem + 2.5vw, 3.5rem);--text-3xl:clamp(2.5rem, 1rem + 4vw, 5rem);--text-hero:clamp(3rem, .5rem + 7vw, 8rem);--font-display:"Cabinet Grotesk", "Helvetica Neue", sans-serif;--font-body:"General Sans", "Helvetica Neue", sans-serif;--transition-interactive:.18s cubic-bezier(.16, 1, .3, 1);--transition-enter:.3s cubic-bezier(.16, 1, .3, 1);--transition-exit:.2s cubic-bezier(.4, 0, 1, 1);--shadow-sm:0 1px 3px rgba(26, 26, 46, .06), 0 1px 2px rgba(26, 26, 46, .04);--shadow-md:0 4px 12px rgba(26, 26, 46, .08), 0 2px 6px rgba(26, 26, 46, .05);--shadow-lg:0 12px 32px rgba(26, 26, 46, .12), 0 4px 12px rgba(26, 26, 46, .06);--shadow-xl:0 24px 64px rgba(26, 26, 46, .16), 0 8px 24px rgba(26, 26, 46, .08);--content-narrow:60%;--content-default:80%;--content-wide:100%}*,*:before,*:after{box-sizing:border-box;margin:0;padding:0}html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;scroll-behavior:smooth;scroll-padding-top:80px;hanging-punctuation:first last;-moz-text-size-adjust:none;-webkit-text-size-adjust:none;text-size-adjust:none}body{min-height:100dvh;line-height:1.6;font-family:var(--font-body);font-size:var(--text-base);color:var(--color-text);background:var(--color-bg)}</style><link rel="stylesheet" href="styles-KUFD4AO5.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="styles-KUFD4AO5.css"></noscript></head>
+<body>
+  <ca-root></ca-root>
+<link rel="modulepreload" href="chunk-NXFKEVE5.js"><link rel="modulepreload" href="chunk-6AKYABPN.js"><link rel="modulepreload" href="chunk-VM5RA74F.js"><link rel="modulepreload" href="chunk-NWK36TD2.js"><link rel="modulepreload" href="chunk-KIFEZDM5.js"><link rel="modulepreload" href="chunk-KW6QH2Z7.js"><link rel="modulepreload" href="chunk-64RT3R5O.js"><link rel="modulepreload" href="chunk-Z65EGWYI.js"><script src="polyfills-5CFQRCPP.js" type="module"></script><script src="main-I2TXJSTP.js" type="module"></script></body>
+</html>

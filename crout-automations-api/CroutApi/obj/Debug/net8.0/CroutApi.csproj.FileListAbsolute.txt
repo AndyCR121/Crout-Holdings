@@ -1,0 +1,7 @@
+c:\Users\User\Documents\GitHub\FinanceManager\Crout-Holdings\crout-automations-api\CroutApi\obj\Debug\net8.0\CroutApi.csproj.AssemblyReference.cache
+c:\Users\User\Documents\GitHub\FinanceManager\Crout-Holdings\crout-automations-api\CroutApi\obj\Debug\net8.0\CroutApi.GeneratedMSBuildEditorConfig.editorconfig
+c:\Users\User\Documents\GitHub\FinanceManager\Crout-Holdings\crout-automations-api\CroutApi\obj\Debug\net8.0\CroutApi.AssemblyInfoInputs.cache
+c:\Users\User\Documents\GitHub\FinanceManager\Crout-Holdings\crout-automations-api\CroutApi\obj\Debug\net8.0\CroutApi.AssemblyInfo.cs
+c:\Users\User\Documents\GitHub\FinanceManager\Crout-Holdings\crout-automations-api\CroutApi\obj\Debug\net8.0\CroutApi.csproj.CoreCompileInputs.cache
+c:\Users\User\Documents\GitHub\FinanceManager\Crout-Holdings\crout-automations-api\CroutApi\obj\Debug\net8.0\CroutApi.MvcApplicationPartsAssemblyInfo.cache
+c:\Users\User\Documents\GitHub\FinanceManager\Crout-Holdings\crout-automations-api\CroutApi\obj\Debug\net8.0\CroutApi.sourcelink.json

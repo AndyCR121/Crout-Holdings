@@ -1,0 +1,3 @@
+import{P as o}from"./chunk-Z65EGWYI.js";var t={production:!0,apiUrl:"https://api.automations.crout-holdings.com/api",paystackPublicKey:"pk_live_1783c8dd8ab886f79ee6d87b63940f0f42e5e29d"};var p=(()=>{let e=class e{constructor(){this.apiUrl=this._resolve()}_resolve(){if(t.apiUrl)return t.apiUrl;let r=window.__env?.apiUrl??"";return r||console.warn(`[EnvironmentService] No API URL found.
+  Dev:  set environment.apiUrl in src/environments/environment.ts
+  Prod: ensure the WordPress plugin injects window.__env.apiUrl`),r}};e.\u0275fac=function(i){return new(i||e)},e.\u0275prov=o({token:e,factory:e.\u0275fac,providedIn:"root"});let n=e;return n})();export{t as a,p as b};
