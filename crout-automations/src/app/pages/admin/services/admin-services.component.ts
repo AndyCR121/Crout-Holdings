@@ -40,7 +40,7 @@ export class AdminServicesComponent implements OnInit {
 
   ngOnInit(): void {
     const user = this.auth.currentUser();
-    if (!user || !user.isAdmin) { this.router.navigate(['/']); return; }
+    if (!user?.isAdmin) { this.router.navigate(['/client/dashboard']); return; }
     this.load();
   }
 
