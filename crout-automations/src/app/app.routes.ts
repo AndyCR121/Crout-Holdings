@@ -16,6 +16,16 @@ export const routes: Routes = [
     }
   },
   {
+    path: 'client',
+    redirectTo: 'client/dashboard',
+    pathMatch: 'full'
+  },
+  {
+    path: 'admin',
+    redirectTo: 'admin/users',
+    pathMatch: 'full'
+  },
+  {
     path: 'services',
     children: [
       {
@@ -99,92 +109,81 @@ export const routes: Routes = [
   },
   // ── Client Portal (auth-guarded) ────────────────────────────────────────────
   {
-    path: 'client',
+    path: 'client/dashboard',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./pages/portal/portal.component').then(m => m.PortalComponent),
+      import('./pages/portal/dashboard/portal-dashboard.component').then(m => m.PortalDashboardComponent),
+  },
+  {
+    path: 'client/services',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/portal/services/portal-services.component').then(m => m.PortalServicesComponent),
+  },
+  {
+    path: 'client/profile',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/portal/profile/portal-profile.component').then(m => m.PortalProfileComponent),
+  },
+  {
+    path: 'client/billing',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/portal/billing/portal-billing.component').then(m => m.PortalBillingComponent),
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: '', redirectTo: 'subscriptions', pathMatch: 'full' },
       {
-        path: 'dashboard',
+        path: 'subscriptions',
+        canActivate: [authGuard],
         loadComponent: () =>
-          import('./pages/portal/dashboard/portal-dashboard.component').then(m => m.PortalDashboardComponent),
+          import('./pages/portal/billing/subscriptions/portal-subscriptions.component').then(m => m.PortalSubscriptionsComponent),
       },
       {
-        path: 'services',
+        path: 'payment-methods',
+        canActivate: [authGuard],
         loadComponent: () =>
-          import('./pages/portal/services/portal-services.component').then(m => m.PortalServicesComponent),
-      },
-      {
-        path: 'profile',
-        loadComponent: () =>
-          import('./pages/portal/profile/portal-profile.component').then(m => m.PortalProfileComponent),
-      },
-      {
-        path: 'billing',
-        loadComponent: () =>
-          import('./pages/portal/billing/portal-billing.component').then(m => m.PortalBillingComponent),
-        children: [
-          { path: '', redirectTo: 'subscriptions', pathMatch: 'full' },
-          {
-            path: 'subscriptions',
-            loadComponent: () =>
-              import('./pages/portal/billing/subscriptions/portal-subscriptions.component').then(m => m.PortalSubscriptionsComponent),
-          },
-          {
-            path: 'payment-methods',
-            loadComponent: () =>
-              import('./pages/portal/billing/payment-methods/portal-payment-methods.component').then(m => m.PortalPaymentMethodsComponent),
-          },
-        ],
+          import('./pages/portal/billing/payment-methods/portal-payment-methods.component').then(m => m.PortalPaymentMethodsComponent),
       },
     ],
   },
   // ── Admin Portal (auth + admin guard) ───────────────────────────────────────
+  { path: '', redirectTo: 'users', pathMatch: 'full' },
   {
-    path: 'admin',
+    path: 'admin/users',
     canActivate: [authGuard, adminGuard],
     loadComponent: () =>
-      import('./pages/admin/admin.component').then(m => m.AdminComponent),
-    children: [
-      { path: '', redirectTo: 'users', pathMatch: 'full' },
-      {
-        path: 'users',
-        canActivate: [adminGuard],
-        loadComponent: () =>
-          import('./pages/admin/users/admin-users.component').then(m => m.AdminUsersComponent),
-      },
-      {
-        path: 'services',
-        canActivate: [adminGuard],
-        loadComponent: () =>
-          import('./pages/admin/services/admin-services.component').then(m => m.AdminServicesComponent),
-      },
-      {
-        path: 'packages',
-        canActivate: [adminGuard],
-        loadComponent: () =>
-          import('./pages/admin/packages/admin-packages.component').then(m => m.AdminPackagesComponent),
-      },
-      {
-        path: 'companies',
-        canActivate: [adminGuard],
-        loadComponent: () =>
-          import('./pages/admin/companies/admin-companies.component').then(m => m.AdminCompaniesComponent),
-      },
-      {
-        path: 'addons',
-        canActivate: [adminGuard],
-        loadComponent: () =>
-          import('./pages/admin/addons/admin-addons.component').then(m => m.AdminAddonsComponent),
-      },
-      {
-        path: 'service-features',
-        canActivate: [adminGuard],
-        loadComponent: () =>
-          import('./pages/admin/service-features/admin-service-features.component').then(m => m.AdminServiceFeaturesComponent),
-      },
-    ],
+      import('./pages/admin/users/admin-users.component').then(m => m.AdminUsersComponent),
+  },
+  {
+    path: 'admin/services',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./pages/admin/services/admin-services.component').then(m => m.AdminServicesComponent),
+  },
+  {
+    path: 'admin/packages',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./pages/admin/packages/admin-packages.component').then(m => m.AdminPackagesComponent),
+  },
+  {
+    path: 'admin/companies',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./pages/admin/companies/admin-companies.component').then(m => m.AdminCompaniesComponent),
+  },
+  {
+    path: 'admin/addons',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./pages/admin/addons/admin-addons.component').then(m => m.AdminAddonsComponent),
+  },
+  {
+    path: 'admin/service-features',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./pages/admin/service-features/admin-service-features.component').then(m => m.AdminServiceFeaturesComponent),
   },
   {
     path: '**',
