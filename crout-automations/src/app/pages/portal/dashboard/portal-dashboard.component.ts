@@ -7,11 +7,12 @@ import { IUserService, IService, ICompany } from '../../../interfaces/i-service.
 import { CompanySvcFilterPipe } from '../../../pipes/company-svc-filter.pipe';
 import { forkJoin, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { PortalSidebarComponent } from '../../../components/portal-sidebar/portal-sidebar.component';
 
 @Component({
   selector: 'ca-portal-dashboard',
   standalone: true,
-  imports: [CommonModule, CompanySvcFilterPipe],
+  imports: [CommonModule, CompanySvcFilterPipe, PortalSidebarComponent],
   templateUrl: './portal-dashboard.component.html',
   styleUrls: ['./portal-dashboard.component.scss'],
 })
@@ -20,10 +21,6 @@ export class PortalDashboardComponent implements OnInit {
   private readonly api  = inject(ApiService);
   private readonly n8n  = inject(N8nService);
 
-  /**
-   * Toggle this flag to show/hide N8N workflow graphs.
-   * Set to false once N8N is integrated into the site.
-   */
   readonly development = true;
 
   readonly user         = computed(() => this.auth.currentUser());
@@ -54,7 +51,6 @@ export class PortalDashboardComponent implements OnInit {
     ).subscribe(allUserSvcs => {
       this.userServices.set(allUserSvcs);
       this.loading.set(false);
-      // Only fetch N8N run data when graphs are enabled
       if (!this.development) {
         allUserSvcs.forEach(us => {
           this.n8n.getDailyRuns(`workflow_${us.serviceId}`, 14).subscribe(runs => {
