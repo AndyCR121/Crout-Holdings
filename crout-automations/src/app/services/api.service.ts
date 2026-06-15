@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { EnvironmentService } from './environment.service';
@@ -55,11 +55,18 @@ export class ApiService {
   private readonly env  = inject(EnvironmentService);
   private get base(): string { return this.env.apiUrl; }
 
+  /** Read ca_jwt cookie and return Authorization headers. */
+  private authHeaders(): HttpHeaders {
+    const match = document.cookie.match(/(?:^|;\s*)ca_jwt=([^;]*)/);
+    const token = match ? decodeURIComponent(match[1]) : '';
+    return new HttpHeaders({ Authorization: `Bearer ${token}` });
+  }
+
   // ─── Services ────────────────────────────────────────────────────────────
 
   getServices(): Observable<IService[]> {
     return this.http
-      .get<any[]>(`${this.base}/services`)
+      .get<any[]>(`${this.base}/services`, { headers: this.authHeaders(), withCredentials: true })
       .pipe(
         map(arr => arr.map(normalizeService)),
         catchError(err => throwError(() => err))
@@ -68,7 +75,7 @@ export class ApiService {
 
   getService(id: number): Observable<IService> {
     return this.http
-      .get<any>(`${this.base}/services/${id}`)
+      .get<any>(`${this.base}/services/${id}`, { headers: this.authHeaders(), withCredentials: true })
       .pipe(
         map(normalizeService),
         catchError(err => throwError(() => err))
@@ -79,7 +86,7 @@ export class ApiService {
 
   getAddonsByService(serviceId: number): Observable<IAddon[]> {
     return this.http
-      .get<any[]>(`${this.base}/services/${serviceId}/addons`)
+      .get<any[]>(`${this.base}/services/${serviceId}/addons`, { headers: this.authHeaders(), withCredentials: true })
       .pipe(
         map(arr => arr.map(normalizeAddon)),
         catchError(err => throwError(() => err))
@@ -90,7 +97,7 @@ export class ApiService {
 
   getAllPackages(): Observable<IPackage[]> {
     return this.http
-      .get<any[]>(`${this.base}/services/packages`)
+      .get<any[]>(`${this.base}/services/packages`, { headers: this.authHeaders(), withCredentials: true })
       .pipe(
         map(arr => arr.map(normalizePackage)),
         catchError(err => throwError(() => err))
@@ -99,7 +106,7 @@ export class ApiService {
 
   getPackagesByService(serviceId: number): Observable<IPackage[]> {
     return this.http
-      .get<any[]>(`${this.base}/services/${serviceId}/packages`)
+      .get<any[]>(`${this.base}/services/${serviceId}/packages`, { headers: this.authHeaders(), withCredentials: true })
       .pipe(
         map(arr => arr.map(normalizePackage)),
         catchError(err => throwError(() => err))
@@ -110,7 +117,7 @@ export class ApiService {
 
   getUser(id: number): Observable<IUser> {
     return this.http
-      .get<IUser>(`${this.base}/users/${id}`)
+      .get<IUser>(`${this.base}/users/${id}`, { headers: this.authHeaders(), withCredentials: true })
       .pipe(catchError(err => throwError(() => err)));
   }
 
@@ -118,13 +125,13 @@ export class ApiService {
 
   getCompaniesByUser(userId: number): Observable<ICompany[]> {
     return this.http
-      .get<ICompany[]>(`${this.base}/users/${userId}/companies`)
+      .get<ICompany[]>(`${this.base}/users/${userId}/companies`, { headers: this.authHeaders(), withCredentials: true })
       .pipe(catchError(err => throwError(() => err)));
   }
 
   getCompany(companyId: number): Observable<ICompany> {
     return this.http
-      .get<ICompany>(`${this.base}/companies/${companyId}`)
+      .get<ICompany>(`${this.base}/companies/${companyId}`, { headers: this.authHeaders(), withCredentials: true })
       .pipe(catchError(err => throwError(() => err)));
   }
 
@@ -132,7 +139,7 @@ export class ApiService {
 
   getCompanyServices(companyId: number): Observable<IUserService[]> {
     return this.http
-      .get<IUserService[]>(`${this.base}/companies/${companyId}/services`)
+      .get<IUserService[]>(`${this.base}/companies/${companyId}/services`, { headers: this.authHeaders(), withCredentials: true })
       .pipe(catchError(err => throwError(() => err)));
   }
 
@@ -140,7 +147,7 @@ export class ApiService {
 
   getServiceConfig(companyId: number, serviceId: number): Observable<IServiceConfig | null> {
     return this.http
-      .get<IServiceConfig>(`${this.base}/companies/${companyId}/services/${serviceId}/config`)
+      .get<IServiceConfig>(`${this.base}/companies/${companyId}/services/${serviceId}/config`, { headers: this.authHeaders(), withCredentials: true })
       .pipe(catchError(err => throwError(() => err)));
   }
 }
