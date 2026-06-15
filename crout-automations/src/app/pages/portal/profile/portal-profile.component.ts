@@ -7,11 +7,12 @@ import { CompanyService } from '../../../services/company.service';
 import { ToastService } from '../../../services/toast.service';
 import { EnvironmentService } from '../../../services/environment.service';
 import { IUser, ICompany } from '../../../interfaces/i-service.interface';
+import { PortalSidebarComponent } from '../../../components/portal-sidebar/portal-sidebar.component';
 
 @Component({
   selector: 'ca-portal-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PortalSidebarComponent],
   templateUrl: './portal-profile.component.html',
   styleUrls: ['./portal-profile.component.scss'],
 })
@@ -32,11 +33,9 @@ export class PortalProfileComponent implements OnInit {
   email      = signal('');
   cellNumber = signal('');
 
-  /** Local preview shown immediately after the user picks a file. */
   avatarPreview = signal<string | null>(null);
   readonly uploadingAvatar = signal(false);
 
-  /** Resolved avatar: local preview first, then persisted URL from user session. */
   readonly resolvedAvatar = computed(
     () => this.avatarPreview() ?? this.user()?.profilePicture ?? null
   );
@@ -49,7 +48,7 @@ export class PortalProfileComponent implements OnInit {
   confirmPw = signal('');
   readonly savingPw = signal(false);
 
-  // ── Company management — read from shared cache ───────────────────
+  // ── Company management ────────────────────────────────────────────
   readonly companies        = this.companySvc.companies;
   readonly loadingCompanies = this.companySvc.loading;
   readonly savingCompany    = signal(false);
@@ -86,9 +85,7 @@ export class PortalProfileComponent implements OnInit {
   ngOnInit(): void {
     const uid = this.user()?.userId;
     if (uid == null) return;
-    // Load from cache — only hits the network if not already fetched this session.
     this.companySvc.load(uid);
-    // Also refresh the user's own details (incl. profilePicture) from the API.
     this.auth.refreshUser();
   }
 
@@ -98,18 +95,15 @@ export class PortalProfileComponent implements OnInit {
     return ((u.firstName?.[0] ?? '') + (u.surname?.[0] ?? '')).toUpperCase() || u.username[0].toUpperCase();
   });
 
-  // ── Avatar upload ──────────────────────────────────────────────────
   onAvatarChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file  = input.files?.[0];
     if (!file) return;
 
-    // 1. Show an instant local preview so the UI responds immediately
     const reader = new FileReader();
     reader.onload = () => this.avatarPreview.set(reader.result as string);
     reader.readAsDataURL(file);
 
-    // 2. Upload to backend
     this.uploadingAvatar.set(true);
     const form = new FormData();
     form.append('file', file);
@@ -119,11 +113,7 @@ export class PortalProfileComponent implements OnInit {
       .subscribe({
         next: (res) => {
           const url: string | undefined = res?.profilePicture;
-          if (url) {
-            // Persist into the auth signal + localStorage so it survives navigation
-            this.auth.patchUser({ profilePicture: url });
-          }
-          // Clear local preview — resolvedAvatar now reads from the session
+          if (url) { this.auth.patchUser({ profilePicture: url }); }
           this.avatarPreview.set(null);
           this.uploadingAvatar.set(false);
           this.toast.success('Profile picture updated.');
@@ -138,7 +128,6 @@ export class PortalProfileComponent implements OnInit {
       });
   }
 
-  // ── Profile save ───────────────────────────────────────────────────
   saveProfile(): void {
     this.saving.set(true);
     const updates: Partial<IUser> = {
@@ -154,7 +143,6 @@ export class PortalProfileComponent implements OnInit {
     });
   }
 
-  // ── Password save ─────────────────────────────────────────────────
   savePassword(): void {
     if (!this.currentPw() || !this.newPw()) { this.toast.error('All password fields are required.'); return; }
     if (this.newPw() !== this.confirmPw())   { this.toast.error('New passwords do not match.'); return; }
@@ -180,7 +168,6 @@ export class PortalProfileComponent implements OnInit {
       });
   }
 
-  // ── Company: open add form ─────────────────────────────────────────
   openAddCompany(): void {
     this.editingId.set(null);
     this.addName.set(''); this.addIndustry.set(''); this.addEmail.set('');

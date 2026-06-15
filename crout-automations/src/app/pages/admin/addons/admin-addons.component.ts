@@ -5,11 +5,12 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { AdminService } from '../../../services/admin.service';
 import { IAddon, IService } from '../../../interfaces/i-service.interface';
+import { AdminSidebarComponent } from '../../../components/admin-sidebar/admin-sidebar.component';
 
 @Component({
   selector: 'ca-admin-addons',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AdminSidebarComponent],
   templateUrl: './admin-addons.component.html',
   styleUrls: ['./admin-addons.component.scss'],
 })

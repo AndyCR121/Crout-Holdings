@@ -7,6 +7,7 @@ import { AuthService } from '../../../services/auth.service';
 import { ApiService } from '../../../services/api.service';
 import { ToastService } from '../../../services/toast.service';
 import { IUserService, IService, IAddon, ICompany } from '../../../interfaces/i-service.interface';
+import { PortalSidebarComponent } from '../../../components/portal-sidebar/portal-sidebar.component';
 
 interface ServiceRow {
   userService:   IUserService;
@@ -27,7 +28,7 @@ interface CompanyGroup {
 @Component({
   selector: 'ca-portal-services',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PortalSidebarComponent],
   templateUrl: './portal-services.component.html',
   styleUrls: ['./portal-services.component.scss'],
 })
@@ -45,7 +46,6 @@ export class PortalServicesComponent implements OnInit {
     const uid = this.user()?.userId;
     if (uid == null) { this.loading.set(false); return; }
 
-    // Step 1: load services + companies in parallel
     forkJoin({
       svcs:      this.api.getServices(),
       companies: this.api.getCompaniesByUser(uid),
@@ -54,7 +54,6 @@ export class PortalServicesComponent implements OnInit {
         if (!companies.length) {
           return of({ svcs, companies, companyServices: [] as IUserService[][], addons: [] as IAddon[][] });
         }
-        // Step 2: load per-company services + per-service addons in parallel
         return forkJoin({
           svcs:            of(svcs),
           companies:       of(companies),
