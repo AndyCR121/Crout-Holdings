@@ -22,6 +22,15 @@ public class PaystackProxyService(
     IConfiguration     config,
     HttpClient         http) : IPaystackProxyService
 {
+    /// <summary>
+    /// All bodies sent to Paystack MUST use camelCase — Paystack is case-sensitive.
+    /// Using this explicitly avoids any dependency on the global ASP.NET serialiser config.
+    /// </summary>
+    private static readonly JsonSerializerOptions CamelCase = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    };
+
     private string SecretKey =>
         config["Paystack:SecretKey"]
         ?? Environment.GetEnvironmentVariable("PAYSTACK_SECRET_KEY")
@@ -32,7 +41,10 @@ public class PaystackProxyService(
         http.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", SecretKey);
 
-    // ── Validate company belongs to user ────────────────────────────────────────────
+    private static StringContent JsonBody(object payload) =>
+        new(JsonSerializer.Serialize(payload, CamelCase), Encoding.UTF8, "application/json");
+
+    // ── Validate company belongs to user ─────────────────────────────────────
     private async Task<CroutApi.Models.Company> GetOwnedCompanyAsync(int userId, int companyId)
     {
         var userCompanies = await companies.GetByUserAsync(userId);
@@ -44,19 +56,12 @@ public class PaystackProxyService(
         return company;
     }
 
-    // ── Fetch reusable cards for a given email ──────────────────────────────────────────
-    /// <summary>
-    /// Deserializes card objects to plain CLR objects INSIDE the using block
-    /// so they are never dependent on a disposed JsonDocument.
-    /// Primary:  GET /customer/{email}  →  authorizations[]
-    /// Fallback: GET /transaction?customer={code}  →  scan unique reusable auths
-    /// </summary>
+    // ── Fetch reusable cards for a given email ────────────────────────────────
     private async Task<List<object>> FetchReusableCardsAsync(string email)
     {
         var cards = new List<object>();
         string? customerCode = null;
 
-        // ── Primary: customer authorizations ────────────────────────────────────────────────
         var custResponse = await http.GetAsync(
             $"https://api.paystack.co/customer/{Uri.EscapeDataString(email)}");
         var custJson = await custResponse.Content.ReadAsStringAsync();
@@ -80,7 +85,6 @@ public class PaystackProxyService(
             }
         }
 
-        // ── Fallback: scan transactions if authorizations[] was empty ───────────────────
         if (cards.Count == 0 && !string.IsNullOrWhiteSpace(customerCode))
         {
             var txResponse = await http.GetAsync(
@@ -108,7 +112,7 @@ public class PaystackProxyService(
         return cards;
     }
 
-    // ── Verify transaction ──────────────────────────────────────────────────────────────
+    // ── Verify transaction ────────────────────────────────────────────────────
     public async Task<object> VerifyTransactionAsync(string reference)
     {
         AddAuth();
@@ -125,7 +129,7 @@ public class PaystackProxyService(
         return new { verified = status == "success", status, message };
     }
 
-    // ── Subscriptions ──────────────────────────────────────────────────────────────
+    // ── Subscriptions ─────────────────────────────────────────────────────────
     public async Task<object> GetSubscriptionsAsync(int userId)
     {
         var userCompanies = await companies.GetByUserAsync(userId);
@@ -139,9 +143,9 @@ public class PaystackProxyService(
             var json = await response.Content.ReadAsStringAsync();
 
             using var doc = JsonDocument.Parse(json);
-            if (doc.RootElement.TryGetProperty("data", out var data))
+            if (doc.RootElement.TryGetProperty("data", out var d))
             {
-                var subs = JsonSerializer.Deserialize<object>(data.GetRawText());
+                var subs = JsonSerializer.Deserialize<object>(d.GetRawText());
                 results.Add(new
                 {
                     companyId     = company.CompanyId,
@@ -154,7 +158,7 @@ public class PaystackProxyService(
         return results;
     }
 
-    // ── Per-company cards ─────────────────────────────────────────────────────────────
+    // ── Per-company cards ─────────────────────────────────────────────────────
     public async Task<object> GetCompanyBillingAsync(int userId)
     {
         var userCompanies = await companies.GetByUserAsync(userId);
@@ -179,33 +183,31 @@ public class PaystackProxyService(
         return results;
     }
 
-    // ── Initialise card-capture ─────────────────────────────────────────────────────────
+    // ── Initialise card-capture ───────────────────────────────────────────────
     public async Task<object> InitialiseCardCaptureAsync(int userId, int companyId)
     {
         var company = await GetOwnedCompanyAsync(userId, companyId);
         AddAuth();
 
-        var body = JsonSerializer.Serialize(new
-        {
-            email    = company.Email,
-            amount   = 5000,
-            currency = "ZAR",
-            channels = new[] { "card" },
-            metadata = new
-            {
-                purpose    = "card_capture",
-                user_id    = userId,
-                company_id = companyId,
-                custom_fields = new[]
-                {
-                    new { display_name = "Company", variable_name = "company", value = company.CompanyName },
-                }
-            },
-        });
-
         var response = await http.PostAsync(
             "https://api.paystack.co/transaction/initialize",
-            new StringContent(body, Encoding.UTF8, "application/json"));
+            JsonBody(new
+            {
+                email    = company.Email,
+                amount   = 5000,   // 5000 kobo = R50 ZAR (minimum for card tokenisation)
+                currency = "ZAR",
+                channels = new[] { "card" },
+                metadata = new
+                {
+                    purpose    = "card_capture",
+                    user_id    = userId,
+                    company_id = companyId,
+                    custom_fields = new[]
+                    {
+                        new { display_name = "Company", variable_name = "company", value = company.CompanyName },
+                    }
+                },
+            }));
 
         var json = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(json);
@@ -225,23 +227,15 @@ public class PaystackProxyService(
         return JsonSerializer.Deserialize<object>(json)!;
     }
 
-    // ── Remove card ──────────────────────────────────────────────────────────────────
-    /// <summary>
-    /// Deactivates the authorization on Paystack so it can no longer be
-    /// charged and no longer appears in the customer's authorization list.
-    /// POST https://api.paystack.co/customer/deactivate_authorization
-    /// { "authorization_code": "AUTH_xxx" }
-    /// </summary>
+    // ── Remove card ───────────────────────────────────────────────────────────
     public async Task<object> RemoveCardAsync(int userId, int companyId, string authorizationCode)
     {
-        // Ownership check — ensures the company belongs to this user
         await GetOwnedCompanyAsync(userId, companyId);
         AddAuth();
 
-        var body = JsonSerializer.Serialize(new { authorization_code = authorizationCode });
         var response = await http.PostAsync(
             "https://api.paystack.co/customer/deactivate_authorization",
-            new StringContent(body, Encoding.UTF8, "application/json"));
+            JsonBody(new { authorization_code = authorizationCode }));
 
         var json = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(json);
@@ -252,35 +246,20 @@ public class PaystackProxyService(
         return new { success = status, message };
     }
 
-    // ── Set default card ─────────────────────────────────────────────────────────────
-    /// <summary>
-    /// Paystack does not have a native "set default authorization" endpoint.
-    /// Strategy:
-    ///   1. Verify ownership.
-    ///   2. Confirm the authorization_code exists in the customer's reusable cards.
-    ///   3. Return success:true — the frontend reorders optimistically.
-    ///      The "default" card is purely a UI concept stored in list order;
-    ///      future charge calls should always pass the chosen authorization_code
-    ///      explicitly rather than relying on Paystack's implicit default.
-    /// If you later store a preferred_authorization_code in your DB per company,
-    /// add that persistence here.
-    /// </summary>
+    // ── Set default card ──────────────────────────────────────────────────────
     public async Task<object> SetDefaultCardAsync(int userId, int companyId, string authorizationCode)
     {
         var company = await GetOwnedCompanyAsync(userId, companyId);
         AddAuth();
 
-        // Confirm the auth code exists for this customer
-        var cards = await FetchReusableCardsAsync(company.Email!);
-        var json  = JsonSerializer.Serialize(cards);
+        var cards  = await FetchReusableCardsAsync(company.Email!);
+        var json   = JsonSerializer.Serialize(cards);
         var exists = json.Contains(authorizationCode, StringComparison.OrdinalIgnoreCase);
 
         if (!exists)
             return new { success = false, message = "Authorization code not found for this company." };
 
         // TODO (optional): persist preferred_authorization_code to your DB here
-        // e.g. await companies.SetPreferredAuthAsync(companyId, authorizationCode);
-
         return new { success = true, message = "Default card updated." };
     }
 }
