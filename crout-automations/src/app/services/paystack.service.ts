@@ -22,20 +22,18 @@ export interface IPaystackPlan {
   amount:   number;
 }
 
-/** Shape returned by the enriched /paystack/subscriptions endpoint */
 export interface IPaystackSubscription {
   subscription_code:  string;
-  status:             string;            // 'active' | 'cancelled' | 'non-renewing'
+  status:             string;
   amount:             number;
   next_payment_date:  string | null;
   plan:               IPaystackPlan | null;
   createdAt:          string;
-  // DB-enriched fields
   linked:             boolean;
   userServiceId:      number | null;
   serviceId:          number | null;
   serviceName:        string | null;
-  serviceStatus:      number | null;     // 0 Disabled | 1 In Dev | 2 Live | 3 Pending
+  serviceStatus:      number | null;
 }
 
 export interface ICompanySubscriptions {
@@ -72,6 +70,33 @@ export class PaystackService {
     const match = document.cookie.match(/(?:^|;\s*)ca_jwt=([^;]*)/);
     const token = match ? decodeURIComponent(match[1]) : '';
     return new HttpHeaders({ Authorization: `Bearer ${token}` });
+  }
+
+  /**
+   * Ensures the Paystack inline script is loaded before resolving.
+   * Works in both standalone (index.html) and WordPress (no index.html) contexts
+   * by dynamically injecting the script tag if PaystackPop is not yet on window.
+   */
+  private ensurePaystackScript(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if ((window as any).PaystackPop) {
+        resolve();
+        return;
+      }
+      const existing = document.querySelector('script[src*="paystack.co"]');
+      if (existing) {
+        // Script tag exists but hasn't finished loading yet — wait for it
+        existing.addEventListener('load', () => resolve());
+        existing.addEventListener('error', () => reject(new Error('Paystack script failed to load')));
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://js.paystack.co/v1/inline.js';
+      script.async = true;
+      script.onload  = () => resolve();
+      script.onerror = () => reject(new Error('Paystack script failed to load'));
+      document.head.appendChild(script);
+    });
   }
 
   getSubscriptions(): Observable<ICompanySubscriptions[]> {
@@ -116,11 +141,43 @@ export class PaystackService {
   }
 
   /**
-   * Verify a transaction reference server-side.
-   * MUST be called after the Paystack popup fires onSuccess —
-   * without this Paystack does not commit the authorization to
-   * the customer record, so the card won't appear on future fetches.
+   * Remove a saved card from a company's Paystack customer record.
    */
+  removeCard(companyId: number, authorizationCode: string): Observable<{ success: boolean }> {
+    return this.http
+      .delete<{ success: boolean }>(
+        `${this.base}/paystack/card`,
+        { body: { companyId, authorizationCode }, headers: this.authHeaders(), withCredentials: true },
+      )
+      .pipe(
+        tap(res => console.debug('[PaystackService] removeCard ->', res)),
+        catchError((err: HttpErrorResponse) => {
+          console.error('[PaystackService] removeCard failed', err.status, err.message);
+          return of({ success: false });
+        }),
+      );
+  }
+
+  /**
+   * Set a card as the default (first) payment method for a company.
+   * The API should reorder the customer's authorizations so this card comes first.
+   */
+  setDefaultCard(companyId: number, authorizationCode: string): Observable<{ success: boolean }> {
+    return this.http
+      .patch<{ success: boolean }>(
+        `${this.base}/paystack/card/default`,
+        { companyId, authorizationCode },
+        { headers: this.authHeaders(), withCredentials: true },
+      )
+      .pipe(
+        tap(res => console.debug('[PaystackService] setDefaultCard ->', res)),
+        catchError((err: HttpErrorResponse) => {
+          console.error('[PaystackService] setDefaultCard failed', err.status, err.message);
+          return of({ success: false });
+        }),
+      );
+  }
+
   verifyTransaction(reference: string): Observable<{ verified: boolean; status: string }> {
     return this.http
       .post<{ verified: boolean; status: string }>(
@@ -139,7 +196,8 @@ export class PaystackService {
 
   /**
    * Open Paystack inline popup.
-   * Calls verifyTransaction automatically in onSuccess before invoking the callback.
+   * Dynamically injects the Paystack script if not already present —
+   * works in both standalone Angular and WordPress (Web Component) contexts.
    */
   openPopup(
     accessCode: string,
@@ -147,23 +205,25 @@ export class PaystackService {
     onSuccess:  (reference: string) => void,
     onClose?:   () => void,
   ): void {
-    const PaystackPop = (window as any).PaystackPop;
-    if (!PaystackPop) {
-      console.error('[PaystackService] PaystackPop not found. Ensure https://js.paystack.co/v1/inline.js is in index.html.');
-      return;
-    }
-    const handler = PaystackPop.setup({
-      key:         environment.paystackPublicKey,
-      access_code: accessCode,
-      email,
-      callback: (res: { reference: string }) => {
-        this.verifyTransaction(res.reference).subscribe(result => {
-          console.debug('[PaystackService] popup callback verified:', result);
-          onSuccess(res.reference);
+    this.ensurePaystackScript()
+      .then(() => {
+        const PaystackPop = (window as any).PaystackPop;
+        const handler = PaystackPop.setup({
+          key:         environment.paystackPublicKey,
+          access_code: accessCode,
+          email,
+          callback: (res: { reference: string }) => {
+            this.verifyTransaction(res.reference).subscribe(result => {
+              console.debug('[PaystackService] popup callback verified:', result);
+              onSuccess(res.reference);
+            });
+          },
+          onClose: onClose ?? (() => {}),
         });
-      },
-      onClose: onClose ?? (() => {}),
-    });
-    handler.openIframe();
+        handler.openIframe();
+      })
+      .catch(err => {
+        console.error('[PaystackService] Failed to load Paystack script:', err);
+      });
   }
 }
