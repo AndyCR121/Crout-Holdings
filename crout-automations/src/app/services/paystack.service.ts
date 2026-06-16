@@ -71,35 +71,33 @@ export class PaystackService {
   }
 
   /**
-   * Loads Paystack v2 inline script.
-   * v2 is required for PaystackPop.resumeTransaction().
+   * Ensures Paystack v2 inline script is loaded.
    *
-   * Key fix: WordPress (or a theme/plugin) may already have loaded Paystack v1
-   * and attached window.PaystackPop before this service runs. Removing the <script>
-   * tag alone does NOT remove the already-executed global from memory. We must
-   * explicitly delete window.PaystackPop so the v2 script re-attaches a fresh
-   * object with resumeTransaction available.
+   * IMPORTANT — v2 API facts (confirmed from source):
+   *   - window.PaystackPop is a CLASS/CONSTRUCTOR, not a static utility object.
+   *   - There is NO static PaystackPop.resumeTransaction() method.
+   *   - To use an access_code, you instantiate: new PaystackPop()
+   *     then call instance.newTransaction({ accessCode }) which internally
+   *     calls verify_access_code and opens the iframe.
    *
-   * We track successful v2 load via window.__paystackV2Loaded to avoid redundant
-   * reloads on subsequent calls.
+   * We delete any stale global (e.g. v1 loaded by WordPress) before
+   * injecting v2 so the constructor is always the v2 version.
    */
   private ensurePaystackScript(): Promise<void> {
     return new Promise((resolve, reject) => {
       const PAYSTACK_V2 = 'https://js.paystack.co/v2/inline.js';
 
-      // Only skip if WE confirmed v2 loaded — never trust window.PaystackPop alone
-      // because it may be the stale v1 object from WordPress/theme
       if ((window as any).__paystackV2Loaded) {
         resolve();
         return;
       }
 
-      // Remove stale DOM script tag first
+      // Remove stale DOM script tag (e.g. v1 from a WordPress plugin/theme)
       const stale = document.querySelector('script[src*="paystack.co"]');
       if (stale) stale.remove();
 
-      // Nuke the existing global from memory — removing the <script> tag does NOT
-      // remove an already-executed global. This forces v2 to re-attach cleanly.
+      // Delete the already-executed global from memory — removing the <script>
+      // tag alone does NOT clear an already-executed global.
       delete (window as any).PaystackPop;
 
       const script = document.createElement('script');
@@ -205,22 +203,29 @@ export class PaystackService {
   /**
    * Open Paystack inline popup using an access_code from the backend.
    *
-   * Uses PaystackPop.resumeTransaction(accessCode) (v2 API).
-   * This resumes a pre-initialised transaction — no public key, email,
-   * or amount is needed on the frontend, avoiding the v1 setup() issue
-   * that caused POST /checkout/request_inline to 400 with "amount not set".
+   * v2 correct usage:
+   *   const popup = new PaystackPop();
+   *   popup.newTransaction({ accessCode, onSuccess, onCancel })
+   *
+   * This internally calls verify_access_code on Paystack's API
+   * (no public key / amount / email needed on the frontend)
+   * and opens the checkout iframe directly.
+   *
+   * Note: onCancel maps to the v2 onCancel callback (not onClose).
    */
   openPopup(
     accessCode: string,
-    _email:     string,   // kept for API compatibility — unused by resumeTransaction
-    onSuccess:  (reference: string) => void,
-    onClose?:   () => void,
+    _email:    string,   // kept for API compatibility — not needed by v2 accessCode flow
+    onSuccess: (reference: string) => void,
+    onClose?:  () => void,
   ): void {
     this.ensurePaystackScript()
       .then(() => {
         const PaystackPop = (window as any).PaystackPop;
+        const popup = new PaystackPop();
 
-        const handler = PaystackPop.resumeTransaction(accessCode, {
+        popup.newTransaction({
+          accessCode,
           onSuccess: (res: { reference: string }) => {
             this.verifyTransaction(res.reference).subscribe(result => {
               console.debug('[PaystackService] popup verified:', result);
@@ -229,11 +234,9 @@ export class PaystackService {
           },
           onCancel: onClose ?? (() => {}),
         });
-
-        handler.openIframe();
       })
       .catch(err => {
-        console.error('[PaystackService] Failed to load Paystack script:', err);
+        console.error('[PaystackService] Failed to open Paystack popup:', err);
       });
   }
 }
