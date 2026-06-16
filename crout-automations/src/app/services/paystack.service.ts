@@ -73,26 +73,42 @@ export class PaystackService {
   /**
    * Loads Paystack v2 inline script.
    * v2 is required for PaystackPop.resumeTransaction().
-   * Replaces any existing v1 script tag to avoid version conflicts.
+   *
+   * Key fix: WordPress (or a theme/plugin) may already have loaded Paystack v1
+   * and attached window.PaystackPop before this service runs. Removing the <script>
+   * tag alone does NOT remove the already-executed global from memory. We must
+   * explicitly delete window.PaystackPop so the v2 script re-attaches a fresh
+   * object with resumeTransaction available.
+   *
+   * We track successful v2 load via window.__paystackV2Loaded to avoid redundant
+   * reloads on subsequent calls.
    */
   private ensurePaystackScript(): Promise<void> {
     return new Promise((resolve, reject) => {
       const PAYSTACK_V2 = 'https://js.paystack.co/v2/inline.js';
 
-      // Already loaded v2
-      if ((window as any).PaystackPop?.resumeTransaction) {
+      // Only skip if WE confirmed v2 loaded — never trust window.PaystackPop alone
+      // because it may be the stale v1 object from WordPress/theme
+      if ((window as any).__paystackV2Loaded) {
         resolve();
         return;
       }
 
-      // Remove any stale v1 script to avoid version conflicts
+      // Remove stale DOM script tag first
       const stale = document.querySelector('script[src*="paystack.co"]');
       if (stale) stale.remove();
+
+      // Nuke the existing global from memory — removing the <script> tag does NOT
+      // remove an already-executed global. This forces v2 to re-attach cleanly.
+      delete (window as any).PaystackPop;
 
       const script = document.createElement('script');
       script.src   = PAYSTACK_V2;
       script.async = true;
-      script.onload  = () => resolve();
+      script.onload = () => {
+        (window as any).__paystackV2Loaded = true;
+        resolve();
+      };
       script.onerror = () => reject(new Error('Paystack v2 script failed to load'));
       document.head.appendChild(script);
     });
