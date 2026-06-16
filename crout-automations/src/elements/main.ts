@@ -116,15 +116,7 @@ import { PortalPaymentMethodsComponent } from '../app/pages/portal/billing/payme
 
   const elements: [string, any][] = [
     // ── Public section components ──────────────────────────────────────────
-    ['ca-hero',                   HeroComponent],
-    ['ca-pain-point',             PainPointComponent],
-    ['ca-services-overview',      ServicesOverviewComponent],
-    ['ca-how-it-works',           HowItWorksComponent],
-    ['ca-why-crout',              WhyCroutComponent],
-    ['ca-pricing',                PricingComponent],
-    ['ca-cta-banner',             CtaBannerComponent],
     ['ca-privacy-policy',         PrivacyPolicyComponent],
-    ['ca-service-configurator',   ServiceConfiguratorComponent],
 
     // ── Auth / Account ─────────────────────────────────────────────────────
     ['ca-account-button',         AccountButtonComponent],
