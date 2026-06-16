@@ -18,6 +18,38 @@
     margin: 0;
   }
 
+  &__notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    background: rgba(220, 38, 38, 0.08);
+    border: 1px solid rgba(220, 38, 38, 0.25);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+    color: #f87171;
+
+    svg {
+      flex-shrink: 0;
+      margin-top: 2px;
+      color: #f87171;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.82rem;
+      font-style: italic;
+      font-weight: 700;
+      color: #f87171;
+      line-height: 1.55;
+
+      strong {
+        font-weight: 800;
+        color: #f87171;
+      }
+    }
+  }
+
   &__layout {
     display: grid;
     grid-template-columns: 200px 1fr;
