@@ -85,7 +85,6 @@ export class PaystackService {
       }
       const existing = document.querySelector('script[src*="paystack.co"]');
       if (existing) {
-        // Script tag exists but hasn't finished loading yet — wait for it
         existing.addEventListener('load', () => resolve());
         existing.addEventListener('error', () => reject(new Error('Paystack script failed to load')));
         return;
@@ -160,7 +159,6 @@ export class PaystackService {
 
   /**
    * Set a card as the default (first) payment method for a company.
-   * The API should reorder the customer's authorizations so this card comes first.
    */
   setDefaultCard(companyId: number, authorizationCode: string): Observable<{ success: boolean }> {
     return this.http
@@ -195,31 +193,35 @@ export class PaystackService {
   }
 
   /**
-   * Open Paystack inline popup.
-   * Dynamically injects the Paystack script if not already present —
-   * works in both standalone Angular and WordPress (Web Component) contexts.
+   * Open Paystack inline popup using an access_code issued by the backend.
+   *
+   * Uses PaystackPop.resumeTransaction(accessCode) — NOT setup().
+   * resumeTransaction() resumes a pre-initialised transaction using the
+   * access_code from POST /transaction/initialize, so no key/email/amount
+   * is needed on the frontend. Using setup() alongside an access_code causes
+   * Paystack to fire a second POST /checkout/request_inline with no amount
+   * set, resulting in a 400 "Transaction amount not set" error.
    */
   openPopup(
     accessCode: string,
-    email:      string,
+    _email:     string,   // kept for API compatibility — not needed by resumeTransaction
     onSuccess:  (reference: string) => void,
     onClose?:   () => void,
   ): void {
     this.ensurePaystackScript()
       .then(() => {
         const PaystackPop = (window as any).PaystackPop;
-        const handler = PaystackPop.setup({
-          key:         environment.paystackPublicKey,
-          access_code: accessCode,
-          email,
-          callback: (res: { reference: string }) => {
+
+        const handler = PaystackPop.resumeTransaction(accessCode, {
+          onSuccess: (res: { reference: string }) => {
             this.verifyTransaction(res.reference).subscribe(result => {
-              console.debug('[PaystackService] popup callback verified:', result);
+              console.debug('[PaystackService] popup verified:', result);
               onSuccess(res.reference);
             });
           },
-          onClose: onClose ?? (() => {}),
+          onCancel: onClose ?? (() => {}),
         });
+
         handler.openIframe();
       })
       .catch(err => {
