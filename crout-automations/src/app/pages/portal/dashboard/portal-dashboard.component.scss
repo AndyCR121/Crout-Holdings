@@ -1,0 +1,210 @@
+.pd-wrap {
+  padding: 54px 0;
+  height:  100%;
+}
+
+.pd-title {
+  font-size:   28px;
+  font-weight: 800;
+  color:       #fff;
+  margin:      0 0 4px;
+}
+
+.pd-sub {
+  font-size: 15px;
+  color:     rgba(255,255,255,0.55);
+  margin:    0 0 32px;
+
+  strong { color: rgba(255,255,255,0.85); }
+}
+
+// ── Company group ────────────────────────────────────────────────────────────
+.pd-company-group {
+  margin-bottom: 28px;
+}
+
+.pd-company-header {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  padding:         10px 0 12px;
+  border-bottom:   1px solid rgba(255,255,255,0.09);
+  margin-bottom:   16px;
+}
+
+.pd-company-meta {
+  display:        flex;
+  flex-direction: column;
+  gap:            2px;
+}
+
+.pd-company-name {
+  font-size:   16px;
+  font-weight: 700;
+  color:       rgba(255,255,255,0.90);
+}
+
+.pd-company-industry {
+  font-size:  12px;
+  color:      #4fa3b8;
+  font-weight: 500;
+}
+
+.pd-company-count {
+  font-size: 12px;
+  color:     rgba(255,255,255,0.40);
+}
+
+// ── Service cards grid ───────────────────────────────────────────────────────
+.pd-grid {
+  display:               grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap:                   16px;
+}
+
+.pd-card {
+  background:     rgba(255,255,255,0.04);
+  border:         1px solid rgba(255,255,255,0.09);
+  border-radius:  14px;
+  padding:        22px;
+  display:        flex;
+  flex-direction: column;
+  gap:            16px;
+}
+
+.pd-card-header {
+  display:         flex;
+  align-items:     flex-start;
+  justify-content: space-between;
+  gap:             14px;
+}
+
+.pd-card-name {
+  font-size:   17px;
+  font-weight: 700;
+  color:       #fff;
+  margin:      0 0 4px;
+}
+
+.pd-card-desc {
+  font-size:  13px;
+  color:      rgba(255,255,255,0.50);
+  margin:     0;
+  max-width:  50ch;
+  line-height: 1.5;
+}
+
+// ── Status badge ─────────────────────────────────────────────────────────────
+.pd-status-badge {
+  padding:        4px 12px;
+  border-radius:  20px;
+  font-size:      12px;
+  font-weight:    700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink:    0;
+  white-space:    nowrap;
+
+  &.status-disabled { background: rgba(150,150,150,0.15); color: #aaa; }
+  &.status-dev      { background: rgba(234,195,50,0.15);  color: #e8c232; }
+  &.status-live     { background: rgba(80,200,120,0.15);  color: #50cc78; }
+  &.status-pending  { background: rgba(100,150,255,0.15); color: #7aaeff; }
+}
+
+// ── Config chips ─────────────────────────────────────────────────────────────
+.pd-addons {
+  display:     flex;
+  align-items: baseline;
+  gap:         10px;
+  flex-wrap:   wrap;
+}
+
+.pd-addons-label {
+  font-size:      11px;
+  font-weight:    700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color:          rgba(255,255,255,0.40);
+  flex-shrink:    0;
+}
+
+.pd-chips {
+  display:  flex;
+  flex-wrap: wrap;
+  gap:       6px;
+}
+
+.pd-chip {
+  padding:       3px 10px;
+  background:    rgba(79,163,184,0.15);
+  border:        1px solid rgba(79,163,184,0.30);
+  border-radius: 20px;
+  font-size:     12px;
+  color:         #4fa3b8;
+  font-weight:   500;
+}
+
+// ── Chart ────────────────────────────────────────────────────────────────────
+.pd-chart-wrap {
+  display:        flex;
+  flex-direction: column;
+  gap:            6px;
+}
+
+.pd-chart-label {
+  font-size:      11px;
+  font-weight:    700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color:          rgba(255,255,255,0.40);
+}
+
+.pd-chart {
+  width:    100%;
+  height:   90px;
+  overflow: visible;
+}
+
+.pd-chart-dates {
+  display:         flex;
+  justify-content: space-between;
+  font-size:       10px;
+  color:           rgba(255,255,255,0.30);
+
+  span { flex: 1; text-align: center; }
+}
+
+// ── Skeleton & empty ─────────────────────────────────────────────────────────
+.pd-skeleton-grid {
+  display:        flex;
+  flex-direction: column;
+  gap:            16px;
+}
+
+.pd-skeleton-card {
+  height:        180px;
+  border-radius: 14px;
+  background:    linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation:     shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.pd-empty {
+  width:           100%;
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  justify-content: center;
+  text-align:      center;
+  padding:         64px 24px;
+  color:           rgba(255,255,255,0.40);
+  gap:             12px;
+
+  h3 { color: rgba(255,255,255,0.70); font-size: 18px; font-weight: 700; margin: 0; }
+  p  { font-size: 14px; margin: 0; max-width: 36ch; }
+}

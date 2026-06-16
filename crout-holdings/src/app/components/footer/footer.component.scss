@@ -1,0 +1,128 @@
+:host {
+  display: block;
+}
+
+.footer {
+  background: #0d0d0d;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  color: rgba(245, 245, 240, 0.6);
+
+  &__inner {
+    max-width: var(--content-wide, 1200px);
+    margin-inline: auto;
+    padding: clamp(3rem, 6vw, 5rem) var(--space-6, 1.5rem);
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: var(--space-12, 3rem);
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: var(--space-8, 2rem);
+    }
+  }
+
+  // ── Brand column ────────────────────────────────────────────────────────
+  &__brand {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5, 1.25rem);
+  }
+
+  &__logo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3, 0.75rem);
+    text-decoration: none;
+
+    img {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 10px rgba(255,255,255,0.06));
+    }
+
+    &-text {
+      font-family: var(--font-display, Georgia, serif);
+      font-size: var(--text-base, 1rem);
+      font-weight: 400;
+      letter-spacing: 0.07em;
+      color: #f5f5f0;
+      text-transform: uppercase;
+    }
+  }
+
+  &__tagline {
+    font-size: var(--text-sm, 0.875rem);
+    line-height: 1.75;
+    color: rgba(245, 245, 240, 0.45);
+    max-width: 36ch;
+  }
+
+  &__cta {
+    display: inline-flex;
+    align-self: flex-start;
+    padding: var(--space-2, 0.5rem) var(--space-6, 1.5rem);
+    border: 1px solid rgba(245, 245, 240, 0.25);
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #f5f5f0;
+    text-decoration: none;
+    transition: background 180ms ease, border-color 180ms ease;
+
+    &:hover {
+      background: rgba(245, 245, 240, 0.06);
+      border-color: rgba(245, 245, 240, 0.5);
+    }
+  }
+
+  // ── Link columns ────────────────────────────────────────────────────────
+  &__col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4, 1rem);
+  }
+
+  &__col-heading {
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #f5f5f0;
+    margin: 0;
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3, 0.75rem);
+  }
+
+  &__link {
+    font-size: var(--text-sm, 0.875rem);
+    color: rgba(245, 245, 240, 0.5);
+    text-decoration: none;
+    transition: color 180ms ease;
+
+    &:hover { color: #f5f5f0; }
+  }
+
+  // ── Bottom bar ──────────────────────────────────────────────────────────
+  &__bottom {
+    max-width: var(--content-wide, 1200px);
+    margin-inline: auto;
+    padding: var(--space-5, 1.25rem) var(--space-6, 1.5rem);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  &__legal {
+    font-size: var(--text-xs, 0.75rem);
+    color: rgba(245, 245, 240, 0.28);
+    margin: 0;
+    letter-spacing: 0.02em;
+  }
+}

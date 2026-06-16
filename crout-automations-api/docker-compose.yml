@@ -1,0 +1,54 @@
+services:
+
+  # ── MySQL ────────────────────────────────────────────────
+  db:
+    image: mysql:8.3
+    container_name: crout_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE:      crout_automations
+      MYSQL_USER:          ${DB_USER}
+      MYSQL_PASSWORD:      ${DB_PASSWORD}
+    ports:
+      - '3306:3306'
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./sql/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./sql/02_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ── REST API ──────────────────────────────────────────────
+  api:
+    build:
+      context: ./CroutApi
+      dockerfile: Dockerfile
+    container_name: crout_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS:        http://+:8080
+      DB_HOST:                db
+      DB_PORT:                '3306'
+      DB_NAME:                crout_automations
+      DB_USER:                ${DB_USER}
+      DB_PASSWORD:            ${DB_PASSWORD}
+      JWT_SECRET:             ${JWT_SECRET}
+      JWT_ISSUER:             ${JWT_ISSUER}
+      JWT_AUDIENCE:           ${JWT_AUDIENCE}
+      JWT_EXPIRY_HOURS:       '8'
+      HMAC_SECRET:            ${HMAC_SECRET}
+      PAYSTACK_SECRET_KEY:    ${PAYSTACK_SECRET_KEY}
+      ALLOWED_ORIGINS:        ${ALLOWED_ORIGINS}
+    ports:
+      - '5000:8080'   # exposed to host only — host Nginx proxies this
+
+volumes:
+  db_data:

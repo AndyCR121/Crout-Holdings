@@ -1,0 +1,129 @@
+<div class="portal-layout">
+  <ca-portal-sidebar />
+  <main class="portal-main">
+
+    <div class="pbilling">
+
+      <header class="pbilling__header">
+        <h1 class="pbilling__title">Billing</h1>
+        <p class="pbilling__subtitle">Manage your subscriptions and payment methods.</p>
+      </header>
+
+      <div class="pbilling__layout">
+
+        <!-- Left sub-nav -->
+        <nav class="pbilling__nav" aria-label="Billing sections">
+          <a href="/client/billing/subscriptions" class="pbilling__nav-item active">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+            Subscriptions
+          </a>
+          <a href="/client/billing/payment-methods" class="pbilling__nav-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
+            </svg>
+            Payment Methods
+          </a>
+        </nav>
+
+        <!-- Content -->
+        <div class="pbilling__content">
+          <div class="psubs">
+
+            <div class="psubs__header">
+              <div>
+                <h2 class="psubs__title">Subscriptions</h2>
+                <p class="psubs__hint">Your active service subscriptions, linked to your Paystack billing account.</p>
+              </div>
+              <span class="psubs__count" *ngIf="!loading() && totalSubs() > 0">{{ totalSubs() }} subscription{{ totalSubs() === 1 ? '' : 's' }}</span>
+            </div>
+
+            <!-- Loading skeleton -->
+            <ng-container *ngIf="loading()">
+              <div class="psubs__skeleton" *ngFor="let i of [0,1,2]"></div>
+            </ng-container>
+
+            <!-- Error -->
+            <div class="psubs__empty psubs__empty--error" *ngIf="error()">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <p>{{ error() }}</p>
+            </div>
+
+            <!-- Empty -->
+            <div class="psubs__empty" *ngIf="!loading() && !error() && totalSubs() === 0">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+              <p>No active subscriptions found.</p>
+            </div>
+
+            <!-- Per-company groups -->
+            <ng-container *ngIf="!loading() && !error() && totalSubs() > 0">
+              <div class="psubs__company" *ngFor="let company of companies()">
+
+                <div class="psubs__company-header">
+                  <span class="psubs__company-name">{{ company.companyName }}</span>
+                  <span class="psubs__company-email">{{ company.email }}</span>
+                  <span class="psubs__company-count">{{ company.subscriptions.length }} sub{{ company.subscriptions.length === 1 ? '' : 's' }}</span>
+                </div>
+
+                <p class="psubs__company-empty" *ngIf="company.subscriptions.length === 0">
+                  No subscriptions for this company.
+                </p>
+
+                <div class="psubs__row" *ngFor="let sub of company.subscriptions">
+
+                  <div class="psubs__row-header">
+                    <div class="psubs__row-title-group">
+                      <span class="psubs__service-name">{{ sub.linked ? (sub.serviceName ?? sub.plan?.name) : sub.plan?.name }}</span>
+                      <span class="psubs__badge" [ngClass]="paystackStatusClass(sub.status)">{{ sub.status }}</span>
+                      <span *ngIf="sub.linked" class="psubs__badge" [ngClass]="serviceStatusClass(sub.serviceStatus)">{{ serviceStatusLabel(sub.serviceStatus) }}</span>
+                      <span *ngIf="!sub.linked" class="psubs__badge badge--unlinked">Unlinked</span>
+                    </div>
+                    <div class="psubs__price">
+                      {{ formatPrice(sub.amount) }}
+                      <span class="psubs__price-interval" *ngIf="sub.plan?.interval">/{{ sub.plan!.interval }}</span>
+                    </div>
+                  </div>
+
+                  <div class="psubs__row-meta">
+                    <div class="psubs__meta-item">
+                      <span class="psubs__meta-label">Subscription Ref</span>
+                      <span class="psubs__meta-value code">{{ sub.subscription_code }}</span>
+                    </div>
+                    <div class="psubs__meta-item">
+                      <span class="psubs__meta-label">Plan</span>
+                      <span class="psubs__meta-value">{{ sub.plan?.name ?? '—' }}</span>
+                    </div>
+                    <div class="psubs__meta-item">
+                      <span class="psubs__meta-label">Next Billing</span>
+                      <span class="psubs__meta-value">{{ formatDate(sub.next_payment_date) }}</span>
+                    </div>
+                    <div class="psubs__meta-item">
+                      <span class="psubs__meta-label">Started</span>
+                      <span class="psubs__meta-value">{{ formatDate(sub.createdAt) }}</span>
+                    </div>
+                    <div class="psubs__meta-item" *ngIf="sub.linked">
+                      <span class="psubs__meta-label">DB Service</span>
+                      <span class="psubs__meta-value">{{ sub.serviceName ?? '—' }}</span>
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+            </ng-container>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>

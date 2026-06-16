@@ -1,0 +1,108 @@
+.pain {
+  padding: clamp(var(--space-12), 7vw, var(--space-24)) 0;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-divider);
+  border-bottom: 1px solid var(--color-divider);
+
+  &__container {
+    width: var(--content-wide);
+    margin-inline: auto;
+    padding-inline: var(--space-6);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-16);
+    align-items: center;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: var(--space-10);
+    }
+  }
+
+  &__left {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  &__eyebrow {
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-orange);
+  }
+
+  &__headline {
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: 800;
+    color: var(--color-text);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  &__headline-accent { color: var(--color-orange); }
+
+  &__copy {
+    font-size: var(--text-base);
+    color: var(--color-text-muted);
+    line-height: 1.7;
+    max-width: 48ch;
+  }
+
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-orange);
+    text-decoration: none;
+    margin-top: var(--space-2);
+    transition: gap var(--transition-interactive), color var(--transition-interactive);
+
+    &:hover {
+      gap: var(--space-3);
+      color: var(--color-orange-hover);
+    }
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    list-style: none;
+  }
+
+  &__item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    line-height: 1.5;
+    transition: border-color var(--transition-interactive), background var(--transition-interactive);
+
+    &:hover {
+      border-color: rgba(212,112,58,0.25);
+      background: rgba(212,112,58,0.03);
+    }
+  }
+
+  &__item-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-md);
+    background: rgba(212,112,58,0.1);
+    color: var(--color-orange);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+}

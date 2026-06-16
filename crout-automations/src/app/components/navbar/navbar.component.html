@@ -1,0 +1,53 @@
+<nav class="ca-navbar">
+  <!-- Brand / Logo -->
+  <a href="/" class="ca-navbar-brand" aria-label="Crout Automations Home">
+    <div class="ca-navbar-logo-lockup">
+      <img
+        [src]="assetsBase + 'ShieldOnlyLogo.png'"
+        alt="Crout Automations shield"
+        class="ca-navbar-logo"
+        width="36"
+        height="36"
+        loading="eager"
+      />
+      <span class="ca-navbar-brand-text">
+        <span class="ca-navbar-brand-line">Crout</span>
+        <span class="ca-navbar-brand-line ca-navbar-brand-line--accent">Automations</span>
+      </span>
+    </div>
+  </a>
+
+  <!-- Divider -->
+  <span class="ca-navbar-divider" aria-hidden="true"></span>
+
+  <!-- Desktop Links -->
+  <ul class="ca-navbar-links" role="list">
+    <li><a href="/" (click)="closeMenu()">Home</a></li>
+    <li><a href="/services" (click)="closeMenu()">Services</a></li>
+    <li><a href="/contact-us" (click)="closeMenu()">Contact</a></li>
+    <li *ngIf="auth.isLoggedIn()">
+      <a href="/client/dashboard" class="ca-navbar-portal" (click)="closeMenu()">Client Portal</a>
+    </li>
+  </ul>
+
+  <!-- Hamburger (mobile) -->
+  <button class="ca-navbar-hamburger" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen" aria-label="Toggle navigation">
+    <svg *ngIf="!menuOpen" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="3" y1="6"  x2="21" y2="6"/>
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+    <svg *ngIf="menuOpen" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="4" y1="4" x2="20" y2="20"/>
+      <line x1="20" y1="4" x2="4" y2="20"/>
+    </svg>
+  </button>
+
+  <!-- Mobile Drawer -->
+  <div class="ca-navbar-mobile" [class.open]="menuOpen">
+    <a href="/" (click)="closeMenu()">Home</a>
+    <a href="/services" (click)="closeMenu()">Services</a>
+    <a href="/contact-us" (click)="closeMenu()">Contact</a>
+    <a *ngIf="auth.isLoggedIn()" href="/client/dashboard" class="ca-navbar-portal" (click)="closeMenu()">Client Portal</a>
+  </div>
+</nav>

@@ -1,0 +1,80 @@
+<section class="svc-page">
+
+  <div class="svc-page__hero">
+    <div class="svc-page__container">
+      <nav class="svc-page__breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span aria-hidden="true">/</span>
+        <a href="/services">Services</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Marketing Systems</span>
+      </nav>
+      <div class="svc-page__badge">
+        <span class="badge-dot" aria-hidden="true"></span>
+        Marketing Automation
+      </div>
+      <h1 class="svc-page__heading">Marketing <span class="accent">Systems</span></h1>
+      @if (service()) {
+      <p class="svc-page__sub">{{ service()!.serviceDescription }}</p>
+      } @else if (loading()) {
+      <div class="svc-page__sub-ghost"></div>
+      }
+    </div>
+  </div>
+
+  <!-- Sub-services from API features[] -->
+  <div class="svc-page__section">
+    <div class="svc-page__container">
+      <h2 class="svc-page__section-title">What's Included</h2>
+      @if (loading()) {
+      <div class="svc-page__sub-grid">
+        @for (i of [0,1,2,3,4,5]; track i) {
+        <div class="sub-card sub-card--ghost">
+          <div class="sub-ghost sub-ghost--icon"></div>
+          <div class="sub-ghost sub-ghost--title"></div>
+        </div>
+        }
+      </div>
+      } @else {
+      <div class="svc-page__sub-grid">
+        @for (s of subServices(); track s.title; let i = $index) {
+        <div class="sub-card" caScrollReveal [style.animation-delay]="(i * 0.08) + 's'">
+          <div class="sub-card__icon" [innerHTML]="s.icon | safeHtml"></div>
+          <h3 class="sub-card__title">{{ s.title }}</h3>
+        </div>
+        }
+      </div>
+      }
+    </div>
+  </div>
+
+  <!-- How it works -->
+  <div class="svc-page__section svc-page__section--alt">
+    <div class="svc-page__container">
+      <h2 class="svc-page__section-title">How It Works</h2>
+      <div class="svc-page__steps">
+        @for (step of steps; track step.num) {
+        <div class="step-card" caScrollReveal>
+          <span class="step-card__num">{{ step.num }}</span>
+          <h3 class="step-card__title">{{ step.title }}</h3>
+          <p class="step-card__desc">{{ step.desc }}</p>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Pricing configurator -->
+  @if (!loading() && service()) {
+  <div class="svc-page__section">
+    <div class="svc-page__container">
+      <h2 class="svc-page__section-title">Pricing</h2>
+      <ca-service-configurator [services]="service() ? [service()!] : []" [addons]="addons()" [packages]="packages()"
+        [allServices]="allServices()" [loading]="loading()"></ca-service-configurator>
+    </div>
+  </div>
+  }
+
+  <ca-cta-banner></ca-cta-banner>
+
+</section>

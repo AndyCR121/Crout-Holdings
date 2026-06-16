@@ -1,0 +1,6 @@
+.env
+*.user
+*.suo
+.vs/
+bin/
+obj/

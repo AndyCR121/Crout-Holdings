@@ -1,0 +1,21 @@
+<section class="why" id="why-us" aria-label="Why Crout Automations">
+  <div class="why__container">
+
+    <div class="why__header" caScrollReveal>
+      <span class="why__eyebrow">Why Us</span>
+      <h2 class="why__headline">Built for <span class="why__headline-accent">South African businesses</span></h2>
+      <p class="why__sub">Most automation agencies are overseas and don't understand load-shedding, Rand pricing, or local compliance. We do.</p>
+    </div>
+
+    <div class="why__grid" caScrollReveal [staggerChildren]="true">
+      @for (reason of reasons; track reason.title) {
+        <div class="why__card">
+          <div class="why__card-icon" aria-hidden="true" [innerHTML]="reason.icon"></div>
+          <h3 class="why__card-title">{{ reason.title }}</h3>
+          <p class="why__card-body">{{ reason.body }}</p>
+        </div>
+      }
+    </div>
+
+  </div>
+</section>

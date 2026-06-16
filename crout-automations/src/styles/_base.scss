@@ -1,0 +1,178 @@
+// ============================================================
+// BASE — Reset, typography defaults, scroll reveal, utilities
+// ============================================================
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+  hanging-punctuation: first last;
+  -moz-text-size-adjust: none;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+}
+
+body {
+  min-height: 100dvh;
+  line-height: 1.6;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+ul[role='list'], ol[role='list'] { list-style: none; }
+
+input, button, textarea, select { font: inherit; color: inherit; }
+
+h1, h2, h3, h4, h5, h6 {
+  text-wrap: balance;
+  line-height: 1.15;
+}
+
+p, li, figcaption {
+  text-wrap: pretty;
+  max-width: 72ch;
+}
+
+::selection {
+  background: rgba(212, 112, 58, 0.2);
+  color: var(--color-text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-orange);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+button { cursor: pointer; background: none; border: none; }
+table  { border-collapse: collapse; width: 100%; }
+
+a, button, [role='button'], [role='link'] {
+  transition:
+    color var(--transition-interactive),
+    background var(--transition-interactive),
+    border-color var(--transition-interactive),
+    box-shadow var(--transition-interactive);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+// Skip link
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: var(--space-4);
+  background: var(--color-navy);
+  color: #fff;
+  padding: var(--space-3) var(--space-6);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  z-index: 200;
+  text-decoration: none;
+  transition: top 0.2s;
+
+  &:focus { top: 0; }
+}
+
+// ============================================================
+// SCROLL REVEAL — used ONLY by [caScrollReveal] directive
+//
+// The directive adds .reveal to targets in JS (ngAfterViewInit),
+// THEN IntersectionObserver adds .is-revealed when in viewport.
+// Never hardcode .reveal in templates — content will be invisible.
+// Hero uses CSS @keyframes directly (no observer needed).
+// ============================================================
+
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity  0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &.is-revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal-child {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity  0.45s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--stagger-i, 0) * 80ms),
+    transform 0.45s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--stagger-i, 0) * 80ms);
+
+  &.is-revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal-fade {
+  opacity: 0;
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms);
+  &.is-revealed { opacity: 1; }
+}
+
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-32px);
+  transition:
+    opacity   0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  &.is-revealed { opacity: 1; transform: translateX(0); }
+}
+
+.reveal-right {
+  opacity: 0;
+  transform: translateX(32px);
+  transition:
+    opacity   0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  &.is-revealed { opacity: 1; transform: translateX(0); }
+}
+
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.96);
+  transition:
+    opacity   0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  &.is-revealed { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .reveal-child, .reveal-fade, .reveal-left, .reveal-right, .reveal-scale {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}

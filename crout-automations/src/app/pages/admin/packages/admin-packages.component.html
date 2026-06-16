@@ -1,0 +1,110 @@
+<div class="admin-layout">
+  <ca-admin-sidebar />
+  <main class="admin-main">
+
+<div class="admin-page">
+  <div class="admin-page-header">
+    <h1 class="admin-page-title">Packages</h1>
+    <button class="btn-create" (click)="showCreate.set(true)">+ New Package</button>
+  </div>
+
+  <div *ngIf="error()" class="admin-error">{{ error() }}</div>
+
+  <div *ngIf="loading()" class="admin-loading">
+    <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
+  </div>
+
+  <div *ngIf="!loading()" class="admin-table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>ID</th><th>Name</th><th>Description</th><th>Discount</th><th>Min Add-ons</th><th>Actions</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let p of items()" [class.editing]="editingId() === p.packageId">
+          <ng-container *ngIf="editingId() !== p.packageId">
+            <td>{{ p.packageId }}</td>
+            <td>{{ p.packageName }}</td>
+            <td class="td-desc">{{ p.packageDescription }}</td>
+            <td>{{ (p.discount * 100) | number:'1.0-0' }}%</td>
+            <td>{{ p.minimumRequiredAddons ?? '—' }}</td>
+            <td class="admin-actions">
+              <button class="btn-link" (click)="openLink(p)">Link</button>
+              <button class="btn-edit" (click)="startEdit(p)">Edit</button>
+              <button class="btn-delete" (click)="confirmDelete(p.packageId)">Delete</button>
+            </td>
+          </ng-container>
+          <ng-container *ngIf="editingId() === p.packageId">
+            <td>{{ p.packageId }}</td>
+            <td><input [(ngModel)]="editBuffer().packageName" class="admin-input" /></td>
+            <td><input [(ngModel)]="editBuffer().packageDescription" class="admin-input" /></td>
+            <td><input type="number" step="0.01" min="0" max="1" [(ngModel)]="editBuffer().discount" class="admin-input" /></td>
+            <td><input type="number" [(ngModel)]="editBuffer().minimumRequiredAddons" class="admin-input" /></td>
+            <td class="admin-actions">
+              <button class="btn-save" [disabled]="saving()" (click)="saveEdit(p)">{{ saving() ? '...' : 'Save' }}</button>
+              <button class="btn-cancel" (click)="cancelEdit()">Cancel</button>
+            </td>
+          </ng-container>
+        </tr>
+        <tr *ngIf="items().length === 0"><td colspan="6" class="admin-empty">No packages found.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="admin-pagination">
+    <button class="btn-page" [disabled]="page() === 1" (click)="prevPage()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Prev
+    </button>
+    <span>Page {{ page() }}</span>
+    <button class="btn-page" [disabled]="!hasMore()" (click)="nextPage()">
+      Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Create Modal -->
+<div class="admin-modal-backdrop" *ngIf="showCreate()" (click)="showCreate.set(false)">
+  <div class="admin-modal" (click)="$event.stopPropagation()">
+    <h3>New Package</h3>
+    <label>Name<input [(ngModel)]="createBuffer().packageName" class="admin-input" /></label>
+    <label>Description<input [(ngModel)]="createBuffer().packageDescription" class="admin-input" /></label>
+    <label>Discount (0–1)<input type="number" step="0.01" min="0" max="1" [(ngModel)]="createBuffer().discount" class="admin-input" /></label>
+    <label>Min Add-ons<input type="number" [(ngModel)]="createBuffer().minimumRequiredAddons" class="admin-input" /></label>
+    <div class="admin-modal-actions">
+      <button class="btn-save" [disabled]="saving()" (click)="submitCreate()">{{ saving() ? 'Saving...' : 'Create' }}</button>
+      <button class="btn-cancel" (click)="showCreate.set(false)">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm -->
+<div class="admin-modal-backdrop" *ngIf="deleteConfirmId() !== null" (click)="cancelDelete()">
+  <div class="admin-modal" (click)="$event.stopPropagation()">
+    <h3>Delete Package #{{ deleteConfirmId() }}?</h3>
+    <p>This action cannot be undone.</p>
+    <div class="admin-modal-actions">
+      <button class="btn-delete" (click)="doDelete(deleteConfirmId()!)">Yes, Delete</button>
+      <button class="btn-cancel" (click)="cancelDelete()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Link Modal -->
+<div class="admin-modal-backdrop" *ngIf="showLinkModal()" (click)="showLinkModal.set(false)">
+  <div class="admin-modal admin-modal--link" (click)="$event.stopPropagation()">
+    <h3>Link Services → {{ linkTarget()?.packageName }}</h3>
+    <p class="admin-modal-hint">Select which services are included in this package.</p>
+    <div class="admin-multiselect">
+      <label class="admin-multiselect-item" *ngFor="let s of services()">
+        <input type="checkbox" [checked]="isLinkSelected(s.serviceId)" (change)="toggleLinkService(s.serviceId)" />
+        <span>{{ s.serviceName }}</span>
+        <span class="admin-multiselect-price">R{{ s.price | number:'1.2-2' }}</span>
+      </label>
+      <p *ngIf="services().length === 0" class="admin-empty">No services available.</p>
+    </div>
+    <div class="admin-modal-actions">
+      <button class="btn-save" [disabled]="linkSaving()" (click)="saveLinks()">{{ linkSaving() ? 'Saving...' : 'Save Links' }}</button>
+      <button class="btn-cancel" (click)="showLinkModal.set(false)">Cancel</button>
+    </div>
+  </div>
+</div>
+
+  </main>
+</div>

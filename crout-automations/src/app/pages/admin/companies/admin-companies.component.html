@@ -1,0 +1,116 @@
+<div class="admin-layout">
+  <ca-admin-sidebar />
+  <main class="admin-main">
+
+<div class="admin-page">
+  <div class="admin-page-header">
+    <h1 class="admin-page-title">Companies</h1>
+    <div class="admin-page-header-actions">
+      <button class="btn-create" (click)="openCreate()">+ New Company</button>
+    </div>
+  </div>
+
+  <div *ngIf="error()" class="admin-error">{{ error() }}</div>
+
+  <div *ngIf="loading()" class="admin-loading">
+    <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
+  </div>
+
+  <div *ngIf="!loading()" class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th><th>Name</th><th>Industry</th><th>Email</th><th>Phone</th><th>Active</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of items()" [class.editing]="isEditing(c.companyId)">
+
+          <!-- View row -->
+          <ng-container *ngIf="!isEditing(c.companyId)">
+            <td>{{ c.companyId }}</td>
+            <td>{{ c.companyName }}</td>
+            <td>{{ c.industry ?? '—' }}</td>
+            <td>{{ c.email ?? '—' }}</td>
+            <td>{{ c.phone ?? '—' }}</td>
+            <td><span class="admin-pill" [class.green]="c.active">{{ c.active ? 'Active' : 'Inactive' }}</span></td>
+            <td class="admin-actions">
+              <button class="btn-edit"   (click)="startEdit(c)">Edit</button>
+              <button class="btn-delete" (click)="onDelete(c)">Delete</button>
+            </td>
+          </ng-container>
+
+          <!-- Edit row -->
+          <ng-container *ngIf="isEditing(c.companyId)">
+            <td>{{ c.companyId }}</td>
+            <td><input [(ngModel)]="getDraft(c.companyId).companyName" class="admin-input" /></td>
+            <td><input [(ngModel)]="getDraft(c.companyId).industry"    class="admin-input" /></td>
+            <td><input [(ngModel)]="getDraft(c.companyId).email"       class="admin-input" /></td>
+            <td><input [(ngModel)]="getDraft(c.companyId).phone"       class="admin-input" /></td>
+            <td>
+              <select [(ngModel)]="getDraft(c.companyId).active" class="admin-input">
+                <option [ngValue]="true">Active</option>
+                <option [ngValue]="false">Inactive</option>
+              </select>
+            </td>
+            <td class="admin-actions">
+              <button class="btn-save"   [disabled]="saving()" (click)="saveEdit(c)">{{ saving() ? '…' : 'Save' }}</button>
+              <button class="btn-cancel" (click)="cancelEdit(c.companyId)">Cancel</button>
+            </td>
+          </ng-container>
+
+        </tr>
+        <tr *ngIf="items().length === 0">
+          <td colspan="7" class="admin-empty">No companies found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="admin-pagination">
+    <button class="btn-page" [disabled]="page() === 1" (click)="prevPage()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Prev
+    </button>
+    <span>Page {{ page() }} of {{ totalPages }}</span>
+    <button class="btn-page" [disabled]="!hasMore" (click)="nextPage()">
+      Next
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Create Modal -->
+<div class="admin-modal-backdrop" *ngIf="showCreate()" (click)="showCreate.set(false)">
+  <div class="admin-modal" (click)="$event.stopPropagation()">
+    <h3>New Company</h3>
+    <label>Company Name <span class="required">*</span>
+      <input [(ngModel)]="createBuffer().companyName" class="admin-input" />
+    </label>
+    <label>Industry
+      <input [(ngModel)]="createBuffer().industry" class="admin-input" />
+    </label>
+    <label>Email
+      <input type="email" [(ngModel)]="createBuffer().email" class="admin-input" />
+    </label>
+    <label>Phone
+      <input [(ngModel)]="createBuffer().phone" class="admin-input" />
+    </label>
+    <label>Address
+      <input [(ngModel)]="createBuffer().address" class="admin-input" />
+    </label>
+    <label>Status
+      <select [(ngModel)]="createBuffer().active" class="admin-input">
+        <option [ngValue]="true">Active</option>
+        <option [ngValue]="false">Inactive</option>
+      </select>
+    </label>
+    <div class="admin-modal-actions">
+      <button class="btn-save" [disabled]="saving()" (click)="submitCreate()">{{ saving() ? 'Creating…' : 'Create' }}</button>
+      <button class="btn-cancel" (click)="showCreate.set(false)">Cancel</button>
+    </div>
+  </div>
+</div>
+
+  </main>
+</div>

@@ -1,0 +1,112 @@
+<div class="admin-layout">
+  <ca-admin-sidebar />
+  <main class="admin-main">
+
+<div class="admin-page">
+  <div class="admin-page-header">
+    <h1 class="admin-page-title">Services</h1>
+    <button class="btn-create" (click)="showCreate.set(true)">+ New Service</button>
+  </div>
+
+  <div *ngIf="error()" class="admin-error">{{ error() }}</div>
+
+  <div *ngIf="loading()" class="admin-loading">
+    <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
+  </div>
+
+  <div *ngIf="!loading()" class="admin-table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>ID</th><th>Name</th><th>Description</th><th>Price</th><th>Add-ons</th><th>Conditional</th><th>Actions</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let s of items()" [class.editing]="editingId() === s.serviceId">
+          <ng-container *ngIf="editingId() !== s.serviceId">
+            <td>{{ s.serviceId }}</td>
+            <td>{{ s.serviceName }}</td>
+            <td class="td-desc">{{ s.serviceDescription }}</td>
+            <td>R{{ s.price | number:'1.2-2' }}</td>
+            <td><span class="admin-pill" [class.green]="s.hasAddons">{{ s.hasAddons ? 'Yes' : 'No' }}</span></td>
+            <td><span class="admin-pill" [class.green]="s.conditional">{{ s.conditional ? 'Yes' : 'No' }}</span></td>
+            <td class="admin-actions">
+              <button class="btn-link" (click)="openLink(s)">Link</button>
+              <button class="btn-edit" (click)="startEdit(s)">Edit</button>
+              <button class="btn-delete" (click)="confirmDelete(s.serviceId)">Delete</button>
+            </td>
+          </ng-container>
+          <ng-container *ngIf="editingId() === s.serviceId">
+            <td>{{ s.serviceId }}</td>
+            <td><input [(ngModel)]="editBuffer().serviceName" class="admin-input" /></td>
+            <td><input [(ngModel)]="editBuffer().serviceDescription" class="admin-input" /></td>
+            <td><input type="number" [(ngModel)]="editBuffer().price" class="admin-input" /></td>
+            <td><select [(ngModel)]="editBuffer().hasAddons" class="admin-input"><option [ngValue]="true">Yes</option><option [ngValue]="false">No</option></select></td>
+            <td><select [(ngModel)]="editBuffer().conditional" class="admin-input"><option [ngValue]="true">Yes</option><option [ngValue]="false">No</option></select></td>
+            <td class="admin-actions">
+              <button class="btn-save" [disabled]="saving()" (click)="saveEdit(s)">{{ saving() ? '...' : 'Save' }}</button>
+              <button class="btn-cancel" (click)="cancelEdit()">Cancel</button>
+            </td>
+          </ng-container>
+        </tr>
+        <tr *ngIf="items().length === 0"><td colspan="7" class="admin-empty">No services found.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="admin-pagination">
+    <button class="btn-page" [disabled]="page() === 1" (click)="prevPage()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Prev
+    </button>
+    <span>Page {{ page() }}</span>
+    <button class="btn-page" [disabled]="!hasMore()" (click)="nextPage()">
+      Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Create Modal -->
+<div class="admin-modal-backdrop" *ngIf="showCreate()" (click)="showCreate.set(false)">
+  <div class="admin-modal" (click)="$event.stopPropagation()">
+    <h3>New Service</h3>
+    <label>Name<input [(ngModel)]="createBuffer().serviceName" class="admin-input" /></label>
+    <label>Description<input [(ngModel)]="createBuffer().serviceDescription" class="admin-input" /></label>
+    <label>Price (R)<input type="number" [(ngModel)]="createBuffer().price" class="admin-input" /></label>
+    <label class="admin-checkbox"><input type="checkbox" [(ngModel)]="createBuffer().hasAddons" /> Has Add-ons</label>
+    <label class="admin-checkbox"><input type="checkbox" [(ngModel)]="createBuffer().conditional" /> Conditional</label>
+    <div class="admin-modal-actions">
+      <button class="btn-save" [disabled]="saving()" (click)="submitCreate()">{{ saving() ? 'Saving...' : 'Create' }}</button>
+      <button class="btn-cancel" (click)="showCreate.set(false)">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm -->
+<div class="admin-modal-backdrop" *ngIf="deleteConfirmId() !== null" (click)="cancelDelete()">
+  <div class="admin-modal" (click)="$event.stopPropagation()">
+    <h3>Delete Service #{{ deleteConfirmId() }}?</h3>
+    <p>This action cannot be undone.</p>
+    <div class="admin-modal-actions">
+      <button class="btn-delete" (click)="doDelete(deleteConfirmId()!)">Yes, Delete</button>
+      <button class="btn-cancel" (click)="cancelDelete()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Link Modal -->
+<div class="admin-modal-backdrop" *ngIf="showLinkModal()" (click)="showLinkModal.set(false)">
+  <div class="admin-modal admin-modal--link" (click)="$event.stopPropagation()">
+    <h3>Linked Addons → {{ linkTarget()?.serviceName }}</h3>
+    <p class="admin-modal-hint">Addons linked to this service. Manage them from the <strong>Addons</strong> page.</p>
+    <div *ngIf="linkLoading()" class="admin-loading"><div class="skeleton-row" *ngFor="let i of [1,2,3]"></div></div>
+    <div *ngIf="!linkLoading()" class="admin-multiselect">
+      <div class="admin-multiselect-item admin-multiselect-item--readonly" *ngFor="let a of linkedAddons()">
+        <span>{{ a.addonName }}</span>
+        <span class="admin-multiselect-price">R{{ a.price | number:'1.2-2' }}</span>
+      </div>
+      <p *ngIf="linkedAddons().length === 0" class="admin-empty">No addons linked yet. Create them from the Addons page.</p>
+    </div>
+    <div class="admin-modal-actions">
+      <button class="btn-cancel" (click)="showLinkModal.set(false)">Close</button>
+    </div>
+  </div>
+</div>
+
+  </main>
+</div>

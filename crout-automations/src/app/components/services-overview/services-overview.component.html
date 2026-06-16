@@ -1,0 +1,21 @@
+<section class="services" id="services" aria-label="Services overview">
+  <div class="services__container">
+
+    <div class="services__header" caScrollReveal>
+      <span class="services__eyebrow">What We Automate</span>
+      <h2 class="services__headline">Workflows that run <span class="services__headline-accent">while you sleep</span></h2>
+      <p class="services__sub">From lead capture to client onboarding — we build the automation stack your business actually needs.</p>
+    </div>
+
+    <div class="services__grid" caScrollReveal [staggerChildren]="true">
+      @for (service of services; track service.title) {
+        <div class="services__card">
+          <div class="services__card-icon" aria-hidden="true" [innerHTML]="service.icon"></div>
+          <h3 class="services__card-title">{{ service.title }}</h3>
+          <p class="services__card-body">{{ service.body }}</p>
+        </div>
+      }
+    </div>
+
+  </div>
+</section>

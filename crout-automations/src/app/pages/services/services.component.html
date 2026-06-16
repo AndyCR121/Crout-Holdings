@@ -1,0 +1,98 @@
+<section class="svc-hub">
+
+  <div class="svc-hub__bg" aria-hidden="true">
+    <div class="svc-hub__bg-orb svc-hub__bg-orb--1"></div>
+    <div class="svc-hub__bg-orb svc-hub__bg-orb--2"></div>
+    <div class="svc-hub__bg-grid"></div>
+  </div>
+
+  <div class="svc-hub__hero">
+    <div class="svc-hub__container">
+      <nav class="svc-hub__breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Services</span>
+      </nav>
+
+      <!-- Badge: dynamic count or ghost -->
+      <div class="svc-hub__badge">
+        <span class="svc-hub__badge-dot" aria-hidden="true"></span>
+        @if (ghostLoaderOnLoad()) {
+          <span class="svc-hub__badge-ghost"></span>
+        } @else {
+          {{ services.length }} Automation Categories
+        }
+      </div>
+
+      <h1 class="svc-hub__heading">What We <span class="accent">Automate</span></h1>
+      <p class="svc-hub__sub">
+        Every workflow is built custom for your business. Pick the category that matches
+        your biggest bottleneck and we'll design a system around it.
+      </p>
+    </div>
+  </div>
+
+  <div class="svc-hub__grid-wrap">
+    <div class="svc-hub__container">
+      <div class="svc-hub__grid">
+
+        <!-- Ghost Loaders -->
+        @if (ghostLoaderOnLoad()) {
+          @for (s of skeletonCards; track $index; let i = $index) {
+            <div
+              class="svc-card svc-card--ghost"
+              [class.svc-card--blue]="i % 2 !== 0"
+            >
+              <div class="svc-ghost svc-ghost--icon"></div>
+              <div class="svc-card__body">
+                <div class="svc-ghost svc-ghost--label"></div>
+                <div class="svc-ghost svc-ghost--tagline"></div>
+                <div class="svc-ghost svc-ghost--desc"></div>
+                <div class="svc-ghost svc-ghost--desc svc-ghost--desc-sm"></div>
+                <ul class="svc-card__features" aria-hidden="true">
+                  <li class="svc-ghost svc-ghost--feature"></li>
+                  <li class="svc-ghost svc-ghost--feature svc-ghost--feature-sm"></li>
+                  <li class="svc-ghost svc-ghost--feature"></li>
+                </ul>
+              </div>
+              <div class="svc-card__cta svc-ghost--cta" aria-hidden="true"></div>
+            </div>
+          }
+        } @else {
+          @for (s of services; track s.serviceId; let i = $index) {
+            <a
+              [href]="['/services/' + s.slug]"
+              class="svc-card"
+              [class.svc-card--blue]="s.accent === 'blue'"
+              caScrollReveal
+              [style.animation-delay]="(i * 0.1) + 's'"
+              [attr.aria-label]="s.label"
+            >
+              <div class="svc-card__icon" [innerHTML]="s.icon | safeHtml"></div>
+              <div class="svc-card__body">
+                <span class="svc-card__label">{{ s.label }}</span>
+                <p class="svc-card__tagline">{{ s.tagline }}</p>
+                <p class="svc-card__desc">{{ s.serviceDescription }}</p>
+                <ul class="svc-card__features" aria-label="Included features">
+                  @for (f of s.features; track f) {
+                    <li>{{ f }}</li>
+                  }
+                </ul>
+              </div>
+              <div class="svc-card__cta" aria-hidden="true">
+                Explore
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </div>
+            </a>
+          }
+        }
+
+      </div>
+    </div>
+  </div>
+
+  <div class="svc-hub__container svc-hub__cta-wrap">
+    <ca-cta-banner></ca-cta-banner>
+  </div>
+
+</section>

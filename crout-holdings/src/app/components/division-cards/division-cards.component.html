@@ -1,0 +1,64 @@
+<section class="divisions">
+  <div class="divisions__header">
+    <span class="divisions__eyebrow">Our Divisions</span>
+    <h2 class="divisions__heading">Where we operate</h2>
+  </div>
+
+  <!-- grid-template-columns bound exactly to card count — no empty tracks -->
+  <div class="divisions__grid"
+       [style.grid-template-columns]="'repeat(' + (divisions.length + 1) + ', 280px)'">
+
+    <article class="card" *ngFor="let div of divisions">
+
+      <!-- TOP: image bg + logo + name -->
+      <div class="card__top" [style.background-image]="'url(' + div.bgImage + ')'">
+        <div class="card__top-overlay"></div>
+        <div class="card__top-content">
+          @if(div.available) {
+          <img class="card__logo" [src]="div.logo" [alt]="div.name + ' logo'" loading="lazy" width="72" height="72" />
+          }
+          <h3 class="card__name">{{ div.name }}</h3>
+          <span class="card__status" [class.card__status--live]="div.available">
+            {{ div.available ? 'Available Now' : 'Coming Soon' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- BOTTOM: CTA + scrolling services -->
+      <div class="card__bottom">
+        <a class="card__cta" [href]="div.siteUrl" [attr.aria-disabled]="!div.available || null"
+          [class.card__cta--disabled]="!div.available" target="_blank" rel="noopener noreferrer">
+          {{ div.available ? 'Visit Site' : 'Coming Soon' }}
+          <svg *ngIf="div.available" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </a>
+
+        <div class="card__services">
+          <ul class="card__services-list">
+            <li *ngFor="let s of div.services">{{ s }}</li>
+            <!-- duplicate for seamless loop -->
+            <li *ngFor="let s of div.services" aria-hidden="true">{{ s }}</li>
+          </ul>
+        </div>
+      </div>
+
+    </article>
+
+    <!-- Placeholder: many more to come -->
+    <article class="card card--placeholder" aria-label="More divisions coming soon">
+      <div class="card__placeholder-content">
+        <h3 class="card__placeholder-title">Many more to come</h3>
+        <div class="card__placeholder-icon" aria-hidden="true">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M9 12h6"></path>
+            <path d="M12 9l3 3-3 3"></path>
+          </svg>
+        </div>
+      </div>
+    </article>
+
+  </div>
+</section>

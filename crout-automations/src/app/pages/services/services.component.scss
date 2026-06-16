@@ -1,0 +1,360 @@
+// ── Services Hub ─────────────────────────────────────────────────────────────
+
+// ---- Keyframes ----
+@keyframes svc-shimmer {
+  0%   { background-position: -400% 0; }
+  100% { background-position:  400% 0; }
+}
+
+// ---- Layout ----
+.svc-hub {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-bg);
+
+  // ---- Background decoration ----
+  &__bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  &__bg-orb {
+    position: absolute;
+    border-radius: var(--radius-full);
+    filter: blur(80px);
+    opacity: 0.35;
+
+    &--1 {
+      width: 600px;
+      height: 600px;
+      top: -100px;
+      right: -150px;
+      background: radial-gradient(circle, rgba(218,113,1,0.18) 0%, transparent 70%);
+    }
+
+    &--2 {
+      width: 500px;
+      height: 500px;
+      bottom: 0;
+      left: -100px;
+      background: radial-gradient(circle, rgba(0,100,148,0.15) 0%, transparent 70%);
+    }
+  }
+
+  &__bg-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(40,37,29,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(40,37,29,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  // ---- Hero section ----
+  &__hero {
+    position: relative;
+    z-index: 1;
+    padding: clamp(var(--space-16), 8vw, var(--space-24)) 0 var(--space-12);
+  }
+
+  &__container {
+    width: 100% !important;
+    margin-inline: auto;
+    padding-inline: var(--space-6);
+  }
+
+  // ---- Breadcrumb ----
+  &__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-6);
+    list-style: none;
+
+    a {
+      color: var(--color-text-muted);
+      text-decoration: none;
+
+      &:hover { color: var(--color-orange); }
+    }
+
+    span[aria-current='page'] {
+      color: var(--color-text);
+      font-weight: 500;
+    }
+  }
+
+  // ---- Badge ----
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--color-text-muted);
+    letter-spacing: 0.04em;
+    margin-bottom: var(--space-5);
+  }
+
+  &__badge-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: var(--radius-full);
+    background: var(--color-orange);
+    flex-shrink: 0;
+  }
+
+  // ---- Heading ----
+  &__heading {
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: 800;
+    color: var(--color-text);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: var(--space-4);
+
+    .accent { color: var(--color-orange); }
+  }
+
+  &__sub {
+    font-size: var(--text-base);
+    color: var(--color-text-muted);
+    line-height: 1.7;
+    max-width: 58ch;
+  }
+
+  // ---- Grid wrap ----
+  &__grid-wrap {
+    position: relative;
+    z-index: 1;
+    padding-bottom: var(--space-16);
+  }
+
+  &__grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-6);
+    align-items: stretch;
+  }
+
+  // ---- CTA wrap ----
+  &__cta-wrap {
+    position: relative;
+    z-index: 1;
+    padding-bottom: clamp(var(--space-16), 8vw, var(--space-24));
+  }
+}
+
+// ── Service Card ─────────────────────────────────────────────────────────────
+.svc-card {
+  // Flex sizing: 2 cards per row on wide, stretching last-row items evenly.
+  // Each card targets ~calc(50% - gap/2). flex-grow fills the last row.
+  flex: 1 1 calc(50% - var(--space-6));
+  min-width: 280px;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-8) var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  text-decoration: none;
+  color: var(--color-text);
+  transition:
+    box-shadow var(--transition-interactive),
+    transform var(--transition-interactive),
+    border-color var(--transition-interactive);
+
+  &:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+    border-color: var(--color-orange);
+  }
+
+  // Blue accent variant
+  &--blue {
+    background: var(--color-navy, #0f2744);
+    border-color: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.9);
+
+    .svc-card__label    { color: var(--color-orange); }
+    .svc-card__tagline  { color: #fff; }
+    .svc-card__desc     { color: rgba(255,255,255,0.6); border-color: rgba(255,255,255,0.1); }
+    .svc-card__features li { color: rgba(255,255,255,0.65); }
+    .svc-card__cta      { color: rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.15); }
+
+    &:hover {
+      box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+      border-color: rgba(218,113,1,0.5);
+    }
+  }
+
+  // Ghost card — no interaction
+  &--ghost {
+    pointer-events: none;
+    cursor: default;
+
+    &.svc-card--blue .svc-ghost {
+      background: linear-gradient(
+        90deg,
+        rgba(255,255,255,0.06) 25%,
+        rgba(255,255,255,0.12) 50%,
+        rgba(255,255,255,0.06) 75%
+      );
+      background-size: 400% 100%;
+    }
+  }
+
+  // Single col on small screens
+  @media (max-width: 640px) {
+    flex-basis: 100%;
+  }
+
+  // ---- Card parts ----
+  &__icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-orange);
+    flex-shrink: 0;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    flex: 1;
+  }
+
+  &__label {
+    font-size: var(--text-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-orange);
+  }
+
+  &__tagline {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--color-text);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  &__desc {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    line-height: 1.65;
+    margin: 0;
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--color-divider);
+    max-width: 52ch;
+  }
+
+  &__features {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    list-style: none;
+    margin: var(--space-2) 0 0;
+    padding: 0;
+    flex: 1;
+
+    li {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      padding-left: var(--space-3);
+      position: relative;
+
+      &::before {
+        content: '–';
+        position: absolute;
+        left: 0;
+        color: var(--color-orange);
+      }
+    }
+  }
+
+  &__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-text-muted);
+    width: fit-content;
+    margin-top: auto;
+    transition:
+      color var(--transition-interactive),
+      border-color var(--transition-interactive);
+
+    svg { transition: transform var(--transition-interactive); }
+
+    .svc-card:hover & {
+      color: var(--color-orange);
+      border-color: var(--color-orange);
+
+      svg { transform: translateX(3px); }
+    }
+  }
+}
+
+// ── Ghost Loader ─────────────────────────────────────────────────────────────
+.svc-ghost {
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-offset) 25%,
+    var(--color-surface-dynamic) 50%,
+    var(--color-surface-offset) 75%
+  );
+  background-size: 400% 100%;
+  animation: svc-shimmer 1.6s ease-in-out infinite;
+
+  @media (prefers-reduced-motion: reduce) { animation: none; }
+
+  &--icon    { width: 48px; height: 48px; border-radius: var(--radius-lg); flex-shrink: 0; }
+  &--label   { height: 13px; width: 55%; margin-bottom: var(--space-2); }
+  &--tagline { height: 18px; width: 80%; margin-bottom: var(--space-3); }
+  &--desc    { height: 14px; width: 100%; margin-bottom: var(--space-2); }
+  &--desc-sm { width: 70%; }
+  &--feature { height: 12px; width: 60%; margin-bottom: var(--space-1); list-style: none; }
+  &--feature-sm { width: 45%; }
+  &--cta     { height: 36px; width: 90px; border-radius: var(--radius-lg); background: var(--color-surface-dynamic) !important; }
+}
+
+// Badge ghost
+.svc-hub__badge-ghost {
+  display: inline-block;
+  width: 120px;
+  height: 12px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.1) 25%,
+    rgba(255,255,255,0.2) 50%,
+    rgba(255,255,255,0.1) 75%
+  );
+  background-size: 400% 100%;
+  animation: svc-shimmer 1.6s ease-in-out infinite;
+  vertical-align: middle;
+}

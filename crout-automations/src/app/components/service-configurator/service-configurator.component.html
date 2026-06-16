@@ -1,0 +1,142 @@
+@if (loading) {
+  <!-- Ghost skeleton -->
+  @for (s of skeletonPackages; track $index) {
+    <div class="pricing__suite pricing__suite--ghost">
+      <div class="ghost ghost--suite-title"></div>
+      <div class="ghost ghost--suite-desc"></div>
+      <div class="ghost ghost--suite-line"></div>
+      <div class="ghost ghost--suite-line"></div>
+      <div class="ghost ghost--suite-line"></div>
+    </div>
+  }
+} @else if (packageViews.length === 0) {
+  <!-- No packages for this service yet -->
+  <div class="svc-configurator__empty">
+    <p>No packages available for this service yet. <a href="/contact-us">Contact us</a> for a tailored quote.</p>
+  </div>
+} @else {
+  <div class="svc-configurator">
+    @for (view of packageViews; track view.pkg.packageId) {
+      <div class="pricing__suite">
+        <div class="pricing__suite-inner">
+
+          <!-- Left: Info -->
+          <div class="pricing__suite-left">
+
+            <div class="pricing__suite-badge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              {{ activePkg(view).discount * 100 | number:'1.0-0' }}% Off &mdash; Bundle Deal
+            </div>
+
+            <h3 class="pricing__suite-title">{{ activePkg(view).packageName }}</h3>
+            <p class="pricing__suite-desc">{{ activePkg(view).packageDescription }}</p>
+
+            <!-- Line items -->
+            <ul class="pricing__suite-items" role="list">
+
+              <!-- Base service rows -->
+              @for (svc of activeServices(view); track svc.serviceId) {
+                @if (!svc.conditional) {
+                  <li class="pricing__suite-item">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span class="pricing__suite-item-label">{{ svc.serviceName }} (base)</span>
+                    <span class="pricing__suite-item-price">R{{ formatPrice(svc.price) }}</span>
+                  </li>
+                }
+              }
+
+              <!-- Addon toggles -->
+              @for (state of view.addonStates; track state.addon.addonId) {
+                <li
+                  class="pricing__suite-item pricing__suite-item--optional"
+                  [class.pricing__suite-item--active]="state.enabled"
+                >
+                  <button
+                    class="pricing__suite-toggle"
+                    [class.pricing__suite-toggle--on]="state.enabled"
+                    [attr.aria-pressed]="state.enabled"
+                    [attr.aria-label]="'Toggle ' + state.addon.addonName"
+                    (click)="toggleAddon(state)"
+                  >
+                    <span class="pricing__suite-toggle-track">
+                      <span class="pricing__suite-toggle-thumb"></span>
+                    </span>
+                  </button>
+                  <span class="pricing__suite-item-label">{{ state.addon.addonName }}</span>
+                  <span class="pricing__suite-item-price pricing__suite-item-price--addon">
+                    + R{{ formatPrice(state.addon.price) }}
+                  </span>
+                </li>
+              }
+
+              <!-- Conditional service toggle -->
+              @if (view.childPkg && view.conditionalService) {
+                <li
+                  class="pricing__suite-item pricing__suite-item--conditional"
+                  [class.pricing__suite-item--active]="view.conditionalEnabled"
+                >
+                  <button
+                    class="pricing__suite-toggle"
+                    [class.pricing__suite-toggle--on]="view.conditionalEnabled"
+                    [attr.aria-pressed]="view.conditionalEnabled"
+                    [attr.aria-label]="'Toggle ' + view.conditionalService.serviceName"
+                    (click)="toggleConditional(view)"
+                  >
+                    <span class="pricing__suite-toggle-track">
+                      <span class="pricing__suite-toggle-thumb"></span>
+                    </span>
+                  </button>
+                  <span class="pricing__suite-item-label">
+                    {{ view.conditionalService.serviceName }}
+                    @if (!view.conditionalEnabled) {
+                      <em class="pricing__suite-optional-label">optional</em>
+                    }
+                  </span>
+                  <span class="pricing__suite-item-price">
+                    + R{{ formatPrice(view.conditionalService.price) }}
+                  </span>
+                </li>
+              }
+
+            </ul>
+          </div>
+
+          <!-- Right: Price block -->
+          <div class="pricing__suite-right">
+            <div class="pricing__suite-price-block">
+              <p class="pricing__suite-price-label">Full price</p>
+              <p class="pricing__suite-price-full">R{{ formatPrice(fullTotal(view)) }}</p>
+
+              <p class="pricing__suite-price-label" style="margin-top: 0.75rem">Bundle price</p>
+
+              @if (discountUnlocked(view)) {
+                <div class="pricing__suite-price-now">
+                  <span class="pricing__suite-price-currency">R</span>
+                  <span class="pricing__suite-price-amount">{{ formatPrice(discountedTotal(view)) }}</span>
+                </div>
+                <div class="pricing__suite-price-saving">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  You save R{{ formatPrice(saving(view)) }}
+                </div>
+              } @else {
+                <div class="pricing__suite-price-now pricing__suite-price-now--locked">
+                  <span class="pricing__suite-price-currency">R</span>
+                  <span class="pricing__suite-price-amount">{{ formatPrice(fullTotal(view)) }}</span>
+                </div>
+                <div class="pricing__suite-discount-hint">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  Select {{ addonsNeededForDiscount(view) }} more add-on{{ addonsNeededForDiscount(view) === 1 ? '' : 's' }} to unlock
+                  {{ activePkg(view).discount * 100 | number:'1.0-0' }}% off
+                </div>
+              }
+            </div>
+
+            <a href="/contact-us/" class="pricing__suite-cta">Get Started</a>
+            <p class="pricing__suite-cta-note">Custom scoping call included</p>
+          </div>
+
+        </div>
+      </div>
+    }
+  </div>
+}

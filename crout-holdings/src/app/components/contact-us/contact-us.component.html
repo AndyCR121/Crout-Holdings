@@ -1,0 +1,111 @@
+<section class="contact">
+
+  <!-- Left: heading block -->
+  <div class="contact__left">
+    <span class="contact__eyebrow">Contact Us</span>
+    <h1 class="contact__heading">Let's talk.</h1>
+    <p class="contact__sub">
+      Whether you're a business looking for a solution, a potential partner,
+      or simply want to find out more about what Crout Holdings can do
+      for you — fill in the form and we'll be in touch.
+    </p>
+
+    <ul class="contact__info">
+      <li>
+        <span class="contact__info-label">Email</span>
+        <a class="contact__info-value" href="mailto:info@crout-holdings.com">info&#64;crout-holdings.com</a>
+      </li>
+      <li>
+        <span class="contact__info-label">Whatsapp</span>
+        <a class="contact__info-value" href="https://wa.me/27646569894" target="_blank">(+27) 64 656 9894</a>
+      </li>
+      <li>
+        <span class="contact__info-label">Based in</span>
+        <span class="contact__info-value">South Africa</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Right: form -->
+  <div class="contact__right">
+
+    <!-- Success state -->
+    <div class="contact__success" *ngIf="status === 'success'">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M8 12l3 3 5-5" />
+      </svg>
+      <h2>Message sent</h2>
+      <p>Thank you for reaching out. We'll get back to you as soon as possible.</p>
+      <button class="btn btn--ghost" (click)="reset()">Send another message</button>
+    </div>
+
+    <!-- Form -->
+    <form class="form" *ngIf="status !== 'success'" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+
+      <div class="form__row form__row--two">
+        <!-- Name -->
+        <div class="form__field" [class.form__field--error]="isInvalid('name')">
+          <label class="form__label" for="ch-name">Full Name <span aria-hidden="true">*</span></label>
+          <input id="ch-name" class="form__input" type="text" formControlName="name" autocomplete="name"
+            placeholder="James Doe" />
+          <span class="form__error" *ngIf="isInvalid('name')">Please enter your full name.</span>
+        </div>
+
+        <!-- Email -->
+        <div class="form__field" [class.form__field--error]="isInvalid('email')">
+          <label class="form__label" for="ch-email">Email Address <span aria-hidden="true">*</span></label>
+          <input id="ch-email" class="form__input" type="email" formControlName="email" autocomplete="email"
+            placeholder="you@company.com" />
+          <span class="form__error" *ngIf="isInvalid('email')">Please enter a valid email address.</span>
+        </div>
+      </div>
+
+      <div class="form__row form__row--two">
+        <!-- Company -->
+        <div class="form__field">
+          <label class="form__label" for="ch-company">Company <span class="form__optional">(optional)</span></label>
+          <input id="ch-company" class="form__input" type="text" formControlName="company" autocomplete="organization"
+            placeholder="Acme Corp" />
+        </div>
+
+        <!-- Category -->
+        <div class="form__field" [class.form__field--error]="isInvalid('category')">
+          <label class="form__label" for="ch-category">Category <span aria-hidden="true">*</span></label>
+          <div class="form__select-wrap">
+            <select id="ch-category" class="form__select" formControlName="category">
+              <option value="" disabled selected>Select a category</option>
+              <option *ngFor="let cat of categories" [value]="cat.value">{{ cat.label }}</option>
+            </select>
+            <svg class="form__select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </div>
+          <span class="form__error" *ngIf="isInvalid('category')">Please select a category.</span>
+        </div>
+      </div>
+
+      <!-- Message -->
+      <div class="form__field" [class.form__field--error]="isInvalid('message')">
+        <label class="form__label" for="ch-message">Message <span aria-hidden="true">*</span></label>
+        <textarea id="ch-message" class="form__textarea" formControlName="message" rows="6"
+          placeholder="Tell us what you're looking for..."></textarea>
+        <span class="form__error" *ngIf="isInvalid('message')">Please enter a message (min. 10 characters).</span>
+      </div>
+
+      <!-- Error banner -->
+      <div class="form__banner form__banner--error" *ngIf="status === 'error'">
+        Something went wrong. Please try again or email us directly.
+      </div>
+
+      <!-- Submit — disabled while form is invalid OR while submitting -->
+      <button class="btn btn--primary" type="submit" [disabled]="form.invalid || status === 'submitting'">
+        <span *ngIf="status !== 'submitting'">Send Message</span>
+        <span *ngIf="status === 'submitting'" class="btn__spinner" aria-label="Sending"></span>
+      </button>
+
+    </form>
+  </div>
+
+</section>

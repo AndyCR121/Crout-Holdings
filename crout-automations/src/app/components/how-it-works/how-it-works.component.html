@@ -1,0 +1,23 @@
+<section class="how" id="how-it-works" aria-label="How it works">
+  <div class="how__container">
+
+    <div class="how__header" caScrollReveal>
+      <span class="how__eyebrow">The Process</span>
+      <h2 class="how__headline">Up and running in <span class="how__headline-accent">7 days</span></h2>
+      <p class="how__sub">No lengthy discovery phases. No bloated retainers. We move fast and keep it simple.</p>
+    </div>
+
+    <ol class="how__steps" role="list" caScrollReveal [staggerChildren]="true">
+      @for (step of steps; track step.number) {
+        <li class="how__step">
+          <div class="how__step-number" aria-hidden="true">{{ step.number }}</div>
+          <div class="how__step-body">
+            <h3 class="how__step-title">{{ step.title }}</h3>
+            <p class="how__step-copy">{{ step.copy }}</p>
+          </div>
+        </li>
+      }
+    </ol>
+
+  </div>
+</section>
