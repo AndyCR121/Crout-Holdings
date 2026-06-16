@@ -3,7 +3,6 @@ import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http
 import { Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { EnvironmentService } from './environment.service';
-import { environment } from '../../environments/environment';
 
 export interface IPaystackCard {
   authorization_code: string;
@@ -65,7 +64,6 @@ export class PaystackService {
   private readonly env  = inject(EnvironmentService);
   private get base() { return this.env.apiUrl; }
 
-  /** Read ca_jwt cookie and return Authorization headers. */
   private authHeaders(): HttpHeaders {
     const match = document.cookie.match(/(?:^|;\s*)ca_jwt=([^;]*)/);
     const token = match ? decodeURIComponent(match[1]) : '';
@@ -73,27 +71,29 @@ export class PaystackService {
   }
 
   /**
-   * Ensures the Paystack inline script is loaded before resolving.
-   * Works in both standalone (index.html) and WordPress (no index.html) contexts
-   * by dynamically injecting the script tag if PaystackPop is not yet on window.
+   * Loads Paystack v2 inline script.
+   * v2 is required for PaystackPop.resumeTransaction().
+   * Replaces any existing v1 script tag to avoid version conflicts.
    */
   private ensurePaystackScript(): Promise<void> {
     return new Promise((resolve, reject) => {
-      if ((window as any).PaystackPop) {
+      const PAYSTACK_V2 = 'https://js.paystack.co/v2/inline.js';
+
+      // Already loaded v2
+      if ((window as any).PaystackPop?.resumeTransaction) {
         resolve();
         return;
       }
-      const existing = document.querySelector('script[src*="paystack.co"]');
-      if (existing) {
-        existing.addEventListener('load', () => resolve());
-        existing.addEventListener('error', () => reject(new Error('Paystack script failed to load')));
-        return;
-      }
+
+      // Remove any stale v1 script to avoid version conflicts
+      const stale = document.querySelector('script[src*="paystack.co"]');
+      if (stale) stale.remove();
+
       const script = document.createElement('script');
-      script.src = 'https://js.paystack.co/v1/inline.js';
+      script.src   = PAYSTACK_V2;
       script.async = true;
       script.onload  = () => resolve();
-      script.onerror = () => reject(new Error('Paystack script failed to load'));
+      script.onerror = () => reject(new Error('Paystack v2 script failed to load'));
       document.head.appendChild(script);
     });
   }
@@ -139,9 +139,6 @@ export class PaystackService {
       );
   }
 
-  /**
-   * Remove a saved card from a company's Paystack customer record.
-   */
   removeCard(companyId: number, authorizationCode: string): Observable<{ success: boolean }> {
     return this.http
       .delete<{ success: boolean }>(
@@ -157,9 +154,6 @@ export class PaystackService {
       );
   }
 
-  /**
-   * Set a card as the default (first) payment method for a company.
-   */
   setDefaultCard(companyId: number, authorizationCode: string): Observable<{ success: boolean }> {
     return this.http
       .patch<{ success: boolean }>(
@@ -193,18 +187,16 @@ export class PaystackService {
   }
 
   /**
-   * Open Paystack inline popup using an access_code issued by the backend.
+   * Open Paystack inline popup using an access_code from the backend.
    *
-   * Uses PaystackPop.resumeTransaction(accessCode) — NOT setup().
-   * resumeTransaction() resumes a pre-initialised transaction using the
-   * access_code from POST /transaction/initialize, so no key/email/amount
-   * is needed on the frontend. Using setup() alongside an access_code causes
-   * Paystack to fire a second POST /checkout/request_inline with no amount
-   * set, resulting in a 400 "Transaction amount not set" error.
+   * Uses PaystackPop.resumeTransaction(accessCode) (v2 API).
+   * This resumes a pre-initialised transaction — no public key, email,
+   * or amount is needed on the frontend, avoiding the v1 setup() issue
+   * that caused POST /checkout/request_inline to 400 with "amount not set".
    */
   openPopup(
     accessCode: string,
-    _email:     string,   // kept for API compatibility — not needed by resumeTransaction
+    _email:     string,   // kept for API compatibility — unused by resumeTransaction
     onSuccess:  (reference: string) => void,
     onClose?:   () => void,
   ): void {
