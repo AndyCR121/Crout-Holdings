@@ -28,11 +28,9 @@ export class AdminCompaniesComponent implements OnInit {
   pageSize = 10;
   total    = signal(0);
 
-  // Per-row draft map
   drafts = new Map<number, Partial<ICompany>>();
   saving = signal(false);
 
-  // Create
   showCreate   = signal(false);
   createBuffer = signal<Partial<ICompany>>({
     companyName: '', industry: undefined, email: undefined,
@@ -44,7 +42,7 @@ export class AdminCompaniesComponent implements OnInit {
 
   ngOnInit(): void {
     const user = this.auth.currentUser();
-    if (!user?.isAdmin) { this.router.navigate(['/']); return; }
+    if (!user?.isAdmin) { this.router.navigate(['/client/dashboard']); return; }
     this.load();
   }
 
@@ -65,9 +63,7 @@ export class AdminCompaniesComponent implements OnInit {
   prevPage(): void { if (this.page() > 1) { this.page.update(p => p - 1); this.load(); } }
   nextPage(): void { if (this.hasMore) { this.page.update(p => p + 1); this.load(); } }
 
-  // ── Edit (isolated per row) ───────────────────────────────────────────────
   isEditing(id: number): boolean { return this.drafts.has(id); }
-
   getDraft(id: number): Partial<ICompany> { return this.drafts.get(id) ?? {}; }
 
   startEdit(c: ICompany): void {
@@ -97,7 +93,6 @@ export class AdminCompaniesComponent implements OnInit {
     });
   }
 
-  // ── Create ────────────────────────────────────────────────────────────────
   openCreate(): void {
     this.createBuffer.set({ companyName: '', industry: undefined, email: undefined, phone: undefined, address: undefined, active: true });
     this.showCreate.set(true);
@@ -121,7 +116,6 @@ export class AdminCompaniesComponent implements OnInit {
     });
   }
 
-  // ── Delete ────────────────────────────────────────────────────────────────
   async onDelete(c: ICompany): Promise<void> {
     const confirmed = await this.confirm.open(
       'Delete Company',

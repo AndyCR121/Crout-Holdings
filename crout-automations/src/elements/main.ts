@@ -51,10 +51,12 @@
 import { createApplication } from '@angular/platform-browser';
 import { createCustomElement } from '@angular/elements';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
+import { authInterceptor } from '../app/interceptors/auth.interceptor';
+import { errorInterceptor } from '../app/interceptors/error.interceptor';
 
-// ── Public section components ──────────────────────────────────────────────
+// ── Public section components ────────────────────────────────────────────────
 import { HeroComponent } from '../app/components/hero/hero.component';
 import { PainPointComponent } from '../app/components/pain-point/pain-point.component';
 import { ServicesOverviewComponent } from '../app/components/services-overview/services-overview.component';
@@ -64,28 +66,28 @@ import { PricingComponent } from '../app/components/pricing/pricing.component';
 import { CtaBannerComponent } from '../app/components/cta-banner/cta-banner.component';
 import { PrivacyPolicyComponent } from '../app/components/privacy-policy/privacy-policy.component';
 
-// ── Auth / Account ─────────────────────────────────────────────────────────
+// ── Auth / Account ───────────────────────────────────────────────────────────
 import { AccountButtonComponent } from '../app/components/account-button/account-button.component';
 import { AuthModalComponent } from '../app/components/auth-modal/auth-modal.component';
 
-// ── NavBar / Footer ────────────────────────────────────────────────────────
+// ── NavBar / Footer ──────────────────────────────────────────────────────────
 import { NavbarComponent } from '../app/components/navbar/navbar.component';
 import { FooterComponent } from '../app/components/footer/footer.component';
 
-// ── Misc public pages ──────────────────────────────────────────────────────
+// ── Misc public pages ────────────────────────────────────────────────────────
 import { NotFoundComponent } from '../app/pages/not-found/not-found.component';
 import { HomeComponent } from '../app/pages/home/home.component';
 import { ContactComponent } from '../app/pages/contact/contact.component';
 import { ServicesComponent } from '../app/pages/services/services.component';
 import { ServiceConfiguratorComponent } from '../app/components/service-configurator/service-configurator.component';
 
-// ── Service sub-pages ──────────────────────────────────────────────────────
+// ── Service sub-pages ────────────────────────────────────────────────────────
 import { MarketingSystemsComponent } from '../app/pages/services/marketing-systems/marketing-systems.component';
 import { ProjectManagementComponent } from '../app/pages/services/project-management/project-management.component';
 import { QuoteSystemComponent } from '../app/pages/services/quote-system/quote-system.component';
 import { WhatsappAgentComponent } from '../app/pages/services/whatsapp-agent/whatsapp-agent.component';
 
-// ── Admin sub-pages (standalone — embed AdminSidebarComponent internally) ──
+// ── Admin sub-pages (standalone — embed AdminSidebarComponent internally) ────
 import { AdminUsersComponent } from '../app/pages/admin/users/admin-users.component';
 import { AdminServicesComponent } from '../app/pages/admin/services/admin-services.component';
 import { AdminPackagesComponent } from '../app/pages/admin/packages/admin-packages.component';
@@ -93,7 +95,7 @@ import { AdminAddonsComponent } from '../app/pages/admin/addons/admin-addons.com
 import { AdminServiceFeaturesComponent } from '../app/pages/admin/service-features/admin-service-features.component';
 import { AdminCompaniesComponent } from '../app/pages/admin/companies/admin-companies.component';
 
-// ── Portal sub-pages (standalone — embed PortalSidebarComponent internally) ─
+// ── Portal sub-pages (standalone — embed PortalSidebarComponent internally) ──
 import { PortalDashboardComponent } from '../app/pages/portal/dashboard/portal-dashboard.component';
 import { PortalServicesComponent } from '../app/pages/portal/services/portal-services.component';
 import { PortalProfileComponent } from '../app/pages/portal/profile/portal-profile.component';
@@ -104,45 +106,47 @@ import { PortalPaymentMethodsComponent } from '../app/pages/portal/billing/payme
   const app = await createApplication({
     providers: [
       provideAnimations(),
-      provideHttpClient(withFetch()),
+      provideHttpClient(
+        withFetch(),
+        withInterceptors([authInterceptor, errorInterceptor])
+      ),
       provideRouter([])
     ]
   });
 
   const elements: [string, any][] = [
-    // ── Public section components ────────────────────────────────────────
-    // ['ca-hero',                   HeroComponent],
-    // ['ca-pain-point',             PainPointComponent],
-    // ['ca-services-overview',      ServicesOverviewComponent],
-    // ['ca-how-it-works',           HowItWorksComponent],
-    // ['ca-why-crout',              WhyCroutComponent],
-    // ['ca-pricing',                PricingComponent],
-    // ['ca-cta-banner',             CtaBannerComponent],
+    // ── Public section components ──────────────────────────────────────────
+    ['ca-hero',                   HeroComponent],
+    ['ca-pain-point',             PainPointComponent],
+    ['ca-services-overview',      ServicesOverviewComponent],
+    ['ca-how-it-works',           HowItWorksComponent],
+    ['ca-why-crout',              WhyCroutComponent],
+    ['ca-pricing',                PricingComponent],
+    ['ca-cta-banner',             CtaBannerComponent],
     ['ca-privacy-policy',         PrivacyPolicyComponent],
+    ['ca-service-configurator',   ServiceConfiguratorComponent],
 
-    // ['ca-service-configurator',   ServiceConfiguratorComponent],
-
-    // ── Auth / Account ───────────────────────────────────────────────────
+    // ── Auth / Account ─────────────────────────────────────────────────────
     ['ca-account-button',         AccountButtonComponent],
     ['ca-auth-modal',             AuthModalComponent],
 
-    // ── NavBar / Footer ──────────────────────────────────────────────────
+    // ── NavBar / Footer ────────────────────────────────────────────────────
     ['ca-navbar',                 NavbarComponent],
     ['ca-footer',                 FooterComponent],
 
-    // ── Misc public pages ────────────────────────────────────────────────
+    // ── Misc public pages ──────────────────────────────────────────────────
     ['ca-not-found',              NotFoundComponent],
     ['ca-home',                   HomeComponent],
     ['ca-contact',                ContactComponent],
     ['ca-services',               ServicesComponent],
 
-    // ── Service sub-pages ────────────────────────────────────────────────
+    // ── Service sub-pages ──────────────────────────────────────────────────
     ['ca-quote-system',           QuoteSystemComponent],
     ['ca-whatsapp-agent',         WhatsappAgentComponent],
     ['ca-project-management',     ProjectManagementComponent],
     ['ca-marketing-systems',      MarketingSystemsComponent],
 
-    // ── Admin sub-pages ──────────────────────────────────────────────────
+    // ── Admin sub-pages ────────────────────────────────────────────────────
     ['ca-admin-users',            AdminUsersComponent],
     ['ca-admin-services',         AdminServicesComponent],
     ['ca-admin-packages',         AdminPackagesComponent],
@@ -150,7 +154,7 @@ import { PortalPaymentMethodsComponent } from '../app/pages/portal/billing/payme
     ['ca-admin-service-features', AdminServiceFeaturesComponent],
     ['ca-admin-companies',        AdminCompaniesComponent],
 
-    // ── Portal sub-pages ─────────────────────────────────────────────────
+    // ── Portal sub-pages ───────────────────────────────────────────────────
     ['ca-portal-dashboard',       PortalDashboardComponent],
     ['ca-portal-services',        PortalServicesComponent],
     ['ca-portal-profile',         PortalProfileComponent],

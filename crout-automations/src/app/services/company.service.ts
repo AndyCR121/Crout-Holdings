@@ -1,5 +1,5 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, of, tap } from 'rxjs';
 import { ICompany } from '../interfaces/i-service.interface';
 import { EnvironmentService } from './environment.service';
@@ -29,6 +29,13 @@ export class CompanyService {
     this._companies().find(c => c.active)?.companyName ?? null
   );
 
+  /** Read ca_jwt cookie and return Authorization headers. */
+  private authHeaders(): HttpHeaders {
+    const match = document.cookie.match(/(?:^|;\s*)ca_jwt=([^;]*)/);
+    const token = match ? decodeURIComponent(match[1]) : '';
+    return new HttpHeaders({ Authorization: `Bearer ${token}` });
+  }
+
   /**
    * Fetch companies for the given user ID.
    * Skips the network call if data was already loaded this session.
@@ -38,7 +45,7 @@ export class CompanyService {
     if (this._loaded && !force) return;
     this._loading.set(true);
     this.http
-      .get<ICompany[]>(`${this.base}/profile/companies`, { withCredentials: true })
+      .get<ICompany[]>(`${this.base}/profile/companies`, { headers: this.authHeaders(), withCredentials: true })
       .pipe(
         tap(c => {
           this._companies.set(c);
