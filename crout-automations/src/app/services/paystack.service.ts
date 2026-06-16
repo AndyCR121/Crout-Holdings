@@ -71,43 +71,45 @@ export class PaystackService {
   }
 
   /**
-   * Ensures Paystack v2 inline script is loaded.
+   * Loads Paystack v2 inline script and resolves with a fresh PaystackPop instance.
    *
-   * IMPORTANT — v2 API facts (confirmed from source):
-   *   - window.PaystackPop is a CLASS/CONSTRUCTOR, not a static utility object.
-   *   - There is NO static PaystackPop.resumeTransaction() method.
-   *   - To use an access_code, you instantiate: new PaystackPop()
-   *     then call instance.newTransaction({ accessCode }) which internally
-   *     calls verify_access_code and opens the iframe.
+   * v2 API (confirmed from source):
+   *   - window.PaystackPop is a CLASS — resumeTransaction is an INSTANCE method.
+   *   - Correct usage: new PaystackPop().resumeTransaction(accessCode, callbacks)
+   *   - resumeTransaction internally calls this.newTransaction({ accessCode, ... })
    *
-   * We delete any stale global (e.g. v1 loaded by WordPress) before
-   * injecting v2 so the constructor is always the v2 version.
+   * WordPress / themes often load Paystack v1 which attaches a different
+   * window.PaystackPop object without resumeTransaction. We force-reload v2
+   * every time by removing the stale script tag AND deleting the global,
+   * then verify the instance has resumeTransaction before resolving.
    */
-  private ensurePaystackScript(): Promise<void> {
+  private loadPaystackV2(): Promise<any> {
     return new Promise((resolve, reject) => {
       const PAYSTACK_V2 = 'https://js.paystack.co/v2/inline.js';
 
-      if ((window as any).__paystackV2Loaded) {
-        resolve();
-        return;
-      }
+      // Remove any existing Paystack script tag (v1 or v2)
+      document.querySelectorAll('script[src*="paystack.co"]').forEach(s => s.remove());
 
-      // Remove stale DOM script tag (e.g. v1 from a WordPress plugin/theme)
-      const stale = document.querySelector('script[src*="paystack.co"]');
-      if (stale) stale.remove();
-
-      // Delete the already-executed global from memory — removing the <script>
-      // tag alone does NOT clear an already-executed global.
+      // Delete the global so v2 re-attaches cleanly
       delete (window as any).PaystackPop;
 
       const script = document.createElement('script');
       script.src   = PAYSTACK_V2;
       script.async = true;
       script.onload = () => {
-        (window as any).__paystackV2Loaded = true;
-        resolve();
+        const PopClass = (window as any).PaystackPop;
+        if (!PopClass) {
+          reject(new Error('PaystackPop not found after v2 script load'));
+          return;
+        }
+        const instance = new PopClass();
+        if (typeof instance.resumeTransaction !== 'function') {
+          reject(new Error('resumeTransaction missing on PaystackPop instance — v2 did not load correctly'));
+          return;
+        }
+        resolve(instance);
       };
-      script.onerror = () => reject(new Error('Paystack v2 script failed to load'));
+      script.onerror = () => reject(new Error('Paystack v2 script failed to load from CDN'));
       document.head.appendChild(script);
     });
   }
@@ -203,29 +205,22 @@ export class PaystackService {
   /**
    * Open Paystack inline popup using an access_code from the backend.
    *
-   * v2 correct usage:
-   *   const popup = new PaystackPop();
-   *   popup.newTransaction({ accessCode, onSuccess, onCancel })
+   * Loads v2 fresh each time (clearing any stale v1 global from WordPress),
+   * then calls instance.resumeTransaction(accessCode, callbacks).
    *
-   * This internally calls verify_access_code on Paystack's API
-   * (no public key / amount / email needed on the frontend)
-   * and opens the checkout iframe directly.
-   *
-   * Note: onCancel maps to the v2 onCancel callback (not onClose).
+   * resumeTransaction signature (from v2 source):
+   *   resumeTransaction(accessCode: string, { onSuccess, onCancel, onLoad, onError })
    */
   openPopup(
     accessCode: string,
-    _email:    string,   // kept for API compatibility — not needed by v2 accessCode flow
+    _email:    string,
     onSuccess: (reference: string) => void,
     onClose?:  () => void,
   ): void {
-    this.ensurePaystackScript()
-      .then(() => {
-        const PaystackPop = (window as any).PaystackPop;
-        const popup = new PaystackPop();
-
-        popup.newTransaction({
-          accessCode,
+    this.loadPaystackV2()
+      .then((popup: any) => {
+        console.debug('[PaystackService] v2 loaded, calling resumeTransaction with accessCode:', accessCode);
+        popup.resumeTransaction(accessCode, {
           onSuccess: (res: { reference: string }) => {
             this.verifyTransaction(res.reference).subscribe(result => {
               console.debug('[PaystackService] popup verified:', result);
