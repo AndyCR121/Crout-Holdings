@@ -11,8 +11,18 @@ public interface IPaystackProxyService
     /// This MUST be called after the Paystack popup fires onSuccess so that
     /// Paystack commits the authorization_code to the customer record.
     /// Without this call, GET /customer/{email} returns no authorizations.
+    /// After a successful verify, the R50 card-capture charge is automatically
+    /// refunded via RefundTransactionAsync.
     /// </summary>
     Task<object> VerifyTransactionAsync(string reference);
+
+    /// <summary>
+    /// Refund a transaction by reference.
+    /// Called automatically after a successful card-capture verify to return
+    /// the R50 tokenisation charge to the client.
+    /// POST https://api.paystack.co/refund
+    /// </summary>
+    Task<object> RefundTransactionAsync(string reference);
 
     /// <summary>
     /// Deactivate (remove) a saved card authorization from a company's

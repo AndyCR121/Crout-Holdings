@@ -14,6 +14,7 @@ namespace CroutApi.Services;
 ///   2. Frontend opens Paystack popup
 ///   3. Popup fires onSuccess(reference)
 ///   4. POST /api/paystack/verify      → commits authorization to customer record
+///                                        then immediately refunds the R50 charge
 ///   5. GET  /api/paystack/companies   → customer authorizations now visible
 /// </summary>
 public class PaystackProxyService(
@@ -44,7 +45,7 @@ public class PaystackProxyService(
     private static StringContent JsonBody(object payload) =>
         new(JsonSerializer.Serialize(payload, CamelCase), Encoding.UTF8, "application/json");
 
-    // ── Validate company belongs to user ─────────────────────────────────────
+    // ── Validate company belongs to user ────────────────────────────────────────
     private async Task<CroutApi.Models.Company> GetOwnedCompanyAsync(int userId, int companyId)
     {
         var userCompanies = await companies.GetByUserAsync(userId);
@@ -56,7 +57,7 @@ public class PaystackProxyService(
         return company;
     }
 
-    // ── Fetch reusable cards for a given email ────────────────────────────────
+    // ── Fetch reusable cards for a given email ────────────────────────────
     private async Task<List<object>> FetchReusableCardsAsync(string email)
     {
         var cards = new List<object>();
@@ -112,7 +113,7 @@ public class PaystackProxyService(
         return cards;
     }
 
-    // ── Verify transaction ────────────────────────────────────────────────────
+    // ── Verify transaction + auto-refund the R50 card-capture charge ──────────
     public async Task<object> VerifyTransactionAsync(string reference)
     {
         AddAuth();
@@ -126,10 +127,47 @@ public class PaystackProxyService(
                      ? s.GetString() : "unknown";
         var message = doc.RootElement.TryGetProperty("message", out var m) ? m.GetString() : null;
 
-        return new { verified = status == "success", status, message };
+        // Card successfully captured — immediately refund the R50 tokenisation charge
+        object? refundResult = null;
+        if (status == "success")
+        {
+            try
+            {
+                refundResult = await RefundTransactionAsync(reference);
+            }
+            catch (Exception ex)
+            {
+                // Refund failure must NOT block the card from being saved.
+                // Log and surface the warning so it can be investigated manually.
+                refundResult = new { success = false, message = $"Refund failed: {ex.Message}" };
+            }
+        }
+
+        return new { verified = status == "success", status, message, refund = refundResult };
     }
 
-    // ── Subscriptions ─────────────────────────────────────────────────────────
+    // ── Refund transaction ─────────────────────────────────────────────────────
+    public async Task<object> RefundTransactionAsync(string reference)
+    {
+        AddAuth();
+        var response = await http.PostAsync(
+            "https://api.paystack.co/refund",
+            JsonBody(new
+            {
+                transaction    = reference,
+                merchant_note  = "Auto-refund: R50 card tokenisation charge",
+            }));
+
+        var json = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(json);
+
+        var success = doc.RootElement.TryGetProperty("status", out var s) && s.GetBoolean();
+        var message = doc.RootElement.TryGetProperty("message", out var m) ? m.GetString() : null;
+
+        return new { success, message };
+    }
+
+    // ── Subscriptions ──────────────────────────────────────────────────────────
     public async Task<object> GetSubscriptionsAsync(int userId)
     {
         var userCompanies = await companies.GetByUserAsync(userId);
@@ -158,7 +196,7 @@ public class PaystackProxyService(
         return results;
     }
 
-    // ── Per-company cards ─────────────────────────────────────────────────────
+    // ── Per-company cards ──────────────────────────────────────────────────
     public async Task<object> GetCompanyBillingAsync(int userId)
     {
         var userCompanies = await companies.GetByUserAsync(userId);
@@ -183,7 +221,7 @@ public class PaystackProxyService(
         return results;
     }
 
-    // ── Initialise card-capture ───────────────────────────────────────────────
+    // ── Initialise card-capture ─────────────────────────────────────────────
     public async Task<object> InitialiseCardCaptureAsync(int userId, int companyId)
     {
         var company = await GetOwnedCompanyAsync(userId, companyId);
@@ -246,7 +284,7 @@ public class PaystackProxyService(
         return new { success = status, message };
     }
 
-    // ── Set default card ──────────────────────────────────────────────────────
+    // ── Set default card ───────────────────────────────────────────────────────
     public async Task<object> SetDefaultCardAsync(int userId, int companyId, string authorizationCode)
     {
         var company = await GetOwnedCompanyAsync(userId, companyId);
