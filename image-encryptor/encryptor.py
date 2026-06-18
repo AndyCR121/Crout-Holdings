@@ -1,10 +1,19 @@
 """
-Core encode/decode pipeline.
+Core encode/decode pipeline using LSB steganography.
 
-All decomposers are bypassed in favour of reading/writing raw bytes directly.
-This is simpler, lossless, and works for every supported format.
+How it works:
+  1. Read the input file as raw bytes.
+  2. Prepend a header: MAGIC(4) + original_byte_count(4, big-endian).
+  3. Embed the payload into the 2 LSBs of each R/G/B channel of the
+     key image pixels.  The visible pixel colours barely change.
+  4. Save the result as PNG — compression ratio stays close to the
+     original because most pixels are untouched.
+  5. Write a .config.json with metadata for decoding.
 
-Config schema stored as <stem>.config.json:
+Capacity:  width * height * 0.75 bytes
+Example:   1920x1080 key image  ->  ~1.97 MB payload capacity
+
+Config schema (v2):
 {
   "version": 2,
   "original_filename": "report.pdf",
@@ -13,7 +22,7 @@ Config schema stored as <stem>.config.json:
   "config_path": "report.config.json",
   "file_type": "pdf",
   "key_image": "key.png",
-  "key_hash": "<sha256 of key pixel bytes>",
+  "key_hash": "<sha256 of raw key pixel bytes>",
   "byte_count": 12345,
   "width": 1920,
   "height": 1080
@@ -39,8 +48,7 @@ SUPPORTED_EXTENSIONS = {
 
 
 class Encryptor:
-    MAGIC   = b"CHIE"        # Crout Holdings Image Encryption
-    EOF_PIX = (255, 0, 255)  # Magenta sentinel
+    MAGIC = b"CHIE"   # Crout Holdings Image Encryption
 
     # ------------------------------------------------------------------ encode
 
@@ -63,45 +71,41 @@ class Encryptor:
         # 1. Read raw bytes
         raw_bytes = input_path.read_bytes()
 
-        # 2. Build payload: MAGIC(4) + length(4 big-endian) + data
+        # 2. Build payload: MAGIC(4) + byte_count(4 big-endian) + data
         payload = self.MAGIC + len(raw_bytes).to_bytes(4, "big") + raw_bytes
 
         # 3. Load key image
         km      = KeyManager(key_path)
-        key_img = km.load()
+        key_img = km.load().convert("RGB")
         w, h    = key_img.size
-        max_bytes = w * h * 3
+        pixels  = list(key_img.getdata())
 
-        # 4. Capacity check (payload + file-type marker pixel + EOF pixel)
-        if len(payload) + 6 > max_bytes:
+        # 4. Capacity check
+        pm = PixelMapper()
+        required_pixels = pm.capacity_pixels(len(payload))
+        if required_pixels > len(pixels):
+            capacity_mb = pm.capacity_bytes(len(pixels)) / 1_048_576
             raise ValueError(
-                f"Key image too small. Need {len(payload)+6} bytes, "
-                f"have {max_bytes}."
+                f"Key image too small. "
+                f"Payload is {len(payload)/1_048_576:.2f} MB but key image "
+                f"can only hold {capacity_mb:.2f} MB. "
+                f"Use a larger key image."
             )
 
-        # 5. Convert payload bytes -> pixel list
-        pm     = PixelMapper()
-        pixels = pm.bytes_to_pixels(payload)
+        # 5. Embed payload into LSBs of key image pixels
+        new_pixels = pm.embed(payload, pixels)
 
-        # 6. Append file-type marker + EOF sentinel
-        pixels.append(FileTypeRegistry.marker_for(ext))
-        pixels.append(self.EOF_PIX)
+        # 6. Save output image — same dimensions, barely changed pixel values
+        out_img = Image.new("RGB", (w, h))
+        out_img.putdata(new_pixels)
+        out_img.save(str(output_path), format="PNG", optimize=True)
 
-        # 7. Write pixels into a copy of the key image
-        out_img   = key_img.copy().convert("RGB")
-        img_array = list(out_img.getdata())
-        for i, pix in enumerate(pixels):
-            img_array[i] = pix
-        out_img.putdata(img_array)
-        out_img.save(str(output_path), format="PNG")
-
-        # 8. Key hash for tamper detection
-        key_pixels = list(key_img.convert("RGB").getdata())
-        key_hash   = hashlib.sha256(
-            bytes([v for px in key_pixels for v in px])
+        # 7. Key hash for tamper detection on decode
+        key_hash = hashlib.sha256(
+            bytes([v for px in pixels for v in px])
         ).hexdigest()
 
-        # 9. Save config
+        # 8. Write config
         config = {
             "version":            2,
             "original_filename":  input_path.name,
@@ -129,6 +133,7 @@ class Encryptor:
         encrypted_path = Path(encrypted_path)
         config_path    = Path(config_path)
         output_dir     = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
         config     = json.loads(config_path.read_text())
         byte_count = config["byte_count"]
@@ -136,31 +141,28 @@ class Encryptor:
         # Recover original filename
         original_filename = config.get("original_filename")
         if not original_filename:
-            ext = "." + config["file_type"]
+            ext  = "." + config["file_type"]
             stem = encrypted_path.stem.removesuffix("-encrypted")
             original_filename = stem + ext
 
-        # Read encrypted image pixels
+        # Load encrypted image pixels
         enc_img   = Image.open(str(encrypted_path)).convert("RGB")
-        img_array = list(enc_img.getdata())
+        pixels    = list(enc_img.getdata())
 
-        # How many pixels hold the payload?
-        total_payload_bytes = 4 + 4 + byte_count  # MAGIC + length + data
-        total_pixels = -(-total_payload_bytes // 3)  # ceiling division
+        # Extract payload bytes from LSBs
+        pm          = PixelMapper()
+        header_size = 8   # MAGIC(4) + length(4)
+        all_bytes   = pm.extract(pixels, header_size + byte_count)
 
-        pm        = PixelMapper()
-        all_bytes = pm.pixels_to_bytes(img_array[:total_pixels])
-
-        # Validate magic header
+        # Validate magic
         if all_bytes[:4] != self.MAGIC:
             raise ValueError(
                 "Magic header mismatch — wrong key image or corrupted file."
             )
 
-        # Extract original data
+        # Recover original data
         raw_bytes = all_bytes[8 : 8 + byte_count]
 
-        # Write recovered file
         output_path = output_dir / original_filename
         output_path.write_bytes(raw_bytes)
         return output_path
