@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Encryptor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Art direction: encryption tool → precise, technical, dark-first
+   Palette: near-black surfaces, teal accent (matches Crout Holdings brand)
+   Typography: Geist (clean, technical) + Geist Mono (code/paths)
+   Density: dense */
+
+:root, [data-theme="light"] {
+  --text-xs:   clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+  --text-sm:   clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+  --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --text-lg:   clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+  --text-xl:   clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+
+  --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem;
+  --space-4: 1rem;    --space-6: 1.5rem; --space-8: 2rem;
+  --space-10: 2.5rem; --space-12: 3rem;  --space-16: 4rem;
+
+  --color-bg:             #f7f6f2;
+  --color-surface:        #f2f1ed;
+  --color-surface-2:      #eceae5;
+  --color-surface-offset: #e5e3de;
+  --color-divider:        #d4d1ca;
+  --color-border:         #c8c5be;
+  --color-text:           #1e1c16;
+  --color-text-muted:     #6b6a65;
+  --color-text-faint:     #aeada9;
+  --color-text-inverse:   #f4f3ef;
+  --color-primary:        #01696f;
+  --color-primary-hover:  #0c4e54;
+  --color-primary-active: #0f3638;
+  --color-primary-highlight: #d2dedd;
+  --color-success:        #437a22;
+  --color-success-bg:     #d4dfcc;
+  --color-error:          #a12c7b;
+  --color-error-bg:       #e0ced7;
+  --color-warning:        #964219;
+  --color-warning-bg:     #e7d7c4;
+  --color-code-bg:        #1e1c18;
+  --color-code-text:      #c8c6c0;
+
+  --radius-sm: 0.375rem; --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;  --radius-xl: 1rem;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 2px oklch(0.2 0.01 80 / 0.06);
+  --shadow-md: 0 4px 12px oklch(0.2 0.01 80 / 0.1);
+  --shadow-lg: 0 12px 32px oklch(0.2 0.01 80 / 0.14);
+
+  --font-body: 'Geist', 'Inter', sans-serif;
+  --font-mono: 'Geist Mono', 'Fira Code', monospace;
+
+  --transition: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="dark"] {
+  --color-bg:             #111010;
+  --color-surface:        #171614;
+  --color-surface-2:      #1c1b19;
+  --color-surface-offset: #201f1d;
+  --color-divider:        #262523;
+  --color-border:         #333230;
+  --color-text:           #d0cfcd;
+  --color-text-muted:     #797876;
+  --color-text-faint:     #555452;
+  --color-text-inverse:   #2b2a28;
+  --color-primary:        #4f98a3;
+  --color-primary-hover:  #64adb8;
+  --color-primary-active: #7bbfc9;
+  --color-primary-highlight: #1e3336;
+  --color-success:        #6daa45;
+  --color-success-bg:     #1a2e12;
+  --color-error:          #d163a7;
+  --color-error-bg:       #2e1524;
+  --color-warning:        #bb653b;
+  --color-warning-bg:     #2e1a0e;
+  --color-code-bg:        #0d0c0b;
+  --color-code-text:      #b8b6b0;
+  --shadow-sm: 0 1px 3px oklch(0 0 0 / 0.3);
+  --shadow-md: 0 4px 16px oklch(0 0 0 / 0.4);
+  --shadow-lg: 0 12px 40px oklch(0 0 0 / 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --color-bg: #111010; --color-surface: #171614; --color-surface-2: #1c1b19;
+    --color-surface-offset: #201f1d; --color-divider: #262523; --color-border: #333230;
+    --color-text: #d0cfcd; --color-text-muted: #797876; --color-text-faint: #555452;
+    --color-text-inverse: #2b2a28; --color-primary: #4f98a3;
+    --color-primary-hover: #64adb8; --color-primary-active: #7bbfc9;
+    --color-primary-highlight: #1e3336; --color-success: #6daa45;
+    --color-success-bg: #1a2e12; --color-error: #d163a7; --color-error-bg: #2e1524;
+    --color-warning: #bb653b; --color-warning-bg: #2e1a0e;
+    --color-code-bg: #0d0c0b; --color-code-text: #b8b6b0;
+    --shadow-sm: 0 1px 3px oklch(0 0 0 / 0.3); --shadow-md: 0 4px 16px oklch(0 0 0 / 0.4);
+    --shadow-lg: 0 12px 40px oklch(0 0 0 / 0.5);
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+body {
+  min-height: 100dvh;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: 1.55;
+}
+img, svg { display: block; }
+button { cursor: pointer; background: none; border: none; font: inherit; color: inherit; }
+input, select { font: inherit; color: inherit; }
+
+a, button, input, select {
+  transition: color var(--transition), background var(--transition),
+              border-color var(--transition), box-shadow var(--transition), opacity var(--transition);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* ─── Layout ─────────────────────────────────────────────────────────────── */
+.app {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 100dvh;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-6);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-divider);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.topbar-brand svg { flex-shrink: 0; }
+
+.brand-name {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+.brand-sub {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+}
+
+.topbar-actions { display: flex; align-items: center; gap: var(--space-2); }
+
+.btn-icon {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+}
+.btn-icon:hover { background: var(--color-surface-2); color: var(--color-text); }
+
+/* ─── Main ───────────────────────────────────────────────────────────────── */
+.main {
+  max-width: 860px;
+  margin: 0 auto;
+  width: 100%;
+  padding: var(--space-8) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+/* ─── Mode tabs ──────────────────────────────────────────────────────────── */
+.mode-tabs {
+  display: flex;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-1);
+  width: fit-content;
+  gap: var(--space-1);
+}
+.mode-tab {
+  padding: var(--space-2) var(--space-6);
+  border-radius: calc(var(--radius-lg) - var(--space-1));
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+.mode-tab:hover { color: var(--color-text); background: var(--color-surface-2); }
+.mode-tab.active {
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+/* ─── Section cards ──────────────────────────────────────────────────────── */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+}
+.card-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text);
+}
+.card-title svg { color: var(--color-primary); }
+
+/* ─── Drop zone ──────────────────────────────────────────────────────────── */
+.drop-zone {
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-10) var(--space-8);
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  transition: border-color var(--transition), background var(--transition);
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--color-primary);
+  background: color-mix(in oklch, var(--color-primary) 5%, var(--color-surface));
+}
+.drop-zone input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.drop-icon { color: var(--color-text-faint); margin: 0 auto var(--space-3); }
+.drop-label { font-size: var(--text-sm); font-weight: 500; color: var(--color-text-muted); }
+.drop-hint  { font-size: var(--text-xs); color: var(--color-text-faint); margin-top: var(--space-1); }
+
+.file-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text);
+  margin-top: var(--space-3);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chip-remove {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  line-height: 1;
+  font-size: 14px;
+}
+.chip-remove:hover { color: var(--color-error); }
+
+/* ─── Field rows ─────────────────────────────────────────────────────────── */
+.field-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+.field-row:last-child { margin-bottom: 0; }
+label {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.input-wrap {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+  overflow: hidden;
+}
+.input-wrap:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-primary) 18%, transparent);
+}
+.input-wrap input {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  background: none;
+  border: none;
+  outline: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text);
+}
+.input-wrap input::placeholder { color: var(--color-text-faint); }
+.input-browse {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-primary);
+  background: color-mix(in oklch, var(--color-primary) 8%, var(--color-surface));
+  border-left: 1px solid var(--color-border);
+  white-space: nowrap;
+  position: relative;
+}
+.input-browse:hover { background: color-mix(in oklch, var(--color-primary) 15%, var(--color-surface)); }
+.input-browse input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+
+/* ─── Preview panel ──────────────────────────────────────────────────────── */
+.preview-row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+.preview-box {
+  flex: 0 0 80px; height: 80px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-offset);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.preview-box img { width: 100%; height: 100%; object-fit: cover; }
+.preview-info { flex: 1; display: flex; flex-direction: column; gap: var(--space-1); }
+.preview-name {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.preview-meta { font-size: var(--text-xs); color: var(--color-text-muted); }
+
+/* ─── Output preview ─────────────────────────────────────────────────────── */
+.output-names {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.output-name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+}
+.output-badge {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 2px 6px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  min-width: 52px;
+  text-align: center;
+}
+.badge-enc  { background: var(--color-primary-highlight); color: var(--color-primary); }
+.badge-cfg  { background: var(--color-warning-bg); color: var(--color-warning); }
+.output-path { font-family: var(--font-mono); color: var(--color-text); }
+.output-path-faint { font-family: var(--font-mono); color: var(--color-text-faint); }
+
+/* ─── Command preview ────────────────────────────────────────────────────── */
+.cmd-block {
+  background: var(--color-code-bg);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  position: relative;
+  margin-top: var(--space-2);
+}
+.cmd-block pre {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-code-text);
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.7;
+}
+.cmd-copy {
+  position: absolute;
+  top: var(--space-2); right: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  background: oklch(from var(--color-code-text) l c h / 0.08);
+  border: 1px solid oklch(from var(--color-code-text) l c h / 0.15);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  color: var(--color-code-text);
+  font-family: var(--font-mono);
+}
+.cmd-copy:hover { background: oklch(from var(--color-code-text) l c h / 0.15); }
+.cmd-copy.copied { color: #6daa45; border-color: #6daa4550; }
+
+/* ─── Keyword colors ─────────────────────────────────────────────────────── */
+.kw-cmd   { color: #4f98a3; }
+.kw-flag  { color: #bb9a4f; }
+.kw-val   { color: #c8c6c0; }
+.kw-faint { color: #555452; }
+
+/* ─── Action row ─────────────────────────────────────────────────────────── */
+.action-row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.btn-primary {
+  padding: var(--space-3) var(--space-6);
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  box-shadow: var(--shadow-sm);
+}
+.btn-primary:hover {
+  background: var(--color-primary-hover);
+  box-shadow: var(--shadow-md);
+}
+.btn-primary:disabled {
+  opacity: 0.4; cursor: not-allowed;
+}
+.btn-secondary {
+  padding: var(--space-3) var(--space-5);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: var(--text-sm);
+}
+.btn-secondary:hover { background: var(--color-surface-offset); }
+
+/* ─── Status ─────────────────────────────────────────────────────────────── */
+.status {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  animation: fadeIn 200ms ease;
+}
+.status-success { background: var(--color-success-bg); color: var(--color-success); }
+.status-error   { background: var(--color-error-bg);   color: var(--color-error); }
+.status-info    { background: var(--color-primary-highlight); color: var(--color-primary); }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+/* ─── Divider ────────────────────────────────────────────────────────────── */
+.divider {
+  height: 1px;
+  background: var(--color-divider);
+  margin: var(--space-4) 0;
+}
+
+/* ─── Hidden panel ───────────────────────────────────────────────────────── */
+.panel { display: none; }
+.panel.active { display: flex; flex-direction: column; gap: var(--space-6); }
+
+/* ─── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .main { padding: var(--space-4) var(--space-4); }
+  .card { padding: var(--space-4); }
+  .drop-zone { padding: var(--space-8) var(--space-4); }
+  .preview-row { flex-direction: column; }
+  .preview-box { width: 100%; height: 120px; flex: unset; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <!-- CH logo mark -->
+      <svg aria-label="Crout Holdings" width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="28" height="28" rx="6" fill="var(--color-primary)"/>
+        <path d="M9 14 C9 10.686 11.686 8 15 8 L15 8 C16.657 8 18 9.343 18 11 L18 11" stroke="var(--color-text-inverse)" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <path d="M9 14 C9 17.314 11.686 20 15 20 L15 20 C16.657 20 18 18.657 18 17 L18 17" stroke="var(--color-text-inverse)" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <circle cx="19" cy="11" r="1.5" fill="var(--color-text-inverse)"/>
+        <circle cx="19" cy="17" r="1.5" fill="var(--color-text-inverse)"/>
+      </svg>
+      <div>
+        <div class="brand-name">Image Encryptor</div>
+        <div class="brand-sub">Crout Holdings · v1.0</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn-icon" data-theme-toggle aria-label="Toggle theme">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Mode selector -->
+    <div class="mode-tabs" role="tablist">
+      <button class="mode-tab active" role="tab" data-mode="encode" aria-selected="true">Encode</button>
+      <button class="mode-tab" role="tab" data-mode="decode" aria-selected="false">Decode</button>
+    </div>
+
+    <!-- ═══ ENCODE PANEL ═══ -->
+    <div class="panel active" id="panel-encode">
+
+      <!-- Step 1: Input file -->
+      <section class="card">
+        <h2 class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+          Input File
+        </h2>
+        <div class="drop-zone" id="enc-input-drop" tabindex="0" role="button" aria-label="Select input file">
+          <input type="file" id="enc-input-file" accept=".pdf,.docx,.doc,.xlsx,.csv,.png,.jpg,.jpeg,.gif,.bmp,.webp" />
+          <div class="drop-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <p class="drop-label">Drop file here or click to browse</p>
+          <p class="drop-hint">PDF · DOCX · XLSX · CSV · PNG · JPG · GIF · BMP · WEBP</p>
+        </div>
+        <div id="enc-input-chip" style="display:none"></div>
+      </section>
+
+      <!-- Step 2: Key image -->
+      <section class="card">
+        <h2 class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+          Key Image
+        </h2>
+        <div class="drop-zone" id="enc-key-drop" tabindex="0" role="button" aria-label="Select key image">
+          <input type="file" id="enc-key-file" accept=".png,.jpg,.jpeg,.bmp,.webp" />
+          <div class="drop-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+          </div>
+          <p class="drop-label">Drop key image or click to browse</p>
+          <p class="drop-hint">PNG · JPG · BMP · WEBP &nbsp;—&nbsp; larger = more capacity</p>
+        </div>
+        <div id="enc-key-chip" style="display:none"></div>
+        <div id="enc-key-preview" style="display:none; margin-top:var(--space-3)" class="preview-row">
+          <div class="preview-box"><img id="enc-key-img" src="" alt="Key image preview" /></div>
+          <div class="preview-info">
+            <div class="preview-name" id="enc-key-name"></div>
+            <div class="preview-meta" id="enc-key-meta"></div>
+            <div class="preview-meta" id="enc-key-capacity" style="color:var(--color-primary)"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 3: Output location -->
+      <section class="card">
+        <h2 class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          Output Location
+        </h2>
+        <div class="field-row">
+          <label for="enc-output-dir">Output directory</label>
+          <div class="input-wrap">
+            <input type="text" id="enc-output-dir" placeholder="Same folder as input file (default)" />
+            <label class="input-browse">
+              Browse
+              <input type="file" id="enc-output-dir-pick" webkitdirectory />
+            </label>
+          </div>
+        </div>
+
+        <div id="enc-output-preview" style="display:none">
+          <div class="divider"></div>
+          <p style="font-size:var(--text-xs);color:var(--color-text-muted);margin-bottom:var(--space-2)">Auto-generated file names</p>
+          <div class="output-names">
+            <div class="output-name-row">
+              <span class="output-badge badge-enc">ENC</span>
+              <span class="output-path" id="enc-out-encrypted"></span>
+            </div>
+            <div class="output-name-row">
+              <span class="output-badge badge-cfg">CFG</span>
+              <span class="output-path" id="enc-out-config"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Command preview -->
+      <section class="card">
+        <h2 class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4,17 10,11 4,5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          CLI Command
+        </h2>
+        <div class="cmd-block">
+          <pre id="enc-cmd"><span class="kw-faint"># Select files above to generate the command</span></pre>
+          <button class="cmd-copy" id="enc-copy" onclick="copyCmd('enc')">Copy</button>
+        </div>
+      </section>
+
+      <div id="enc-status"></div>
+
+      <div class="action-row">
+        <button class="btn-primary" id="enc-run" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21 5,3"/></svg>
+          Run Encode
+        </button>
+        <button class="btn-secondary" onclick="resetEncode()">Clear</button>
+      </div>
+    </div>
+
+    <!-- ═══ DECODE PANEL ═══ -->
+    <div class="panel" id="panel-decode">
+
+      <!-- Encrypted image -->
+      <section class="card">
+        <h2 class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+          Encrypted Image
+        </h2>
+        <div class="drop-zone" id="dec-enc-drop" tabindex="0" role="button">
+          <input type="file" id="dec-enc-file" accept=".png" />
+          <div class="drop-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <p class="drop-label">Drop encrypted PNG or click to browse</p>
+          <p class="drop-hint">Must be the output of an encode operation</p>
+        </div>
+        <div id="dec-enc-chip" style="display:none"></div>
+      </section>
+
+      <!-- Key image -->
+      <section class="card">
+        <h2 class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+          Key Image
+        </h2>
+        <div class="drop-zone" id="dec-key-drop" tabindex="0" role="button">
+          <input type="file" id="dec-key-file" accept=".png,.jpg,.jpeg,.bmp,.webp" />
+          <div class="drop-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+          </div>
+          <p class="drop-label">Drop key image or click to browse</p>
+          <p class="drop-hint">Must be the exact same key used during encoding</p>
+        </div>
+        <div id="dec-key-chip" style="display:none"></div>
+      </section>
+
+      <!-- Config file -->
+      <section class="card">
+        <h2 class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+          Config File
+        </h2>
+        <div class="drop-zone" id="dec-cfg-drop" tabindex="0" role="button">
+          <input type="file" id="dec-cfg-file" accept=".json" />
+          <div class="drop-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+          </div>
+          <p class="drop-label">Drop .config.json or click to browse</p>
+          <p class="drop-hint">e.g. report.config.json</p>
+        </div>
+        <div id="dec-cfg-chip" style="display:none"></div>
+        <div id="dec-cfg-info" style="display:none; margin-top:var(--space-3)">
+          <div class="output-names">
+            <div class="output-name-row" id="dec-cfg-orig"></div>
+            <div class="output-name-row" id="dec-cfg-type"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Output dir -->
+      <section class="card">
+        <h2 class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          Output Location
+        </h2>
+        <div class="field-row">
+          <label for="dec-output-dir">Output directory</label>
+          <div class="input-wrap">
+            <input type="text" id="dec-output-dir" placeholder="Same folder as encrypted image (default)" />
+            <label class="input-browse">
+              Browse
+              <input type="file" id="dec-output-dir-pick" webkitdirectory />
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Command preview -->
+      <section class="card">
+        <h2 class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4,17 10,11 4,5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          CLI Command
+        </h2>
+        <div class="cmd-block">
+          <pre id="dec-cmd"><span class="kw-faint"># Select files above to generate the command</span></pre>
+          <button class="cmd-copy" id="dec-copy" onclick="copyCmd('dec')">Copy</button>
+        </div>
+      </section>
+
+      <div id="dec-status"></div>
+
+      <div class="action-row">
+        <button class="btn-primary" id="dec-run" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,6 13.5,15.5 8.5,10.5 1,18"/><polyline points="17,6 23,6 23,12"/></svg>
+          Run Decode
+        </button>
+        <button class="btn-secondary" onclick="resetDecode()">Clear</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+(function(){
+  // ─── Theme toggle ────────────────────────────────────────────────────────
+  const html = document.documentElement;
+  let theme = matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light';
+  html.setAttribute('data-theme', theme);
+  const tog = document.querySelector('[data-theme-toggle]');
+  function updateTogIcon(){
+    tog.innerHTML = theme === 'dark'
+      ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
+      : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  }
+  updateTogIcon();
+  tog.addEventListener('click', () => {
+    theme = theme === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', theme);
+    updateTogIcon();
+  });
+
+  // ─── Mode tabs ────────────────────────────────────────────────────────────
+  document.querySelectorAll('.mode-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.mode-tab').forEach(t => {
+        t.classList.remove('active'); t.setAttribute('aria-selected','false');
+      });
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active'); tab.setAttribute('aria-selected','true');
+      document.getElementById('panel-' + tab.dataset.mode).classList.add('active');
+    });
+  });
+
+  // ─── State ────────────────────────────────────────────────────────────────
+  const enc = { inputFile: null, keyFile: null, outputDir: '' };
+  const dec = { encFile: null, keyFile: null, cfgFile: null, cfgData: null, outputDir: '' };
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+  function stem(filename) {
+    return filename.replace(/\.[^.]+$/, '');
+  }
+  function fmtBytes(n) {
+    if (n < 1024) return n + ' B';
+    if (n < 1048576) return (n/1024).toFixed(1) + ' KB';
+    return (n/1048576).toFixed(1) + ' MB';
+  }
+
+  function makeChip(filename, onRemove) {
+    const d = document.createElement('div');
+    d.className = 'file-chip';
+    d.innerHTML = `
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+      <span style="overflow:hidden;text-overflow:ellipsis">${filename}</span>
+      <button class="chip-remove" aria-label="Remove file">✕</button>`;
+    d.querySelector('.chip-remove').addEventListener('click', onRemove);
+    return d;
+  }
+
+  function setChip(chipId, dropId, file, onRemove) {
+    const chipEl = document.getElementById(chipId);
+    const dropEl = document.getElementById(dropId);
+    chipEl.innerHTML = '';
+    if (file) {
+      chipEl.style.display = 'block';
+      dropEl.style.display = 'none';
+      chipEl.appendChild(makeChip(file.name, onRemove));
+    } else {
+      chipEl.style.display = 'none';
+      dropEl.style.display = '';
+    }
+  }
+
+  function showStatus(id, type, msg) {
+    const el = document.getElementById(id);
+    el.innerHTML = `<div class="status status-${type}">${msg}</div>`;
+  }
+  function clearStatus(id) { document.getElementById(id).innerHTML = ''; }
+
+  // ─── Drag-and-drop helper ──────────────────────────────────────────────────
+  function setupDrop(dropId, fileInputId, onFile) {
+    const drop = document.getElementById(dropId);
+    const input = document.getElementById(fileInputId);
+    drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag-over'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('drag-over'));
+    drop.addEventListener('drop', e => {
+      e.preventDefault(); drop.classList.remove('drag-over');
+      if (e.dataTransfer.files.length) onFile(e.dataTransfer.files[0]);
+    });
+    input.addEventListener('change', () => { if (input.files.length) onFile(input.files[0]); });
+    drop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') input.click(); });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ENCODE
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  setupDrop('enc-input-drop','enc-input-file', file => {
+    enc.inputFile = file;
+    setChip('enc-input-chip','enc-input-drop', file, () => {
+      enc.inputFile = null;
+      setChip('enc-input-chip','enc-input-drop', null);
+      updateEncOutput(); updateEncCmd(); updateEncRun();
+    });
+    updateEncOutput(); updateEncCmd(); updateEncRun();
+  });
+
+  setupDrop('enc-key-drop','enc-key-file', file => {
+    enc.keyFile = file;
+    setChip('enc-key-chip','enc-key-drop', file, () => {
+      enc.keyFile = null;
+      setChip('enc-key-chip','enc-key-drop', null);
+      document.getElementById('enc-key-preview').style.display = 'none';
+      updateEncCmd(); updateEncRun();
+    });
+    // Show image preview
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const maxBytes = img.width * img.height * 3;
+        document.getElementById('enc-key-img').src = e.target.result;
+        document.getElementById('enc-key-name').textContent = file.name;
+        document.getElementById('enc-key-meta').textContent =
+          `${img.width} × ${img.height} px  ·  ${fmtBytes(file.size)}`;
+        document.getElementById('enc-key-capacity').textContent =
+          `Capacity: ~${fmtBytes(maxBytes)} payload`;
+        document.getElementById('enc-key-preview').style.display = 'flex';
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    updateEncCmd(); updateEncRun();
+  });
+
+  document.getElementById('enc-output-dir').addEventListener('input', e => {
+    enc.outputDir = e.target.value.trim();
+    updateEncOutput(); updateEncCmd();
+  });
+
+  document.getElementById('enc-output-dir-pick').addEventListener('change', function() {
+    if (this.files.length) {
+      const parts = this.files[0].webkitRelativePath.split('/');
+      enc.outputDir = parts.slice(0, -1).join('/');
+      document.getElementById('enc-output-dir').value = enc.outputDir;
+      updateEncOutput(); updateEncCmd();
+    }
+  });
+
+  function updateEncOutput() {
+    const preview = document.getElementById('enc-output-preview');
+    if (!enc.inputFile) { preview.style.display = 'none'; return; }
+    const s = stem(enc.inputFile.name);
+    const dir = enc.outputDir ? enc.outputDir + '/' : './';
+    document.getElementById('enc-out-encrypted').textContent = dir + s + '-encrypted.png';
+    document.getElementById('enc-out-config').textContent    = dir + s + '.config.json';
+    preview.style.display = 'block';
+  }
+
+  function updateEncCmd() {
+    const pre = document.getElementById('enc-cmd');
+    if (!enc.inputFile || !enc.keyFile) {
+      pre.innerHTML = '<span class="kw-faint"># Select files above to generate the command</span>';
+      return;
+    }
+    const s   = stem(enc.inputFile.name);
+    const dir = enc.outputDir || '.';
+    pre.innerHTML =
+      `<span class="kw-cmd">python</span> <span class="kw-val">image-encryptor/main.py</span> <span class="kw-cmd">encode</span>\n` +
+      `  <span class="kw-flag">--input</span>      <span class="kw-val">${enc.inputFile.name}</span>\n` +
+      `  <span class="kw-flag">--key</span>        <span class="kw-val">${enc.keyFile.name}</span>\n` +
+      (enc.outputDir ? `  <span class="kw-flag">--output-dir</span> <span class="kw-val">${dir}</span>\n` : '') +
+      `<span class="kw-faint">\n# Outputs → ${s}-encrypted.png + ${s}.config.json</span>`;
+  }
+
+  function updateEncRun() {
+    document.getElementById('enc-run').disabled = !(enc.inputFile && enc.keyFile);
+  }
+
+  document.getElementById('enc-run').addEventListener('click', () => {
+    showStatus('enc-status','info',
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+      '&nbsp;Command ready — run it in your terminal (browser cannot execute Python)');
+  });
+
+  function resetEncode() {
+    enc.inputFile = null; enc.keyFile = null; enc.outputDir = '';
+    setChip('enc-input-chip','enc-input-drop', null);
+    setChip('enc-key-chip','enc-key-drop', null);
+    document.getElementById('enc-key-preview').style.display = 'none';
+    document.getElementById('enc-output-dir').value = '';
+    document.getElementById('enc-output-preview').style.display = 'none';
+    updateEncCmd(); updateEncRun(); clearStatus('enc-status');
+  }
+  window.resetEncode = resetEncode;
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DECODE
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  setupDrop('dec-enc-drop','dec-enc-file', file => {
+    dec.encFile = file;
+    setChip('dec-enc-chip','dec-enc-drop', file, () => {
+      dec.encFile = null;
+      setChip('dec-enc-chip','dec-enc-drop', null);
+      updateDecCmd(); updateDecRun();
+    });
+    updateDecCmd(); updateDecRun();
+  });
+
+  setupDrop('dec-key-drop','dec-key-file', file => {
+    dec.keyFile = file;
+    setChip('dec-key-chip','dec-key-drop', file, () => {
+      dec.keyFile = null;
+      setChip('dec-key-chip','dec-key-drop', null);
+      updateDecCmd(); updateDecRun();
+    });
+    updateDecCmd(); updateDecRun();
+  });
+
+  setupDrop('dec-cfg-drop','dec-cfg-file', file => {
+    dec.cfgFile = file;
+    setChip('dec-cfg-chip','dec-cfg-drop', file, () => {
+      dec.cfgFile = null; dec.cfgData = null;
+      setChip('dec-cfg-chip','dec-cfg-drop', null);
+      document.getElementById('dec-cfg-info').style.display = 'none';
+      updateDecCmd(); updateDecRun();
+    });
+    // Parse config to show original filename
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        dec.cfgData = JSON.parse(e.target.result);
+        const origRow = document.getElementById('dec-cfg-orig');
+        const typeRow = document.getElementById('dec-cfg-type');
+        origRow.innerHTML = `<span class="output-badge badge-enc">FILE</span>
+          <span class="output-path">${dec.cfgData.original_filename || '(unknown)'}</span>`;
+        typeRow.innerHTML = `<span class="output-badge badge-cfg">TYPE</span>
+          <span class="output-path">${(dec.cfgData.file_type || '').toUpperCase()}</span>
+          <span class="output-path-faint" style="margin-left:4px">&nbsp;·&nbsp;
+            ${dec.cfgData.byte_count ? fmtBytes(dec.cfgData.byte_count) : ''}</span>`;
+        document.getElementById('dec-cfg-info').style.display = 'block';
+      } catch(ex) {
+        showStatus('dec-status','error','Invalid config JSON: ' + ex.message);
+      }
+      updateDecCmd(); updateDecRun();
+    };
+    reader.readAsText(file);
+  });
+
+  document.getElementById('dec-output-dir').addEventListener('input', e => {
+    dec.outputDir = e.target.value.trim();
+    updateDecCmd();
+  });
+
+  document.getElementById('dec-output-dir-pick').addEventListener('change', function() {
+    if (this.files.length) {
+      const parts = this.files[0].webkitRelativePath.split('/');
+      dec.outputDir = parts.slice(0, -1).join('/');
+      document.getElementById('dec-output-dir').value = dec.outputDir;
+      updateDecCmd();
+    }
+  });
+
+  function updateDecCmd() {
+    const pre = document.getElementById('dec-cmd');
+    if (!dec.encFile || !dec.keyFile || !dec.cfgFile) {
+      pre.innerHTML = '<span class="kw-faint"># Select files above to generate the command</span>';
+      return;
+    }
+    const original = dec.cfgData && dec.cfgData.original_filename
+      ? dec.cfgData.original_filename : '(from config)';
+    const dir = dec.outputDir || '.';
+    pre.innerHTML =
+      `<span class="kw-cmd">python</span> <span class="kw-val">image-encryptor/main.py</span> <span class="kw-cmd">decode</span>\n` +
+      `  <span class="kw-flag">--input</span>      <span class="kw-val">${dec.encFile.name}</span>\n` +
+      `  <span class="kw-flag">--key</span>        <span class="kw-val">${dec.keyFile.name}</span>\n` +
+      `  <span class="kw-flag">--config</span>     <span class="kw-val">${dec.cfgFile.name}</span>\n` +
+      (dec.outputDir ? `  <span class="kw-flag">--output-dir</span> <span class="kw-val">${dir}</span>\n` : '') +
+      `<span class="kw-faint">\n# Recovers → ${original}</span>`;
+  }
+
+  function updateDecRun() {
+    document.getElementById('dec-run').disabled = !(dec.encFile && dec.keyFile && dec.cfgFile);
+  }
+
+  document.getElementById('dec-run').addEventListener('click', () => {
+    showStatus('dec-status','info',
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+      '&nbsp;Command ready — run it in your terminal (browser cannot execute Python)');
+  });
+
+  function resetDecode() {
+    dec.encFile = null; dec.keyFile = null; dec.cfgFile = null; dec.cfgData = null; dec.outputDir = '';
+    setChip('dec-enc-chip','dec-enc-drop', null);
+    setChip('dec-key-chip','dec-key-drop', null);
+    setChip('dec-cfg-chip','dec-cfg-drop', null);
+    document.getElementById('dec-cfg-info').style.display = 'none';
+    document.getElementById('dec-output-dir').value = '';
+    updateDecCmd(); updateDecRun(); clearStatus('dec-status');
+  }
+  window.resetDecode = resetDecode;
+
+  // ─── Copy command ────────────────────────────────────────────────────────
+  window.copyCmd = function(which) {
+    const pre = document.getElementById(which + '-cmd');
+    const btn = document.getElementById(which + '-copy');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = '✓ Copied';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  };
+})();
+</script>
+</body>
+</html>

@@ -1,9 +1,15 @@
-"""Delta value ↔ RGB encoding helpers."""
+"""Delta value <-> RGB encoding helpers.
+
+String values are stored as exactly 3 ASCII/UTF-8 bytes per pixel.
+Longer strings MUST be chunked by the caller (decomposer) before
+passing to encode_value_against_key.
+"""
 
 from __future__ import annotations
 
-import struct
 from typing import Any
+
+CHUNK_SIZE = 3  # characters per pixel for str values
 
 
 def _to_three_bytes(value: Any, value_type: str) -> tuple[int, int, int]:
@@ -22,8 +28,9 @@ def _to_three_bytes(value: Any, value_type: str) -> tuple[int, int, int]:
         r, g, b = value
         return (int(r) & 0xFF, int(g) & 0xFF, int(b) & 0xFF)
 
-    encoded = str(value).encode("utf-8")[:3]
-    encoded = encoded + b"\x00" * (3 - len(encoded))
+    # str — caller guarantees len(value) <= CHUNK_SIZE
+    encoded = str(value).encode("utf-8")[:CHUNK_SIZE]
+    encoded = encoded + b"\x00" * (CHUNK_SIZE - len(encoded))
     return (encoded[0], encoded[1], encoded[2])
 
 
@@ -41,6 +48,7 @@ def _from_three_bytes(rgb: tuple[int, int, int], value_type: str) -> Any:
     if value_type == "rgb":
         return rgb
 
+    # str
     raw = bytes(rgb).rstrip(b"\x00")
     return raw.decode("utf-8", errors="ignore")
 

@@ -1,116 +1,166 @@
-"""Core semantic image encryptor implementation."""
+"""
+Core encode/decode pipeline.
+Config schema (stored as <stem>.config.json):
+{
+  "version": 1,
+  "original_filename": "report.pdf",
+  "original_extension": ".pdf",
+  "encrypted_output": "report-encrypted.png",
+  "config_path": "report.config.json",
+  "file_type": "pdf",
+  "key_image": "key.png",
+  "key_hash": "<sha256 of key pixel bytes>",
+  "byte_count": 12345,
+  "pixel_count": 4115,
+  "width": <int>,
+  "height": <int>
+}
+"""
 
-from __future__ import annotations
-
+import json
+import hashlib
 from pathlib import Path
-from typing import Any
-
-import numpy as np
 from PIL import Image
-
-from config_manager import ConfigManager
-from decomposers import (
-    BaseDecomposer,
-    DocxDecomposer,
-    ImageDecomposer,
-    PdfDecomposer,
-    XlsxDecomposer,
-)
-from file_type import detect_extension
 from key_manager import KeyManager
-from pixel_mapper import decode_value_against_key, encode_value_against_key
-from semantic_types import denormalize_value_from_json, infer_value_type, normalize_value_for_json
+from pixel_mapper import PixelMapper
+from file_type import FileTypeRegistry
+from decomposers.pdf_decomposer import PDFDecomposer
+from decomposers.docx_decomposer import DOCXDecomposer
+from decomposers.xlsx_decomposer import XLSXDecomposer
+from decomposers.image_decomposer import ImageDecomposer
 
-SCHEMA_VERSION = 2
+
+DECOMPOSER_MAP = {
+    ".pdf":  PDFDecomposer,
+    ".docx": DOCXDecomposer,
+    ".doc":  DOCXDecomposer,
+    ".xlsx": XLSXDecomposer,
+    ".csv":  XLSXDecomposer,
+    ".png":  ImageDecomposer,
+    ".jpg":  ImageDecomposer,
+    ".jpeg": ImageDecomposer,
+    ".gif":  ImageDecomposer,
+    ".bmp":  ImageDecomposer,
+    ".webp": ImageDecomposer,
+}
 
 
-class ImageEncryptor:
-    def __init__(self, key_image_path: str) -> None:
-        self.key = KeyManager(key_image_path)
+class Encryptor:
+    MAGIC   = b"CHIE"          # Crout Holdings Image Encryption
+    EOF_PIX = (255, 0, 255)    # Magenta sentinel
 
-    def _get_decomposer(self, file_path: str, ext: str) -> BaseDecomposer:
-        mapping = {
-            "pdf": PdfDecomposer,
-            "docx": DocxDecomposer,
-            "doc": DocxDecomposer,
-            "xlsx": XlsxDecomposer,
-            "csv": XlsxDecomposer,
-            "png": ImageDecomposer,
-            "jpg": ImageDecomposer,
-            "jpeg": ImageDecomposer,
-            "bmp": ImageDecomposer,
-        }
-        cls = mapping.get(ext)
-        if cls is None:
-            raise ValueError(f"No decomposer for extension: {ext}")
-        return cls(file_path)
+    def encode(
+        self,
+        input_path: Path,
+        key_path: Path,
+        output_path: Path,
+        config_path: Path,
+    ) -> None:
+        ext = input_path.suffix.lower()
+        decomposer_cls = DECOMPOSER_MAP.get(ext)
+        if not decomposer_cls:
+            raise ValueError(f"Unsupported file type: {ext}")
 
-    def encode(self, input_file: str, output_image: str, output_config: str) -> None:
-        ext = detect_extension(input_file)
-        decomposer = self._get_decomposer(input_file, ext)
-        entries = decomposer.to_entries()
+        # 1. Decompose
+        raw_bytes = decomposer_cls().to_bytes(input_path)
 
-        self.key.check_capacity(len(entries))
+        # 2. Build payload: MAGIC(4) + length(4, big-endian) + data
+        length_bytes = len(raw_bytes).to_bytes(4, "big")
+        payload      = self.MAGIC + length_bytes + raw_bytes
 
-        canvas = self.key.fresh_canvas()
-        key_array = self.key.key_array()
-        available = self.key.available_indices()
+        # 3. Load key image
+        km        = KeyManager(key_path)
+        key_img   = km.load()
+        w, h      = key_img.size
+        max_bytes = w * h * 3
 
-        config_entries: list[dict[str, Any]] = []
-
-        print(f"[Encryptor] Semantic entries: {len(entries):,}")
-
-        for index, (key_name, value) in enumerate(entries):
-            pixel_index = available[index]
-            row, col = self.key.flat_index_to_rc(pixel_index)
-
-            key_rgb = tuple(int(v) for v in key_array[row, col])
-            value_type = infer_value_type(value)
-            encrypted_rgb = encode_value_against_key(key_rgb, value, value_type)
-
-            canvas[row, col] = encrypted_rgb
-            config_entries.append(
-                {
-                    "key": key_name,
-                    "pixel_index": pixel_index,
-                    "value_type": value_type,
-                }
+        # 4. File-type marker pixel + EOF sentinel (6 bytes = 2 pixels)
+        ft_marker = FileTypeRegistry.marker_for(ext)        # 3 bytes
+        overhead  = len(ft_marker) + 3                      # marker px + EOF px
+        if len(payload) + overhead > max_bytes:
+            raise ValueError(
+                f"Key image too small. Need {len(payload)+overhead} bytes, "
+                f"have {max_bytes}."
             )
 
-        Image.fromarray(canvas, mode="RGB").save(output_image)
-        ConfigManager.write_config(
-            output_config,
-            file_type=ext,
-            schema_version=SCHEMA_VERSION,
-            image_size=(self.key.width, self.key.height),
-            entries=config_entries,
-        )
+        # 5. Map payload → pixels
+        pm     = PixelMapper()
+        pixels = pm.bytes_to_pixels(payload)
+        pixels.append(tuple(ft_marker))  # file-type marker pixel
+        pixels.append(self.EOF_PIX)      # sentinel
 
-        print(f"[Encryptor] Encrypted image saved → {output_image}")
-        print(f"[Encryptor] Config saved → {output_config}")
+        # 6. Write into a copy of the key image
+        out_img   = key_img.copy().convert("RGB")
+        img_array = list(out_img.getdata())
+        for i, pix in enumerate(pixels):
+            img_array[i] = pix
+        out_img.putdata(img_array)
+        out_img.save(str(output_path), format="PNG")
 
-    def decode(self, encrypted_image: str, input_config: str, output_file: str) -> None:
-        enc_arr = np.array(Image.open(encrypted_image).convert("RGB"), dtype=np.uint8)
-        key_arr = self.key.key_array()
-        config = ConfigManager.read_config(input_config)
+        # 7. Compute key hash for verification
+        key_hash = hashlib.sha256(
+            bytes([v for px in list(key_img.convert("RGB").getdata()) for v in px])
+        ).hexdigest()
 
-        decoded_entries: list[tuple[str, Any]] = []
-        for entry in config["entries"]:
-            key_name = entry["key"]
-            pixel_index = int(entry["pixel_index"])
-            value_type = entry["value_type"]
+        # 8. Save config
+        config = {
+            "version":            1,
+            "original_filename":  input_path.name,
+            "original_extension": ext,
+            "encrypted_output":   output_path.name,
+            "config_path":        config_path.name,
+            "file_type":          ext.lstrip("."),
+            "key_image":          key_path.name,
+            "key_hash":           key_hash,
+            "byte_count":         len(raw_bytes),
+            "pixel_count":        len(pixels),
+            "width":              w,
+            "height":             h,
+        }
+        config_path.write_text(json.dumps(config, indent=2))
 
-            row, col = self.key.flat_index_to_rc(pixel_index)
-            key_rgb = tuple(int(v) for v in key_arr[row, col])
-            encrypted_rgb = tuple(int(v) for v in enc_arr[row, col])
+    def decode(
+        self,
+        encrypted_path: Path,
+        key_path: Path,
+        config_path: Path,
+        output_dir: Path,
+    ) -> Path:
+        config = json.loads(config_path.read_text())
 
-            value = decode_value_against_key(key_rgb, encrypted_rgb, value_type)
-            value = denormalize_value_from_json(normalize_value_for_json(value), value_type)
-            decoded_entries.append((key_name, value))
+        # Recover original filename from config
+        original_filename = config.get("original_filename")
+        if not original_filename:
+            # Fallback for configs without original_filename
+            ext = "." + config["file_type"]
+            stem = encrypted_path.stem.removesuffix("-encrypted")
+            original_filename = stem + ext
 
-        original_ext = detect_extension(output_file)
-        decomposer = self._get_decomposer(output_file, original_ext)
-        decomposer.from_entries(decoded_entries, output_file)
+        byte_count = config["byte_count"]
 
-        print(f"[Decryptor] Recovered semantic entries: {len(decoded_entries):,}")
-        print(f"[Decryptor] Output saved → {output_file}")
+        # Load encrypted image
+        enc_img   = Image.open(str(encrypted_path)).convert("RGB")
+        img_array = list(enc_img.getdata())
+
+        # Read pixels → bytes (payload = MAGIC + length + data)
+        pm             = PixelMapper()
+        total_payload  = 4 + 4 + byte_count   # MAGIC + len + data
+        total_pixels   = (total_payload + 2) // 3 + (1 if total_payload % 3 else 0)
+        raw_pixels     = img_array[:total_pixels]
+        all_bytes      = pm.pixels_to_bytes(raw_pixels)
+
+        # Strip MAGIC + length header
+        magic   = all_bytes[:4]
+        if magic != self.MAGIC:
+            raise ValueError("Invalid encrypted image or wrong key.")
+        payload_bytes = all_bytes[8 : 8 + byte_count]
+
+        # Reconstruct file
+        ext = "." + config["file_type"]
+        decomposer_cls = DECOMPOSER_MAP.get(ext)
+        if not decomposer_cls:
+            raise ValueError(f"Unsupported file type in config: {ext}")
+
+        output_path = output_dir / original_filename
+        decomposer_cls().from_bytes(payload_bytes, output_path)
+        return output_path
