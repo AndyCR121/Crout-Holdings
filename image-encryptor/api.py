@@ -1,21 +1,20 @@
-"""Local REST API for Image Encryptor — run with: python image-encryptor/api.py"""
+"""Local REST API for Image Encryptor — run with: python api.py"""
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import os, tempfile, traceback
-from encryptor import ImageEncryptor
+from pathlib import Path
+from encryptor import Encryptor
 
 app = Flask(__name__)
 CORS(app)  # allow requests from file:// or localhost UI
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
 
 def _save_upload(file_storage, suffix=""):
-    """Save an uploaded FileStorage to a temp file and return its path."""
+    """Save an uploaded FileStorage to a temp file and return its Path."""
     fd, path = tempfile.mkstemp(suffix=suffix)
     os.close(fd)
     file_storage.save(path)
-    return path
+    return Path(path)
 
 
 @app.route("/health", methods=["GET"])
@@ -32,49 +31,51 @@ def encode():
       output_dir  — (optional) directory path for outputs; defaults to tempdir
 
     Returns JSON:
-      { encrypted_path, config_path, original_filename,
-        encrypted_filename, config_filename }
+      { success, original_filename, encrypted_filename, config_filename,
+        encrypted_path, config_path, output_dir }
     """
     try:
         if "input_file" not in request.files or "key_image" not in request.files:
             return jsonify({"error": "Missing input_file or key_image"}), 400
 
-        input_file  = request.files["input_file"]
-        key_image   = request.files["key_image"]
-        output_dir  = request.form.get("output_dir", "").strip()
+        input_file = request.files["input_file"]
+        key_image  = request.files["key_image"]
+        output_dir = request.form.get("output_dir", "").strip()
 
-        orig_name   = input_file.filename
-        stem        = os.path.splitext(orig_name)[0]
+        orig_name = input_file.filename
+        stem      = Path(orig_name).stem
 
-        # Resolve output directory
         if not output_dir:
             output_dir = tempfile.mkdtemp(prefix="imgenc_")
         else:
             os.makedirs(output_dir, exist_ok=True)
 
-        # Save uploads to temp paths
-        input_ext  = os.path.splitext(orig_name)[1]
-        tmp_input  = _save_upload(input_file, suffix=input_ext)
-        tmp_key    = _save_upload(key_image,  suffix=os.path.splitext(key_image.filename)[1])
+        input_ext = Path(orig_name).suffix
+        tmp_input = _save_upload(input_file, suffix=input_ext)
+        tmp_key   = _save_upload(key_image,  suffix=Path(key_image.filename).suffix)
 
-        encrypted_path = os.path.join(output_dir, f"{stem}-encrypted.png")
-        config_path    = os.path.join(output_dir, f"{stem}.config.json")
+        encrypted_path = Path(output_dir) / f"{stem}-encrypted.png"
+        config_path    = Path(output_dir) / f"{stem}.config.json"
 
-        enc = ImageEncryptor(tmp_key)
-        enc.encode(tmp_input, encrypted_path, config_path)
+        enc = Encryptor()
+        enc.encode(
+            input_path=tmp_input,
+            key_path=tmp_key,
+            output_path=encrypted_path,
+            config_path=config_path,
+        )
 
-        # Clean up temp input/key
-        os.unlink(tmp_input)
-        os.unlink(tmp_key)
+        tmp_input.unlink(missing_ok=True)
+        tmp_key.unlink(missing_ok=True)
 
         return jsonify({
-            "success": True,
+            "success":            True,
             "original_filename":  orig_name,
-            "encrypted_path":     encrypted_path,
-            "config_path":        config_path,
-            "encrypted_filename": os.path.basename(encrypted_path),
-            "config_filename":    os.path.basename(config_path),
-            "output_dir":         output_dir,
+            "encrypted_path":     str(encrypted_path),
+            "config_path":        str(config_path),
+            "encrypted_filename": encrypted_path.name,
+            "config_filename":    config_path.name,
+            "output_dir":         str(output_dir),
         })
 
     except Exception as e:
@@ -92,7 +93,7 @@ def decode():
       output_dir      — (optional) directory for recovered file
 
     Returns JSON:
-      { recovered_path, recovered_filename, original_filename }
+      { success, recovered_path, recovered_filename, output_dir }
     """
     try:
         required = ["encrypted_image", "key_image", "config_file"]
@@ -111,21 +112,26 @@ def decode():
             os.makedirs(output_dir, exist_ok=True)
 
         tmp_enc = _save_upload(enc_image,   suffix=".png")
-        tmp_key = _save_upload(key_image,   suffix=os.path.splitext(key_image.filename)[1])
+        tmp_key = _save_upload(key_image,   suffix=Path(key_image.filename).suffix)
         tmp_cfg = _save_upload(config_file, suffix=".json")
 
-        enc = ImageEncryptor(tmp_key)
-        recovered_path = enc.decode(tmp_enc, tmp_cfg, output_dir)
+        enc = Encryptor()
+        recovered_path = enc.decode(
+            encrypted_path=tmp_enc,
+            key_path=tmp_key,
+            config_path=tmp_cfg,
+            output_dir=Path(output_dir),
+        )
 
-        os.unlink(tmp_enc)
-        os.unlink(tmp_key)
-        os.unlink(tmp_cfg)
+        tmp_enc.unlink(missing_ok=True)
+        tmp_key.unlink(missing_ok=True)
+        tmp_cfg.unlink(missing_ok=True)
 
         return jsonify({
-            "success":           True,
-            "recovered_path":    recovered_path,
-            "recovered_filename": os.path.basename(recovered_path),
-            "output_dir":        output_dir,
+            "success":            True,
+            "recovered_path":     str(recovered_path),
+            "recovered_filename": Path(recovered_path).name,
+            "output_dir":         str(output_dir),
         })
 
     except Exception as e:
