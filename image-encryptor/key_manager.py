@@ -1,45 +1,36 @@
-"""Key image handling and pixel indexing helpers."""
+"""Loads and validates the key (base) image."""
 
 from __future__ import annotations
 
 from pathlib import Path
-
-import numpy as np
 from PIL import Image
 
 
 class KeyManager:
-    def __init__(self, key_image_path: str) -> None:
-        self.key_path = Path(key_image_path)
+    """Wraps the key image used as the encryption carrier."""
+
+    SUPPORTED = {".png", ".jpg", ".jpeg", ".bmp", ".webp"}
+
+    def __init__(self, key_path: Path) -> None:
+        self.key_path = Path(key_path)
+
+    def load(self) -> Image.Image:
         if not self.key_path.exists():
             raise FileNotFoundError(f"Key image not found: {self.key_path}")
-
-        img = Image.open(self.key_path).convert("RGB")
-        self.width = img.width
-        self.height = img.height
-        self.capacity_pixels = self.width * self.height
-        self._array = np.array(img, dtype=np.uint8)
-
-    def key_array(self) -> np.ndarray:
-        return self._array.copy()
-
-    def fresh_canvas(self) -> np.ndarray:
-        return self._array.copy()
-
-    def flat_index_to_rc(self, index: int) -> tuple[int, int]:
-        row = index // self.width
-        col = index % self.width
-        return row, col
-
-    def rc_to_flat_index(self, row: int, col: int) -> int:
-        return row * self.width + col
-
-    def available_indices(self) -> list[int]:
-        return list(range(self.capacity_pixels))
-
-    def check_capacity(self, required_pixels: int) -> None:
-        if required_pixels > self.capacity_pixels:
-            raise OverflowError(
-                f"Payload requires {required_pixels} semantic entries but key image only provides "
-                f"{self.capacity_pixels} pixels ({self.width}×{self.height})."
+        ext = self.key_path.suffix.lower()
+        if ext not in self.SUPPORTED:
+            raise ValueError(
+                f"Unsupported key image format '{ext}'. "
+                f"Supported: {sorted(self.SUPPORTED)}"
             )
+        img = Image.open(str(self.key_path))
+        w, h = img.size
+        if w * h < 10:
+            raise ValueError("Key image is too small (minimum 10 pixels).")
+        return img
+
+    def capacity_bytes(self) -> int:
+        """Maximum bytes this key image can store."""
+        img = self.load()
+        w, h = img.size
+        return w * h * 3
