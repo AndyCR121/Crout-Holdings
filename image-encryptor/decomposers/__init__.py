@@ -1,10 +1,10 @@
-"""File decomposer sub-package."""
+"""Semantic decomposer exports."""
 
-from .pdf_decomposer import PdfDecomposer
-from .docx_decomposer import DocxDecomposer
-from .xlsx_decomposer import XlsxDecomposer
-from .image_decomposer import ImageDecomposer
 from .base import BaseDecomposer
+from .docx_decomposer import DocxDecomposer
+from .image_decomposer import ImageDecomposer
+from .pdf_decomposer import PdfDecomposer
+from .xlsx_decomposer import XlsxDecomposer
 
 __all__ = [
     "BaseDecomposer",

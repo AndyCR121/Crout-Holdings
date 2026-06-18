@@ -1,128 +1,123 @@
 # 🔐 Image Encryption Algorithm
 
-A steganographic file-to-image encoder for **Crout Holdings**.
+A semantic image encryption prototype for **Crout Holdings**.
 
-Takes any supported file, decomposes it into its raw byte / key-value stream, then encodes it **pixel-by-pixel** into a carrier image. The original carrier image acts as the **secret key** — without it, decoding is computationally infeasible.
+This version implements the redesigned architecture:
 
----
-
-## Supported File Types
-
-| Format | Extension | Decomposition Strategy |
-|--------|-----------|------------------------|
-| PDF | `.pdf` | Raw byte stream (compressed internally) |
-| Word | `.docx` / `.doc` | XML text + metadata key-value pairs |
-| Excel | `.xlsx` / `.csv` | Row/column cell key-value pairs |
-| Image | `.png` / `.jpg` / `.bmp` | Raw pixel RGB tuples |
+- The **encrypted image** stores encoded values.
+- A separate **config file** stores `{ key, pixel_index, value_type }` entries.
+- The **key image is private** and is never required to be shared.
+- Decryption requires:
+  1. encrypted image
+  2. config file
+  3. private key image
 
 ---
 
-## How It Works
+## Core Concept
 
+Instead of treating every file as a raw byte blob, files are decomposed into **semantic key-value entries**.
+
+Examples:
+
+- `meta.original_extension = png`
+- `image.width = 400`
+- `image.height = 300`
+- `pixel.0 = 255,128,0`
+- `Sheet1!R1C1 = Revenue`
+- `Sheet1!R2C2 = 1500`
+
+Each semantic entry is assigned to a pixel index. The config stores the mapping:
+
+```json
+{
+  "key": "image.width",
+  "pixel_index": 42,
+  "value_type": "int"
+}
 ```
-┌─────────────────────────────────────────────────────────┐
-│  1. Load base image → used as SECRET KEY (pixel map)    │
-│  2. Decompose input file → [(key, value), ...]           │
-│  3. Serialize to byte stream                             │
-│  4. For each byte → encode into pixel channel (R/G/B)    │
-│  5. Write file-type reference pixels                     │
-│  6. Write EOF sentinel pixel (255, 0, 255)               │
-│  7. Save encrypted image                                 │
-└─────────────────────────────────────────────────────────┘
-```
 
-### Pixel Encoding Scheme
-
-- Every **3 bytes** of payload → 1 pixel (R, G, B)
-- Pixel **order** follows the secret key image's pixel sequence
-- **File-type marker**: 3 pixels before EOF encode the file type as a known RGB triplet
-- **EOF sentinel**: `(255, 0, 255)` — magenta pixel signals end of content
-
-### File-Type Reference RGB Codes
-
-| File Type | Marker Pixel (R, G, B) |
-|-----------|------------------------|
-| PDF | `(80, 68, 70)` — ASCII "PDF" |
-| DOCX | `(68, 79, 67)` — ASCII "DOC" |
-| XLSX | `(88, 76, 83)` — ASCII "XLS" |
-| CSV | `(67, 83, 86)` — ASCII "CSV" |
-| PNG | `(80, 78, 71)` — ASCII "PNG" |
-| JPG | `(74, 80, 71)` — ASCII "JPG" |
-| BMP | `(66, 77, 80)` — ASCII "BMP" |
+The pixel value at that index stores the encoded data using a delta against the private key image.
 
 ---
 
-## Installation
+## Files Produced
 
-```bash
-cd image-encryptor
-pip install -r requirements.txt
-```
-
-## Usage
-
-### Encode (Encrypt)
+### Encrypt
 
 ```bash
 python main.py encode \
-  --key base_image.png \
-  --input secret_document.pdf \
-  --output encrypted.png
+  --key ./demo/orignals/key.png \
+  --input ./demo/orignals/test.png \
+  --output-image ./demo/encrypted/encrypted.png \
+  --output-config ./demo/encrypted/encrypted.config.json
 ```
 
-### Decode (Decrypt)
+### Decrypt
 
 ```bash
 python main.py decode \
-  --key base_image.png \
-  --input encrypted.png \
-  --output recovered_document.pdf
+  --key ./demo/orignals/key.png \
+  --input-image ./demo/encrypted/encrypted.png \
+  --input-config ./demo/encrypted/encrypted.config.json \
+  --output ./demo/decrypted/recovered.png
 ```
 
-### Python API
+---
 
-```python
-from encryptor import ImageEncryptor
+## Supported Types
 
-enc = ImageEncryptor(key_image_path="base_image.png")
-
-# Encrypt
-enc.encode(input_file="report.pdf", output_image="encrypted.png")
-
-# Decrypt
-enc.decode(encrypted_image="encrypted.png", output_file="recovered.pdf")
-```
+- PDF → currently stored as base64 chunked semantic entries
+- DOCX / DOC → currently stored as base64 chunked semantic entries
+- XLSX / CSV → semantic cell entries
+- Images (PNG / JPG / BMP) → metadata + per-pixel semantic entries
 
 ---
 
 ## Architecture
 
-```
+```text
 image-encryptor/
-├── main.py              # CLI entry point
-├── encryptor.py         # Core ImageEncryptor class
+├── main.py
+├── encryptor.py
+├── config_manager.py
+├── file_type.py
+├── key_manager.py
+├── pixel_mapper.py
+├── semantic_types.py
 ├── decomposers/
-│   ├── __init__.py
-│   ├── base.py          # BaseDecomposer interface
+│   ├── base.py
 │   ├── pdf_decomposer.py
 │   ├── docx_decomposer.py
 │   ├── xlsx_decomposer.py
 │   └── image_decomposer.py
-├── pixel_mapper.py      # Byte ↔ Pixel RGB conversion
-├── key_manager.py       # Secret key image loader & pixel index map
-├── file_type.py         # File-type detection & marker pixels
-├── requirements.txt
 └── README.md
 ```
 
 ---
 
-## Security Notes
+## Security Model
 
-- The **base image is the key**. Anyone without the exact base image cannot decode.
-- The pixel ordering is derived from the key image's pixel sequence — a different image produces a completely different mapping.
-- For production use, consider layering AES encryption on the byte stream before pixel encoding for dual-layer security.
+### Public / Shared
+- Encrypted image
+- Config file
+
+### Private
+- Key image
+
+Config alone is insufficient because the actual value is delta-encoded against the private key image's original pixel value.
+
+Encrypted image alone is insufficient because the attacker does not know what each pixel semantically represents.
 
 ---
 
-> Crout Holdings PTY LTD — Internal R&D Tool
+## Notes
+
+This is a prototype and is optimized for **clarity of architecture**, not maximum compression or production-grade cryptography.
+
+Future improvements:
+- AES pre-encryption layer
+- pixel shuffle seeded from config key
+- chunk packing for large strings
+- binary config format
+- compression before chunking

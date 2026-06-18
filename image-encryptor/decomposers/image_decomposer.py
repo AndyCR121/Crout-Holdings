@@ -1,8 +1,9 @@
-"""Image decomposer — serialises pixel RGB tuples to bytes."""
+"""Image decomposer using semantic metadata + per-pixel entries."""
 
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 from PIL import Image
@@ -11,48 +12,36 @@ from .base import BaseDecomposer
 
 
 class ImageDecomposer(BaseDecomposer):
-    """
-    Strategy:
-      Encode the input image's pixel data as a compact binary stream:
-
-      Header (8 bytes):
-        [0:2] width  (uint16, big-endian)
-        [2:4] height (uint16, big-endian)
-        [4]   channels (1 = grayscale, 3 = RGB)
-        [5:8] reserved (0x00)
-
-      Body:
-        Flat array of pixel channel values (uint8), row-major order.
-
-    This preserves the image faithfully (lossless), independent of
-    the carrier format, and keeps the decomposer simple.
-    """
-
-    def to_bytes(self) -> bytes:
+    def to_entries(self) -> list[tuple[str, Any]]:
         img = Image.open(self.file_path).convert("RGB")
         arr = np.array(img, dtype=np.uint8)
         h, w = arr.shape[:2]
 
-        header = bytearray(8)
-        header[0] = (w >> 8) & 0xFF
-        header[1] = w & 0xFF
-        header[2] = (h >> 8) & 0xFF
-        header[3] = h & 0xFF
-        header[4] = 3  # RGB channels
-        # bytes 5-7 reserved
+        entries: list[tuple[str, Any]] = [
+            ("meta.original_extension", Path(self.file_path).suffix.lower().lstrip(".")),
+            ("image.width", int(w)),
+            ("image.height", int(h)),
+        ]
 
-        return bytes(header) + arr.tobytes()
+        index = 0
+        for row in range(h):
+            for col in range(w):
+                pixel = tuple(int(v) for v in arr[row, col])
+                entries.append((f"pixel.{index}", pixel))
+                index += 1
+        return entries
 
-    def from_bytes(self, data: bytes, output_path: str) -> None:
-        header = data[:8]
-        w = (header[0] << 8) | header[1]
-        h = (header[2] << 8) | header[3]
-        channels = header[4]
+    def from_entries(self, entries: list[tuple[str, Any]], output_path: str) -> None:
+        lookup = dict(entries)
+        width = int(lookup["image.width"])
+        height = int(lookup["image.height"])
 
-        expected_body = w * h * channels
-        body = data[8 : 8 + expected_body]
+        arr = np.zeros((height, width, 3), dtype=np.uint8)
+        total = width * height
+        for i in range(total):
+            pixel = lookup.get(f"pixel.{i}", (0, 0, 0))
+            row = i // width
+            col = i % width
+            arr[row, col] = pixel
 
-        arr = np.frombuffer(body, dtype=np.uint8).reshape((h, w, channels))
-        img = Image.fromarray(arr, mode="RGB")
-        img.save(output_path)
-        print(f"[IMAGE] Recovered → {output_path}")
+        Image.fromarray(arr, mode="RGB").save(output_path)

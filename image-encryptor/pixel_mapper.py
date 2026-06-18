@@ -1,41 +1,63 @@
-"""Byte-stream ↔ RGB pixel conversion utilities."""
+"""Delta value ↔ RGB encoding helpers."""
 
 from __future__ import annotations
 
-
-def bytes_to_pixels(
-    data: bytes,
-) -> list[tuple[int, int, int]]:
-    """
-    Pack a byte stream into a list of (R, G, B) tuples.
-
-    Every 3 bytes become one pixel:
-      byte[0] → R
-      byte[1] → G
-      byte[2] → B
-
-    If the data length is not a multiple of 3, the last pixel
-    is zero-padded.
-    """
-    pixels: list[tuple[int, int, int]] = []
-    # Pad to multiple of 3
-    padded = data + b"\x00" * ((3 - len(data) % 3) % 3)
-    for i in range(0, len(padded), 3):
-        pixels.append((padded[i], padded[i + 1], padded[i + 2]))
-    return pixels
+import struct
+from typing import Any
 
 
-def pixels_to_bytes(
-    pixels: list[tuple[int, int, int]],
-    original_length: int,
-) -> bytes:
-    """
-    Unpack (R, G, B) tuples back into a byte stream.
+def _to_three_bytes(value: Any, value_type: str) -> tuple[int, int, int]:
+    if value_type == "bool":
+        return (1 if value else 0, 0, 0)
 
-    `original_length` is stored in the payload header so we
-    can strip zero-padding introduced during encoding.
-    """
-    raw = bytearray()
-    for r, g, b in pixels:
-        raw.extend([r, g, b])
-    return bytes(raw[:original_length])
+    if value_type == "int":
+        packed = int(value) % 16777216
+        return ((packed >> 16) & 0xFF, (packed >> 8) & 0xFF, packed & 0xFF)
+
+    if value_type == "float":
+        scaled = int(round(float(value) * 1000)) % 16777216
+        return ((scaled >> 16) & 0xFF, (scaled >> 8) & 0xFF, scaled & 0xFF)
+
+    if value_type == "rgb":
+        r, g, b = value
+        return (int(r) & 0xFF, int(g) & 0xFF, int(b) & 0xFF)
+
+    encoded = str(value).encode("utf-8")[:3]
+    encoded = encoded + b"\x00" * (3 - len(encoded))
+    return (encoded[0], encoded[1], encoded[2])
+
+
+def _from_three_bytes(rgb: tuple[int, int, int], value_type: str) -> Any:
+    if value_type == "bool":
+        return bool(rgb[0])
+
+    if value_type == "int":
+        return (rgb[0] << 16) | (rgb[1] << 8) | rgb[2]
+
+    if value_type == "float":
+        raw = (rgb[0] << 16) | (rgb[1] << 8) | rgb[2]
+        return raw / 1000.0
+
+    if value_type == "rgb":
+        return rgb
+
+    raw = bytes(rgb).rstrip(b"\x00")
+    return raw.decode("utf-8", errors="ignore")
+
+
+def encode_value_against_key(
+    key_rgb: tuple[int, int, int],
+    value: Any,
+    value_type: str,
+) -> tuple[int, int, int]:
+    raw = _to_three_bytes(value, value_type)
+    return tuple((key_rgb[i] + raw[i]) % 256 for i in range(3))
+
+
+def decode_value_against_key(
+    key_rgb: tuple[int, int, int],
+    encrypted_rgb: tuple[int, int, int],
+    value_type: str,
+) -> Any:
+    raw = tuple((encrypted_rgb[i] - key_rgb[i]) % 256 for i in range(3))
+    return _from_three_bytes(raw, value_type)
