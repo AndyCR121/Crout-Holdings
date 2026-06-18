@@ -1,15 +1,15 @@
 """Delta value <-> RGB encoding helpers.
 
-String values are stored as exactly 3 ASCII/UTF-8 bytes per pixel.
-Longer strings MUST be chunked by the caller (decomposer) before
-passing to encode_value_against_key.
+Raw bytes are packed 3 bytes per pixel (R, G, B).
+The PixelMapper class provides the bytes_to_pixels / pixels_to_bytes
+interface expected by encryptor.py.
 """
 
 from __future__ import annotations
-
 from typing import Any
 
-CHUNK_SIZE = 3  # characters per pixel for str values
+
+CHUNK_SIZE = 3  # bytes per pixel
 
 
 def _to_three_bytes(value: Any, value_type: str) -> tuple[int, int, int]:
@@ -69,3 +69,28 @@ def decode_value_against_key(
 ) -> Any:
     raw = tuple((encrypted_rgb[i] - key_rgb[i]) % 256 for i in range(3))
     return _from_three_bytes(raw, value_type)
+
+
+class PixelMapper:
+    """Converts raw bytes <-> list of (R, G, B) pixel tuples.
+
+    Packing: every 3 consecutive bytes become one pixel.
+    If the byte count is not divisible by 3 the last pixel is zero-padded.
+    """
+
+    def bytes_to_pixels(self, data: bytes) -> list[tuple[int, int, int]]:
+        pixels = []
+        for i in range(0, len(data), 3):
+            chunk = data[i : i + 3]
+            # zero-pad if last chunk is short
+            r = chunk[0] if len(chunk) > 0 else 0
+            g = chunk[1] if len(chunk) > 1 else 0
+            b = chunk[2] if len(chunk) > 2 else 0
+            pixels.append((r, g, b))
+        return pixels
+
+    def pixels_to_bytes(self, pixels: list[tuple[int, int, int]]) -> bytes:
+        out = bytearray()
+        for r, g, b in pixels:
+            out.extend([r, g, b])
+        return bytes(out)
