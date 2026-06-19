@@ -815,7 +815,7 @@ document.getElementById('btn-encode').addEventListener('click',async()=>{
     const res=await fetch(base+'/encode',{method:'POST',body:fd});
     const d=await res.json();
 
-    if(!res.ok||!d.ok) throw new Error(d.detail||d.message||'Encode failed');
+    if(!res.ok||!d.passed) throw new Error(d.detail||d.message||'Encode failed');
 
     showResultOk('enc-result-hdr','enc-result-body','Encryption complete',([
       ['Input file',d.input_filename,''],
@@ -854,7 +854,7 @@ document.getElementById('btn-decode').addEventListener('click',async()=>{
     const res=await fetch(base+'/decode',{method:'POST',body:fd});
     const d=await res.json();
 
-    if(!res.ok||!d.ok) throw new Error(d.detail||d.message||'Decode failed');
+    if(!res.ok||!d.passed) throw new Error(d.detail||d.message||'Decode failed');
 
     showResultOk('dec-result-hdr','dec-result-body','Decryption complete',([
       ['Recovered file',d.recovered_filename,''],
@@ -961,7 +961,7 @@ document.getElementById('btn-test').addEventListener('click',async()=>{
     const res=await fetch(base+'/test',{method:'POST',signal:AbortSignal.timeout(120000)});
     const d=await res.json();
 
-    if(!res.ok||!d.ok) throw new Error(
+    if(!res.ok||!d.passed) throw new Error(
       (d.steps&&d.steps.find(s=>s.status==='error')?.detail)||
       d.detail||'Test failed'
     );
