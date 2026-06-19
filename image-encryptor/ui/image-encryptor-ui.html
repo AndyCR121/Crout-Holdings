@@ -7,822 +7,982 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@300..700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/zxcvbn@4.4.2/dist/zxcvbn.js"></script>
 <style>
 /* ── tokens ──────────────────────────────────────────────────────────── */
 :root,[data-theme="light"]{
-  --bg:#f7f6f2;--surface:#f9f8f5;--surface-2:#fbfbf9;
-  --surface-off:#f3f0ec;--surface-dyn:#e6e4df;
-  --divider:#dcd9d5;--border:#d4d1ca;
-  --text:#28251d;--muted:#7a7974;--faint:#bab9b4;--inverse:#f9f8f4;
-  --primary:#01696f;--primary-h:#0c4e54;--primary-a:#0f3638;--primary-hl:#cedcd8;
-  --success:#437a22;--success-hl:#d4dfcc;
-  --error:#a12c7b;--error-hl:#e0ced7;
-  --warn:#964219;--warn-hl:#ddcfc6;
-  --r-sm:.375rem;--r-md:.5rem;--r-lg:.75rem;--r-xl:1rem;--r-full:9999px;
-  --sh-sm:0 1px 2px oklch(0.2 0.01 80/.06);
-  --sh-md:0 4px 12px oklch(0.2 0.01 80/.08);
-  --sh-lg:0 12px 32px oklch(0.2 0.01 80/.12);
-  --ease:180ms cubic-bezier(.16,1,.3,1);
+  --color-bg:#f7f6f2;--color-surface:#f9f8f5;--color-surface-2:#fbfbf9;
+  --color-surface-offset:#f3f0ec;--color-surface-dynamic:#e6e4df;
+  --color-divider:#dcd9d5;--color-border:#d4d1ca;
+  --color-text:#28251d;--color-text-muted:#7a7974;--color-text-faint:#bab9b4;
+  --color-primary:#01696f;--color-primary-hover:#0c4e54;--color-primary-active:#0f3638;
+  --color-primary-hl:#cedcd8;
+  --color-success:#437a22;--color-success-hl:#d4dfcc;
+  --color-error:#a12c7b;--color-error-hl:#e0ced7;
+  --color-warning:#964219;--color-warning-hl:#ddcfc6;
+  --color-blue:#006494;--color-blue-hl:#c6d8e4;
+  --color-orange:#da7101;--color-orange-hl:#e7d7c4;
+  --radius-sm:.375rem;--radius-md:.5rem;--radius-lg:.75rem;--radius-xl:1rem;--radius-full:9999px;
+  --shadow-sm:0 1px 2px oklch(.2 .01 80/.06);
+  --shadow-md:0 4px 12px oklch(.2 .01 80/.08);
+  --shadow-lg:0 12px 32px oklch(.2 .01 80/.12);
+  --transition:180ms cubic-bezier(.16,1,.3,1);
   --font-body:'Inter','Helvetica Neue',sans-serif;
-  --font-mono:'JetBrains Mono',monospace;
-  --tx-xs:clamp(.75rem,.7rem + .25vw,.875rem);
-  --tx-sm:clamp(.875rem,.8rem + .35vw,1rem);
-  --tx-base:clamp(1rem,.95rem + .25vw,1.125rem);
-  --tx-lg:clamp(1.125rem,1rem + .75vw,1.5rem);
-  --tx-xl:clamp(1.5rem,1.2rem + 1.25vw,2.25rem);
+  --font-mono:'JetBrains Mono','Fira Code',monospace;
+  --text-xs:clamp(.75rem,.7rem + .25vw,.875rem);
+  --text-sm:clamp(.875rem,.8rem + .35vw,1rem);
+  --text-base:clamp(1rem,.95rem + .25vw,1.125rem);
+  --text-lg:clamp(1.125rem,1rem + .75vw,1.5rem);
+  --text-xl:clamp(1.5rem,1.2rem + 1.25vw,2.25rem);
+  --space-1:.25rem;--space-2:.5rem;--space-3:.75rem;--space-4:1rem;
+  --space-5:1.25rem;--space-6:1.5rem;--space-8:2rem;--space-10:2.5rem;
+  --space-12:3rem;--space-16:4rem;
 }
 [data-theme="dark"]{
-  --bg:#171614;--surface:#1c1b19;--surface-2:#201f1d;
-  --surface-off:#1d1c1a;--surface-dyn:#2d2c2a;
-  --divider:#262523;--border:#393836;
-  --text:#cdccca;--muted:#797876;--faint:#5a5957;--inverse:#2b2a28;
-  --primary:#4f98a3;--primary-h:#227f8b;--primary-a:#1a626b;--primary-hl:#313b3b;
-  --success:#6daa45;--success-hl:#3a4435;
-  --error:#d163a7;--error-hl:#4c3d46;
-  --warn:#bb653b;--warn-hl:#564942;
-  --sh-sm:0 1px 2px oklch(0 0 0/.2);
-  --sh-md:0 4px 12px oklch(0 0 0/.3);
-  --sh-lg:0 12px 32px oklch(0 0 0/.4);
+  --color-bg:#171614;--color-surface:#1c1b19;--color-surface-2:#201f1d;
+  --color-surface-offset:#1d1c1a;--color-surface-dynamic:#2d2c2a;
+  --color-divider:#262523;--color-border:#393836;
+  --color-text:#cdccca;--color-text-muted:#797876;--color-text-faint:#5a5957;
+  --color-primary:#4f98a3;--color-primary-hover:#227f8b;--color-primary-active:#1a626b;
+  --color-primary-hl:#313b3b;
+  --color-success:#6daa45;--color-success-hl:#3a4435;
+  --color-error:#d163a7;--color-error-hl:#4c3d46;
+  --color-warning:#bb653b;--color-warning-hl:#564942;
+  --color-blue:#5591c7;--color-blue-hl:#3a4550;
+  --color-orange:#fdab43;--color-orange-hl:#564b3e;
+  --shadow-sm:0 1px 2px oklch(0 0 0/.2);
+  --shadow-md:0 4px 12px oklch(0 0 0/.3);
+  --shadow-lg:0 12px 32px oklch(0 0 0/.4);
 }
-@media(prefers-color-scheme:dark){:root:not([data-theme]){
-  --bg:#171614;--surface:#1c1b19;--surface-2:#201f1d;
-  --surface-off:#1d1c1a;--surface-dyn:#2d2c2a;
-  --divider:#262523;--border:#393836;
-  --text:#cdccca;--muted:#797876;--faint:#5a5957;--inverse:#2b2a28;
-  --primary:#4f98a3;--primary-h:#227f8b;--primary-a:#1a626b;--primary-hl:#313b3b;
-  --success:#6daa45;--success-hl:#3a4435;
-  --error:#d163a7;--error-hl:#4c3d46;
-  --warn:#bb653b;--warn-hl:#564942;
-  --sh-sm:0 1px 2px oklch(0 0 0/.2);
-  --sh-md:0 4px 12px oklch(0 0 0/.3);
-  --sh-lg:0 12px 32px oklch(0 0 0/.4);
-}}
+@media(prefers-color-scheme:dark){:root:not([data-theme]){--color-bg:#171614;--color-surface:#1c1b19;--color-surface-2:#201f1d;--color-surface-offset:#1d1c1a;--color-surface-dynamic:#2d2c2a;--color-divider:#262523;--color-border:#393836;--color-text:#cdccca;--color-text-muted:#797876;--color-text-faint:#5a5957;--color-primary:#4f98a3;--color-primary-hover:#227f8b;--color-primary-active:#1a626b;--color-primary-hl:#313b3b;--color-success:#6daa45;--color-success-hl:#3a4435;--color-error:#d163a7;--color-error-hl:#4c3d46;--color-warning:#bb653b;--color-warning-hl:#564942;--color-blue:#5591c7;--color-blue-hl:#3a4550;--color-orange:#fdab43;--color-orange-hl:#564b3e;--shadow-sm:0 1px 2px oklch(0 0 0/.2);--shadow-md:0 4px 12px oklch(0 0 0/.3);--shadow-lg:0 12px 32px oklch(0 0 0/.4);}}
 
 /* ── reset ───────────────────────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;scroll-behavior:smooth}
-body{min-height:100dvh;font-family:var(--font-body);font-size:var(--tx-base);color:var(--text);background:var(--bg);line-height:1.6}
+body{min-height:100dvh;font-family:var(--font-body);font-size:var(--text-base);color:var(--color-text);background:var(--color-bg);line-height:1.6}
 img,svg{display:block;max-width:100%}
-input,button,select,textarea{font:inherit;color:inherit}
+button,input,select{font:inherit;color:inherit}
 button{cursor:pointer;background:none;border:none}
-:focus-visible{outline:2px solid var(--primary);outline-offset:3px;border-radius:var(--r-sm)}
-a,button,[role=button],input,textarea,select{transition:color var(--ease),background var(--ease),border-color var(--ease),box-shadow var(--ease)}
+:focus-visible{outline:2px solid var(--color-primary);outline-offset:3px;border-radius:var(--radius-sm)}
+a,button,input,select,[role="button"]{transition:color var(--transition),background var(--transition),border-color var(--transition),box-shadow var(--transition),opacity var(--transition)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border-width:0}
 
 /* ── layout ──────────────────────────────────────────────────────────── */
-.app{min-height:100dvh;display:grid;grid-template-rows:auto 1fr auto}
-.topbar{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:.75rem 1.5rem;border-bottom:1px solid var(--divider);
-  background:var(--surface);position:sticky;top:0;z-index:10;
-  box-shadow:var(--sh-sm);
-}
-.logo{display:flex;align-items:center;gap:.625rem;text-decoration:none;color:var(--text)}
-.logo svg{flex-shrink:0}
-.logo-text{font-weight:600;font-size:var(--tx-sm);letter-spacing:-.01em}
-.logo-sub{font-size:var(--tx-xs);color:var(--muted);font-weight:400}
-.topbar-right{display:flex;align-items:center;gap:.5rem}
-
-.main{display:flex;justify-content:center;padding:2rem 1rem 3rem;}
-.card{
-  width:100%;max-width:640px;
-  background:var(--surface);border:1px solid oklch(from var(--text) l c h/.1);
-  border-radius:var(--r-xl);box-shadow:var(--sh-md);overflow:hidden;
-}
-
-/* ── tabs ────────────────────────────────────────────────────────────── */
-.tabs{display:flex;border-bottom:1px solid var(--divider)}
-.tab{
-  flex:1;padding:.875rem 1rem;font-size:var(--tx-sm);font-weight:500;
-  color:var(--muted);border-bottom:2px solid transparent;
-  background:none;border-radius:0;transition:color var(--ease),border-color var(--ease),background var(--ease);
-  display:flex;align-items:center;justify-content:center;gap:.5rem;
-}
-.tab:hover{color:var(--text);background:var(--surface-off)}
-.tab.active{color:var(--primary);border-bottom-color:var(--primary);background:var(--surface)}
-
-/* ── form body ───────────────────────────────────────────────────────── */
-.form-body{padding:1.5rem;display:flex;flex-direction:column;gap:1.25rem}
-
-.field-label{
-  display:block;font-size:var(--tx-sm);font-weight:500;
-  color:var(--muted);margin-bottom:.375rem;
-  display:flex;align-items:center;gap:.375rem;
-}
-.field-label .badge{
-  font-size:var(--tx-xs);background:var(--primary-hl);color:var(--primary);
-  padding:.1em .45em;border-radius:var(--r-full);font-weight:600;letter-spacing:.02em;
-}
-.field-label .badge.optional{
-  background:var(--surface-dyn);color:var(--muted);
-}
-.field-label .badge.new{
-  background:var(--success-hl);color:var(--success);
-}
-
-/* ── drop zone ───────────────────────────────────────────────────────── */
-.drop-zone{
-  border:1.5px dashed var(--border);border-radius:var(--r-lg);
-  padding:1.5rem 1rem;text-align:center;cursor:pointer;
-  background:var(--surface-2);transition:border-color var(--ease),background var(--ease);
-  position:relative;
-}
-.drop-zone:hover,.drop-zone.dragover{
-  border-color:var(--primary);background:color-mix(in oklch,var(--primary) 5%,var(--surface-2));
-}
-.drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.drop-zone-icon{color:var(--faint);margin:0 auto .5rem;width:28px;height:28px}
-.drop-zone p{font-size:var(--tx-sm);color:var(--muted)}
-.drop-zone span{color:var(--primary);text-decoration:underline;text-underline-offset:2px}
-.drop-zone small{font-size:var(--tx-xs);color:var(--faint);margin-top:.25rem;display:block}
-
-/* ── chip ────────────────────────────────────────────────────────────── */
-.chip-row{display:flex;flex-wrap:wrap;gap:.375rem;margin-top:.375rem}
-.chip{
-  display:inline-flex;align-items:center;gap:.375rem;
-  background:var(--surface-off);border:1px solid var(--border);
-  border-radius:var(--r-full);padding:.2em .7em .2em .6em;
-  font-size:var(--tx-xs);color:var(--text);
-}
-.chip button{
-  width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  color:var(--muted);flex-shrink:0;
-}
-.chip button:hover{background:var(--surface-dyn);color:var(--text)}
-
-/* ── key preview ─────────────────────────────────────────────────────── */
-.key-preview{
-  display:none;flex-direction:row;gap:.75rem;align-items:flex-start;
-  background:var(--surface-off);border-radius:var(--r-md);padding:.75rem;
-}
-.key-preview.show{display:flex}
-.key-thumb{width:72px;height:72px;object-fit:cover;border-radius:var(--r-sm);flex-shrink:0;border:1px solid var(--border)}
-.key-meta{font-size:var(--tx-xs);color:var(--muted);line-height:1.7}
-.key-meta strong{color:var(--text);font-size:var(--tx-sm)}
-.capacity-bar{height:4px;border-radius:var(--r-full);background:var(--surface-dyn);margin-top:.5rem;overflow:hidden}
-.capacity-fill{height:100%;border-radius:var(--r-full);background:var(--primary);width:0;transition:width .4s var(--ease)}
-
-/* ── text input ──────────────────────────────────────────────────────── */
-.input-wrap{position:relative}
-.input-wrap input[type=text],.input-wrap input[type=password]{
-  width:100%;padding:.625rem .75rem;border-radius:var(--r-md);
-  border:1px solid var(--border);background:var(--surface-2);
-  font-size:var(--tx-sm);color:var(--text);
-}
-.input-wrap input:focus{border-color:var(--primary);outline:none;box-shadow:0 0 0 3px color-mix(in oklch,var(--primary) 18%,transparent)}
-.input-reveal{
-  position:absolute;right:.625rem;top:50%;transform:translateY(-50%);
-  color:var(--muted);padding:.25rem;border-radius:var(--r-sm);
-}
-.input-reveal:hover{color:var(--text)}
-
-/* ── strength meter ──────────────────────────────────────────────────── */
-.strength-wrap{margin-top:.5rem}
-.strength-bar{display:flex;gap:3px;margin-bottom:.3rem}
-.strength-seg{flex:1;height:3px;border-radius:var(--r-full);background:var(--surface-dyn);transition:background .25s}
-.strength-label{font-size:var(--tx-xs);color:var(--muted)}
-.str-0 .strength-seg:nth-child(1){background:#d4d1ca}
-.str-1 .strength-seg:nth-child(1){background:var(--error)}
-.str-2 .strength-seg:nth-child(1),.str-2 .strength-seg:nth-child(2){background:var(--warn)}
-.str-3 .strength-seg:nth-child(1),.str-3 .strength-seg:nth-child(2),.str-3 .strength-seg:nth-child(3){background:var(--primary)}
-.str-4 .strength-seg{background:var(--success)}
-
-/* ── output preview ──────────────────────────────────────────────────── */
-.output-preview{
-  background:var(--surface-off);border-radius:var(--r-md);padding:.75rem;
-  display:none;flex-direction:column;gap:.375rem;
-}
-.output-preview.show{display:flex}
-.output-row{display:flex;align-items:center;gap:.5rem;font-size:var(--tx-xs)}
-.output-icon{color:var(--muted);flex-shrink:0}
-.output-name{font-family:var(--font-mono);color:var(--text);font-size:var(--tx-xs)}
-.output-badge{margin-left:auto;font-size:10px;background:var(--success-hl);color:var(--success);padding:.15em .5em;border-radius:var(--r-full);font-weight:600}
-.output-badge.cfg{background:var(--primary-hl);color:var(--primary)}
-.output-badge.aes{background:var(--success-hl);color:var(--success)}
-
-/* ── config info ─────────────────────────────────────────────────────── */
-.config-info{
-  background:var(--surface-off);border-radius:var(--r-md);padding:.875rem;
-  display:none;gap:.5rem;flex-direction:column;
-}
-.config-info.show{display:flex}
-.ci-row{display:flex;justify-content:space-between;font-size:var(--tx-xs);align-items:center}
-.ci-key{color:var(--muted)}
-.ci-val{font-family:var(--font-mono);color:var(--text)}
-.ci-badge{font-size:10px;padding:.15em .5em;border-radius:var(--r-full);font-weight:600}
-.ci-badge.aes-on{background:var(--success-hl);color:var(--success)}
-.ci-badge.aes-off{background:var(--surface-dyn);color:var(--muted)}
-
-/* ── divider ─────────────────────────────────────────────────────────── */
-.divider{height:1px;background:var(--divider);margin:.25rem 0}
-
-/* ── CLI box ─────────────────────────────────────────────────────────── */
-.cli-box{
-  background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);
-  overflow:hidden;
-}
-.cli-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:.5rem .875rem;border-bottom:1px solid var(--divider);
-  background:var(--surface-off);
-}
-.cli-header-left{display:flex;align-items:center;gap:.5rem;font-size:var(--tx-xs);color:var(--muted);font-family:var(--font-mono)}
-.cli-dots{display:flex;gap:5px}
-.cli-dot{width:10px;height:10px;border-radius:50%}
-.cli-dot:nth-child(1){background:#ff5f57}
-.cli-dot:nth-child(2){background:#febc2e}
-.cli-dot:nth-child(3){background:#28c840}
-.cli-body{padding:.875rem;font-family:var(--font-mono);font-size:var(--tx-xs);color:var(--text);white-space:pre-wrap;word-break:break-all;line-height:1.7;min-height:3.5rem}
-.cli-copy{
-  font-size:var(--tx-xs);color:var(--muted);padding:.3rem .6rem;
-  border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface-2);
-  display:flex;align-items:center;gap:.3rem;
-}
-.cli-copy:hover{color:var(--text);border-color:var(--primary)}
-.cli-copy.copied{color:var(--success);border-color:var(--success)}
-
-/* ── action button ───────────────────────────────────────────────────── */
-.btn-primary{
-  width:100%;padding:.75rem 1rem;border-radius:var(--r-md);
-  background:var(--primary);color:var(--inverse);font-weight:600;
-  font-size:var(--tx-sm);letter-spacing:.01em;
-  display:flex;align-items:center;justify-content:center;gap:.5rem;
-}
-.btn-primary:hover{background:var(--primary-h)}
-.btn-primary:active{background:var(--primary-a)}
-.btn-primary:disabled{opacity:.45;cursor:not-allowed}
+.app{display:grid;grid-template-rows:auto 1fr auto;min-height:100dvh}
+header{display:flex;align-items:center;justify-content:space-between;padding:var(--space-4) var(--space-6);border-bottom:1px solid var(--color-divider);background:var(--color-surface);position:sticky;top:0;z-index:50}
+.logo{display:flex;align-items:center;gap:var(--space-3)}
+.logo-icon{width:32px;height:32px;flex-shrink:0}
+.logo-text{font-size:var(--text-sm);font-weight:600;letter-spacing:-.01em}
+.logo-sub{font-size:var(--text-xs);color:var(--color-text-muted);font-weight:400}
+main{padding:var(--space-8) var(--space-6);max-width:900px;margin-inline:auto;width:100%}
+footer{padding:var(--space-4) var(--space-6);border-top:1px solid var(--color-divider);font-size:var(--text-xs);color:var(--color-text-faint);text-align:center}
 
 /* ── theme toggle ────────────────────────────────────────────────────── */
-.theme-btn{
-  width:36px;height:36px;border-radius:var(--r-full);
-  display:flex;align-items:center;justify-content:center;
-  color:var(--muted);border:1px solid var(--border);background:var(--surface-2);
+.theme-btn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:var(--radius-md);color:var(--color-text-muted)}
+.theme-btn:hover{background:var(--color-surface-offset);color:var(--color-text)}
+
+/* ── api status bar ──────────────────────────────────────────────────── */
+.api-bar{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-4);border-radius:var(--radius-lg);background:var(--color-surface);border:1px solid var(--color-divider);margin-bottom:var(--space-6);font-size:var(--text-sm)}
+.api-dot{width:8px;height:8px;border-radius:50%;background:var(--color-text-faint);flex-shrink:0;transition:background var(--transition)}
+.api-dot.ok{background:var(--color-success)}
+.api-dot.err{background:var(--color-error)}
+.api-dot.checking{background:var(--color-warning);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.api-label{color:var(--color-text-muted)}
+.api-url-input{flex:1;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:var(--space-1) var(--space-3);font-size:var(--text-xs);font-family:var(--font-mono);color:var(--color-text)}
+.api-url-input:focus{outline:none;border-color:var(--color-primary)}
+.btn-recheck{font-size:var(--text-xs);padding:var(--space-1) var(--space-3);border-radius:var(--radius-sm);background:var(--color-surface-offset);color:var(--color-text-muted);border:1px solid var(--color-border)}
+.btn-recheck:hover{background:var(--color-surface-dynamic);color:var(--color-text)}
+
+/* ── tabs ────────────────────────────────────────────────────────────── */
+.tabs{display:flex;gap:var(--space-1);padding:var(--space-1);background:var(--color-surface-offset);border-radius:var(--radius-lg);margin-bottom:var(--space-6);width:fit-content}
+.tab-btn{padding:var(--space-2) var(--space-5);border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:500;color:var(--color-text-muted);display:flex;align-items:center;gap:var(--space-2)}
+.tab-btn.active{background:var(--color-surface);color:var(--color-text);box-shadow:var(--shadow-sm)}
+.tab-btn:hover:not(.active){color:var(--color-text);background:var(--color-surface-dynamic)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* ── section heading ─────────────────────────────────────────────────── */
+.section-title{font-size:var(--text-sm);font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:var(--space-4)}
+
+/* ── drop zone ───────────────────────────────────────────────────────── */
+.drop-zone{border:1.5px dashed var(--color-border);border-radius:var(--radius-lg);padding:var(--space-6) var(--space-4);text-align:center;cursor:pointer;color:var(--color-text-muted);font-size:var(--text-sm);transition:border-color var(--transition),background var(--transition)}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--color-primary);background:var(--color-primary-hl)}
+.drop-zone-icon{margin-inline:auto;margin-bottom:var(--space-2);color:var(--color-text-faint)}
+.drop-zone p{margin:0;font-size:var(--text-xs)}
+.drop-zone strong{color:var(--color-text);font-weight:500}
+
+/* ── file chip ───────────────────────────────────────────────────────── */
+.file-chip{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-4);background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);margin-top:var(--space-2)}
+.file-chip-icon{color:var(--color-primary);flex-shrink:0}
+.file-chip-info{flex:1;min-width:0}
+.file-chip-name{font-size:var(--text-sm);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-chip-meta{font-size:var(--text-xs);color:var(--color-text-muted)}
+.file-chip-remove{color:var(--color-text-faint);padding:var(--space-1);border-radius:var(--radius-sm)}
+.file-chip-remove:hover{color:var(--color-error);background:var(--color-error-hl)}
+
+/* ── key preview ─────────────────────────────────────────────────────── */
+.key-preview{display:flex;align-items:center;gap:var(--space-4);padding:var(--space-3) var(--space-4);background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);margin-top:var(--space-2)}
+.key-thumb{width:56px;height:56px;object-fit:cover;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface-offset)}
+.key-info{flex:1}
+.key-capacity{display:inline-flex;align-items:center;gap:4px;margin-top:var(--space-1);font-size:var(--text-xs);padding:2px var(--space-2);border-radius:var(--radius-full);background:var(--color-primary-hl);color:var(--color-primary)}
+
+/* ── form grid ───────────────────────────────────────────────────────── */
+.form-grid{display:grid;gap:var(--space-5)}
+.form-group{display:grid;gap:var(--space-2)}
+label.form-label{font-size:var(--text-sm);font-weight:500;color:var(--color-text)}
+.form-hint{font-size:var(--text-xs);color:var(--color-text-muted)}
+.input-text{width:100%;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-2) var(--space-3);font-size:var(--text-sm)}
+.input-text:focus{outline:none;border-color:var(--color-primary)}
+
+/* ── output preview ──────────────────────────────────────────────────── */
+.output-preview{background:var(--color-surface-offset);border-radius:var(--radius-lg);padding:var(--space-4);display:flex;gap:var(--space-4);flex-wrap:wrap;font-size:var(--text-xs);color:var(--color-text-muted)}
+.out-badge{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-1) var(--space-3);border-radius:var(--radius-full);background:var(--color-surface);border:1px solid var(--color-border);font-family:var(--font-mono);font-size:var(--text-xs)}
+.out-badge svg{color:var(--color-primary)}
+
+/* ── divider ─────────────────────────────────────────────────────────── */
+.divider{height:1px;background:var(--color-divider);margin:var(--space-6) 0}
+
+/* ── buttons ─────────────────────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:var(--space-2);padding:var(--space-3) var(--space-6);border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:500;line-height:1}
+.btn-primary{background:var(--color-primary);color:#fff}
+.btn-primary:hover{background:var(--color-primary-hover)}
+.btn-primary:active{background:var(--color-primary-active)}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--color-text-muted);border:1px solid var(--color-border)}
+.btn-ghost:hover{background:var(--color-surface-offset);color:var(--color-text)}
+.btn-test{background:var(--color-blue-hl);color:var(--color-blue);border:1px solid color-mix(in oklch,var(--color-blue) 25%,transparent)}
+.btn-test:hover{background:color-mix(in oklch,var(--color-blue) 18%,var(--color-bg))}
+.btn-test:disabled{opacity:.45;cursor:not-allowed}
+.btn-row{display:flex;gap:var(--space-3);flex-wrap:wrap;align-items:center}
+
+/* spinning loader ──────────────────────────────────────────────────────── */
+.spin{animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── CLI command ─────────────────────────────────────────────────────── */
+.cli-block{background:var(--color-bg);border:1px solid var(--color-divider);border-radius:var(--radius-lg);overflow:hidden}
+.cli-header{display:flex;align-items:center;justify-content:space-between;padding:var(--space-2) var(--space-4);background:var(--color-surface-offset);border-bottom:1px solid var(--color-divider);font-size:var(--text-xs);color:var(--color-text-muted)}
+.btn-copy{font-size:var(--text-xs);padding:var(--space-1) var(--space-3);border-radius:var(--radius-sm);background:var(--color-surface);border:1px solid var(--color-border);color:var(--color-text-muted)}
+.btn-copy:hover{background:var(--color-surface-2);color:var(--color-text)}
+.cli-code{padding:var(--space-4);font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-text);white-space:pre-wrap;word-break:break-all;line-height:1.8}
+.cli-kw{color:var(--color-primary);font-weight:500}
+.cli-flag{color:var(--color-warning)}
+.cli-val{color:var(--color-blue)}
+
+/* ── result panel ────────────────────────────────────────────────────── */
+.result-panel{margin-top:var(--space-6);border-radius:var(--radius-xl);overflow:hidden;border:1px solid var(--color-divider);display:none}
+.result-panel.show{display:block}
+.result-header{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-4) var(--space-5);font-weight:600;font-size:var(--text-sm)}
+.result-header.ok{background:var(--color-success-hl);color:var(--color-success)}
+.result-header.err{background:var(--color-error-hl);color:var(--color-error)}
+.result-header.loading{background:var(--color-surface-offset);color:var(--color-text-muted)}
+.result-body{padding:var(--space-5);background:var(--color-surface)}
+.result-row{display:flex;justify-content:space-between;align-items:baseline;padding:var(--space-2) 0;border-bottom:1px solid var(--color-divider);font-size:var(--text-sm);gap:var(--space-4)}
+.result-row:last-child{border-bottom:none}
+.result-key{color:var(--color-text-muted);flex-shrink:0}
+.result-val{font-family:var(--font-mono);font-size:var(--text-xs);text-align:right;word-break:break-all}
+.result-val.good{color:var(--color-success)}
+.result-val.bad{color:var(--color-error)}
+.result-val.warn{color:var(--color-warning)}
+
+/* ── test suite panel ────────────────────────────────────────────────── */
+.test-panel{margin-top:var(--space-8);background:var(--color-surface);border:1px solid var(--color-divider);border-radius:var(--radius-xl);overflow:hidden}
+.test-panel-header{display:flex;align-items:center;justify-content:space-between;padding:var(--space-5) var(--space-6);border-bottom:1px solid var(--color-divider)}
+.test-panel-title{font-weight:600;font-size:var(--text-base);display:flex;align-items:center;gap:var(--space-2)}
+.test-panel-body{padding:var(--space-6)}
+.test-steps{display:grid;gap:var(--space-3);margin-bottom:var(--space-6)}
+.test-step{display:flex;gap:var(--space-4);align-items:flex-start;padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-surface-2);border:1px solid var(--color-divider)}
+.step-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700}
+.step-icon.idle{background:var(--color-surface-offset);color:var(--color-text-faint)}
+.step-icon.running{background:var(--color-primary-hl);color:var(--color-primary)}
+.step-icon.ok{background:var(--color-success-hl);color:var(--color-success)}
+.step-icon.warn{background:var(--color-warning-hl);color:var(--color-warning)}
+.step-icon.error{background:var(--color-error-hl);color:var(--color-error)}
+.step-content{flex:1;min-width:0}
+.step-label{font-size:var(--text-sm);font-weight:600}
+.step-detail{font-size:var(--text-xs);color:var(--color-text-muted);margin-top:2px;font-family:var(--font-mono)}
+.step-elapsed{font-size:var(--text-xs);color:var(--color-text-faint);margin-top:2px}
+
+/* ── test summary ─────────────────────────────────────────────────────── */
+.test-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:var(--space-4)}
+.kpi{background:var(--color-surface-offset);border-radius:var(--radius-lg);padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-1)}
+.kpi-label{font-size:var(--text-xs);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.05em}
+.kpi-value{font-size:var(--text-lg);font-weight:700;font-family:var(--font-mono)}
+.kpi-value.good{color:var(--color-success)}
+.kpi-value.warn{color:var(--color-warning)}
+.kpi-value.bad{color:var(--color-error)}
+.kpi-sub{font-size:var(--text-xs);color:var(--color-text-faint)}
+
+/* ── accuracy bar ─────────────────────────────────────────────────────── */
+.accuracy-bar-wrap{margin-top:var(--space-4)}
+.accuracy-bar-label{display:flex;justify-content:space-between;font-size:var(--text-xs);color:var(--color-text-muted);margin-bottom:var(--space-2)}
+.accuracy-bar{height:8px;border-radius:var(--radius-full);background:var(--color-surface-dynamic);overflow:hidden}
+.accuracy-fill{height:100%;border-radius:var(--radius-full);background:var(--color-success);transition:width .6s cubic-bezier(.16,1,.3,1)}
+
+/* ── responsive ──────────────────────────────────────────────────────── */
+@media(max-width:600px){
+  main{padding:var(--space-4)}
+  header{padding:var(--space-3) var(--space-4)}
+  .btn-row{flex-direction:column;align-items:stretch}
+  .btn-row .btn{justify-content:center}
 }
-.theme-btn:hover{color:var(--text);border-color:var(--primary)}
-
-/* ── footer ──────────────────────────────────────────────────────────── */
-footer{text-align:center;padding:1rem;font-size:var(--tx-xs);color:var(--faint);border-top:1px solid var(--divider)}
-
-@media(max-width:480px){.form-body{padding:1rem}.topbar{padding:.625rem 1rem}}
 </style>
 </head>
 <body>
 <div class="app">
 
-<!-- topbar -->
-<header class="topbar">
-  <a class="logo" href="#" aria-label="Crout Holdings Image Encryptor">
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-      <rect width="28" height="28" rx="7" fill="var(--primary)"/>
-      <rect x="7" y="9" width="14" height="10" rx="2" stroke="var(--inverse)" stroke-width="1.5" fill="none"/>
-      <path d="M10 9V7a4 4 0 0 1 8 0v2" stroke="var(--inverse)" stroke-width="1.5" stroke-linecap="round"/>
-      <circle cx="14" cy="14" r="1.5" fill="var(--inverse)"/>
-      <path d="M14 15.5v2" stroke="var(--inverse)" stroke-width="1.5" stroke-linecap="round"/>
+<!-- ── Header ─────────────────────────────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    <svg class="logo-icon" viewBox="0 0 32 32" fill="none" aria-label="Crout Holdings">
+      <rect width="32" height="32" rx="8" fill="var(--color-primary)"/>
+      <rect x="7" y="10" width="6" height="6" rx="1" fill="white" opacity=".9"/>
+      <rect x="7" y="18" width="6" height="4" rx="1" fill="white" opacity=".5"/>
+      <rect x="15" y="10" width="10" height="2" rx="1" fill="white" opacity=".7"/>
+      <rect x="15" y="14" width="8" height="2" rx="1" fill="white" opacity=".5"/>
+      <rect x="15" y="18" width="10" height="2" rx="1" fill="white" opacity=".7"/>
+      <rect x="15" y="22" width="6" height="2" rx="1" fill="white" opacity=".4"/>
     </svg>
-    <span>
-      <span class="logo-text">Image Encryptor</span><br>
-      <span class="logo-sub">Crout Holdings</span>
-    </span>
-  </a>
-  <div class="topbar-right">
-    <button class="theme-btn" data-theme-toggle aria-label="Toggle theme">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-    </button>
+    <div>
+      <div class="logo-text">Image Encryptor</div>
+      <div class="logo-sub">Crout Holdings — Dev Tool</div>
+    </div>
   </div>
+  <button class="theme-btn" data-theme-toggle aria-label="Toggle theme">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
 </header>
 
-<!-- main -->
-<main class="main">
-  <div class="card">
+<!-- ── Main ───────────────────────────────────────────────────────────────── -->
+<main>
 
-    <!-- tabs -->
-    <nav class="tabs" role="tablist">
-      <button class="tab active" role="tab" data-tab="encode" aria-selected="true">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        Encode
-      </button>
-      <button class="tab" role="tab" data-tab="decode" aria-selected="false">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
-        Decode
-      </button>
-    </nav>
-
-    <!-- ══ ENCODE ══ -->
-    <div id="panel-encode" class="form-body" role="tabpanel">
-
-      <!-- input file -->
-      <div>
-        <label class="field-label">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          Input File
-          <span class="badge">required</span>
-        </label>
-        <div class="drop-zone" id="dz-input" role="button" tabindex="0" aria-label="Select input file">
-          <input type="file" id="file-input" accept=".pdf,.docx,.doc,.xlsx,.csv,.png,.jpg,.jpeg,.gif,.bmp,.webp">
-          <svg class="drop-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <p>Drop file here or <span>browse</span></p>
-          <small>PDF · DOCX · XLSX · CSV · PNG · JPG · GIF · BMP · WEBP</small>
-        </div>
-        <div class="chip-row" id="chip-input"></div>
-      </div>
-
-      <!-- key image -->
-      <div>
-        <label class="field-label">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="5"/><path d="M10.6 13.4L21 23.8"/><path d="M17 17l2 2"/></svg>
-          Key Image
-          <span class="badge">required</span>
-        </label>
-        <div class="drop-zone" id="dz-key-enc" role="button" tabindex="0" aria-label="Select key image">
-          <input type="file" id="key-enc" accept=".png,.jpg,.jpeg">
-          <svg class="drop-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          <p>Drop PNG/JPG key image or <span>browse</span></p>
-          <small>Larger image = more capacity</small>
-        </div>
-        <div class="chip-row" id="chip-key-enc"></div>
-        <div class="key-preview" id="key-preview-enc">
-          <img class="key-thumb" id="key-thumb-enc" src="" alt="Key image preview" width="72" height="72">
-          <div class="key-meta">
-            <strong id="key-name-enc">key.png</strong><br>
-            <span id="key-dims-enc">— × —</span> &nbsp;·&nbsp; Capacity: <span id="key-cap-enc">—</span>
-            <div class="capacity-bar"><div class="capacity-fill" id="key-fill-enc"></div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- passphrase -->
-      <div>
-        <label class="field-label" for="passphrase-enc">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          AES-256-GCM Passphrase
-          <span class="badge optional">optional</span>
-          <span class="badge new">NEW</span>
-        </label>
-        <div class="input-wrap">
-          <input type="password" id="passphrase-enc" placeholder="Leave blank for LSB-only mode" autocomplete="new-password">
-          <button class="input-reveal" id="reveal-enc" aria-label="Show passphrase" type="button">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
-        </div>
-        <div class="strength-wrap" id="strength-wrap-enc">
-          <div class="strength-bar str-0" id="strength-bar-enc">
-            <div class="strength-seg"></div><div class="strength-seg"></div>
-            <div class="strength-seg"></div><div class="strength-seg"></div>
-          </div>
-          <div class="strength-label" id="strength-label-enc">Enter a passphrase to enable AES-256-GCM dual-layer encryption</div>
-        </div>
-      </div>
-
-      <!-- output preview -->
-      <div>
-        <label class="field-label">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Output Files
-        </label>
-        <div class="output-preview" id="output-preview">
-          <div class="output-row">
-            <svg class="output-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            <span class="output-name" id="out-enc-name">—</span>
-            <span class="output-badge" id="out-enc-aes">PNG</span>
-          </div>
-          <div class="output-row">
-            <svg class="output-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            <span class="output-name" id="out-cfg-name">—</span>
-            <span class="output-badge cfg">JSON</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- CLI -->
-      <div>
-        <label class="field-label">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-          CLI Command
-        </label>
-        <div class="cli-box">
-          <div class="cli-header">
-            <div class="cli-header-left">
-              <div class="cli-dots">
-                <div class="cli-dot"></div><div class="cli-dot"></div><div class="cli-dot"></div>
-              </div>
-              bash
-            </div>
-            <button class="cli-copy" id="copy-enc" type="button">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              Copy
-            </button>
-          </div>
-          <div class="cli-body" id="cli-enc">Select a file and key image to generate the command…</div>
-        </div>
-      </div>
-
-      <button class="btn-primary" id="btn-encode" disabled type="button">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        Encode File
-      </button>
-    </div>
-
-    <!-- ══ DECODE ══ -->
-    <div id="panel-decode" class="form-body" style="display:none" role="tabpanel">
-
-      <!-- encrypted image -->
-      <div>
-        <label class="field-label">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          Encrypted Image
-          <span class="badge">required</span>
-        </label>
-        <div class="drop-zone" id="dz-enc-img" role="button" tabindex="0" aria-label="Select encrypted image">
-          <input type="file" id="enc-img" accept=".png">
-          <svg class="drop-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          <p>Drop encrypted PNG or <span>browse</span></p>
-          <small>e.g. report-encrypted.png</small>
-        </div>
-        <div class="chip-row" id="chip-enc-img"></div>
-      </div>
-
-      <!-- key image decode -->
-      <div>
-        <label class="field-label">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="5"/><path d="M10.6 13.4L21 23.8"/><path d="M17 17l2 2"/></svg>
-          Key Image
-          <span class="badge">required</span>
-        </label>
-        <div class="drop-zone" id="dz-key-dec" role="button" tabindex="0" aria-label="Select key image for decode">
-          <input type="file" id="key-dec" accept=".png,.jpg,.jpeg">
-          <svg class="drop-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          <p>Drop key PNG/JPG or <span>browse</span></p>
-        </div>
-        <div class="chip-row" id="chip-key-dec"></div>
-      </div>
-
-      <!-- config -->
-      <div>
-        <label class="field-label">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          Config JSON
-          <span class="badge">required</span>
-        </label>
-        <div class="drop-zone" id="dz-cfg" role="button" tabindex="0" aria-label="Select config JSON">
-          <input type="file" id="cfg-file" accept=".json">
-          <svg class="drop-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          <p>Drop config JSON or <span>browse</span></p>
-          <small>e.g. report.config.json</small>
-        </div>
-        <div class="chip-row" id="chip-cfg"></div>
-        <div class="config-info" id="config-info">
-          <div class="ci-row"><span class="ci-key">Original file</span><span class="ci-val" id="ci-orig">—</span></div>
-          <div class="ci-row"><span class="ci-key">File type</span><span class="ci-val" id="ci-type">—</span></div>
-          <div class="ci-row"><span class="ci-key">Stored size</span><span class="ci-val" id="ci-size">—</span></div>
-          <div class="ci-row"><span class="ci-key">Key image</span><span class="ci-val" id="ci-key">—</span></div>
-          <div class="ci-row"><span class="ci-key">AES-256-GCM</span><span class="ci-badge" id="ci-aes">—</span></div>
-        </div>
-      </div>
-
-      <!-- passphrase decode -->
-      <div id="passphrase-dec-wrap">
-        <label class="field-label" for="passphrase-dec">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          AES-256-GCM Passphrase
-          <span class="badge" id="pass-dec-badge">optional</span>
-          <span class="badge new">NEW</span>
-        </label>
-        <div class="input-wrap">
-          <input type="password" id="passphrase-dec" placeholder="Required if file was AES-encrypted" autocomplete="current-password">
-          <button class="input-reveal" id="reveal-dec" aria-label="Show passphrase" type="button">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- CLI -->
-      <div>
-        <label class="field-label">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-          CLI Command
-        </label>
-        <div class="cli-box">
-          <div class="cli-header">
-            <div class="cli-header-left">
-              <div class="cli-dots">
-                <div class="cli-dot"></div><div class="cli-dot"></div><div class="cli-dot"></div>
-              </div>
-              bash
-            </div>
-            <button class="cli-copy" id="copy-dec" type="button">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              Copy
-            </button>
-          </div>
-          <div class="cli-body" id="cli-dec">Select files above to generate the command…</div>
-        </div>
-      </div>
-
-      <button class="btn-primary" id="btn-decode" disabled type="button">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
-        Decode File
-      </button>
-    </div>
-
+  <!-- API status -->
+  <div class="api-bar">
+    <div class="api-dot checking" id="apiDot"></div>
+    <span class="api-label">API:</span>
+    <input class="api-url-input" id="apiUrl" value="http://localhost:8787" type="text" aria-label="API base URL">
+    <button class="btn-recheck" id="btnRecheck">Check</button>
+    <span id="apiStatus" style="font-size:var(--text-xs);color:var(--color-text-muted)">Checking…</span>
   </div>
-</main>
 
-<footer>
-  Crout Holdings PTY LTD &nbsp;·&nbsp; Image Encryption Algorithm &nbsp;·&nbsp;
-  AES-256-GCM + LSB Steganography
-</footer>
-</div>
+  <!-- Tabs -->
+  <div class="tabs" role="tablist">
+    <button class="tab-btn active" role="tab" data-tab="encode" aria-selected="true">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      Encode
+    </button>
+    <button class="tab-btn" role="tab" data-tab="decode" aria-selected="false">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Decode
+    </button>
+    <button class="tab-btn" role="tab" data-tab="test" aria-selected="false">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Test Suite
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════ ENCODE ═══════════════════════════════ -->
+  <div class="tab-panel active" id="panel-encode">
+    <div class="form-grid">
+
+      <!-- Input file -->
+      <div class="form-group">
+        <label class="form-label">File to Encrypt</label>
+        <div class="drop-zone" id="dz-file" tabindex="0" role="button" aria-label="Select file to encrypt">
+          <svg class="drop-zone-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+          <p><strong>Drop file here</strong> or click to browse</p>
+          <p>PDF · DOCX · XLSX · CSV · PNG · JPG</p>
+        </div>
+        <div id="chip-file" style="display:none" class="file-chip">
+          <svg class="file-chip-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+          <div class="file-chip-info"><div class="file-chip-name" id="chip-file-name">—</div><div class="file-chip-meta" id="chip-file-meta">—</div></div>
+          <button class="file-chip-remove" data-clear="file" aria-label="Remove file">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <input type="file" id="input-file" class="sr-only" accept=".pdf,.docx,.doc,.xlsx,.csv,.png,.jpg,.jpeg,.gif,.bmp,.webp">
+      </div>
+
+      <!-- Key image -->
+      <div class="form-group">
+        <label class="form-label">Key Image <span class="form-hint">(base PNG used as encryption carrier)</span></label>
+        <div class="drop-zone" id="dz-key-enc" tabindex="0" role="button" aria-label="Select key image">
+          <svg class="drop-zone-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <p><strong>Drop key image</strong> or click to browse</p>
+          <p>PNG or JPG</p>
+        </div>
+        <div id="chip-key-enc" style="display:none" class="key-preview">
+          <img id="key-thumb-enc" class="key-thumb" src="" alt="Key thumbnail">
+          <div class="key-info">
+            <div class="file-chip-name" id="chip-key-enc-name">—</div>
+            <div class="file-chip-meta" id="chip-key-enc-meta">—</div>
+            <div class="key-capacity" id="chip-key-enc-cap">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span>—</span>
+            </div>
+          </div>
+          <button class="file-chip-remove" data-clear="key-enc" aria-label="Remove key">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <input type="file" id="input-key-enc" class="sr-only" accept="image/png,image/jpeg,image/jpg">
+      </div>
+
+      <!-- Passphrase -->
+      <div class="form-group">
+        <label class="form-label" for="enc-passphrase">Passphrase <span class="form-hint">(optional)</span></label>
+        <input class="input-text" type="password" id="enc-passphrase" placeholder="Leave empty to skip">
+      </div>
+
+      <!-- Output preview -->
+      <div id="enc-output-preview" style="display:none">
+        <div class="section-title">Output files</div>
+        <div class="output-preview">
+          <div class="out-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            <span id="enc-out-name">—</span>
+          </div>
+          <div class="out-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+            <span id="enc-cfg-name">—</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /form-grid -->
+
+    <div class="divider"></div>
+
+    <!-- CLI command -->
+    <div class="section-title">Generated command</div>
+    <div class="cli-block">
+      <div class="cli-header">
+        <span>bash</span>
+        <button class="btn-copy" id="enc-copy-btn" aria-label="Copy command">Copy</button>
+      </div>
+      <div class="cli-code" id="enc-cli"><span class="cli-kw">python</span> main.py <span class="cli-kw">encode</span> <span class="cli-val"># select files above</span></div>
+    </div>
+
+    <div style="margin-top:var(--space-5)" class="btn-row">
+      <button class="btn btn-primary" id="btn-encode" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        Encrypt File
+      </button>
+    </div>
+
+    <!-- Result -->
+    <div class="result-panel" id="enc-result">
+      <div class="result-header" id="enc-result-hdr"></div>
+      <div class="result-body" id="enc-result-body"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ DECODE ═══════════════════════════════ -->
+  <div class="tab-panel" id="panel-decode">
+    <div class="form-grid">
+
+      <!-- Encrypted image -->
+      <div class="form-group">
+        <label class="form-label">Encrypted Image</label>
+        <div class="drop-zone" id="dz-enc-img" tabindex="0" role="button" aria-label="Select encrypted image">
+          <svg class="drop-zone-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <p><strong>Drop encrypted PNG</strong> or click to browse</p>
+        </div>
+        <div id="chip-enc-img" style="display:none" class="file-chip">
+          <svg class="file-chip-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <div class="file-chip-info"><div class="file-chip-name" id="chip-enc-img-name">—</div><div class="file-chip-meta" id="chip-enc-img-meta">—</div></div>
+          <button class="file-chip-remove" data-clear="enc-img" aria-label="Remove">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <input type="file" id="input-enc-img" class="sr-only" accept="image/png">
+      </div>
+
+      <!-- Key image -->
+      <div class="form-group">
+        <label class="form-label">Key Image</label>
+        <div class="drop-zone" id="dz-key-dec" tabindex="0" role="button" aria-label="Select key image">
+          <svg class="drop-zone-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <p><strong>Drop key image</strong> or click to browse</p>
+        </div>
+        <div id="chip-key-dec" style="display:none" class="key-preview">
+          <img id="key-thumb-dec" class="key-thumb" src="" alt="Key thumbnail">
+          <div class="key-info">
+            <div class="file-chip-name" id="chip-key-dec-name">—</div>
+            <div class="file-chip-meta" id="chip-key-dec-meta">—</div>
+          </div>
+          <button class="file-chip-remove" data-clear="key-dec" aria-label="Remove">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <input type="file" id="input-key-dec" class="sr-only" accept="image/png,image/jpeg,image/jpg">
+      </div>
+
+      <!-- Config -->
+      <div class="form-group">
+        <label class="form-label">Config JSON <span class="form-hint">(*.config.json generated during encode)</span></label>
+        <div class="drop-zone" id="dz-cfg" tabindex="0" role="button" aria-label="Select config JSON">
+          <svg class="drop-zone-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <p><strong>Drop config file</strong> or click to browse</p>
+          <p>*.config.json</p>
+        </div>
+        <div id="chip-cfg" style="display:none" class="file-chip">
+          <svg class="file-chip-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+          <div class="file-chip-info">
+            <div class="file-chip-name" id="chip-cfg-name">—</div>
+            <div class="file-chip-meta" id="chip-cfg-meta">—</div>
+          </div>
+          <button class="file-chip-remove" data-clear="cfg" aria-label="Remove">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <input type="file" id="input-cfg" class="sr-only" accept=".json,application/json">
+        <!-- Config info -->
+        <div id="cfg-info" style="display:none;margin-top:var(--space-2);padding:var(--space-3) var(--space-4);background:var(--color-surface-offset);border-radius:var(--radius-md);font-size:var(--text-xs);font-family:var(--font-mono);color:var(--color-text-muted)"></div>
+      </div>
+
+      <!-- Passphrase -->
+      <div class="form-group">
+        <label class="form-label" for="dec-passphrase">Passphrase <span class="form-hint">(if used during encode)</span></label>
+        <input class="input-text" type="password" id="dec-passphrase" placeholder="Leave empty if none was set">
+      </div>
+
+    </div><!-- /form-grid -->
+
+    <div class="divider"></div>
+
+    <!-- CLI -->
+    <div class="section-title">Generated command</div>
+    <div class="cli-block">
+      <div class="cli-header">
+        <span>bash</span>
+        <button class="btn-copy" id="dec-copy-btn" aria-label="Copy command">Copy</button>
+      </div>
+      <div class="cli-code" id="dec-cli"><span class="cli-kw">python</span> main.py <span class="cli-kw">decode</span> <span class="cli-val"># select files above</span></div>
+    </div>
+
+    <div style="margin-top:var(--space-5)" class="btn-row">
+      <button class="btn btn-primary" id="btn-decode" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Decrypt File
+      </button>
+    </div>
+
+    <!-- Result -->
+    <div class="result-panel" id="dec-result">
+      <div class="result-header" id="dec-result-hdr"></div>
+      <div class="result-body" id="dec-result-body"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ TEST ════════════════════════════════ -->
+  <div class="tab-panel" id="panel-test">
+    <p style="font-size:var(--text-sm);color:var(--color-text-muted);margin-bottom:var(--space-6);max-width:60ch">
+      Runs a full <strong>encode → decode</strong> round-trip using the bundled demo assets
+      (<code style="font-family:var(--font-mono);font-size:var(--text-xs)">demo/demo_input.png</code> into
+      <code style="font-family:var(--font-mono);font-size:var(--text-xs)">demo/demo_key.png</code>).
+      Compares encrypted image size vs original key, then verifies decoded output byte-for-byte.
+    </p>
+
+    <div class="btn-row">
+      <button class="btn btn-test" id="btn-test">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Run Test Suite
+      </button>
+    </div>
+
+    <div class="test-panel" id="test-panel" style="display:none">
+      <div class="test-panel-header">
+        <div class="test-panel-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Round-trip Results
+        </div>
+        <span id="test-elapsed" style="font-size:var(--text-xs);color:var(--color-text-faint)"></span>
+      </div>
+      <div class="test-panel-body">
+
+        <!-- Step pipeline -->
+        <div class="test-steps" id="test-steps"></div>
+
+        <!-- KPI summary -->
+        <div class="section-title" id="summary-title" style="display:none">Summary</div>
+        <div class="test-summary" id="test-summary"></div>
+
+        <!-- Accuracy bar -->
+        <div class="accuracy-bar-wrap" id="accuracy-wrap" style="display:none">
+          <div class="accuracy-bar-label">
+            <span>Byte accuracy</span>
+            <span id="accuracy-pct-label">—</span>
+          </div>
+          <div class="accuracy-bar"><div class="accuracy-fill" id="accuracy-fill" style="width:0%"></div></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</main>
+<footer>Crout Holdings PTY LTD — Image Encryptor Dev UI — running against local Python API</footer>
+</div><!-- /app -->
 
 <script>
+/* ── helpers ──────────────────────────────────────────────────────────── */
+function fmtBytes(b){
+  if(b<1024) return b+' B';
+  if(b<1048576) return (b/1024).toFixed(1)+' KB';
+  return (b/1048576).toFixed(2)+' MB';
+}
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ── theme ────────────────────────────────────────────────────────────── */
 (function(){
-  // ── theme toggle ─────────────────────────────────────────────────────
-  const root = document.documentElement;
-  let theme = matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light';
-  root.setAttribute('data-theme', theme);
-  const themeBtn = document.querySelector('[data-theme-toggle]');
-  const sunSVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
-  const moonSVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
-  function setThemeIcon(){
-    themeBtn.innerHTML = theme === 'dark' ? sunSVG : moonSVG;
-    themeBtn.setAttribute('aria-label', 'Switch to '+(theme==='dark'?'light':'dark')+' mode');
+  const btn=document.querySelector('[data-theme-toggle]'),r=document.documentElement;
+  let d=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+  r.setAttribute('data-theme',d);
+  function setIcon(){
+    btn.innerHTML=d==='dark'
+      ?'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
+      :'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
   }
-  setThemeIcon();
-  themeBtn.addEventListener('click', ()=>{
-    theme = theme === 'dark' ? 'light' : 'dark';
-    root.setAttribute('data-theme', theme);
-    setThemeIcon();
-  });
-
-  // ── state ─────────────────────────────────────────────────────────────
-  const state = {
-    enc: { inputFile: null, keyFile: null, passphrase: '' },
-    dec: { encImg: null, keyFile: null, cfgFile: null, cfgData: null, passphrase: '' },
-  };
-
-  // ── tabs ──────────────────────────────────────────────────────────────
-  document.querySelectorAll('.tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected','false'); });
-      btn.classList.add('active'); btn.setAttribute('aria-selected','true');
-      const tab = btn.dataset.tab;
-      document.getElementById('panel-encode').style.display = tab==='encode' ? 'flex' : 'none';
-      document.getElementById('panel-decode').style.display = tab==='decode' ? 'flex' : 'none';
-    });
-  });
-
-  // ── helpers ───────────────────────────────────────────────────────────
-  function fmtBytes(b){
-    if(b < 1024) return b+' B';
-    if(b < 1048576) return (b/1024).toFixed(1)+' KB';
-    return (b/1048576).toFixed(2)+' MB';
-  }
-  function stem(name){ return name.replace(/\.[^.]+$/, ''); }
-  function q(p){ return p.includes(' ') ? `"${p}"` : p; }
-
-  // ── chip factory ──────────────────────────────────────────────────────
-  function setChip(rowId, file, onRemove){
-    const row = document.getElementById(rowId);
-    row.innerHTML = '';
-    if(!file) return;
-    const chip = document.createElement('div');
-    chip.className = 'chip';
-    chip.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`
-      + `<span>${file.name}</span>`
-      + `<button aria-label="Remove ${file.name}">✕</button>`;
-    chip.querySelector('button').addEventListener('click', onRemove);
-    row.appendChild(chip);
-  }
-
-  // ── drop zone wiring ──────────────────────────────────────────────────
-  function wireDrop(dzId, inputId, onFile){
-    const dz = document.getElementById(dzId);
-    const inp = document.getElementById(inputId);
-    dz.addEventListener('dragover', e=>{ e.preventDefault(); dz.classList.add('dragover'); });
-    dz.addEventListener('dragleave', ()=>dz.classList.remove('dragover'));
-    dz.addEventListener('drop', e=>{ e.preventDefault(); dz.classList.remove('dragover'); if(e.dataTransfer.files[0]) onFile(e.dataTransfer.files[0]); });
-    inp.addEventListener('change', ()=>{ if(inp.files[0]) onFile(inp.files[0]); });
-  }
-
-  function showDz(dzId, show){
-    document.getElementById(dzId).style.display = show ? '' : 'none';
-  }
-
-  // ── key image preview ─────────────────────────────────────────────────
-  function loadKeyPreview(file, thumbId, nameId, dimsId, capId, fillId, previewId){
-    const thumb  = document.getElementById(thumbId);
-    const name   = document.getElementById(nameId);
-    const dims   = document.getElementById(dimsId);
-    const cap    = document.getElementById(capId);
-    const fill   = document.getElementById(fillId);
-    const prev   = document.getElementById(previewId);
-    const url    = URL.createObjectURL(file);
-    thumb.src    = url;
-    thumb.onload = ()=>{
-      const w = thumb.naturalWidth, h = thumb.naturalHeight;
-      const bytes = Math.floor(w * h * 3 * 2 / 8);
-      dims.textContent  = `${w} × ${h} px`;
-      cap.textContent   = fmtBytes(bytes);
-      fill.style.width  = '100%';
-    };
-    name.textContent = file.name;
-    prev.classList.add('show');
-  }
-  function clearKeyPreview(previewId, thumbId){
-    const prev = document.getElementById(previewId);
-    const thumb = document.getElementById(thumbId);
-    prev.classList.remove('show');
-    URL.revokeObjectURL(thumb.src);
-    thumb.src = '';
-  }
-
-  // ── output names ─────────────────────────────────────────────────────
-  function updateOutputPreview(){
-    const f = state.enc.inputFile;
-    const prev = document.getElementById('output-preview');
-    if(!f){ prev.classList.remove('show'); return; }
-    const s = stem(f.name);
-    const encName = s+'-encrypted.png';
-    const cfgName = s+'.config.json';
-    document.getElementById('out-enc-name').textContent = encName;
-    document.getElementById('out-cfg-name').textContent = cfgName;
-    const aesOn = state.enc.passphrase.length > 0;
-    const aesBadge = document.getElementById('out-enc-aes');
-    aesBadge.textContent = aesOn ? 'AES+LSB' : 'LSB';
-    aesBadge.className = 'output-badge' + (aesOn ? ' aes' : '');
-    prev.classList.add('show');
-  }
-
-  // ── CLI builders ──────────────────────────────────────────────────────
-  function buildEncCLI(){
-    const { inputFile, keyFile, passphrase } = state.enc;
-    const el = document.getElementById('cli-enc');
-    if(!inputFile || !keyFile){
-      el.textContent = 'Select a file and key image to generate the command…';
-      return;
-    }
-    let cmd = `python main.py encode \\\n  --input ${q(inputFile.name)} \\\n  --key   ${q(keyFile.name)}`;
-    if(passphrase) cmd += ` \\\n  --passphrase ${q(passphrase)}`;
-    el.textContent = cmd;
-  }
-  function buildDecCLI(){
-    const { encImg, keyFile, cfgFile, passphrase } = state.dec;
-    const el = document.getElementById('cli-dec');
-    if(!encImg || !keyFile || !cfgFile){
-      el.textContent = 'Select files above to generate the command…';
-      return;
-    }
-    let cmd = `python main.py decode \\\n  --input  ${q(encImg.name)} \\\n  --key    ${q(keyFile.name)} \\\n  --config ${q(cfgFile.name)}`;
-    if(passphrase) cmd += ` \\\n  --passphrase ${q(passphrase)}`;
-    el.textContent = cmd;
-  }
-
-  // ── encode button guard ───────────────────────────────────────────────
-  function refreshEncBtn(){
-    const ok = state.enc.inputFile && state.enc.keyFile;
-    document.getElementById('btn-encode').disabled = !ok;
-  }
-  function refreshDecBtn(){
-    const ok = state.dec.encImg && state.dec.keyFile && state.dec.cfgFile;
-    document.getElementById('btn-decode').disabled = !ok;
-  }
-
-  // ── encode wiring ─────────────────────────────────────────────────────
-  wireDrop('dz-input','file-input', f=>{
-    state.enc.inputFile = f;
-    setChip('chip-input', f, ()=>{ state.enc.inputFile=null; setChip('chip-input',null); showDz('dz-input',true); updateOutputPreview(); buildEncCLI(); refreshEncBtn(); });
-    showDz('dz-input', false);
-    updateOutputPreview(); buildEncCLI(); refreshEncBtn();
-  });
-  wireDrop('dz-key-enc','key-enc', f=>{
-    state.enc.keyFile = f;
-    setChip('chip-key-enc', f, ()=>{ state.enc.keyFile=null; setChip('chip-key-enc',null); showDz('dz-key-enc',true); clearKeyPreview('key-preview-enc','key-thumb-enc'); buildEncCLI(); refreshEncBtn(); });
-    showDz('dz-key-enc', false);
-    loadKeyPreview(f,'key-thumb-enc','key-name-enc','key-dims-enc','key-cap-enc','key-fill-enc','key-preview-enc');
-    buildEncCLI(); refreshEncBtn();
-  });
-
-  // ── decode wiring ─────────────────────────────────────────────────────
-  wireDrop('dz-enc-img','enc-img', f=>{
-    state.dec.encImg = f;
-    setChip('chip-enc-img', f, ()=>{ state.dec.encImg=null; setChip('chip-enc-img',null); showDz('dz-enc-img',true); buildDecCLI(); refreshDecBtn(); });
-    showDz('dz-enc-img', false);
-    buildDecCLI(); refreshDecBtn();
-  });
-  wireDrop('dz-key-dec','key-dec', f=>{
-    state.dec.keyFile = f;
-    setChip('chip-key-dec', f, ()=>{ state.dec.keyFile=null; setChip('chip-key-dec',null); showDz('dz-key-dec',true); buildDecCLI(); refreshDecBtn(); });
-    showDz('dz-key-dec', false);
-    buildDecCLI(); refreshDecBtn();
-  });
-  wireDrop('dz-cfg','cfg-file', f=>{
-    state.dec.cfgFile = f;
-    setChip('chip-cfg', f, ()=>{
-      state.dec.cfgFile=null; state.dec.cfgData=null;
-      setChip('chip-cfg',null); showDz('dz-cfg',true);
-      document.getElementById('config-info').classList.remove('show');
-      buildDecCLI(); refreshDecBtn();
-    });
-    showDz('dz-cfg', false);
-    // read and parse config
-    const reader = new FileReader();
-    reader.onload = e=>{
-      try{
-        const cfg = JSON.parse(e.target.result);
-        state.dec.cfgData = cfg;
-        document.getElementById('ci-orig').textContent = cfg.original_filename || '—';
-        document.getElementById('ci-type').textContent = (cfg.file_type || '—').toUpperCase();
-        document.getElementById('ci-size').textContent = cfg.byte_count ? fmtBytes(cfg.byte_count) : '—';
-        document.getElementById('ci-key').textContent  = cfg.key_image || '—';
-        const aesEl  = document.getElementById('ci-aes');
-        const badge  = document.getElementById('pass-dec-badge');
-        if(cfg.aes_encrypted){
-          aesEl.textContent = 'Enabled'; aesEl.className = 'ci-badge aes-on';
-          badge.textContent = 'required'; badge.className = 'badge';
-        } else {
-          aesEl.textContent = 'Disabled'; aesEl.className = 'ci-badge aes-off';
-          badge.textContent = 'optional'; badge.className = 'badge optional';
-        }
-        document.getElementById('config-info').classList.add('show');
-      } catch(err){
-        document.getElementById('config-info').classList.remove('show');
-      }
-    };
-    reader.readAsText(f);
-    buildDecCLI(); refreshDecBtn();
-  });
-
-  // ── passphrase — encode ───────────────────────────────────────────────
-  const pwEnc = document.getElementById('passphrase-enc');
-  const strBar = document.getElementById('strength-bar-enc');
-  const strLabel = document.getElementById('strength-label-enc');
-  const labels = ['Too weak', 'Weak', 'Fair', 'Strong', 'Very strong ✓'];
-  const hints  = ['', 'Add numbers and symbols', 'Add uppercase and symbols', 'Good — consider adding length', 'Excellent passphrase'];
-
-  pwEnc.addEventListener('input', ()=>{
-    const v = pwEnc.value;
-    state.enc.passphrase = v;
-    if(v.length === 0){
-      strBar.className = 'strength-bar str-0';
-      strLabel.textContent = 'Enter a passphrase to enable AES-256-GCM dual-layer encryption';
-    } else {
-      const r = typeof zxcvbn !== 'undefined' ? zxcvbn(v) : { score: Math.min(4, Math.floor(v.length/4)) };
-      const s = r.score;
-      strBar.className = `strength-bar str-${s}`;
-      strLabel.textContent = `${labels[s]}${hints[s] ? ' — '+hints[s] : ''}`;
-    }
-    updateOutputPreview(); buildEncCLI();
-  });
-
-  // ── passphrase — decode ───────────────────────────────────────────────
-  document.getElementById('passphrase-dec').addEventListener('input', e=>{
-    state.dec.passphrase = e.target.value;
-    buildDecCLI();
-  });
-
-  // ── reveal toggles ────────────────────────────────────────────────────
-  function wireReveal(revealId, inputId){
-    const btn = document.getElementById(revealId);
-    const inp = document.getElementById(inputId);
-    btn.addEventListener('click', ()=>{
-      const show = inp.type === 'password';
-      inp.type = show ? 'text' : 'password';
-      btn.innerHTML = show
-        ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
-        : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
-      btn.setAttribute('aria-label', show ? 'Hide passphrase' : 'Show passphrase');
-    });
-  }
-  wireReveal('reveal-enc', 'passphrase-enc');
-  wireReveal('reveal-dec', 'passphrase-dec');
-
-  // ── copy CLI ──────────────────────────────────────────────────────────
-  function wireCopy(btnId, cliId){
-    document.getElementById(btnId).addEventListener('click', ()=>{
-      const text = document.getElementById(cliId).textContent;
-      navigator.clipboard.writeText(text).then(()=>{
-        const btn = document.getElementById(btnId);
-        btn.classList.add('copied'); btn.innerHTML = btn.innerHTML.replace('Copy','Copied!');
-        setTimeout(()=>{ btn.classList.remove('copied'); btn.innerHTML = btn.innerHTML.replace('Copied!','Copy'); }, 2000);
-      });
-    });
-  }
-  wireCopy('copy-enc','cli-enc');
-  wireCopy('copy-dec','cli-dec');
-
-  // ── encode / decode action stubs ──────────────────────────────────────
-  // The UI generates the CLI command; actual processing runs via Python.
-  document.getElementById('btn-encode').addEventListener('click', ()=>{
-    alert('Run the command shown in the CLI box via your terminal.\n\nThis UI generates the exact command — the Python backend does the encoding.');
-  });
-  document.getElementById('btn-decode').addEventListener('click', ()=>{
-    alert('Run the command shown in the CLI box via your terminal.\n\nThis UI generates the exact command — the Python backend does the decoding.');
-  });
-
+  setIcon();
+  btn.addEventListener('click',()=>{d=d==='dark'?'light':'dark';r.setAttribute('data-theme',d);setIcon();});
 })();
+
+/* ── tabs ─────────────────────────────────────────────────────────────── */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false');});
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');btn.setAttribute('aria-selected','true');
+    document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ── API health check ─────────────────────────────────────────────────── */
+const dot=document.getElementById('apiDot');
+const apiStatusEl=document.getElementById('apiStatus');
+const apiUrlInput=document.getElementById('apiUrl');
+let apiOk=false;
+
+async function checkHealth(){
+  const base=apiUrlInput.value.replace(/\/$/,'');
+  dot.className='api-dot checking';
+  apiStatusEl.textContent='Checking…';
+  try{
+    const r=await fetch(base+'/health',{signal:AbortSignal.timeout(4000)});
+    const d=await r.json();
+    dot.className='api-dot ok';
+    apiStatusEl.textContent=d.encryptor_available?'Connected — encryptor ready':'Connected — encryptor module missing';
+    apiStatusEl.style.color=d.encryptor_available?'var(--color-success)':'var(--color-warning)';
+    apiOk=d.encryptor_available;
+  }catch(e){
+    dot.className='api-dot err';
+    apiStatusEl.textContent='Unreachable — start: uvicorn api:app --reload --port 8787';
+    apiStatusEl.style.color='var(--color-error)';
+    apiOk=false;
+  }
+  syncButtons();
+}
+checkHealth();
+document.getElementById('btnRecheck').addEventListener('click',checkHealth);
+
+/* ── state ────────────────────────────────────────────────────────────── */
+const state={
+  file:null,   // File
+  keyEnc:null, // File
+  encImg:null, // File
+  keyDec:null, // File
+  cfg:null,    // File
+};
+
+function syncButtons(){
+  const encOk = state.file && state.keyEnc;
+  const decOk = state.encImg && state.keyDec && state.cfg;
+  document.getElementById('btn-encode').disabled = !(encOk && apiOk);
+  document.getElementById('btn-decode').disabled = !(decOk && apiOk);
+  document.getElementById('btn-test').disabled   = !apiOk;
+}
+
+/* ── drop zone factory ────────────────────────────────────────────────── */
+function makeDropZone(dzId,inputId,accept,onFile){
+  const dz=document.getElementById(dzId);
+  const inp=document.getElementById(inputId);
+  dz.addEventListener('click',()=>inp.click());
+  dz.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();inp.click();}});
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dragover');});
+  dz.addEventListener('dragleave',()=>dz.classList.remove('dragover'));
+  dz.addEventListener('drop',e=>{
+    e.preventDefault();dz.classList.remove('dragover');
+    const f=e.dataTransfer.files[0];if(f) onFile(f);
+  });
+  inp.addEventListener('change',()=>{if(inp.files[0]) onFile(inp.files[0]);inp.value='';});
+}
+
+/* ── show file chip ───────────────────────────────────────────────────── */
+function showChip(chipId,dzId,nameId,metaId,file){
+  document.getElementById(dzId).style.display='none';
+  const chip=document.getElementById(chipId);
+  chip.style.display='flex';
+  document.getElementById(nameId).textContent=file.name;
+  document.getElementById(metaId).textContent=fmtBytes(file.size);
+}
+function clearChip(chipId,dzId){
+  document.getElementById(dzId).style.display='';
+  document.getElementById(chipId).style.display='none';
+}
+
+/* ── key image preview + capacity ────────────────────────────────────── */
+function showKeyPreview(chipId,dzId,nameId,metaId,capEl,thumbId,file){
+  document.getElementById(dzId).style.display='none';
+  document.getElementById(chipId).style.display='flex';
+  document.getElementById(nameId).textContent=file.name;
+  document.getElementById(metaId).textContent=fmtBytes(file.size);
+  const thumb=document.getElementById(thumbId);
+  const url=URL.createObjectURL(file);
+  const img=new Image();
+  img.onload=()=>{
+    thumb.src=url;
+    const pixels=img.naturalWidth*img.naturalHeight;
+    const cap=Math.floor(pixels*3-12); // 3 bytes per pixel minus header
+    const cap_el=document.getElementById(capEl);
+    if(cap_el) cap_el.querySelector('span').textContent='~'+fmtBytes(Math.max(0,cap))+' payload capacity';
+    URL.revokeObjectURL(url);
+  };
+  img.src=url;
+}
+
+/* ── auto-name output preview ────────────────────────────────────────── */
+function updateEncPreview(){
+  const f=state.file;
+  const prev=document.getElementById('enc-output-preview');
+  if(!f){prev.style.display='none';return;}
+  const dot=f.name.lastIndexOf('.');
+  const stem=dot>0?f.name.slice(0,dot):f.name;
+  document.getElementById('enc-out-name').textContent=stem+'-encrypted.png';
+  document.getElementById('enc-cfg-name').textContent=stem+'.config.json';
+  prev.style.display='block';
+}
+
+/* ── wire encode file pickers ────────────────────────────────────────── */
+makeDropZone('dz-file','input-file','',f=>{
+  state.file=f;
+  showChip('chip-file','dz-file','chip-file-name','chip-file-meta',f);
+  updateEncPreview();updateEncCli();syncButtons();
+});
+makeDropZone('dz-key-enc','input-key-enc','',f=>{
+  state.keyEnc=f;
+  showKeyPreview('chip-key-enc','dz-key-enc','chip-key-enc-name','chip-key-enc-meta','chip-key-enc-cap','key-thumb-enc',f);
+  updateEncCli();syncButtons();
+});
+
+/* ── wire decode file pickers ────────────────────────────────────────── */
+makeDropZone('dz-enc-img','input-enc-img','',f=>{
+  state.encImg=f;
+  showChip('chip-enc-img','dz-enc-img','chip-enc-img-name','chip-enc-img-meta',f);
+  updateDecCli();syncButtons();
+});
+makeDropZone('dz-key-dec','input-key-dec','',f=>{
+  state.keyDec=f;
+  showKeyPreview('chip-key-dec','dz-key-dec','chip-key-dec-name','chip-key-dec-meta',null,'key-thumb-dec',f);
+  updateDecCli();syncButtons();
+});
+makeDropZone('dz-cfg','input-cfg','',f=>{
+  state.cfg=f;
+  showChip('chip-cfg','dz-cfg','chip-cfg-name','chip-cfg-meta',f);
+  // read config and show info
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      const info=document.getElementById('cfg-info');
+      const lines=[];
+      if(d.original_filename) lines.push('original: '+d.original_filename);
+      if(d.original_extension) lines.push('type: '+d.original_extension);
+      if(d.file_type) lines.push('encoder: '+d.file_type);
+      if(d.encrypted_output) lines.push('encrypted: '+d.encrypted_output);
+      info.innerHTML=lines.map(l=>'<div>'+escHtml(l)+'</div>').join('');
+      info.style.display=lines.length?'block':'none';
+    }catch{}
+  };
+  reader.readAsText(f);
+  updateDecCli();syncButtons();
+});
+
+/* ── clear buttons ────────────────────────────────────────────────────── */
+document.querySelectorAll('[data-clear]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const k=btn.dataset.clear;
+    if(k==='file'){state.file=null;clearChip('chip-file','dz-file');updateEncPreview();updateEncCli();}
+    if(k==='key-enc'){state.keyEnc=null;clearChip('chip-key-enc','dz-key-enc');updateEncCli();}
+    if(k==='enc-img'){state.encImg=null;clearChip('chip-enc-img','dz-enc-img');updateDecCli();}
+    if(k==='key-dec'){state.keyDec=null;clearChip('chip-key-dec','dz-key-dec');updateDecCli();}
+    if(k==='cfg'){state.cfg=null;clearChip('chip-cfg','dz-cfg');document.getElementById('cfg-info').style.display='none';updateDecCli();}
+    syncButtons();
+  });
+});
+
+/* ── CLI builder ──────────────────────────────────────────────────────── */
+function buildCli(parts){
+  return parts.map(p=>{
+    if(p.type==='kw') return '<span class="cli-kw">'+escHtml(p.v)+'</span>';
+    if(p.type==='flag') return '<span class="cli-flag">'+escHtml(p.v)+'</span>';
+    if(p.type==='val') return '<span class="cli-val">'+escHtml(p.v)+'</span>';
+    return escHtml(p.v||p);
+  }).join(' ');
+}
+function updateEncCli(){
+  const f=state.file,k=state.keyEnc,p=document.getElementById('enc-passphrase').value;
+  const pass=document.getElementById('enc-passphrase').value;
+  let parts=[
+    {type:'kw',v:'python'},{v:'main.py'},{type:'kw',v:'encode'},
+    {type:'flag',v:'--key'},{type:'val',v:k?k.name:'<key.png>'},
+    {type:'flag',v:'--input'},{type:'val',v:f?f.name:'<file>'},
+  ];
+  if(pass) parts.push({type:'flag',v:'--passphrase'},{type:'val',v:'***'});
+  document.getElementById('enc-cli').innerHTML=buildCli(parts);
+}
+function updateDecCli(){
+  const e=state.encImg,k=state.keyDec,c=state.cfg;
+  const pass=document.getElementById('dec-passphrase').value;
+  let parts=[
+    {type:'kw',v:'python'},{v:'main.py'},{type:'kw',v:'decode'},
+    {type:'flag',v:'--key'},{type:'val',v:k?k.name:'<key.png>'},
+    {type:'flag',v:'--input'},{type:'val',v:e?e.name:'<encrypted.png>'},
+    {type:'flag',v:'--config'},{type:'val',v:c?c.name:'<file.config.json>'},
+  ];
+  if(pass) parts.push({type:'flag',v:'--passphrase'},{type:'val',v:'***'});
+  document.getElementById('dec-cli').innerHTML=buildCli(parts);
+}
+document.getElementById('enc-passphrase').addEventListener('input',updateEncCli);
+document.getElementById('dec-passphrase').addEventListener('input',updateDecCli);
+
+/* ── copy button ──────────────────────────────────────────────────────── */
+function bindCopy(btnId,codeId){
+  document.getElementById(btnId).addEventListener('click',()=>{
+    const text=document.getElementById(codeId).innerText;
+    navigator.clipboard.writeText(text).then(()=>{
+      const b=document.getElementById(btnId);
+      b.textContent='Copied!';
+      setTimeout(()=>b.textContent='Copy',1800);
+    });
+  });
+}
+bindCopy('enc-copy-btn','enc-cli');
+bindCopy('dec-copy-btn','dec-cli');
+
+/* ── result panel helpers ─────────────────────────────────────────────── */
+function showResultLoading(hdrId,bodyId,label){
+  const panel=document.getElementById(hdrId).closest('.result-panel');
+  panel.classList.add('show');
+  document.getElementById(hdrId).className='result-header loading';
+  document.getElementById(hdrId).innerHTML=
+    '<span class="spin">◌</span> '+escHtml(label);
+  document.getElementById(bodyId).innerHTML='';
+}
+function showResultOk(hdrId,bodyId,label,rows){
+  document.getElementById(hdrId).className='result-header ok';
+  document.getElementById(hdrId).innerHTML=
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> '+escHtml(label);
+  document.getElementById(bodyId).innerHTML=rows.map(r=>`
+    <div class="result-row">
+      <span class="result-key">${escHtml(r[0])}</span>
+      <span class="result-val ${r[2]||''}">${escHtml(String(r[1]))}</span>
+    </div>`).join('');
+}
+function showResultErr(hdrId,bodyId,msg){
+  document.getElementById(hdrId).className='result-header err';
+  document.getElementById(hdrId).innerHTML=
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Error';
+  document.getElementById(bodyId).innerHTML=
+    '<div style="font-size:var(--text-sm);color:var(--color-error);font-family:var(--font-mono)">'+escHtml(msg)+'</div>';
+}
+
+/* ══════════════════════════ ENCODE API CALL ══════════════════════════ */
+document.getElementById('btn-encode').addEventListener('click',async()=>{
+  const btn=document.getElementById('btn-encode');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spin">◌</span> Encrypting…';
+  showResultLoading('enc-result-hdr','enc-result-body','Sending to API…');
+
+  try{
+    const fd=new FormData();
+    fd.append('file',state.file,state.file.name);
+    fd.append('key',state.keyEnc,state.keyEnc.name);
+    const pass=document.getElementById('enc-passphrase').value;
+    if(pass) fd.append('passphrase',pass);
+
+    const base=apiUrlInput.value.replace(/\/$/,'');
+    const res=await fetch(base+'/encode',{method:'POST',body:fd});
+    const d=await res.json();
+
+    if(!res.ok||!d.ok) throw new Error(d.detail||d.message||'Encode failed');
+
+    showResultOk('enc-result-hdr','enc-result-body','Encryption complete',([
+      ['Input file',d.input_filename,''],
+      ['Input size',d.input_size_fmt,''],
+      ['Output file',d.output_filename,''],
+      ['Output size',d.output_size_fmt,''],
+      ['Config file',d.config_filename,''],
+      ['Elapsed',d.elapsed_s+'s',''],
+      ['Message',d.message,''],
+    ]));
+  }catch(e){
+    showResultErr('enc-result-hdr','enc-result-body',e.message);
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Encrypt File';
+    syncButtons();
+  }
+});
+
+/* ══════════════════════════ DECODE API CALL ══════════════════════════ */
+document.getElementById('btn-decode').addEventListener('click',async()=>{
+  const btn=document.getElementById('btn-decode');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spin">◌</span> Decrypting…';
+  showResultLoading('dec-result-hdr','dec-result-body','Sending to API…');
+
+  try{
+    const fd=new FormData();
+    fd.append('encrypted_image',state.encImg,state.encImg.name);
+    fd.append('key',state.keyDec,state.keyDec.name);
+    fd.append('config',state.cfg,state.cfg.name);
+    const pass=document.getElementById('dec-passphrase').value;
+    if(pass) fd.append('passphrase',pass);
+
+    const base=apiUrlInput.value.replace(/\/$/,'');
+    const res=await fetch(base+'/decode',{method:'POST',body:fd});
+    const d=await res.json();
+
+    if(!res.ok||!d.ok) throw new Error(d.detail||d.message||'Decode failed');
+
+    showResultOk('dec-result-hdr','dec-result-body','Decryption complete',([
+      ['Recovered file',d.recovered_filename,''],
+      ['Recovered size',d.recovered_size_fmt,''],
+      ['Elapsed',d.elapsed_s+'s',''],
+      ['Message',d.message,''],
+    ]));
+  }catch(e){
+    showResultErr('dec-result-hdr','dec-result-body',e.message);
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Decrypt File';
+    syncButtons();
+  }
+});
+
+/* ══════════════════════════ TEST SUITE API CALL ══════════════════════ */
+const STEP_META={
+  load:   {label:'Load demo assets',      icon:'1'},
+  encode: {label:'Encode (encrypt)',       icon:'2'},
+  decode: {label:'Decode (decrypt)',       icon:'3'},
+};
+
+function renderSteps(steps){
+  const el=document.getElementById('test-steps');
+  el.innerHTML=steps.map(s=>{
+    const meta=STEP_META[s.step]||{label:s.step,icon:'·'};
+    const statusCls=s.status||'idle';
+    const iconHtml=s.status==='running'
+      ?'<span class="spin" style="font-size:14px">◌</span>'
+      :meta.icon;
+    return `
+      <div class="test-step">
+        <div class="step-icon ${statusCls}">${iconHtml}</div>
+        <div class="step-content">
+          <div class="step-label">${escHtml(s.label||meta.label)}</div>
+          ${s.detail?'<div class="step-detail">'+escHtml(s.detail)+'</div>':''}
+          ${s.elapsed_s!=null?'<div class="step-elapsed">'+s.elapsed_s+'s</div>':''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderSummary(sum){
+  document.getElementById('summary-title').style.display='block';
+  const kpis=[
+    {label:'Input file',value:sum.input_file,sub:sum.input_size_fmt},
+    {label:'Key (original)',value:sum.key_orig_size_fmt,sub:'before encryption'},
+    {label:'Encrypted size',value:sum.encrypted_size_fmt,
+      sub:(sum.size_delta_pct>=0?'+':'')+sum.size_delta_pct+'% vs key',
+      cls: Math.abs(sum.size_delta_pct)<5?'good':'warn'},
+    {label:'Recovered size',value:sum.recovered_size_fmt,
+      cls:sum.recovered_size===sum.input_size?'good':'warn'},
+    {label:'SHA-256 match',value:sum.hash_match?'✓ PASS':'✗ FAIL',cls:sum.hash_match?'good':'bad'},
+    {label:'Byte accuracy',value:sum.accuracy_pct+'%',cls:sum.accuracy_pct>=99.99?'good':sum.accuracy_pct>90?'warn':'bad'},
+    {label:'Encode time',value:sum.encode_elapsed_s+'s',cls:''},
+    {label:'Decode time',value:sum.decode_elapsed_s+'s',cls:''},
+  ];
+  document.getElementById('test-summary').innerHTML=kpis.map(k=>`
+    <div class="kpi">
+      <div class="kpi-label">${escHtml(k.label)}</div>
+      <div class="kpi-value ${k.cls||''}">${escHtml(String(k.value))}</div>
+      ${k.sub?'<div class="kpi-sub">'+escHtml(k.sub)+'</div>':''}
+    </div>`).join('');
+
+  // accuracy bar
+  const wrap=document.getElementById('accuracy-wrap');
+  wrap.style.display='block';
+  document.getElementById('accuracy-pct-label').textContent=sum.accuracy_pct+'%';
+  setTimeout(()=>{
+    document.getElementById('accuracy-fill').style.width=Math.min(100,sum.accuracy_pct)+'%';
+  },80);
+}
+
+document.getElementById('btn-test').addEventListener('click',async()=>{
+  const btn=document.getElementById('btn-test');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spin">◌</span> Running…';
+
+  // reset panel
+  document.getElementById('test-panel').style.display='block';
+  document.getElementById('summary-title').style.display='none';
+  document.getElementById('test-summary').innerHTML='';
+  document.getElementById('accuracy-wrap').style.display='none';
+  document.getElementById('accuracy-fill').style.width='0%';
+  document.getElementById('test-elapsed').textContent='';
+
+  // show pending steps
+  renderSteps([
+    {step:'load',label:'Load demo assets',status:'idle'},
+    {step:'encode',label:'Encode (encrypt)',status:'idle'},
+    {step:'decode',label:'Decode (decrypt)',status:'idle'},
+  ]);
+
+  // animate load step
+  renderSteps([
+    {step:'load',label:'Load demo assets',status:'running'},
+    {step:'encode',label:'Encode (encrypt)',status:'idle'},
+    {step:'decode',label:'Decode (decrypt)',status:'idle'},
+  ]);
+
+  try{
+    const base=apiUrlInput.value.replace(/\/$/,'');
+    const res=await fetch(base+'/test',{method:'POST',signal:AbortSignal.timeout(120000)});
+    const d=await res.json();
+
+    if(!res.ok||!d.ok) throw new Error(
+      (d.steps&&d.steps.find(s=>s.status==='error')?.detail)||
+      d.detail||'Test failed'
+    );
+
+    renderSteps(d.steps);
+    renderSummary(d.summary);
+    document.getElementById('test-elapsed').textContent='Total: '+d.elapsed_s+'s';
+
+  }catch(e){
+    renderSteps([
+      {step:'load',label:'Test failed',status:'error',detail:e.message},
+    ]);
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Run Test Suite';
+    syncButtons();
+  }
+});
+
+/* initial CLI render */
+updateEncCli();updateDecCli();
 </script>
 </body>
 </html>
