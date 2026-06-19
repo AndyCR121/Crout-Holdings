@@ -183,8 +183,7 @@ def run_test():
         try:
             from PIL import Image as PILImage
             PILImage.new("RGB", (200, 200), color=(100, 149, 237)).save(str(DEMO_FILE))
-            steps.append({"name": "Setup", "status": "ok",
-                          "detail": "Auto-generated 200x200 demo source image (small_test.png)"})
+            steps.append({"name": "Setup", "status": "ok", "detail": "Auto-generated 200x200 demo source image (small_test.png)"})
         except Exception as exc:
             raise HTTPException(status_code=500, detail=f"Could not create demo file: {exc}")
 
