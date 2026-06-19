@@ -5,17 +5,15 @@ Start:
     uvicorn api:app --reload --port 8787
 
 Endpoints:
-    GET  /health          liveness + encryptor status
-    POST /encode          multipart: file + key  -> zip(encrypted.png, name.config.json)
-    POST /decode          multipart: encrypted_image + key + config -> original file
-    POST /test            no body - full encode->decode round-trip on demo assets
+    GET  /health   liveness + encryptor status
+    POST /encode   multipart: file + key -> zip(stem-encrypted.png, stem.config.json)
+    POST /decode   multipart: encrypted_image + key + config -> original file
+    POST /test     no body - full encode->decode round-trip on bundled demo assets
 """
 
 import hashlib
 import io
 import json
-import os
-import shutil
 import tempfile
 import time
 import zipfile
@@ -26,10 +24,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 
 # ---------------------------------------------------------------------------
-# App setup
+# App
 # ---------------------------------------------------------------------------
 app = FastAPI(title="Image Encryptor API", version="2.0.0")
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -37,7 +34,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Demo assets bundled with the repo (used by /test)
 DEMO_DIR  = Path(__file__).parent / "demo" / "orignals"
 DEMO_KEY  = DEMO_DIR / "key.png"
 DEMO_FILE = DEMO_DIR / "small_test.png"
@@ -46,8 +42,7 @@ DEMO_FILE = DEMO_DIR / "small_test.png"
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _load_encryptor():
-    """Import Encryptor lazily so the API still starts if deps are missing."""
+def _get_encryptor_class():
     try:
         from encryptor import Encryptor
         return Encryptor
@@ -56,11 +51,10 @@ def _load_encryptor():
 
 
 async def _save_upload(upload: UploadFile, dest: Path) -> None:
-    data = await upload.read()
-    dest.write_bytes(data)
+    dest.write_bytes(await upload.read())
 
 
-def _fmt_bytes(n: int) -> str:
+def _fmt(n: int) -> str:
     for unit in ("B", "KB", "MB", "GB"):
         if n < 1024:
             return f"{n:.1f} {unit}"
@@ -75,11 +69,11 @@ def _fmt_bytes(n: int) -> str:
 @app.get("/health")
 def health():
     try:
-        from encryptor import Encryptor  # noqa: F401
-        enc_ok = True
+        from encryptor import Encryptor  # noqa
+        ok = True
     except Exception:
-        enc_ok = False
-    return {"status": "ok", "encryptor_available": enc_ok}
+        ok = False
+    return {"status": "ok", "encryptor_available": ok}
 
 
 @app.post("/encode")
@@ -88,50 +82,43 @@ async def encode(
     key:  UploadFile = File(...),
     passphrase: str  = Form(""),
 ):
-    """
-    Accepts the input file + key image.
-    Returns a ZIP containing:
-        <stem>-encrypted.png
-        <stem>.config.json
-    """
-    Encryptor = _load_encryptor()
+    Encryptor = _get_encryptor_class()
 
-    with tempfile.TemporaryDirectory() as tmp:
-        tmp = Path(tmp)
-
+    with tempfile.TemporaryDirectory() as _tmp:
+        tmp        = Path(_tmp)
         input_path = tmp / file.filename
         key_path   = tmp / key.filename
         await _save_upload(file, input_path)
         await _save_upload(key,  key_path)
 
-        stem           = input_path.stem
-        out_image      = tmp / f"{stem}-encrypted.png"
-        out_config     = tmp / f"{stem}.config.json"
+        stem       = input_path.stem
+        out_image  = tmp / f"{stem}-encrypted.png"
+        out_config = tmp / f"{stem}.config.json"
 
         try:
-            enc = Encryptor(key_path=str(key_path), passphrase=passphrase or None)
+            enc = Encryptor()
             enc.encode(
-                input_file=str(input_path),
-                output_image=str(out_image),
-                output_config=str(out_config),
+                input_path=input_path,
+                key_path=key_path,
+                output_path=out_image,
+                config_path=out_config,
+                passphrase=passphrase or None,
             )
-        except OverflowError as e:
-            raise HTTPException(status_code=422, detail=str(e))
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+        except OverflowError as exc:
+            raise HTTPException(status_code=422, detail=str(exc))
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=str(exc))
 
-        # Bundle both output files into a single ZIP streamed back
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
             zf.write(out_image,  out_image.name)
             zf.write(out_config, out_config.name)
         buf.seek(0)
 
-        zip_name = f"{stem}-encrypted.zip"
         return StreamingResponse(
             buf,
             media_type="application/zip",
-            headers={"Content-Disposition": f'attachment; filename="{zip_name}"'},
+            headers={"Content-Disposition": f'attachment; filename="{stem}-encrypted.zip"'},
         )
 
 
@@ -142,175 +129,143 @@ async def decode(
     config:          UploadFile = File(...),
     passphrase: str             = Form(""),
 ):
-    """
-    Accepts encrypted PNG + key image + config JSON.
-    Returns the recovered original file.
-    """
-    Encryptor = _load_encryptor()
+    Encryptor = _get_encryptor_class()
 
-    with tempfile.TemporaryDirectory() as tmp:
-        tmp = Path(tmp)
+    with tempfile.TemporaryDirectory() as _tmp:
+        tmp      = Path(_tmp)
+        img_path = tmp / encrypted_image.filename
+        key_path = tmp / key.filename
+        cfg_path = tmp / config.filename
+        out_dir  = tmp / "out"
+        out_dir.mkdir()
 
-        img_path    = tmp / encrypted_image.filename
-        key_path    = tmp / key.filename
-        cfg_path    = tmp / config.filename
         await _save_upload(encrypted_image, img_path)
         await _save_upload(key,             key_path)
         await _save_upload(config,          cfg_path)
 
-        # Read original filename from config
-        cfg_data = json.loads(cfg_path.read_text())
+        cfg_data          = json.loads(cfg_path.read_text())
         original_filename = cfg_data.get("original_filename", "recovered_file")
-        out_path = tmp / f"recovered_{original_filename}"
 
         try:
-            enc = Encryptor(key_path=str(key_path), passphrase=passphrase or None)
-            enc.decode(
-                input_image=str(img_path),
-                input_config=str(cfg_path),
-                output_file=str(out_path),
+            enc = Encryptor()
+            recovered = enc.decode(
+                encrypted_path=img_path,
+                key_path=key_path,
+                config_path=cfg_path,
+                output_dir=out_dir,
+                passphrase=passphrase or None,
             )
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=str(exc))
 
-        file_bytes = out_path.read_bytes()
-        mime = "application/octet-stream"
+        out_file = recovered if isinstance(recovered, Path) else (out_dir / original_filename)
         return StreamingResponse(
-            io.BytesIO(file_bytes),
-            media_type=mime,
+            io.BytesIO(out_file.read_bytes()),
+            media_type="application/octet-stream",
             headers={"Content-Disposition": f'attachment; filename="{original_filename}"'},
         )
 
 
 @app.post("/test")
 def run_test():
-    """
-    Full encode -> decode round-trip using bundled demo assets.
-    Returns step-by-step metrics as JSON.
-    """
-    Encryptor = _load_encryptor()
-
-    steps = []
+    Encryptor = _get_encryptor_class()
+    steps  = []
     passed = True
 
+    # Auto-create small_test.png if missing
     if not DEMO_KEY.exists():
         raise HTTPException(
             status_code=404,
-            detail=f"Demo key image not found at {DEMO_KEY}. "
-                   "Add a key.png to image-encryptor/demo/orignals/"
+            detail=f"Demo key not found: {DEMO_KEY} — add key.png to demo/orignals/",
         )
     if not DEMO_FILE.exists():
-        # Auto-generate a tiny test image
         try:
             from PIL import Image as PILImage
-            img = PILImage.new("RGB", (200, 200), color=(100, 149, 237))
             DEMO_FILE.parent.mkdir(parents=True, exist_ok=True)
-            img.save(str(DEMO_FILE))
+            PILImage.new("RGB", (200, 200), color=(100, 149, 237)).save(str(DEMO_FILE))
             steps.append({"name": "Setup", "status": "ok",
-                          "detail": "Generated 200x200 demo source image (small_test.png)"})
-        except Exception as e:
-            raise HTTPException(status_code=500,
-                                detail=f"Could not create demo file: {e}")
+                          "detail": "Auto-created 200x200 small_test.png in demo/orignals/"})
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=f"Cannot create demo file: {exc}")
 
-    with tempfile.TemporaryDirectory() as tmp:
-        tmp = Path(tmp)
-
+    with tempfile.TemporaryDirectory() as _tmp:
+        tmp        = Path(_tmp)
         out_image  = tmp / "test-encrypted.png"
         out_config = tmp / "test.config.json"
-        out_decoded = tmp / "test-decoded.png"
+        out_dir    = tmp / "decoded"
+        out_dir.mkdir()
 
-        # -- Step 1: Encode --------------------------------------------------
+        # Step 1 — Encode
         t0 = time.perf_counter()
         try:
-            enc = Encryptor(key_path=str(DEMO_KEY))
-            enc.encode(
-                input_file=str(DEMO_FILE),
-                output_image=str(out_image),
-                output_config=str(out_config),
+            Encryptor().encode(
+                input_path=DEMO_FILE,
+                key_path=DEMO_KEY,
+                output_path=out_image,
+                config_path=out_config,
             )
-            encode_ms = round((time.perf_counter() - t0) * 1000)
-            key_size = DEMO_KEY.stat().st_size
-            enc_size = out_image.stat().st_size
-            size_delta_pct = round((enc_size - key_size) / key_size * 100, 2)
+            enc_ms       = round((time.perf_counter() - t0) * 1000)
+            key_size     = DEMO_KEY.stat().st_size
+            enc_size     = out_image.stat().st_size
+            delta_pct    = round((enc_size - key_size) / key_size * 100, 2)
             steps.append({
-                "name":   "Encode",
-                "status": "ok",
-                "ms":     encode_ms,
-                "detail": (
-                    f"Key: {_fmt_bytes(key_size)}  "
-                    f"Encrypted: {_fmt_bytes(enc_size)}  "
-                    f"Delta: {'+' if size_delta_pct >= 0 else ''}{size_delta_pct}%"
-                ),
-                "key_size_bytes": key_size,
-                "enc_size_bytes": enc_size,
-                "size_delta_pct": size_delta_pct,
+                "name": "Encode", "status": "ok", "ms": enc_ms,
+                "detail": f"Key: {_fmt(key_size)}  Encrypted: {_fmt(enc_size)}  Delta: {'+' if delta_pct >= 0 else ''}{delta_pct}%",
+                "key_size_bytes": key_size, "enc_size_bytes": enc_size, "size_delta_pct": delta_pct,
             })
-        except Exception as e:
-            steps.append({"name": "Encode", "status": "fail", "detail": str(e)})
+        except Exception as exc:
+            steps.append({"name": "Encode", "status": "fail", "detail": str(exc)})
             passed = False
 
-        # -- Step 2: Decode --------------------------------------------------
+        # Step 2 — Decode
         if passed:
             t0 = time.perf_counter()
             try:
-                enc = Encryptor(key_path=str(DEMO_KEY))
-                enc.decode(
-                    input_image=str(out_image),
-                    input_config=str(out_config),
-                    output_file=str(out_decoded),
+                recovered = Encryptor().decode(
+                    encrypted_path=out_image,
+                    key_path=DEMO_KEY,
+                    config_path=out_config,
+                    output_dir=out_dir,
                 )
-                decode_ms = round((time.perf_counter() - t0) * 1000)
+                dec_ms = round((time.perf_counter() - t0) * 1000)
+                out_file = recovered if isinstance(recovered, Path) else next(out_dir.iterdir(), None)
                 steps.append({
-                    "name":   "Decode",
-                    "status": "ok",
-                    "ms":     decode_ms,
-                    "detail": f"Recovered file written ({_fmt_bytes(out_decoded.stat().st_size)})",
+                    "name": "Decode", "status": "ok", "ms": dec_ms,
+                    "detail": f"Recovered: {_fmt(out_file.stat().st_size) if out_file else 'unknown'}",
                 })
-            except Exception as e:
-                steps.append({"name": "Decode", "status": "fail", "detail": str(e)})
+            except Exception as exc:
+                steps.append({"name": "Decode", "status": "fail", "detail": str(exc)})
                 passed = False
+                out_file = None
 
-        # -- Step 3: Compare original vs decoded ----------------------------
-        accuracy = 0.0
+        # Step 3 — Compare
+        accuracy  = 0.0
         sha_match = False
-        if passed and out_decoded.exists():
-            orig_bytes    = DEMO_FILE.read_bytes()
-            decoded_bytes = out_decoded.read_bytes()
-
-            sha_orig    = hashlib.sha256(orig_bytes).hexdigest()
-            sha_decoded = hashlib.sha256(decoded_bytes).hexdigest()
-            sha_match   = sha_orig == sha_decoded
-
-            if len(orig_bytes) > 0:
-                min_len   = min(len(orig_bytes), len(decoded_bytes))
-                matches   = sum(a == b for a, b in zip(orig_bytes, decoded_bytes))
-                accuracy  = round(matches / len(orig_bytes) * 100, 4)
-
+        if passed and out_file and out_file.exists():
+            orig    = DEMO_FILE.read_bytes()
+            decoded = out_file.read_bytes()
+            sha_match = hashlib.sha256(orig).hexdigest() == hashlib.sha256(decoded).hexdigest()
+            if orig:
+                accuracy = round(sum(a == b for a, b in zip(orig, decoded)) / len(orig) * 100, 4)
             steps.append({
-                "name":   "Content Match",
+                "name": "Content Match",
                 "status": "ok" if sha_match else "warn",
-                "detail": (
-                    f"Original: {_fmt_bytes(len(orig_bytes))}  "
-                    f"Decoded: {_fmt_bytes(len(decoded_bytes))}  "
-                    f"SHA-256 match: {sha_match}  "
-                    f"Byte accuracy: {accuracy}%"
-                ),
+                "detail": f"Original: {_fmt(len(orig))}  Decoded: {_fmt(len(decoded))}  SHA-256: {sha_match}  Accuracy: {accuracy}%",
                 "sha_match": sha_match,
                 "accuracy_pct": accuracy,
-                "original_size_bytes": len(orig_bytes),
-                "decoded_size_bytes":  len(decoded_bytes),
+                "original_size_bytes": len(orig),
+                "decoded_size_bytes": len(decoded),
             })
-
             if not sha_match:
                 passed = False
 
         return JSONResponse({
             "passed": passed,
-            "steps":  steps,
+            "steps": steps,
             "summary": {
-                "accuracy_pct":     accuracy,
-                "sha_match":        sha_match,
-                "size_delta_pct":   next(
+                "accuracy_pct": accuracy,
+                "sha_match": sha_match,
+                "size_delta_pct": next(
                     (s.get("size_delta_pct") for s in steps if s["name"] == "Encode"), None
                 ),
             },
