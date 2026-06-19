@@ -34,7 +34,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DEMO_DIR  = Path(__file__).parent / "demo" / "orignals"
+DEMO_DIR  = Path(__file__).parent / "test_files"
 DEMO_KEY  = DEMO_DIR / "key.png"
 DEMO_FILE = DEMO_DIR / "small_test.png"
 
@@ -55,12 +55,12 @@ async def _save_upload(upload: UploadFile, dest: Path) -> None:
 
 
 def _fmt_bytes(n: int) -> str:
+    size = float(n)
     for unit in ("B", "KB", "MB", "GB"):
-        if n < 1024:
-            return f"{n:.1f} {unit}"
-        n /= 1024
-    return f"{n:.1f} GB"
-
+        if size < 1024:
+            return f"{size:.1f} {unit}"
+        size /= 1024
+    return f"{size:.1f} GB"
 
 # ---------------------------------------------------------------------------
 # Routes
@@ -85,8 +85,8 @@ async def encode(
     Encryptor = _get_encryptor_class()
     with tempfile.TemporaryDirectory() as _tmp:
         tmp        = Path(_tmp)
-        input_path = tmp / file.filename
-        key_path   = tmp / key.filename
+        input_path = tmp / Path(file.filename or "input.bin").name
+        key_path = tmp / Path(key.filename or "key.png").name
         await _save_upload(file, input_path)
         await _save_upload(key,  key_path)
 
@@ -131,9 +131,9 @@ async def decode(
     Encryptor = _get_encryptor_class()
     with tempfile.TemporaryDirectory() as _tmp:
         tmp            = Path(_tmp)
-        encrypted_path = tmp / encrypted_image.filename
-        key_path       = tmp / key.filename
-        config_path    = tmp / config.filename
+        encrypted_path = tmp / Path(encrypted_image.filename or "encrypted.png").name
+        key_path = tmp / Path(key.filename or "key.png").name
+        config_path = tmp / Path(config.filename or "config.json").name
         await _save_upload(encrypted_image, encrypted_path)
         await _save_upload(key,             key_path)
         await _save_upload(config,          config_path)
