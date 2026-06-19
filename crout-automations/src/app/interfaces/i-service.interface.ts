@@ -7,6 +7,8 @@ export interface IUser {
   cellNumber?: string;
   active: boolean;
   isAdmin: boolean;
+  isDev: boolean;
+  referral?: string;
   password?: string;
   createdAt?: string;
   profilePicture?: string;
@@ -90,4 +92,39 @@ export interface IPagedResult<T> {
   total: number;
   page: number;
   pageSize: number;
+}
+
+export interface IDevServiceAssignment {
+  devServiceId?: number;
+  userId?: number;
+  userServiceId: number;
+  developerName?: string;
+  developerEmail?: string;
+  referral?: string;
+  companyId: number;
+  companyName: string;
+  serviceId: number;
+  serviceName: string;
+  subscriptionId?: string;
+  status: UserServiceStatus;
+  commissionPerc: number;
+  cost: number;
+  totalCommission: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ICreateDevServiceAssignment {
+  userId: number;
+  userServiceId: number;
+  commissionPerc: number;
+  cost: number;
+}
+
+export interface IUpdateDevServiceAssignment {
+  userId: number;
+  commissionPerc: number;
+  cost: number;
+  isActive: boolean;
 }

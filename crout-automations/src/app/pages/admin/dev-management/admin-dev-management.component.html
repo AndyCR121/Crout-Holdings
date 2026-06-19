@@ -1,0 +1,175 @@
+<div class="admin-layout">
+  <ca-admin-sidebar />
+
+  <main class="admin-main">
+    <div class="admin-page admin-page--wide">
+      <div class="admin-page-header">
+        <h1 class="admin-page-title">Developer Management</h1>
+        <div class="admin-page-header-actions">
+          <button class="btn-create" (click)="openCreate()">+ Add Assignment</button>
+        </div>
+      </div>
+
+      <div *ngIf="error()" class="admin-error">{{ error() }}</div>
+
+      <section class="dev-panel">
+        <h2>Developer Users</h2>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Name</th><th>Surname</th><th>Email</th><th>Cell</th><th>Referral Code</th><th>Developer</th><th>Date Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let dev of devUsers()">
+                <td>{{ dev.firstName }}</td>
+                <td>{{ dev.surname }}</td>
+                <td>{{ dev.email }}</td>
+                <td>{{ dev.cellNumber || 'None' }}</td>
+                <td>{{ dev.referral || 'None' }}</td>
+                <td><span class="admin-pill green">Yes</span></td>
+                <td>{{ displayDate(dev.createdAt) }}</td>
+              </tr>
+              <tr *ngIf="devUsers().length === 0">
+                <td colspan="7" class="admin-empty">No Developer-enabled users yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="dev-panel">
+        <div class="dev-panel__header">
+          <h2>Service Assignments</h2>
+          <div class="dev-filters">
+            <input [(ngModel)]="search" class="admin-input" placeholder="Search developer, company, service" />
+            <input [(ngModel)]="referral" class="admin-input" placeholder="Referral code" />
+            <select [(ngModel)]="developerId" class="admin-input">
+              <option [ngValue]="null">All Developers</option>
+              <option *ngFor="let dev of devUsers()" [ngValue]="dev.userId">{{ dev.firstName }} {{ dev.surname }}</option>
+            </select>
+            <select [(ngModel)]="assigned" class="admin-input">
+              <option value="">All Assignment States</option>
+              <option value="true">Assigned</option>
+              <option value="false">Unassigned</option>
+            </select>
+            <select [(ngModel)]="active" class="admin-input">
+              <option value="">All Active States</option>
+              <option value="true">Active</option>
+              <option value="false">Inactive</option>
+            </select>
+            <button class="btn-save" (click)="applyFilters()">Filter</button>
+            <button class="btn-cancel" (click)="clearFilters()">Clear</button>
+          </div>
+        </div>
+
+        <div *ngIf="loading()" class="admin-loading">
+          <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
+        </div>
+
+        <div *ngIf="!loading()" class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Client Service</th><th>Company</th><th>Service</th><th>Developer</th><th>Subscription</th>
+                <th>Amount</th><th>Commission %</th><th>Total Commission</th><th>Status</th><th>Active</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of assignments()" [class.editing]="isEditing(row.devServiceId)">
+                <ng-container *ngIf="!isEditing(row.devServiceId)">
+                  <td>#{{ row.userServiceId }}</td>
+                  <td>{{ row.companyName }}</td>
+                  <td>{{ row.serviceName }}</td>
+                  <td>{{ row.developerName || 'Unassigned' }}</td>
+                  <td>{{ row.subscriptionId || 'None' }}</td>
+                  <td>{{ formatMoney(row.cost) }}</td>
+                  <td>{{ row.commissionPerc | number:'1.2-2' }}%</td>
+                  <td>{{ formatMoney(row.totalCommission) }}</td>
+                  <td>{{ statusLabel(row.status) }}</td>
+                  <td><span class="admin-pill" [class.green]="row.isActive">{{ row.isActive ? 'Active' : 'Inactive' }}</span></td>
+                  <td class="admin-actions">
+                    <button class="btn-edit" [disabled]="!row.devServiceId" (click)="startEdit(row)">Edit</button>
+                    <button class="btn-delete" [disabled]="!row.devServiceId" (click)="onDelete(row)">Delete</button>
+                  </td>
+                </ng-container>
+
+                <ng-container *ngIf="isEditing(row.devServiceId)">
+                  <td>#{{ row.userServiceId }}</td>
+                  <td>{{ row.companyName }}</td>
+                  <td>{{ row.serviceName }}</td>
+                  <td>
+                    <select [(ngModel)]="getDraft(row.devServiceId).userId" class="admin-input">
+                      <option *ngFor="let dev of devUsers()" [ngValue]="dev.userId">{{ dev.firstName }} {{ dev.surname }}</option>
+                    </select>
+                  </td>
+                  <td>{{ row.subscriptionId || 'None' }}</td>
+                  <td><input type="number" [(ngModel)]="getDraft(row.devServiceId).cost" class="admin-input" min="0" step="0.01" /></td>
+                  <td><input type="number" [(ngModel)]="getDraft(row.devServiceId).commissionPerc" class="admin-input" min="0" step="0.01" /></td>
+                  <td>{{ formatMoney((getDraft(row.devServiceId).cost || 0) * ((getDraft(row.devServiceId).commissionPerc || 0) / 100)) }}</td>
+                  <td>{{ statusLabel(row.status) }}</td>
+                  <td>
+                    <select [(ngModel)]="getDraft(row.devServiceId).isActive" class="admin-input">
+                      <option [ngValue]="true">Active</option>
+                      <option [ngValue]="false">Inactive</option>
+                    </select>
+                  </td>
+                  <td class="admin-actions">
+                    <button class="btn-save" [disabled]="saving()" (click)="saveEdit(row)">Save</button>
+                    <button class="btn-cancel" (click)="cancelEdit(row.devServiceId)">Cancel</button>
+                  </td>
+                </ng-container>
+              </tr>
+              <tr *ngIf="assignments().length === 0">
+                <td colspan="11" class="admin-empty">No client services match these filters.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="admin-pagination">
+          <button class="btn-page" [disabled]="page() === 1" (click)="prevPage()">Prev</button>
+          <span>Page {{ page() }} of {{ totalPages }}</span>
+          <button class="btn-page" [disabled]="!hasMore" (click)="nextPage()">Next</button>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class="admin-modal-backdrop" *ngIf="showCreate()" (click)="showCreate.set(false)">
+  <div class="admin-modal admin-modal--link" (click)="$event.stopPropagation()">
+    <h3>Add Developer Assignment</h3>
+    <p>Link a Developer-enabled user to an unassigned client service.</p>
+
+    <label>Developer
+      <select [(ngModel)]="createBuffer.userId" class="admin-input">
+        <option [ngValue]="0">Select Developer</option>
+        <option *ngFor="let dev of devUsers()" [ngValue]="dev.userId">{{ dev.firstName }} {{ dev.surname }} - {{ dev.email }}</option>
+      </select>
+    </label>
+
+    <label>Client Service
+      <select [(ngModel)]="createBuffer.userServiceId" class="admin-input">
+        <option [ngValue]="0">Select client service</option>
+        <option *ngFor="let row of unassigned()" [ngValue]="row.userServiceId">
+          #{{ row.userServiceId }} - {{ row.companyName }} - {{ row.serviceName }}
+        </option>
+      </select>
+    </label>
+
+    <label>Subscription Amount
+      <input type="number" [(ngModel)]="createBuffer.cost" class="admin-input" min="0" step="0.01" />
+    </label>
+
+    <label>Commission %
+      <input type="number" [(ngModel)]="createBuffer.commissionPerc" class="admin-input" min="0" step="0.01" />
+    </label>
+
+    <div class="admin-modal-actions">
+      <button class="btn-save" [disabled]="saving()" (click)="submitCreate()">{{ saving() ? 'Saving...' : 'Create' }}</button>
+      <button class="btn-cancel" (click)="showCreate.set(false)">Cancel</button>
+    </div>
+  </div>
+</div>

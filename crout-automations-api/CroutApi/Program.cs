@@ -36,6 +36,7 @@ builder.Services.AddScoped<IServiceRequestRepository, ServiceRequestRepository>(
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
 builder.Services.AddScoped<IAddonRepository, AddonRepository>();
 builder.Services.AddScoped<IServiceFeatureRepository, ServiceFeatureRepository>();
+builder.Services.AddScoped<IDevServiceRepository, DevServiceRepository>();
 
 // -- Application Services -----------------------------------------------------
 builder.Services.AddScoped<IAuthService, AuthService>();

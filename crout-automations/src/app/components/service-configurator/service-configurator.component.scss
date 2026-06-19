@@ -366,6 +366,29 @@
   }
 }
 
+.pricing__suite-referral {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: rgba(255,255,255,0.5);
+
+  input {
+    width: 100%;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: var(--radius-md);
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.9);
+    padding: 10px 12px;
+    font: inherit;
+    outline: none;
+
+    &:focus { border-color: var(--color-orange); }
+    &::placeholder { color: rgba(255,255,255,0.35); }
+  }
+}
+
 .pricing__suite-cta-note {
   font-size: var(--text-xs);
   color: rgba(255,255,255,0.35);

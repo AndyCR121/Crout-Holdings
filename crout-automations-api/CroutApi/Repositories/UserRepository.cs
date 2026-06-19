@@ -7,7 +7,7 @@ namespace CroutApi.Repositories;
 public class UserRepository(DbHelper db) : IUserRepository
 {
     private const string SelectCols =
-        "user_id AS UserId, Username, PasswordHash, FirstName, Surname, Email, CellNumber, Active, IsAdmin, ProfilePicture";
+        "user_id AS UserId, Username, PasswordHash, FirstName, Surname, Email, CellNumber, Active, IsAdmin, isDev AS IsDev, referral AS Referral, CreatedAt, ProfilePicture";
 
     public async Task<User?> GetByUsernameAsync(string username)
     {
@@ -37,11 +37,19 @@ public class UserRepository(DbHelper db) : IUserRepository
         return await conn.ExecuteScalarAsync<int>("SELECT COUNT(1) FROM Users WHERE Email = @email", new { email }) > 0;
     }
 
+    public async Task<bool> ReferralExistsAsync(string referral, int? exceptUserId = null)
+    {
+        using var conn = db.GetConnection();
+        return await conn.ExecuteScalarAsync<int>(
+            "SELECT COUNT(1) FROM Users WHERE referral = @referral AND (@exceptUserId IS NULL OR user_id <> @exceptUserId)",
+            new { referral, exceptUserId }) > 0;
+    }
+
     public async Task<int> CreateAsync(User user)
     {
         using var conn = db.GetConnection();
         return await conn.ExecuteScalarAsync<int>(
-            "INSERT INTO Users (Username, PasswordHash, FirstName, Surname, Email, CellNumber, Active, IsAdmin) VALUES (@Username, @PasswordHash, @FirstName, @Surname, @Email, @CellNumber, @Active, @IsAdmin); SELECT LAST_INSERT_ID();",
+            "INSERT INTO Users (Username, PasswordHash, FirstName, Surname, Email, CellNumber, Active, IsAdmin, isDev, referral) VALUES (@Username, @PasswordHash, @FirstName, @Surname, @Email, @CellNumber, @Active, @IsAdmin, @IsDev, @Referral); SELECT LAST_INSERT_ID();",
             user);
     }
 
@@ -59,7 +67,7 @@ public class UserRepository(DbHelper db) : IUserRepository
     {
         using var conn = db.GetConnection();
         await conn.ExecuteAsync(
-            "UPDATE Users SET FirstName=@FirstName, Surname=@Surname, Email=@Email, CellNumber=@CellNumber, Active=@Active, IsAdmin=@IsAdmin WHERE user_id=@UserId",
+            "UPDATE Users SET FirstName=@FirstName, Surname=@Surname, Email=@Email, CellNumber=@CellNumber, Active=@Active, IsAdmin=@IsAdmin, isDev=@IsDev, referral=@Referral WHERE user_id=@UserId",
             user);
     }
 
@@ -81,23 +89,26 @@ public class UserRepository(DbHelper db) : IUserRepository
 
     // ── Admin methods ────────────────────────────────────────────────────────
 
-    public async Task<(IEnumerable<User> Items, int Total)> GetAllAsync(int page, int pageSize, string? search)
+    public async Task<(IEnumerable<User> Items, int Total)> GetAllAsync(int page, int pageSize, string? search, bool? isDev = null)
     {
         using var conn = db.GetConnection();
         var offset = (page - 1) * pageSize;
         var hasSearch = !string.IsNullOrWhiteSpace(search);
-        var where = hasSearch
-            ? "WHERE Username LIKE @pattern OR Email LIKE @pattern OR FirstName LIKE @pattern OR Surname LIKE @pattern"
-            : "";
+        var filters = new List<string>();
+        if (hasSearch)
+            filters.Add("(Username LIKE @pattern OR Email LIKE @pattern OR FirstName LIKE @pattern OR Surname LIKE @pattern OR referral LIKE @pattern)");
+        if (isDev is not null)
+            filters.Add("isDev = @isDev");
+        var where = filters.Count > 0 ? $"WHERE {string.Join(" AND ", filters)}" : "";
         var pattern = $"%{search}%";
 
         var total = await conn.ExecuteScalarAsync<int>(
             $"SELECT COUNT(1) FROM Users {where}",
-            new { pattern });
+            new { pattern, isDev });
 
         var items = await conn.QueryAsync<User>(
-            $"SELECT user_id AS UserId, Username, FirstName, Surname, Email, CellNumber, Active, IsAdmin FROM Users {where} ORDER BY UserId DESC LIMIT @pageSize OFFSET @offset",
-            new { pattern, pageSize, offset });
+            $"SELECT user_id AS UserId, Username, FirstName, Surname, Email, CellNumber, Active, IsAdmin, isDev AS IsDev, referral AS Referral, CreatedAt FROM Users {where} ORDER BY UserId DESC LIMIT @pageSize OFFSET @offset",
+            new { pattern, isDev, pageSize, offset });
 
         return (items, total);
     }

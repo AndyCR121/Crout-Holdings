@@ -171,6 +171,12 @@ export const routes: Routes = [
       import('./pages/admin/companies/admin-companies.component').then(m => m.AdminCompaniesComponent),
   },
   {
+    path: 'admin/dev-management',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./pages/admin/dev-management/admin-dev-management.component').then(m => m.AdminDevManagementComponent),
+  },
+  {
     path: 'admin/addons',
     canActivate: [authGuard, adminGuard],
     loadComponent: () =>

@@ -5,5 +5,6 @@ public record SubmitServiceRequestDto(
     int ServiceId,
     int? PackageId,
     string? RequestNote,
-    string[]? SelectedAddons
+    string[]? SelectedAddons,
+    string? Referral
 );

@@ -1,5 +1,6 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { IService, IAddon, IPackage } from '../../interfaces/i-service.interface';
 import { IAddonState, IPackageView } from '../../interfaces/i-service-display.interface';
@@ -7,7 +8,7 @@ import { IAddonState, IPackageView } from '../../interfaces/i-service-display.in
 @Component({
   selector: 'ca-service-configurator',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './service-configurator.component.html',
   styleUrl: './service-configurator.component.scss'
 })
@@ -28,6 +29,7 @@ export class ServiceConfiguratorComponent implements OnChanges {
   @Input() loading = false;
 
   packageViews: IPackageView[] = [];
+  referralCode = '';
 
   readonly PACKAGE_DISCOUNT = 0.15;
   skeletonPackages = Array(1).fill(null);
@@ -203,5 +205,12 @@ export class ServiceConfiguratorComponent implements OnChanges {
 
   formatPrice(n: number): string {
     return n.toLocaleString('en-ZA');
+  }
+
+  contactUrl(view: IPackageView): string {
+    const params = new URLSearchParams({ package: this.activePkg(view).packageName });
+    const referral = this.referralCode.trim();
+    if (referral) params.set('referral', referral);
+    return `/contact-us/?${params.toString()}`;
   }
 }

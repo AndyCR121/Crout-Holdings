@@ -131,7 +131,11 @@
               }
             </div>
 
-            <a href="/contact-us/" class="pricing__suite-cta">Get Started</a>
+            <label class="pricing__suite-referral">
+              <span>Referral code</span>
+              <input [(ngModel)]="referralCode" placeholder="Optional" />
+            </label>
+            <a [href]="contactUrl(view)" class="pricing__suite-cta">Get Started</a>
             <p class="pricing__suite-cta-note">Custom scoping call included</p>
           </div>
 

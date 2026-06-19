@@ -12,8 +12,12 @@ CREATE TABLE IF NOT EXISTS Users (
   CellNumber   VARCHAR(30)      NULL,
   Active       TINYINT(1)   NOT NULL DEFAULT 1,
   IsAdmin      TINYINT(1)   NOT NULL DEFAULT 0,
+  isDev        TINYINT(1)   NOT NULL DEFAULT 0,
+  referral     VARCHAR(100)     NULL,
   CreatedAt    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  UpdatedAt    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  UpdatedAt    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_users_referral (referral),
+  KEY idx_users_isDev (isDev)
 );
 
 CREATE TABLE IF NOT EXISTS Companies (
@@ -88,6 +92,24 @@ CREATE TABLE IF NOT EXISTS UserServices (
   CONSTRAINT fk_us_company FOREIGN KEY (company_id) REFERENCES Companies(company_id) ON DELETE CASCADE,
   CONSTRAINT fk_us_service FOREIGN KEY (service_id) REFERENCES Services(service_id),
   CONSTRAINT fk_us_package FOREIGN KEY (package_id) REFERENCES Packages(package_id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS DevServices (
+  devServiceId   INT           NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  userId         INT           NOT NULL,
+  userServiceId  INT           NOT NULL,
+  commissionPerc DECIMAL(5,2)  NOT NULL DEFAULT 20.00,
+  cost           DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  totalCommission DECIMAL(12,2)
+    GENERATED ALWAYS AS (ROUND(cost * (commissionPerc / 100), 2)) STORED,
+  isActive       TINYINT(1)    NOT NULL DEFAULT 1,
+  createdAt      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_devservices_user FOREIGN KEY (userId) REFERENCES Users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_devservices_userservice FOREIGN KEY (userServiceId) REFERENCES UserServices(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  UNIQUE KEY uq_devservices_userServiceId (userServiceId),
+  KEY idx_devservices_userId (userId),
+  KEY idx_devservices_userServiceId (userServiceId)
 );
 
 CREATE TABLE IF NOT EXISTS ServiceRequests (

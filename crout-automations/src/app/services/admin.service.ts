@@ -3,7 +3,17 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { EnvironmentService } from './environment.service';
-import { IUser, ICompany, IService, IAddon, IServiceFeature, IPackage } from '../interfaces/i-service.interface';
+import {
+  IUser,
+  ICompany,
+  IService,
+  IAddon,
+  IServiceFeature,
+  IPackage,
+  ICreateDevServiceAssignment,
+  IDevServiceAssignment,
+  IUpdateDevServiceAssignment,
+} from '../interfaces/i-service.interface';
 
 export interface PagedResult<T> { items: T[]; total: number; page: number; pageSize: number; }
 
@@ -21,9 +31,10 @@ export class AdminService {
   }
 
   // ── Users ──────────────────────────────────────────────────────────────────
-  getUsers(page = 1, pageSize = 20, search = ''): Observable<PagedResult<IUser>> {
+  getUsers(page = 1, pageSize = 20, search = '', isDev?: boolean): Observable<PagedResult<IUser>> {
     const params = new HttpParams().set('page', page).set('pageSize', pageSize).set('search', search);
-    return this.http.get<PagedResult<IUser>>(`${this.base}/users`, { params, headers: this.authHeaders(), withCredentials: true });
+    const finalParams = isDev == null ? params : params.set('isDev', isDev);
+    return this.http.get<PagedResult<IUser>>(`${this.base}/users`, { params: finalParams, headers: this.authHeaders(), withCredentials: true });
   }
   getUser(id: number): Observable<IUser> {
     return this.http.get<IUser>(`${this.base}/users/${id}`, { headers: this.authHeaders(), withCredentials: true });
@@ -138,5 +149,45 @@ export class AdminService {
   }
   deleteServiceFeature(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/service-features/${id}`, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  // Dev Management
+  getDevUsers(page = 1, pageSize = 100, search = ''): Observable<PagedResult<IUser>> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize).set('search', search);
+    return this.http.get<PagedResult<IUser>>(`${this.base}/dev-users`, { params, headers: this.authHeaders(), withCredentials: true });
+  }
+
+  getDevServices(
+    page = 1,
+    pageSize = 20,
+    filters: {
+      search?: string;
+      developerId?: number;
+      companyId?: number;
+      serviceId?: number;
+      referral?: string;
+      assigned?: boolean;
+      active?: boolean;
+    } = {},
+  ): Observable<PagedResult<IDevServiceAssignment>> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    for (const [key, value] of Object.entries(filters)) {
+      if (value !== undefined && value !== null && value !== '') {
+        params = params.set(key, String(value));
+      }
+    }
+    return this.http.get<PagedResult<IDevServiceAssignment>>(`${this.base}/dev-services`, { params, headers: this.authHeaders(), withCredentials: true });
+  }
+
+  createDevService(dto: ICreateDevServiceAssignment): Observable<IDevServiceAssignment> {
+    return this.http.post<IDevServiceAssignment>(`${this.base}/dev-services`, dto, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  updateDevService(id: number, dto: IUpdateDevServiceAssignment): Observable<IDevServiceAssignment> {
+    return this.http.put<IDevServiceAssignment>(`${this.base}/dev-services/${id}`, dto, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  deleteDevService(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/dev-services/${id}`, { headers: this.authHeaders(), withCredentials: true });
   }
 }
