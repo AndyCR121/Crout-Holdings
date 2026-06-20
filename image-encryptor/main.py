@@ -17,14 +17,25 @@ import argparse
 import getpass
 import sys
 from pathlib import Path
-from encryptor import Encryptor
+from encryptor import (
+    DEFAULT_STRICT_SIZE_DELTA_PCT,
+    EncodeError,
+    Encryptor,
+    encrypted_name_for,
+)
+from key_manager import KeyManager
 
 
-def derive_names(input_path: Path, output_dir: Path | None = None) -> tuple[Path, Path]:
+def derive_names(
+    input_path: Path,
+    key_path: Path,
+    output_dir: Path | None = None,
+) -> tuple[Path, Path]:
     """Given an input file path, return (encrypted_output_path, config_path)."""
     stem     = input_path.stem
     base_dir = output_dir or input_path.parent
-    encrypted = base_dir / f"{stem}-encrypted.png"
+    carrier_format = KeyManager(key_path).format()
+    encrypted = base_dir / encrypted_name_for(input_path, carrier_format)
     config    = base_dir / f"{stem}.config.json"
     return encrypted, config
 
@@ -52,16 +63,21 @@ def cmd_encode(args):
 
     passphrase = resolve_passphrase(args.passphrase, args.prompt_passphrase)
 
-    encrypted_path, config_path = derive_names(input_path, output_dir)
+    encrypted_path, config_path = derive_names(input_path, key_path, output_dir)
+    strict_size_delta_pct = None if args.allow_oversize else args.strict_size_delta_pct
 
     enc = Encryptor()
-    enc.encode(
-        input_path=input_path,
-        key_path=key_path,
-        output_path=encrypted_path,
-        config_path=config_path,
-        passphrase=passphrase,
-    )
+    try:
+        enc.encode(
+            input_path=input_path,
+            key_path=key_path,
+            output_path=encrypted_path,
+            config_path=config_path,
+            passphrase=passphrase,
+            strict_size_delta_pct=strict_size_delta_pct,
+        )
+    except EncodeError as exc:
+        sys.exit(f"[error] {exc.code}: {exc.message}\n{exc.to_dict()}")
     mode = "AES-256-GCM + LSB" if passphrase else "LSB only"
     print(f"[ok] Mode       → {mode}")
     print(f"[ok] Encrypted  → {encrypted_path}")
@@ -121,6 +137,18 @@ def main():
     enc_p.add_argument("--input",      required=True, help="File to encrypt (pdf/docx/xlsx/csv/image)")
     enc_p.add_argument("--key",        required=True, help="Base key image (.png/.jpg)")
     enc_p.add_argument("--output-dir", default=None,  help="Directory for outputs (default: same as input)")
+    enc_p.add_argument(
+        "--strict-size-delta-pct",
+        type=float,
+        default=DEFAULT_STRICT_SIZE_DELTA_PCT,
+        help="Fail encode if output differs from carrier size by more than this percent.",
+    )
+    enc_p.add_argument(
+        "--allow-oversize",
+        action="store_true",
+        default=False,
+        help="Disable strict size-delta enforcement.",
+    )
     add_passphrase_args(enc_p)
     enc_p.set_defaults(func=cmd_encode)
 

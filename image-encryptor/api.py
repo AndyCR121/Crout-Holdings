@@ -44,8 +44,9 @@ DEMO_FILE = DEMO_DIR / "small_test.png"
 
 def _get_encryptor_class():
     try:
-        from encryptor import Encryptor
-        return Encryptor
+        from encryptor import EncodeError, Encryptor, encrypted_name_for
+        from key_manager import KeyManager
+        return Encryptor, EncodeError, encrypted_name_for, KeyManager
     except Exception as exc:
         raise HTTPException(status_code=503, detail=f"Encryptor unavailable: {exc}")
 
@@ -82,7 +83,7 @@ async def encode(
     key:        UploadFile = File(...),
     passphrase: str        = Form(""),
 ):
-    Encryptor = _get_encryptor_class()
+    Encryptor, EncodeError, encrypted_name_for, KeyManager = _get_encryptor_class()
     with tempfile.TemporaryDirectory() as _tmp:
         tmp        = Path(_tmp)
         input_path = tmp / Path(file.filename or "input.bin").name
@@ -91,7 +92,8 @@ async def encode(
         await _save_upload(key,  key_path)
 
         stem        = input_path.stem
-        output_path = tmp / f"{stem}-encrypted.png"
+        carrier_format = KeyManager(key_path).format()
+        output_path = tmp / encrypted_name_for(input_path, carrier_format)
         config_path = tmp / f"{stem}.config.json"
 
         try:
@@ -103,8 +105,8 @@ async def encode(
                 config_path = config_path,
                 passphrase  = passphrase or None,
             )
-        except OverflowError as exc:
-            raise HTTPException(status_code=422, detail=str(exc))
+        except EncodeError as exc:
+            raise HTTPException(status_code=422, detail=exc.to_dict())
         except Exception as exc:
             raise HTTPException(status_code=500, detail=str(exc))
 
@@ -128,7 +130,7 @@ async def decode(
     config:          UploadFile = File(...),
     passphrase: str             = Form(""),
 ):
-    Encryptor = _get_encryptor_class()
+    Encryptor, _, _, _ = _get_encryptor_class()
     with tempfile.TemporaryDirectory() as _tmp:
         tmp            = Path(_tmp)
         encrypted_path = tmp / Path(encrypted_image.filename or "encrypted.png").name
@@ -168,7 +170,7 @@ async def decode(
 
 @app.post("/test")
 def run_test():
-    Encryptor = _get_encryptor_class()
+    Encryptor, EncodeError, encrypted_name_for, KeyManager = _get_encryptor_class()
     steps  = []
     passed = True
 
@@ -189,7 +191,8 @@ def run_test():
 
     with tempfile.TemporaryDirectory() as _tmp:
         tmp         = Path(_tmp)
-        out_image   = tmp / "test-encrypted.png"
+        carrier_format = KeyManager(DEMO_KEY).format()
+        out_image   = tmp / encrypted_name_for(DEMO_FILE, carrier_format)
         out_config  = tmp / "test.config.json"
         out_dir     = tmp / "decoded"
         out_dir.mkdir()
@@ -216,6 +219,13 @@ def run_test():
                 "enc_size_bytes": enc_sz,
                 "size_delta_pct": delta,
             })
+            if abs(delta) > 1.0:
+                steps[-1]["status"] = "fail"
+                steps[-1]["detail"] += "  Size delta exceeds +/-1.0%."
+                passed = False
+        except EncodeError as exc:
+            steps.append({"name": "Encode", "status": "fail", "detail": exc.message, "error": exc.to_dict()})
+            passed = False
         except Exception as exc:
             steps.append({"name": "Encode", "status": "fail", "detail": str(exc)})
             passed = False

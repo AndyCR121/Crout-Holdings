@@ -197,7 +197,7 @@ label.form-label{font-size:var(--text-sm);font-weight:500;color:var(--color-text
 .step-icon.running{background:var(--color-primary-hl);color:var(--color-primary)}
 .step-icon.ok{background:var(--color-success-hl);color:var(--color-success)}
 .step-icon.warn{background:var(--color-warning-hl);color:var(--color-warning)}
-.step-icon.error{background:var(--color-error-hl);color:var(--color-error)}
+.step-icon.error,.step-icon.fail{background:var(--color-error-hl);color:var(--color-error)}
 .step-content{flex:1;min-width:0}
 .step-label{font-size:var(--text-sm);font-weight:600}
 .step-detail{font-size:var(--text-xs);color:var(--color-text-muted);margin-top:2px;font-family:var(--font-mono)}
@@ -815,7 +815,7 @@ document.getElementById('btn-encode').addEventListener('click',async()=>{
     const res=await fetch(base+'/encode',{method:'POST',body:fd});
     const d=await res.json();
 
-    if(!res.ok||!d.passed) throw new Error(d.detail||d.message||'Encode failed');
+    if(!res.ok||!d.passed) throw new Error(d.detail?.message||d.detail||d.message||'Encode failed');
 
     showResultOk('enc-result-hdr','enc-result-body','Encryption complete',([
       ['Input file',d.input_filename,''],
@@ -854,7 +854,7 @@ document.getElementById('btn-decode').addEventListener('click',async()=>{
     const res=await fetch(base+'/decode',{method:'POST',body:fd});
     const d=await res.json();
 
-    if(!res.ok||!d.passed) throw new Error(d.detail||d.message||'Decode failed');
+    if(!res.ok||!d.passed) throw new Error(d.detail?.message||d.detail||d.message||'Decode failed');
 
     showResultOk('dec-result-hdr','dec-result-body','Decryption complete',([
       ['Recovered file',d.recovered_filename,''],
@@ -905,7 +905,7 @@ function renderSummary(sum){
     {label:'Key (original)',value:sum.key_orig_size_fmt,sub:'before encryption'},
     {label:'Encrypted size',value:sum.encrypted_size_fmt,
       sub:(sum.size_delta_pct>=0?'+':'')+sum.size_delta_pct+'% vs key',
-      cls: Math.abs(sum.size_delta_pct)<5?'good':'warn'},
+      cls: Math.abs(sum.size_delta_pct)<=1?'good':'warn'},
     {label:'Recovered size',value:sum.recovered_size_fmt,
       cls:sum.recovered_size===sum.input_size?'good':'warn'},
     {label:'SHA-256 match',value:sum.hash_match?'✓ PASS':'✗ FAIL',cls:sum.hash_match?'good':'bad'},
@@ -962,7 +962,7 @@ document.getElementById('btn-test').addEventListener('click',async()=>{
     const d=await res.json();
 
     if(!res.ok||!d.passed) throw new Error(
-      (d.steps&&d.steps.find(s=>s.status==='error')?.detail)||
+      (d.steps&&d.steps.find(s=>s.status==='error'||s.status==='fail')?.detail)||
       d.detail||'Test failed'
     );
 
