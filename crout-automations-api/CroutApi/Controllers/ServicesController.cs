@@ -31,6 +31,10 @@ public class ServicesController(IServiceCatalogService catalog) : ControllerBase
     [HttpGet("{id:int}/addons")]
     public async Task<IActionResult> GetAddons(int id) => Ok(await catalog.GetAddonsByServiceAsync(id));
 
+    /// <summary>GET /api/services/pricing-components/required</summary>
+    [HttpGet("pricing-components/required")]
+    public async Task<IActionResult> GetRequiredPricingComponents() => Ok(await catalog.GetRequiredPricingComponentsAsync());
+
     /// <summary>GET /api/services/{id}/packages</summary>
     [HttpGet("{id:int}/packages")]
     public async Task<IActionResult> GetPackages(int id) => Ok(await catalog.GetPackagesByServiceAsync(id));

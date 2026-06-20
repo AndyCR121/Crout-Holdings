@@ -46,6 +46,17 @@ export interface IAddon {
   price: number;
 }
 
+export interface IPricingComponent {
+  pricingComponentId: number;
+  componentKey: string;
+  componentName: string;
+  category: string;
+  pricingType: string;
+  amount: number;
+  isRequiredDefault: boolean;
+  isActive: boolean;
+}
+
 export interface IServiceFeature {
   featureId: number;
   serviceId: number;

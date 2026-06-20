@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive';
 import { ApiService } from '../../services/api.service';
-import { IService, IAddon, IPackage } from '../../interfaces/i-service.interface';
+import { IService, IAddon, IPackage, IPricingComponent } from '../../interfaces/i-service.interface';
 import { IAddonState, IPackageView } from '../../interfaces/i-service-display.interface';
 import { FilterByServiceIdPipe } from '../../pipes/filter-by-service-id.pipe';
 import { forkJoin, of } from 'rxjs';
@@ -30,6 +30,7 @@ export class PricingComponent implements OnInit {
   services: IService[]  = [];
   addons:   IAddon[]    = [];
   packages: IPackage[]  = [];
+  requiredPricingComponents: IPricingComponent[] = [];
 
   // ── Derived views ─────────────────────────────────────────────────────────
   visibleServices: IService[] = [];
@@ -49,8 +50,9 @@ export class PricingComponent implements OnInit {
     forkJoin({
       svcs: this.api.getServices(),
       pkgs: this.api.getAllPackages(),
+      requiredComponents: this.api.getRequiredPricingComponents(),
     }).pipe(
-      switchMap(({ svcs, pkgs }) => {
+      switchMap(({ svcs, pkgs, requiredComponents }) => {
         // Only request addons for services that (a) have addons AND (b) have a valid service_id
         const addonSvcs = svcs.filter(s => s.hasAddons && s.serviceId != null);
 
@@ -66,12 +68,13 @@ export class PricingComponent implements OnInit {
             )
           : of([] as IAddon[][]);
 
-        return forkJoin({ svcs: of(svcs), pkgs: of(pkgs), addonMatrix: addonRequests });
+        return forkJoin({ svcs: of(svcs), pkgs: of(pkgs), requiredComponents: of(requiredComponents), addonMatrix: addonRequests });
       })
     ).subscribe({
-      next: ({ svcs, pkgs, addonMatrix }) => {
+      next: ({ svcs, pkgs, requiredComponents, addonMatrix }) => {
         this.services = svcs;
         this.packages = pkgs;
+        this.requiredPricingComponents = requiredComponents.filter(c => c.isActive && c.isRequiredDefault);
         // Flatten per-service addon arrays into one list
         this.addons   = (addonMatrix as IAddon[][]).flat();
         this.buildViews();
@@ -94,46 +97,36 @@ export class PricingComponent implements OnInit {
       ? this.visibleServices.slice(0, MAX_VISIBLE_SERVICES)
       : this.visibleServices;
 
-    const childIds = new Set(
-      this.packages
-        .filter(p => p.parentPackageId != null)
-        .map(p => p.packageId!)
-    );
-
-    const rootPackages = this.packages.filter(p => !childIds.has(p.packageId));
-
-    this.packageViews = rootPackages.map(pkg => {
-      const childPkg = this.packages.find(p => p.parentPackageId === pkg.packageId) ?? null;
-
-      const conditionalService: IService | null = childPkg
-        ? (this.services.find(
-            s => s.conditional && (childPkg.serviceIds ?? []).includes(s.serviceId)
-          ) ?? null)
+    this.packageViews = this.packages.map(pkg => {
+      const parentPkg = pkg.parentPackageId != null
+        ? this.packages.find(p => p.packageId === pkg.parentPackageId)
         : null;
+      const serviceIds = [...new Set([
+        ...(parentPkg?.serviceIds ?? []),
+        ...(pkg.serviceIds ?? []),
+      ])];
 
-      const rootServices: IService[] = (pkg.serviceIds ?? []).reduce<IService[]>((acc, id) => {
+      const rootServices: IService[] = serviceIds.reduce<IService[]>((acc, id) => {
         const svc = this.services.find(s => s.serviceId === id);
         if (svc) acc.push(svc);
         return acc;
       }, []);
 
-      const rootAddonStates: IAddonState[] = (pkg.serviceIds ?? []).flatMap(svcId =>
+      const rootAddonStates: IAddonState[] = serviceIds.flatMap(svcId =>
         this.addons
           .filter(a => a.serviceId === svcId)
           .map(a => ({ addon: a, enabled: false }))
       );
 
-      const conditionalIndex = conditionalService ? rootAddonStates.length : -1;
-
       return {
         pkg,
-        childPkg,
-        conditionalService,
+        childPkg: null,
+        conditionalService: null,
         conditionalEnabled: false,
         rootServices,
         rootAddonStates,
         childAddonStates: [],
-        conditionalIndex,
+        conditionalIndex: -1,
         addonStates: [...rootAddonStates],
       } satisfies IPackageView;
     });
@@ -203,28 +196,7 @@ export class PricingComponent implements OnInit {
   // ── Price helpers ─────────────────────────────────────────────────────────
 
   basePrice(view: IPackageView): number {
-    const svcIds = view.pkg.serviceIds ?? [];
-
-    if (svcIds.length === 0) {
-      const uniqueIds = [...new Set(
-        view.addonStates.map(s => s.addon.serviceId).filter((id): id is number => id != null)
-      )];
-      return uniqueIds.reduce((sum: number, id: number) => {
-        const svc = this.services.find(s => s.serviceId === id);
-        return sum + (svc?.price ?? 0);
-      }, 0);
-    }
-
-    const rootTotal = svcIds.reduce((sum: number, id: number) => {
-      const svc = this.services.find(s => s.serviceId === id);
-      return sum + (svc?.price ?? 0);
-    }, 0);
-
-    const conditionalPrice = (view.conditionalEnabled && view.conditionalService)
-      ? (view.conditionalService.price ?? 0)
-      : 0;
-
-    return rootTotal + conditionalPrice;
+    return this.activeServices(view).reduce((sum, svc) => sum + (svc.price ?? 0), 0);
   }
 
   enabledAddonTotal(view: IPackageView): number {
@@ -234,7 +206,11 @@ export class PricingComponent implements OnInit {
   }
 
   fullTotal(view: IPackageView): number {
-    return this.basePrice(view) + this.enabledAddonTotal(view);
+    return this.basePrice(view) + this.enabledAddonTotal(view) + this.requiredTotal();
+  }
+
+  requiredTotal(): number {
+    return this.requiredPricingComponents.reduce((sum, c) => sum + (c.amount ?? 0), 0);
   }
 
   discountedTotal(view: IPackageView): number {

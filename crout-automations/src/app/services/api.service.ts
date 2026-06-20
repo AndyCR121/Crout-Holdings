@@ -11,6 +11,7 @@ import {
   ICompany,
   IUserService,
   IServiceConfig,
+  IPricingComponent,
 } from '../interfaces/i-service.interface';
 
 // ─── Field-name normalizers ───────────────────────────────────────────────────
@@ -46,6 +47,40 @@ function normalizePackage(raw: any): IPackage {
     packageDescription:   raw.PackageDescription   ?? raw.packageDescription ?? raw.description ?? '',
     discount:             raw.Discount             ?? raw.discount           ?? 0,
     minimumRequiredAddons: raw.minimumRequiredAddons ?? raw.minimumrequiredaddons ?? undefined,
+  };
+}
+
+function normalizePricingComponent(raw: any): IPricingComponent {
+  return {
+    pricingComponentId: raw.pricingComponentId ?? raw.PricingComponentId ?? raw.id,
+    componentKey: raw.componentKey ?? raw.ComponentKey ?? '',
+    componentName: raw.componentName ?? raw.ComponentName ?? '',
+    category: raw.category ?? raw.Category ?? '',
+    pricingType: raw.pricingType ?? raw.PricingType ?? 'fixed',
+    amount: raw.amount ?? raw.Amount ?? 0,
+    isRequiredDefault: raw.isRequiredDefault ?? raw.IsRequiredDefault ?? false,
+    isActive: raw.isActive ?? raw.IsActive ?? true,
+  };
+}
+
+function normalizeUserService(raw: any): IUserService {
+  return {
+    userServiceId: raw.userServiceId ?? raw.UserServiceId ?? raw.id ?? raw.Id,
+    companyId: raw.companyId ?? raw.CompanyId,
+    serviceId: raw.serviceId ?? raw.ServiceId,
+    packageId: raw.packageId ?? raw.PackageId,
+    addonIds: raw.addonIds ?? raw.AddonIds ?? [],
+    active: raw.active ?? raw.Active ?? true,
+    service: raw.service,
+    addons: raw.addons,
+    config: raw.config ?? raw.Config ?? '',
+    status: raw.status ?? raw.Status ?? 0,
+    subscriptionId: raw.subscriptionId ?? raw.SubscriptionId,
+    subscriptionAmount: raw.subscriptionAmount ?? raw.SubscriptionAmount,
+    pricingSnapshot: raw.pricingSnapshot ?? raw.PricingSnapshot,
+    paymentDate: raw.paymentDate ?? raw.PaymentDate,
+    dueDate: raw.dueDate ?? raw.DueDate,
+    createdAt: raw.createdAt ?? raw.CreatedAt,
   };
 }
 
@@ -89,6 +124,15 @@ export class ApiService {
       .get<any[]>(`${this.base}/services/${serviceId}/addons`, { headers: this.authHeaders(), withCredentials: true })
       .pipe(
         map(arr => arr.map(normalizeAddon)),
+        catchError(err => throwError(() => err))
+      );
+  }
+
+  getRequiredPricingComponents(): Observable<IPricingComponent[]> {
+    return this.http
+      .get<any[]>(`${this.base}/services/pricing-components/required`, { headers: this.authHeaders(), withCredentials: true })
+      .pipe(
+        map(arr => arr.map(normalizePricingComponent)),
         catchError(err => throwError(() => err))
       );
   }
@@ -139,8 +183,11 @@ export class ApiService {
 
   getCompanyServices(companyId: number): Observable<IUserService[]> {
     return this.http
-      .get<IUserService[]>(`${this.base}/companies/${companyId}/services`, { headers: this.authHeaders(), withCredentials: true })
-      .pipe(catchError(err => throwError(() => err)));
+      .get<any[]>(`${this.base}/companies/${companyId}/services`, { headers: this.authHeaders(), withCredentials: true })
+      .pipe(
+        map(arr => arr.map(normalizeUserService)),
+        catchError(err => throwError(() => err))
+      );
   }
 
   // ─── Service Config ───────────────────────────────────────────────────────
@@ -160,8 +207,11 @@ export class ApiService {
     requestNote?: string;
   }): Observable<IUserService> {
     return this.http
-      .post<IUserService>(`${this.base}/services/user-services`, payload, { headers: this.authHeaders(), withCredentials: true })
-      .pipe(catchError(err => throwError(() => err)));
+      .post<any>(`${this.base}/services/user-services`, payload, { headers: this.authHeaders(), withCredentials: true })
+      .pipe(
+        map(normalizeUserService),
+        catchError(err => throwError(() => err))
+      );
   }
 
   requestServiceConfigChange(userServiceId: number, payload: {
@@ -174,7 +224,10 @@ export class ApiService {
     outputNotes?: string;
   }): Observable<IUserService> {
     return this.http
-      .put<IUserService>(`${this.base}/services/user-services/${userServiceId}/config-request`, payload, { headers: this.authHeaders(), withCredentials: true })
-      .pipe(catchError(err => throwError(() => err)));
+      .put<any>(`${this.base}/services/user-services/${userServiceId}/config-request`, payload, { headers: this.authHeaders(), withCredentials: true })
+      .pipe(
+        map(normalizeUserService),
+        catchError(err => throwError(() => err))
+      );
   }
 }

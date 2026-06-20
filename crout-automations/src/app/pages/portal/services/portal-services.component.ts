@@ -200,8 +200,14 @@ export class PortalServicesComponent implements OnInit {
   }
 
   submitConfigRequest(row: ServiceRow): void {
-    this.saving.set(row.userService.serviceId);
-    this.api.requestServiceConfigChange(row.userService.userServiceId!, {
+    const userServiceId = row.userService.userServiceId;
+    if (userServiceId == null) {
+      this.toast.error('Configuration request could not be submitted because this service is missing its assignment id.');
+      return;
+    }
+
+    this.saving.set(userServiceId);
+    this.api.requestServiceConfigChange(userServiceId, {
       addonIds: row.editAddonIds,
       trigger: row.editTrigger,
       action: row.editAction,

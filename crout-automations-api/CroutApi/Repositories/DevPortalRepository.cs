@@ -178,9 +178,8 @@ public class DevPortalRepository(DbHelper db) : IDevPortalRepository
     public async Task<int> ClaimAsync(int userId, int userServiceId)
     {
         using var conn = db.GetConnection();
-        return await conn.ExecuteScalarAsync<int>(
+        await conn.ExecuteAsync(
             """
-            SELECT LAST_INSERT_ID(0);
             INSERT INTO DevServices (userId, userServiceId, commissionPerc, cost, isActive)
             SELECT @userId, us.id, 20.00, COALESCE(us.subscriptionAmount, 0.00), 1
             FROM UserServices us
@@ -190,7 +189,20 @@ public class DevPortalRepository(DbHelper db) : IDevPortalRepository
                 SELECT 1 FROM DevServices ds
                 WHERE ds.userServiceId = us.id AND ds.isActive = 1
               );
-            SELECT LAST_INSERT_ID();
+            """,
+            new { userId, userServiceId });
+
+        return await conn.ExecuteScalarAsync<int>(
+            """
+            SELECT COALESCE((
+              SELECT ds.devServiceId
+              FROM DevServices ds
+              WHERE ds.userServiceId = @userServiceId
+                AND ds.userId = @userId
+                AND ds.isActive = 1
+              ORDER BY ds.devServiceId DESC
+              LIMIT 1
+            ), 0)
             """,
             new { userId, userServiceId });
     }

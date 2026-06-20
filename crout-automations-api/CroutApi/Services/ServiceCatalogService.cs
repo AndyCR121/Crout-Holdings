@@ -13,6 +13,7 @@ public class ServiceCatalogService(
     public Task<IEnumerable<Service>>    GetServicesAsync()                      => services.GetAllAsync();
     public Task<Service?>                GetServiceByIdAsync(int serviceId)      => services.GetByIdAsync(serviceId);
     public Task<IEnumerable<Addon>>      GetAddonsByServiceAsync(int id)         => services.GetAddonsByServiceAsync(id);
+    public Task<IEnumerable<PricingComponent>> GetRequiredPricingComponentsAsync() => services.GetRequiredPricingComponentsAsync();
     public Task<IEnumerable<Package>>    GetPackagesByServiceAsync(int id)       => services.GetPackagesByServiceAsync(id);
     public Task<IEnumerable<Package>>    GetAllPackagesAsync()                   => services.GetAllPackagesAsync();
     public Task<IEnumerable<UserService>> GetUserServicesAsync(int companyId)    => userServices.GetByCompanyAsync(companyId);
@@ -41,13 +42,11 @@ public class ServiceCatalogService(
         {
             package = await services.GetPackageByIdAsync(dto.PackageId.Value)
                 ?? throw new KeyNotFoundException("Package not found.");
-            if (!package.ServiceIds.Contains(dto.ServiceId))
-                throw new ArgumentException("Selected package does not include this service.");
         }
 
-        var activeServiceIds = package?.ServiceIds.Count > 0
-            ? package.ServiceIds.Distinct().ToHashSet()
-            : new[] { dto.ServiceId }.ToHashSet();
+        var activeServiceIds = await ResolvePackageServiceIdsAsync(package, dto.ServiceId);
+        if (package is not null && !activeServiceIds.Contains(dto.ServiceId))
+            throw new ArgumentException("Selected package does not include this service.");
 
         var addonIds = (dto.AddonIds ?? []).Distinct().ToArray();
         var selectedAddons = (await services.GetAddonsByIdsAsync(addonIds)).ToList();
@@ -136,9 +135,7 @@ public class ServiceCatalogService(
         var package = userService.PackageId is null
             ? null
             : await services.GetPackageByIdAsync(userService.PackageId.Value);
-        var validServiceIds = package?.ServiceIds.Count > 0
-            ? package.ServiceIds.Distinct().ToHashSet()
-            : new[] { userService.ServiceId }.ToHashSet();
+        var validServiceIds = await ResolvePackageServiceIdsAsync(package, userService.ServiceId);
 
         var addonIds = (dto.AddonIds ?? []).Distinct().ToArray();
         var selectedAddons = (await services.GetAddonsByIdsAsync(addonIds)).ToList();
@@ -191,6 +188,31 @@ public class ServiceCatalogService(
         .Select(v => v.Trim())
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .ToArray();
+
+    private async Task<HashSet<int>> ResolvePackageServiceIdsAsync(Package? package, int fallbackServiceId)
+    {
+        var ids = new HashSet<int>();
+        if (package is null)
+        {
+            ids.Add(fallbackServiceId);
+            return ids;
+        }
+
+        foreach (var id in package.ServiceIds)
+            ids.Add(id);
+
+        if (package.ParentPackageId is not null)
+        {
+            var parent = await services.GetPackageByIdAsync(package.ParentPackageId.Value);
+            if (parent is not null)
+            {
+                foreach (var id in parent.ServiceIds)
+                    ids.Add(id);
+            }
+        }
+
+        return ids.Count > 0 ? ids : [fallbackServiceId];
+    }
 
     private static string ClassifyIntegration(string name)
     {

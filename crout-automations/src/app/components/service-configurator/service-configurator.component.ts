@@ -2,7 +2,7 @@ import { Component, Input, OnChanges, OnInit, SimpleChanges, computed, inject, s
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { IService, IAddon, IPackage } from '../../interfaces/i-service.interface';
+import { IService, IAddon, IPackage, IPricingComponent } from '../../interfaces/i-service.interface';
 import { IAddonState, IPackageView } from '../../interfaces/i-service-display.interface';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
@@ -38,6 +38,7 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
   @Input() loading = false;
 
   packageViews: IPackageView[] = [];
+  requiredPricingComponents: IPricingComponent[] = [];
   referralCode = '';
   selectedCompanyId: number | null = null;
   savingConfig = signal<number | null>(null);
@@ -54,6 +55,14 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
   ngOnInit(): void {
     const user = this.user();
     if (user) this.companies.load(user.userId);
+    this.api.getRequiredPricingComponents().subscribe({
+      next: components => {
+        this.requiredPricingComponents = components.filter(c => c.isActive && c.isRequiredDefault);
+      },
+      error: () => {
+        this.requiredPricingComponents = [];
+      }
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -64,50 +73,39 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
 
   // ── View builders ─────────────────────────────────────────────────────────
   private buildViews(): void {
-    // All IDs that are child packages (pointed to by parent_package_id)
-    const childIds = new Set(
-      this.packages
-        .filter(p => p.parentPackageId != null)
-        .map(p => p.packageId!)
-    );
-
-    const rootPackages = this.packages.filter(p => !childIds.has(p.packageId));
-
-    this.packageViews = rootPackages.map(pkg => {
-      const childPkg = this.packages.find(p => p.parentPackageId === pkg.packageId) ?? null;
-
-      // Resolve the conditional service from allServices (it has Conditional:true)
-      const conditionalService: IService | null = childPkg
-        ? (this.allServices.find(
-            s => s.conditional && (childPkg.serviceIds ?? []).includes(s.serviceId)
-          ) ?? null)
+    this.packageViews = this.packages.map(pkg => {
+      const parentPkg = pkg.parentPackageId != null
+        ? this.packages.find(p => p.packageId === pkg.parentPackageId)
         : null;
 
+      const serviceIds = [...new Set([
+        ...(parentPkg?.serviceIds ?? []),
+        ...(pkg.serviceIds ?? [])
+      ])];
+
       // Root service rows
-      const rootServices: IService[] = (pkg.serviceIds ?? []).reduce<IService[]>((acc, id) => {
+      const rootServices: IService[] = serviceIds.reduce<IService[]>((acc, id) => {
         const svc = this.allServices.find(s => s.serviceId === id);
         if (svc) acc.push(svc);
         return acc;
       }, []);
 
       // Root addon states (non-conditional services' addons)
-      const rootAddonStates: IAddonState[] = (pkg.serviceIds ?? []).flatMap(svcId =>
+      const rootAddonStates: IAddonState[] = serviceIds.flatMap(svcId =>
         this.addons
           .filter(a => a.serviceId === svcId)
           .map(a => ({ addon: a, enabled: false }))
       );
 
-      const conditionalIndex = conditionalService ? rootAddonStates.length : -1;
-
       return {
         pkg,
-        childPkg,
-        conditionalService,
+        childPkg: null,
+        conditionalService: null,
         conditionalEnabled: false,
         rootServices,
         rootAddonStates,
         childAddonStates: [],
-        conditionalIndex,
+        conditionalIndex: -1,
         addonStates: [...rootAddonStates],
       } satisfies IPackageView;
     });
@@ -181,28 +179,7 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
 
   // ── Price helpers ─────────────────────────────────────────────────────────
   basePrice(view: IPackageView): number {
-    const svcIds = view.pkg.serviceIds ?? [];
-
-    if (svcIds.length === 0) {
-      const uniqueIds = [...new Set(
-        view.addonStates.map(s => s.addon.serviceId).filter((id): id is number => id != null)
-      )];
-      return uniqueIds.reduce((sum, id) => {
-        const svc = this.allServices.find(s => s.serviceId === id);
-        return sum + (svc?.price ?? 0);
-      }, 0);
-    }
-
-    const rootTotal = svcIds.reduce((sum: number, id: number) => {
-      const svc = this.allServices.find(s => s.serviceId === id);
-      return sum + (svc?.price ?? 0);
-    }, 0);
-
-    const conditionalPrice = (view.conditionalEnabled && view.conditionalService)
-      ? (view.conditionalService.price ?? 0)
-      : 0;
-
-    return rootTotal + conditionalPrice;
+    return this.activeServices(view).reduce((sum, svc) => sum + (svc.price ?? 0), 0);
   }
 
   enabledAddonTotal(view: IPackageView): number {
@@ -211,8 +188,12 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
       .reduce((sum, s) => sum + s.addon.price, 0);
   }
 
+  requiredTotal(): number {
+    return this.requiredPricingComponents.reduce((sum, c) => sum + (c.amount ?? 0), 0);
+  }
+
   fullTotal(view: IPackageView): number {
-    return this.basePrice(view) + this.enabledAddonTotal(view);
+    return this.basePrice(view) + this.enabledAddonTotal(view) + this.requiredTotal();
   }
 
   discountedTotal(view: IPackageView): number {
@@ -284,6 +265,12 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
       packageId: this.activePkg(view).packageId,
       packageName: this.activePkg(view).packageName,
       basePrice: this.basePrice(view),
+      requiredComponents: this.requiredPricingComponents.map(c => ({
+        componentKey: c.componentKey,
+        componentName: c.componentName,
+        amount: c.amount
+      })),
+      requiredTotal: this.requiredTotal(),
       fullTotal: this.fullTotal(view),
       discountedTotal: this.discountedTotal(view),
       discount: this.activePkg(view).discount,
