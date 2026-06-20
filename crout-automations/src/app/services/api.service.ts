@@ -150,4 +150,17 @@ export class ApiService {
       .get<IServiceConfig>(`${this.base}/companies/${companyId}/services/${serviceId}/config`, { headers: this.authHeaders(), withCredentials: true })
       .pipe(catchError(err => throwError(() => err)));
   }
+
+  createUserServiceFromConfig(payload: {
+    companyId: number;
+    serviceId: number;
+    packageId?: number | null;
+    addonIds?: number[];
+    referral?: string;
+    requestNote?: string;
+  }): Observable<IUserService> {
+    return this.http
+      .post<IUserService>(`${this.base}/services/user-services`, payload, { headers: this.authHeaders(), withCredentials: true })
+      .pipe(catchError(err => throwError(() => err)));
+  }
 }

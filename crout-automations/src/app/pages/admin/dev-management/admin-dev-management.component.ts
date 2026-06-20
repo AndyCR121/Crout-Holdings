@@ -126,6 +126,17 @@ export class AdminDevManagementComponent implements OnInit {
     this.showCreate.set(true);
   }
 
+  openCreateFor(row: IDevServiceAssignment): void {
+    this.createBuffer = {
+      userId: this.devUsers()[0]?.userId ?? 0,
+      userServiceId: row.userServiceId,
+      commissionPerc: row.commissionPerc || 20,
+      cost: row.cost || 0,
+    };
+    this.unassigned.set([row]);
+    this.showCreate.set(true);
+  }
+
   submitCreate(): void {
     if (!this.createBuffer.userId || !this.createBuffer.userServiceId) {
       this.error.set('Select a Developer and client service.');

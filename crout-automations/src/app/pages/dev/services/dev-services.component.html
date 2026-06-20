@@ -1,0 +1,111 @@
+<div class="portal-layout">
+  <ca-portal-sidebar />
+
+  <main class="portal-main">
+    <section class="dservices-wrap">
+      <div class="dservices-header">
+        <div>
+          <h1 class="dservices-title">Dev Services</h1>
+          <p class="dservices-sub">Manage assigned services and claim available work.</p>
+        </div>
+        <a class="dservices-action" href="/dev/dashboard">Dashboard</a>
+      </div>
+
+      <div class="dservices-grid">
+        <section class="dservices-panel">
+          <div class="dservices-panel-head">
+            <div>
+              <h2>Assigned Services</h2>
+              <span>{{ assignedTotal() }} total</span>
+            </div>
+            <form class="dservices-search" (ngSubmit)="searchAssigned()">
+              <input [(ngModel)]="assignedSearch" name="assignedSearch" placeholder="Search assigned" />
+              <button type="submit">Search</button>
+            </form>
+          </div>
+
+          @if (loadingAssigned()) {
+            <div class="dservices-loading">Loading assigned services...</div>
+          } @else if (assigned().length === 0) {
+            <div class="dservices-empty">No assigned services found.</div>
+          } @else {
+            <div class="dservices-table">
+              <div class="dservices-row dservices-row--head">
+                <span>Company</span>
+                <span>Service</span>
+                <span>Status</span>
+                <span>Due</span>
+                <span>Subscription</span>
+                <span>Commission</span>
+              </div>
+              @for (item of assigned(); track item.userServiceId) {
+                <div class="dservices-row">
+                  <span>{{ item.companyName }}</span>
+                  <span>{{ item.serviceName }}</span>
+                  <span><em class="dservices-status" [class]="statusClass(item.status)">{{ statusLabel(item.status) }}</em></span>
+                  <span>{{ formatDate(item.dueDate) }}</span>
+                  <span>{{ formatMoney(item.subscriptionAmount) }}</span>
+                  <strong>{{ formatMoney(item.totalCommission) }}</strong>
+                </div>
+              }
+            </div>
+          }
+
+          <div class="dservices-pager">
+            <button type="button" (click)="prevAssigned()" [disabled]="assignedPage === 1">Previous</button>
+            <span>Page {{ assignedPage }}</span>
+            <button type="button" (click)="nextAssigned()" [disabled]="assignedPage * pageSize >= assignedTotal()">Next</button>
+          </div>
+        </section>
+
+        <aside class="dservices-available">
+          <div class="dservices-panel-head">
+            <div>
+              <h2>Available Services</h2>
+              <span>{{ availableTotal() }} unassigned</span>
+            </div>
+          </div>
+          <form class="dservices-search dservices-search--wide" (ngSubmit)="searchAvailable()">
+            <input [(ngModel)]="availableSearch" name="availableSearch" placeholder="Search available" />
+            <button type="submit">Search</button>
+          </form>
+
+          @if (loadingAvailable()) {
+            <div class="dservices-loading">Loading available services...</div>
+          } @else if (available().length === 0) {
+            <div class="dservices-empty">No available services right now.</div>
+          } @else {
+            <div class="dservices-news">
+              @for (item of available(); track item.userServiceId) {
+                <article class="dservices-news-card">
+                  <div class="dservices-news-head">
+                    <div>
+                      <h3>{{ item.serviceName }}</h3>
+                      <p>{{ item.companyName }}</p>
+                    </div>
+                    <span class="dservices-status" [class]="statusClass(item.status)">{{ statusLabel(item.status) }}</span>
+                  </div>
+                  <dl>
+                    <div><dt>Created</dt><dd>{{ formatDate(item.createdAt) }}</dd></div>
+                    <div><dt>Due</dt><dd>{{ formatDate(item.dueDate) }}</dd></div>
+                    <div><dt>Subscription</dt><dd>{{ formatMoney(item.subscriptionAmount) }}</dd></div>
+                    <div><dt>Commission</dt><dd>{{ formatMoney(item.totalCommission) }}</dd></div>
+                  </dl>
+                  <button type="button" (click)="claim(item)" [disabled]="claimingId() === item.userServiceId">
+                    {{ claimingId() === item.userServiceId ? 'Claiming...' : 'Take Action' }}
+                  </button>
+                </article>
+              }
+            </div>
+          }
+
+          <div class="dservices-pager">
+            <button type="button" (click)="prevAvailable()" [disabled]="availablePage === 1">Previous</button>
+            <span>Page {{ availablePage }}</span>
+            <button type="button" (click)="nextAvailable()" [disabled]="availablePage * pageSize >= availableTotal()">Next</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+</div>

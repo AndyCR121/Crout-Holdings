@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
+import { devGuard } from './guards/dev.guard';
 
 export const routes: Routes = [
   {
@@ -23,6 +24,11 @@ export const routes: Routes = [
   {
     path: 'admin',
     redirectTo: 'admin/users',
+    pathMatch: 'full'
+  },
+  {
+    path: 'dev',
+    redirectTo: 'dev/dashboard',
     pathMatch: 'full'
   },
   {
@@ -143,6 +149,19 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/portal/billing/payment-methods/portal-payment-methods.component').then(m => m.PortalPaymentMethodsComponent),
+  },
+  // Dev Portal
+  {
+    path: 'dev/dashboard',
+    canActivate: [authGuard, devGuard],
+    loadComponent: () =>
+      import('./pages/dev/dashboard/dev-dashboard.component').then(m => m.DevDashboardComponent),
+  },
+  {
+    path: 'dev/services',
+    canActivate: [authGuard, devGuard],
+    loadComponent: () =>
+      import('./pages/dev/services/dev-services.component').then(m => m.DevServicesComponent),
   },
   // ── Admin Portal (auth + admin guard) ───────────────────────────────────────
   { path: '', redirectTo: 'users', pathMatch: 'full' },

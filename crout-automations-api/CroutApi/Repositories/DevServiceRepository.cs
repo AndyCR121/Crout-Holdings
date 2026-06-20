@@ -22,8 +22,8 @@ public class DevServiceRepository(DbHelper db) : IDevServiceRepository
           us.subscription_id AS SubscriptionId,
           us.Status AS Status,
           COALESCE(ds.commissionPerc, 20.00) AS CommissionPerc,
-          COALESCE(ds.cost, 0.00) AS Cost,
-          COALESCE(ds.totalCommission, ROUND(COALESCE(ds.cost, 0.00) * (COALESCE(ds.commissionPerc, 20.00) / 100), 2)) AS TotalCommission,
+          COALESCE(ds.cost, us.subscriptionAmount, 0.00) AS Cost,
+          COALESCE(ds.totalCommission, ROUND(COALESCE(ds.cost, us.subscriptionAmount, 0.00) * (COALESCE(ds.commissionPerc, 20.00) / 100), 2)) AS TotalCommission,
           COALESCE(ds.isActive, 0) AS IsActive,
           COALESCE(ds.createdAt, us.CreatedAt) AS CreatedAt,
           ds.updatedAt AS UpdatedAt
@@ -114,6 +114,20 @@ public class DevServiceRepository(DbHelper db) : IDevServiceRepository
             SELECT LAST_INSERT_ID();
             """,
             devService);
+    }
+
+    public async Task<int> CreateWithSubscriptionSnapshotAsync(int userId, int userServiceId, decimal commissionPerc, decimal? costOverride = null)
+    {
+        using var conn = db.GetConnection();
+        return await conn.ExecuteScalarAsync<int>(
+            """
+            INSERT INTO DevServices (userId, userServiceId, commissionPerc, cost, isActive)
+            SELECT @userId, us.id, @commissionPerc, COALESCE(@costOverride, us.subscriptionAmount, 0.00), 1
+            FROM UserServices us
+            WHERE us.id = @userServiceId;
+            SELECT LAST_INSERT_ID();
+            """,
+            new { userId, userServiceId, commissionPerc, costOverride });
     }
 
     public async Task UpdateAsync(DevService devService)

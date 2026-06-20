@@ -1,0 +1,73 @@
+<div class="portal-layout">
+  <ca-portal-sidebar />
+
+  <main class="portal-main">
+    <section class="dev-wrap">
+      <div class="dev-header">
+        <div>
+          <h1 class="dev-title">Dev Dashboard</h1>
+          <p class="dev-sub">Assigned services for <strong>{{ user()?.username }}</strong></p>
+        </div>
+        <a class="dev-action" href="/dev/services">Services</a>
+      </div>
+
+      @if (loading()) {
+        <div class="dev-grid">
+          <div class="dev-skeleton" *ngFor="let _ of [1,2,3,4]"></div>
+        </div>
+      } @else if (error()) {
+        <div class="dev-empty">{{ error() }}</div>
+      } @else {
+        @let d = dashboard();
+        <div class="dev-metrics" *ngIf="d">
+          <div class="dev-metric">
+            <span>Assigned</span>
+            <strong>{{ d.assignedCount }}</strong>
+          </div>
+          <div class="dev-metric">
+            <span>In Development</span>
+            <strong>{{ d.inDevelopmentCount }}</strong>
+          </div>
+          <div class="dev-metric">
+            <span>Live</span>
+            <strong>{{ d.liveCount }}</strong>
+          </div>
+          <div class="dev-metric">
+            <span>Monthly Commission</span>
+            <strong>{{ formatMoney(d.monthlyCommissionTotal) }}</strong>
+          </div>
+        </div>
+
+        @if (recent().length === 0) {
+          <div class="dev-empty">
+            <h3>No assigned services yet</h3>
+            <p>Available services can be claimed from the Services page.</p>
+          </div>
+        } @else {
+          <div class="dev-section-title">Recent Assigned Services</div>
+          <div class="dev-card-grid">
+            @for (item of recent(); track item.userServiceId) {
+              <article class="dev-service-card">
+                <div class="dev-service-head">
+                  <div>
+                    <h2>{{ item.serviceName }}</h2>
+                    <p>{{ item.companyName }}</p>
+                  </div>
+                  <span class="dev-status" [class]="statusClass(item.status)">{{ statusLabel(item.status) }}</span>
+                </div>
+                <div class="dev-service-money">
+                  <span>Subscription</span>
+                  <strong>{{ formatMoney(item.subscriptionAmount) }}</strong>
+                </div>
+                <div class="dev-service-money">
+                  <span>Commission</span>
+                  <strong>{{ formatMoney(item.totalCommission) }}</strong>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      }
+    </section>
+  </main>
+</div>

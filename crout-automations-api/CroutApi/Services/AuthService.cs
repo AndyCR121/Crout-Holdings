@@ -37,8 +37,8 @@ public class AuthService(IUserRepository users, JwtHelper jwt, EncryptionHelper 
 
     private LoginResponse BuildResponse(User user)
     {
-        var token = jwt.GenerateToken(user.UserId, user.Username, user.IsAdmin);
-        var dto   = new UserDto(user.UserId, user.Username, user.FirstName, user.Surname, user.Email, user.CellNumber, user.IsAdmin);
+        var token = jwt.GenerateToken(user.UserId, user.Username, user.IsAdmin, user.IsDev);
+        var dto   = new UserDto(user.UserId, user.Username, user.FirstName, user.Surname, user.Email, user.CellNumber, user.IsAdmin, user.IsDev, user.Referral);
         return new LoginResponse(token, dto);
     }
 }

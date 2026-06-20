@@ -79,6 +79,11 @@ export interface IUserService {
   config: string;
   status: UserServiceStatus;
   subscriptionId?: string;
+  subscriptionAmount?: number;
+  pricingSnapshot?: string;
+  paymentDate?: string;
+  dueDate?: string;
+  createdAt?: string;
 }
 
 /** Holds the selected addon IDs for a specific service in a company context. */
@@ -113,6 +118,37 @@ export interface IDevServiceAssignment {
   isActive: boolean;
   createdAt: string;
   updatedAt?: string;
+}
+
+export interface IDevPortalService {
+  devServiceId?: number;
+  userId?: number;
+  userServiceId: number;
+  companyId: number;
+  companyName: string;
+  serviceId: number;
+  serviceName: string;
+  serviceDescription?: string;
+  subscriptionId?: string;
+  status: UserServiceStatus;
+  config?: string;
+  subscriptionAmount: number;
+  commissionPerc: number;
+  totalCommission: number;
+  isActive: boolean;
+  createdAt: string;
+  dueDate?: string;
+  paymentDate?: string;
+}
+
+export interface IDevDashboard {
+  assignedCount: number;
+  liveCount: number;
+  inDevelopmentCount: number;
+  pendingCount: number;
+  monthlySubscriptionTotal: number;
+  monthlyCommissionTotal: number;
+  recentAssigned: IDevPortalService[];
 }
 
 export interface ICreateDevServiceAssignment {

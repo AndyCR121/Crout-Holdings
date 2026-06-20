@@ -1,18 +1,27 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, SimpleChanges, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { IService, IAddon, IPackage } from '../../interfaces/i-service.interface';
 import { IAddonState, IPackageView } from '../../interfaces/i-service-display.interface';
+import { AuthService } from '../../services/auth.service';
+import { ApiService } from '../../services/api.service';
+import { CompanyService } from '../../services/company.service';
+import { ToastService } from '../../services/toast.service';
+import { AuthModalComponent } from '../auth-modal/auth-modal.component';
 
 @Component({
   selector: 'ca-service-configurator',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, AuthModalComponent],
   templateUrl: './service-configurator.component.html',
   styleUrl: './service-configurator.component.scss'
 })
-export class ServiceConfiguratorComponent implements OnChanges {
+export class ServiceConfiguratorComponent implements OnInit, OnChanges {
+  private readonly auth = inject(AuthService);
+  private readonly api = inject(ApiService);
+  private readonly companies = inject(CompanyService);
+  private readonly toast = inject(ToastService);
 
   /** The single service this configurator is scoped to */
   @Input() services: IService[] = [];
@@ -30,9 +39,22 @@ export class ServiceConfiguratorComponent implements OnChanges {
 
   packageViews: IPackageView[] = [];
   referralCode = '';
+  selectedCompanyId: number | null = null;
+  savingConfig = signal<number | null>(null);
+  showAuthModal = signal(false);
+
+  readonly user = this.auth.currentUser;
+  readonly isLoggedIn = this.auth.isLoggedIn;
+  readonly companyList = this.companies.companies;
+  readonly hasCompanies = computed(() => this.companyList().length > 0);
 
   readonly PACKAGE_DISCOUNT = 0.15;
   skeletonPackages = Array(1).fill(null);
+
+  ngOnInit(): void {
+    const user = this.user();
+    if (user) this.companies.load(user.userId);
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (!this.loading && this.packages.length > 0) {
@@ -208,9 +230,73 @@ export class ServiceConfiguratorComponent implements OnChanges {
   }
 
   contactUrl(view: IPackageView): string {
-    const params = new URLSearchParams({ package: this.activePkg(view).packageName });
+    const params = new URLSearchParams({
+      service: this.primaryService(view)?.serviceName ?? this.activePkg(view).packageName,
+      package: this.activePkg(view).packageName,
+      config: encodeURIComponent(JSON.stringify(this.buildContactConfig(view)))
+    });
     const referral = this.referralCode.trim();
     if (referral) params.set('referral', referral);
     return `/contact-us/?${params.toString()}`;
+  }
+
+  addToAccount(view: IPackageView): void {
+    const companyId = this.selectedCompanyId ?? this.companyList().find(c => c.active)?.companyId ?? null;
+    const service = this.primaryService(view);
+    if (!companyId || !service) {
+      this.toast.error('Select a company before adding this service.');
+      return;
+    }
+
+    this.savingConfig.set(view.pkg.packageId);
+    this.api.createUserServiceFromConfig({
+      companyId,
+      serviceId: service.serviceId,
+      packageId: this.activePkg(view).packageId,
+      addonIds: view.addonStates.filter(s => s.enabled).map(s => s.addon.addonId),
+      referral: this.referralCode.trim() || undefined,
+      requestNote: 'Created from website service configurator.'
+    }).subscribe({
+      next: () => {
+        this.toast.success('Service added to your account.');
+        this.savingConfig.set(null);
+      },
+      error: () => {
+        this.toast.error('Could not add the service. Please try again or contact us.');
+        this.savingConfig.set(null);
+      }
+    });
+  }
+
+  openAuthPrompt(): void {
+    this.showAuthModal.set(true);
+  }
+
+  private primaryService(view: IPackageView): IService | null {
+    return this.activeServices(view).find(s => !s.conditional) ?? this.activeServices(view)[0] ?? null;
+  }
+
+  private buildContactConfig(view: IPackageView) {
+    const service = this.primaryService(view);
+    return {
+      serviceId: service?.serviceId,
+      serviceName: service?.serviceName,
+      packageId: this.activePkg(view).packageId,
+      packageName: this.activePkg(view).packageName,
+      basePrice: this.basePrice(view),
+      fullTotal: this.fullTotal(view),
+      discountedTotal: this.discountedTotal(view),
+      discount: this.activePkg(view).discount,
+      services: this.activeServices(view).map(s => ({
+        serviceId: s.serviceId,
+        serviceName: s.serviceName,
+        price: s.price
+      })),
+      addons: view.addonStates.filter(s => s.enabled).map(s => ({
+        addonId: s.addon.addonId,
+        addonName: s.addon.addonName,
+        price: s.addon.price
+      }))
+    };
   }
 }

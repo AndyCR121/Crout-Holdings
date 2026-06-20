@@ -1,8 +1,9 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormsModule, FormGroupDirective } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { FormValidatorService } from '../../services/form-validator.service';
-import { WebhookService } from '../../services/webhook.service';
+import { ContactConfig, WebhookService } from '../../services/webhook.service';
 
 type FormState = 'idle' | 'loading' | 'success' | 'error';
 
@@ -17,15 +18,19 @@ export class ContactComponent {
   private readonly fb       = inject(FormBuilder);
   private readonly validator = inject(FormValidatorService);
   private readonly webhook   = inject(WebhookService);
+  private readonly route     = inject(ActivatedRoute);
 
   formState = signal<FormState>('idle');
   errorMessage = signal('');
+  selectedConfig = signal<ContactConfig | null>(null);
+  referral = signal('');
 
   readonly services = [
     'WhatsApp AI Agent',
-    'Quoting & Invoicing Automation',
-    'Job Card Automation',
-    'Custom n8n Workflow',
+    'Quote System',
+    'Project Management System',
+    'Marketing Systems',
+    'Custom Automation Workflow',
     'Not sure yet — I need advice'
   ];
 
@@ -37,6 +42,29 @@ export class ContactComponent {
     service:  ['', [Validators.required]],
     message:  ['', [Validators.required, Validators.minLength(10), Validators.maxLength(1000)]]
   });
+
+  constructor() {
+    const query = this.route.snapshot.queryParamMap;
+    const service = query.get('service') ?? query.get('package');
+    const referral = query.get('referral') ?? '';
+    const encodedConfig = query.get('config');
+
+    if (service) this.form.patchValue({ service });
+    if (referral) this.referral.set(referral);
+
+    if (encodedConfig) {
+      try {
+        const config = JSON.parse(decodeURIComponent(encodedConfig)) as ContactConfig;
+        this.selectedConfig.set(config);
+        this.form.patchValue({
+          service: config.serviceName ?? config.packageName ?? service ?? '',
+          message: this.buildConfigMessage(config)
+        });
+      } catch {
+        this.selectedConfig.set(null);
+      }
+    }
+  }
 
   err(field: string): string {
     const control = this.form.get(field)!;
@@ -65,6 +93,8 @@ export class ContactComponent {
       business:  v.business ?? '',
       service:   v.service  ?? '',
       message:   v.message  ?? '',
+      referral:  this.referral(),
+      config:    this.selectedConfig(),
       source:    'Crout Automations website',
       timestamp: new Date().toISOString()
     }).subscribe({
@@ -80,5 +110,18 @@ export class ContactComponent {
     this.form.reset();
     this.formState.set('idle');
     this.errorMessage.set('');
+  }
+
+  private buildConfigMessage(config: ContactConfig): string {
+    const addons = config.addons?.map(a => a.addonName).join(', ') || 'None selected';
+    const total = config.discountedTotal ?? config.fullTotal ?? 0;
+    return [
+      'I would like to discuss this selected service configuration.',
+      '',
+      `Service: ${config.serviceName ?? 'Not specified'}`,
+      `Package: ${config.packageName ?? 'Not specified'}`,
+      `Selected add-ons: ${addons}`,
+      `Estimated monthly amount: R${total.toLocaleString('en-ZA')}`
+    ].join('\n');
   }
 }

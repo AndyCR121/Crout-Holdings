@@ -61,6 +61,21 @@ CREATE TABLE IF NOT EXISTS Addons (
   CONSTRAINT fk_addon_service FOREIGN KEY (service_id) REFERENCES Services(service_id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS PricingComponents (
+  pricing_component_id INT           NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  component_key        VARCHAR(100)  NOT NULL UNIQUE,
+  component_name       VARCHAR(255)  NOT NULL,
+  category             VARCHAR(100)  NOT NULL,
+  pricing_type         VARCHAR(50)   NOT NULL DEFAULT 'fixed',
+  amount               DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  is_required_default  TINYINT(1)    NOT NULL DEFAULT 0,
+  is_active            TINYINT(1)    NOT NULL DEFAULT 1,
+  createdAt            DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt            DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY idx_pricing_components_category (category),
+  KEY idx_pricing_components_active (is_active)
+);
+
 CREATE TABLE IF NOT EXISTS Packages (
   package_id            INT           NOT NULL AUTO_INCREMENT PRIMARY KEY,
   parent_package_id     INT               NULL,
@@ -86,6 +101,10 @@ CREATE TABLE IF NOT EXISTS UserServices (
   package_id      INT              NULL,
   subscription_id VARCHAR(255)     NULL,
   Config          JSON             NULL,
+  subscriptionAmount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  pricingSnapshot JSON             NULL,
+  paymentDate     DATETIME         NULL,
+  dueDate         DATETIME         NULL,
   Active          TINYINT(1)   NOT NULL DEFAULT 1,
   Status          TINYINT      NOT NULL DEFAULT 0 COMMENT '0=Disabled 1=InDevelopment 2=Live 3=Pending',
   CreatedAt       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -103,11 +122,13 @@ CREATE TABLE IF NOT EXISTS DevServices (
   totalCommission DECIMAL(12,2)
     GENERATED ALWAYS AS (ROUND(cost * (commissionPerc / 100), 2)) STORED,
   isActive       TINYINT(1)    NOT NULL DEFAULT 1,
+  activeUserServiceId INT
+    GENERATED ALWAYS AS (CASE WHEN isActive = 1 THEN userServiceId ELSE NULL END) STORED,
   createdAt      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updatedAt      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_devservices_user FOREIGN KEY (userId) REFERENCES Users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT fk_devservices_userservice FOREIGN KEY (userServiceId) REFERENCES UserServices(id) ON DELETE CASCADE ON UPDATE CASCADE,
-  UNIQUE KEY uq_devservices_userServiceId (userServiceId),
+  UNIQUE KEY uq_devservices_active_userServiceId (activeUserServiceId),
   KEY idx_devservices_userId (userId),
   KEY idx_devservices_userServiceId (userServiceId)
 );
@@ -124,4 +145,21 @@ CREATE TABLE IF NOT EXISTS ServiceRequests (
   CONSTRAINT fk_req_company FOREIGN KEY (company_id) REFERENCES Companies(company_id) ON DELETE CASCADE,
   CONSTRAINT fk_req_service FOREIGN KEY (service_id) REFERENCES Services(service_id),
   CONSTRAINT fk_req_package FOREIGN KEY (package_id) REFERENCES Packages(package_id) ON DELETE SET NULL
-);
+  );
+
+CREATE TABLE IF NOT EXISTS ContactRequests (
+    contact_request_id INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    Name               VARCHAR(160) NOT NULL,
+    Email              VARCHAR(255) NOT NULL,
+    Phone              VARCHAR(50)      NULL,
+    Business           VARCHAR(160)     NULL,
+    Service            VARCHAR(255) NOT NULL,
+    Message            TEXT         NOT NULL,
+    Referral           VARCHAR(64)      NULL,
+    ConfigJson         JSON             NULL,
+    Source             VARCHAR(255)     NULL,
+    EmailSent          TINYINT(1)   NOT NULL DEFAULT 0,
+    CreatedAt          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_contact_requests_email (Email),
+    KEY idx_contact_requests_created (CreatedAt)
+  );

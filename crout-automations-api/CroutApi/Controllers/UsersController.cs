@@ -38,6 +38,8 @@ public class UsersController(IUserRepository users) : ControllerBase
             cellNumber     = user.CellNumber,
             active         = user.Active,
             isAdmin        = user.IsAdmin,
+            isDev          = user.IsDev,
+            referral       = user.Referral,
             profilePicture = user.ProfilePicture,
         });
     }

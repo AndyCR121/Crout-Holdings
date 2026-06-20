@@ -90,8 +90,11 @@
                   <td>{{ statusLabel(row.status) }}</td>
                   <td><span class="admin-pill" [class.green]="row.isActive">{{ row.isActive ? 'Active' : 'Inactive' }}</span></td>
                   <td class="admin-actions">
-                    <button class="btn-edit" [disabled]="!row.devServiceId" (click)="startEdit(row)">Edit</button>
-                    <button class="btn-delete" [disabled]="!row.devServiceId" (click)="onDelete(row)">Delete</button>
+                    <button *ngIf="row.devServiceId; else assignAction" class="btn-edit" (click)="startEdit(row)">Edit</button>
+                    <ng-template #assignAction>
+                      <button class="btn-save" (click)="openCreateFor(row)">Assign</button>
+                    </ng-template>
+                    <button *ngIf="row.devServiceId" class="btn-delete" (click)="onDelete(row)">Delete</button>
                   </td>
                 </ng-container>
 

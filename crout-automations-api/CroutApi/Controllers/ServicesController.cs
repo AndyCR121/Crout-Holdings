@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using CroutApi.DTOs.Services;
 using CroutApi.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,6 +9,8 @@ namespace CroutApi.Controllers;
 [Route("api/services")]
 public class ServicesController(IServiceCatalogService catalog) : ControllerBase
 {
+    private int UserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
     /// <summary>GET /api/services — all service catalogue entries with their features</summary>
     [HttpGet]
     public async Task<IActionResult> GetAll() => Ok(await catalog.GetServicesAsync());
@@ -36,4 +40,13 @@ public class ServicesController(IServiceCatalogService catalog) : ControllerBase
     [Microsoft.AspNetCore.Authorization.Authorize]
     public async Task<IActionResult> GetByCompany(int companyId) =>
         Ok(await catalog.GetUserServicesAsync(companyId));
+
+    /// <summary>POST /api/services/user-services — creates a UserServices row from a selected website configuration.</summary>
+    [HttpPost("user-services")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<IActionResult> CreateUserService([FromBody] CreateUserServiceFromConfigDto dto)
+    {
+        var created = await catalog.CreateUserServiceAsync(UserId, dto);
+        return Created($"/api/services/company/{created.CompanyId}", created);
+    }
 }

@@ -18,6 +18,7 @@ public interface IDevServiceRepository
 
     Task<DevService?> GetByIdAsync(int devServiceId);
     Task<int> CreateAsync(DevService devService);
+    Task<int> CreateWithSubscriptionSnapshotAsync(int userId, int userServiceId, decimal commissionPerc, decimal? costOverride = null);
     Task UpdateAsync(DevService devService);
     Task DeactivateAsync(int devServiceId);
     Task<bool> UserServiceExistsAsync(int userServiceId);

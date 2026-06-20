@@ -75,5 +75,5 @@ public class ProfileService(
     };
 
     private static UserDto ToDto(User u) =>
-        new(u.UserId, u.Username, u.FirstName, u.Surname, u.Email, u.CellNumber, u.IsAdmin, u.ProfilePicture);
+        new(u.UserId, u.Username, u.FirstName, u.Surname, u.Email, u.CellNumber, u.IsAdmin, u.IsDev, u.Referral, u.ProfilePicture);
 }

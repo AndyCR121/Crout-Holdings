@@ -417,14 +417,9 @@ public class AdminController(
 
         try
         {
-            var newId = await devServices.CreateAsync(new DevService
-            {
-                UserId = dto.UserId,
-                UserServiceId = dto.UserServiceId,
-                CommissionPerc = dto.CommissionPerc <= 0 ? 20.00m : dto.CommissionPerc,
-                Cost = dto.Cost < 0 ? 0 : dto.Cost,
-                IsActive = true,
-            });
+            var commissionPerc = dto.CommissionPerc <= 0 ? 20.00m : dto.CommissionPerc;
+            var costOverride = dto.Cost > 0 ? dto.Cost : (decimal?)null;
+            var newId = await devServices.CreateWithSubscriptionSnapshotAsync(dto.UserId, dto.UserServiceId, commissionPerc, costOverride);
             return Created($"/api/admin/dev-services/{newId}", await devServices.GetByIdAsync(newId));
         }
         catch (MySqlException ex) when (ex.Number == 1062)
