@@ -158,6 +158,12 @@ export const routes: Routes = [
       import('./pages/dev/dashboard/dev-dashboard.component').then(m => m.DevDashboardComponent),
   },
   {
+    path: 'dev/services/:userServiceId/guide',
+    canActivate: [authGuard, devGuard],
+    loadComponent: () =>
+      import('./pages/dev/service-guide/dev-service-guide.component').then(m => m.DevServiceGuideComponent),
+  },
+  {
     path: 'dev/services',
     canActivate: [authGuard, devGuard],
     loadComponent: () =>

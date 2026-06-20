@@ -39,7 +39,7 @@ public class ServicesController(IServiceCatalogService catalog) : ControllerBase
     [HttpGet("company/{companyId:int}")]
     [Microsoft.AspNetCore.Authorization.Authorize]
     public async Task<IActionResult> GetByCompany(int companyId) =>
-        Ok(await catalog.GetUserServicesAsync(companyId));
+        Ok(await catalog.GetUserServicesAsync(UserId, companyId));
 
     /// <summary>POST /api/services/user-services — creates a UserServices row from a selected website configuration.</summary>
     [HttpPost("user-services")]
@@ -48,5 +48,14 @@ public class ServicesController(IServiceCatalogService catalog) : ControllerBase
     {
         var created = await catalog.CreateUserServiceAsync(UserId, dto);
         return Created($"/api/services/company/{created.CompanyId}", created);
+    }
+
+    /// <summary>PUT /api/services/user-services/{userServiceId}/config-request — stores a pending service config change.</summary>
+    [HttpPut("user-services/{userServiceId:int}/config-request")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<IActionResult> RequestConfigChange(int userServiceId, [FromBody] RequestServiceConfigChangeDto dto)
+    {
+        var updated = await catalog.RequestConfigChangeAsync(UserId, userServiceId, dto);
+        return Ok(updated);
     }
 }

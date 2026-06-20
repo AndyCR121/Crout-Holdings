@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using CroutApi.DTOs;
 using CroutApi.Helpers;
 using CroutApi.Repositories;
 using Microsoft.AspNetCore.Authorization;
@@ -42,6 +43,31 @@ public class DevController(IUserRepository users, IDevPortalRepository devPortal
         if (!await IsDeveloperAsync()) return Forbid();
         var (items, total) = await devPortal.GetAvailableAsync(page, pageSize, search);
         return Ok(new { items, total, page, pageSize });
+    }
+
+    [HttpGet("services/{userServiceId:int}/guide")]
+    public async Task<IActionResult> Guide(int userServiceId)
+    {
+        if (!await IsDeveloperAsync()) return Forbid();
+        var guide = await devPortal.GetGuideAsync(CallerId, userServiceId);
+        return guide is null ? NotFound(new { error = "Assigned service was not found." }) : Ok(guide);
+    }
+
+    [HttpPost("services/{userServiceId:int}/guide/step")]
+    public async Task<IActionResult> UpdateGuideStep(int userServiceId, [FromBody] DevGuideStepUpdateDto dto)
+    {
+        if (!await IsDeveloperAsync()) return Forbid();
+        if (dto.Step is < 1 or > 17) return BadRequest(new { error = "Guide step must be between 1 and 17." });
+        var guide = await devPortal.UpdateGuideStepAsync(CallerId, userServiceId, dto.Step);
+        return guide is null ? NotFound(new { error = "Assigned service was not found." }) : Ok(guide);
+    }
+
+    [HttpPost("services/{userServiceId:int}/maintenance")]
+    public async Task<IActionResult> UpdateMaintenance(int userServiceId, [FromBody] DevMaintenanceUpdateDto dto)
+    {
+        if (!await IsDeveloperAsync()) return Forbid();
+        var guide = await devPortal.UpdateMaintenanceAsync(CallerId, userServiceId, dto.IsMaintenance);
+        return guide is null ? NotFound(new { error = "Assigned service was not found." }) : Ok(guide);
     }
 
     [HttpPost("services/{userServiceId:int}/claim")]

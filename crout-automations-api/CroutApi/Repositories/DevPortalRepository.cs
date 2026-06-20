@@ -13,12 +13,18 @@ public class DevPortalRepository(DbHelper db) : IDevPortalRepository
           us.id AS UserServiceId,
           c.company_id AS CompanyId,
           c.CompanyName AS CompanyName,
+          c.Email AS CompanyEmail,
+          c.Phone AS CompanyPhone,
+          c.Address AS CompanyAddress,
           s.service_id AS ServiceId,
           s.ServiceName AS ServiceName,
           s.ServiceDescription AS ServiceDescription,
           us.subscription_id AS SubscriptionId,
           us.Status AS Status,
           us.Config AS Config,
+          us.pricingSnapshot AS PricingSnapshot,
+          COALESCE(us.devGuideStep, 0) AS GuideStep,
+          COALESCE(us.isMaintenance, 0) AS IsMaintenance,
           COALESCE(ds.cost, us.subscriptionAmount, 0.00) AS SubscriptionAmount,
           ds.commissionPerc AS CommissionPerc,
           ds.totalCommission AS TotalCommission,
@@ -39,12 +45,18 @@ public class DevPortalRepository(DbHelper db) : IDevPortalRepository
           us.id AS UserServiceId,
           c.company_id AS CompanyId,
           c.CompanyName AS CompanyName,
+          c.Email AS CompanyEmail,
+          c.Phone AS CompanyPhone,
+          c.Address AS CompanyAddress,
           s.service_id AS ServiceId,
           s.ServiceName AS ServiceName,
           s.ServiceDescription AS ServiceDescription,
           us.subscription_id AS SubscriptionId,
           us.Status AS Status,
           us.Config AS Config,
+          us.pricingSnapshot AS PricingSnapshot,
+          COALESCE(us.devGuideStep, 0) AS GuideStep,
+          COALESCE(us.isMaintenance, 0) AS IsMaintenance,
           COALESCE(us.subscriptionAmount, 0.00) AS SubscriptionAmount,
           20.00 AS CommissionPerc,
           ROUND(COALESCE(us.subscriptionAmount, 0.00) * 0.20, 2) AS TotalCommission,
@@ -87,6 +99,65 @@ public class DevPortalRepository(DbHelper db) : IDevPortalRepository
         var total = await conn.ExecuteScalarAsync<int>($"SELECT COUNT(1) FROM ({AssignedSelect} {where}) q", args);
         var items = await conn.QueryAsync<DevPortalServiceDto>($"{AssignedSelect} {where} ORDER BY CreatedAt DESC LIMIT @pageSize OFFSET @offset", args);
         return (items, total);
+    }
+
+    public async Task<DevPortalServiceDto?> GetGuideAsync(int userId, int userServiceId)
+    {
+        using var conn = db.GetConnection();
+        return await conn.QuerySingleOrDefaultAsync<DevPortalServiceDto>(
+            $"""
+            {AssignedSelect}
+            WHERE ds.userId = @userId
+              AND ds.isActive = 1
+              AND us.Active = 1
+              AND us.id = @userServiceId
+            """,
+            new { userId, userServiceId });
+    }
+
+    public async Task<DevPortalServiceDto?> UpdateGuideStepAsync(int userId, int userServiceId, int step)
+    {
+        using var conn = db.GetConnection();
+        var status = step switch
+        {
+            >= 13 => 2,
+            >= 9 => 1,
+            >= 2 => 1,
+            _ => 3
+        };
+
+        var affected = await conn.ExecuteAsync(
+            """
+            UPDATE UserServices us
+            JOIN DevServices ds ON ds.userServiceId = us.id
+            SET us.devGuideStep = GREATEST(COALESCE(us.devGuideStep, 0), @step),
+                us.Status = @status
+            WHERE us.id = @userServiceId
+              AND us.Active = 1
+              AND ds.userId = @userId
+              AND ds.isActive = 1
+            """,
+            new { userId, userServiceId, step, status });
+
+        return affected == 0 ? null : await GetGuideAsync(userId, userServiceId);
+    }
+
+    public async Task<DevPortalServiceDto?> UpdateMaintenanceAsync(int userId, int userServiceId, bool isMaintenance)
+    {
+        using var conn = db.GetConnection();
+        var affected = await conn.ExecuteAsync(
+            """
+            UPDATE UserServices us
+            JOIN DevServices ds ON ds.userServiceId = us.id
+            SET us.isMaintenance = @isMaintenance
+            WHERE us.id = @userServiceId
+              AND us.Active = 1
+              AND ds.userId = @userId
+              AND ds.isActive = 1
+            """,
+            new { userId, userServiceId, isMaintenance });
+
+        return affected == 0 ? null : await GetGuideAsync(userId, userServiceId);
     }
 
     public async Task<(IEnumerable<DevPortalServiceDto> Items, int Total)> GetAvailableAsync(int page, int pageSize, string? search)

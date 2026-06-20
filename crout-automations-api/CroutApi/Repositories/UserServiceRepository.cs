@@ -77,4 +77,12 @@ public class UserServiceRepository(DbHelper db) : IUserServiceRepository
             """,
             userService);
     }
+
+    public async Task UpdateConfigAsync(int userServiceId, string config, int status)
+    {
+        using var conn = db.GetConnection();
+        await conn.ExecuteAsync(
+            "UPDATE UserServices SET Config = @config, Status = @status WHERE id = @userServiceId",
+            new { userServiceId, config, status });
+    }
 }

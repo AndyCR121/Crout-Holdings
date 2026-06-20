@@ -126,12 +126,18 @@ export interface IDevPortalService {
   userServiceId: number;
   companyId: number;
   companyName: string;
+  companyEmail?: string;
+  companyPhone?: string;
+  companyAddress?: string;
   serviceId: number;
   serviceName: string;
   serviceDescription?: string;
   subscriptionId?: string;
   status: UserServiceStatus;
   config?: string;
+  pricingSnapshot?: string;
+  guideStep: number;
+  isMaintenance: boolean;
   subscriptionAmount: number;
   commissionPerc: number;
   totalCommission: number;

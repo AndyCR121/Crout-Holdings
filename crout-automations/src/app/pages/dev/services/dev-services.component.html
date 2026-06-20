@@ -39,14 +39,14 @@
                 <span>Commission</span>
               </div>
               @for (item of assigned(); track item.userServiceId) {
-                <div class="dservices-row">
+                <a class="dservices-row dservices-row--link" [routerLink]="['/dev/services', item.userServiceId, 'guide']">
                   <span>{{ item.companyName }}</span>
                   <span>{{ item.serviceName }}</span>
                   <span><em class="dservices-status" [class]="statusClass(item.status)">{{ statusLabel(item.status) }}</em></span>
                   <span>{{ formatDate(item.dueDate) }}</span>
                   <span>{{ formatMoney(item.subscriptionAmount) }}</span>
                   <strong>{{ formatMoney(item.totalCommission) }}</strong>
-                </div>
+                </a>
               }
             </div>
           }

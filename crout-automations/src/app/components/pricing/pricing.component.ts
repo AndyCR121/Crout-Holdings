@@ -251,6 +251,21 @@ export class PricingComponent implements OnInit {
     return n.toLocaleString('en-ZA');
   }
 
+  serviceUrl(service: IService | null | undefined): string {
+    const routes: Record<string, string> = {
+      'WhatsApp Agent': '/services/whatsapp-agent',
+      'WhatsApp AI Agent': '/services/whatsapp-agent',
+      'Quote System': '/services/quote-system',
+      'Project Management System': '/services/project-management',
+      'Marketing Systems': '/services/marketing-systems',
+    };
+    return routes[service?.serviceName ?? ''] ?? '/services';
+  }
+
+  packageUrl(view: IPackageView): string {
+    return this.serviceUrl(this.activeServices(view).find(s => !s.conditional) ?? this.activeServices(view)[0]);
+  }
+
   // ── Ghost skeleton helpers ────────────────────────────────────────────────
   skeletonCards    = Array(3).fill(null);
   skeletonPackages = Array(2).fill(null);

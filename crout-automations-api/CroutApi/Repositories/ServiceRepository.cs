@@ -64,7 +64,13 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
             @"SELECT p.package_id AS PackageId, p.parent_package_id AS ParentPackageId, p.PackageName, p.PackageDescription, p.Discount, p.minimumRequiredAddons AS MinimumRequiredAddons
               FROM Packages p
               INNER JOIN PackageServices ps ON ps.package_id = p.package_id
-              WHERE ps.service_id = @serviceId",
+              WHERE ps.service_id = @serviceId
+                 OR p.parent_package_id IN (
+                    SELECT parent.package_id
+                    FROM Packages parent
+                    INNER JOIN PackageServices parent_ps ON parent_ps.package_id = parent.package_id
+                    WHERE parent_ps.service_id = @serviceId
+                 )",
             new { serviceId })).ToList();
 
         await EnrichPackageServiceIds(conn, packages);

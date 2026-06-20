@@ -42,5 +42,5 @@ public class CompaniesController(IProfileService profile, IServiceCatalogService
     // GET /api/companies/{companyId}/services
     [HttpGet("api/companies/{companyId:int}/services")]
     public async Task<IActionResult> GetCompanyServices(int companyId) =>
-        Ok(await catalog.GetUserServicesAsync(companyId));
+        Ok(await catalog.GetUserServicesAsync(UserId, companyId));
 }

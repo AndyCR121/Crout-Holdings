@@ -34,4 +34,16 @@ export class DevService {
   claim(userServiceId: number): Observable<{ devServiceId: number }> {
     return this.http.post<{ devServiceId: number }>(`${this.base}/services/${userServiceId}/claim`, {}, { headers: this.authHeaders(), withCredentials: true });
   }
+
+  getGuide(userServiceId: number): Observable<IDevPortalService> {
+    return this.http.get<IDevPortalService>(`${this.base}/services/${userServiceId}/guide`, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  updateGuideStep(userServiceId: number, step: number): Observable<IDevPortalService> {
+    return this.http.post<IDevPortalService>(`${this.base}/services/${userServiceId}/guide/step`, { step }, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  updateMaintenance(userServiceId: number, isMaintenance: boolean): Observable<IDevPortalService> {
+    return this.http.post<IDevPortalService>(`${this.base}/services/${userServiceId}/maintenance`, { isMaintenance }, { headers: this.authHeaders(), withCredentials: true });
+  }
 }

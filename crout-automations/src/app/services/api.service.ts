@@ -163,4 +163,18 @@ export class ApiService {
       .post<IUserService>(`${this.base}/services/user-services`, payload, { headers: this.authHeaders(), withCredentials: true })
       .pipe(catchError(err => throwError(() => err)));
   }
+
+  requestServiceConfigChange(userServiceId: number, payload: {
+    addonIds: number[];
+    trigger: string[];
+    action: string[];
+    output: string[];
+    triggerNotes?: string;
+    actionNotes?: string;
+    outputNotes?: string;
+  }): Observable<IUserService> {
+    return this.http
+      .put<IUserService>(`${this.base}/services/user-services/${userServiceId}/config-request`, payload, { headers: this.authHeaders(), withCredentials: true })
+      .pipe(catchError(err => throwError(() => err)));
+  }
 }

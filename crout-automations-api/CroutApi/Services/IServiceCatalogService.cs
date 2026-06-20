@@ -11,5 +11,7 @@ public interface IServiceCatalogService
     Task<IEnumerable<Package>> GetPackagesByServiceAsync(int serviceId);
     Task<IEnumerable<Package>> GetAllPackagesAsync();
     Task<IEnumerable<UserService>> GetUserServicesAsync(int companyId);
+    Task<IEnumerable<UserService>> GetUserServicesAsync(int userId, int companyId);
     Task<UserService> CreateUserServiceAsync(int userId, CreateUserServiceFromConfigDto dto);
+    Task<UserService> RequestConfigChangeAsync(int userId, int userServiceId, RequestServiceConfigChangeDto dto);
 }

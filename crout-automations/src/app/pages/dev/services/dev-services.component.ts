@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { PortalSidebarComponent } from '../../../components/portal-sidebar/portal-sidebar.component';
 import { IDevPortalService } from '../../../interfaces/i-service.interface';
 import { DevService } from '../../../services/dev.service';
@@ -9,7 +11,7 @@ import { ToastService } from '../../../services/toast.service';
 @Component({
   selector: 'ca-dev-services',
   standalone: true,
-  imports: [CommonModule, FormsModule, PortalSidebarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, PortalSidebarComponent],
   templateUrl: './dev-services.component.html',
   styleUrls: ['./dev-services.component.scss'],
 })
@@ -72,13 +74,38 @@ export class DevServicesComponent implements OnInit {
       next: () => {
         this.toast.success('Service claimed.');
         this.claimingId.set(null);
-        this.loadAssigned();
-        this.loadAvailable();
+        this.available.update(list => list.filter(x => x.userServiceId !== item.userServiceId));
+        this.availableTotal.update(total => Math.max(0, total - 1));
+        this.assigned.update(list => [{ ...item, isActive: true, commissionPerc: item.commissionPerc || 20 }, ...list]);
+        this.assignedTotal.update(total => total + 1);
+        this.refreshListsAfterClaim();
       },
       error: err => {
         this.claimingId.set(null);
         this.toast.error(err?.error?.error ?? 'Service could not be claimed.');
         this.loadAvailable();
+      },
+    });
+  }
+
+  private refreshListsAfterClaim(): void {
+    this.loadingAssigned.set(true);
+    this.loadingAvailable.set(true);
+    forkJoin({
+      assigned: this.dev.getAssigned(this.assignedPage, this.pageSize, this.assignedSearch),
+      available: this.dev.getAvailable(this.availablePage, this.pageSize, this.availableSearch),
+    }).subscribe({
+      next: ({ assigned, available }) => {
+        this.assigned.set(assigned.items);
+        this.assignedTotal.set(assigned.total);
+        this.available.set(available.items);
+        this.availableTotal.set(available.total);
+        this.loadingAssigned.set(false);
+        this.loadingAvailable.set(false);
+      },
+      error: () => {
+        this.loadingAssigned.set(false);
+        this.loadingAvailable.set(false);
       },
     });
   }

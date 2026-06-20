@@ -9,13 +9,25 @@ import { ToastService } from '../../../services/toast.service';
 import { IUserService, IService, IAddon, ICompany } from '../../../interfaces/i-service.interface';
 import { PortalSidebarComponent } from '../../../components/portal-sidebar/portal-sidebar.component';
 
+interface IntegrationItem {
+  name: string;
+  confirmed: boolean;
+  category: 'trigger' | 'action' | 'output';
+}
+
 interface ServiceRow {
   userService:   IUserService;
   service:       IService;
   addons:        IAddon[];
-  activeAddons:  string[];
+  activeAddons:  IntegrationItem[];
   editing:       boolean;
-  editConfig:    string[];
+  editAddonIds:  number[];
+  editTrigger:   string[];
+  editAction:    string[];
+  editOutput:    string[];
+  triggerNotes:  string;
+  actionNotes:   string;
+  outputNotes:   string;
   sidePanelOpen: boolean;
 }
 
@@ -41,6 +53,12 @@ export class PortalServicesComponent implements OnInit {
   readonly groups  = signal<CompanyGroup[]>([]);
   readonly loading = signal(true);
   readonly saving  = signal<number | null>(null);
+
+  readonly integrationOptions = {
+    trigger: ['Webhook', 'Email / IMAP', 'WhatsApp Message', 'Website Form', 'Scheduled Trigger'],
+    action: ['Xero', 'Google Sheets', 'Trello', 'CRM Update', 'AI Agent', 'Custom Setup'],
+    output: ['Email Response', 'WhatsApp Reply', 'Dashboard', 'Report', 'Invoice / Quote']
+  };
 
   ngOnInit(): void {
     const uid = this.user()?.userId;
@@ -72,14 +90,21 @@ export class PortalServicesComponent implements OnInit {
           const rows: ServiceRow[] = us.map((u: IUserService) => {
             const svc       = (svcs as IService[]).find((s: IService) => s.serviceId === u.serviceId)!;
             const rowAddons = allAddons.filter((a: IAddon) => a.serviceId === u.serviceId);
-            const active    = this._parseConfig(u.config);
+            const active    = this._parseConfig(u.config, allAddons);
+            const selectedAddonIds = this._parseAddonIds(u.config, active, rowAddons);
             return {
               userService:   u,
               service:       svc,
               addons:        rowAddons,
               activeAddons:  active,
               editing:       false,
-              editConfig:    [...active],
+              editAddonIds:  selectedAddonIds,
+              editTrigger:   active.filter(i => i.category === 'trigger').map(i => i.name),
+              editAction:    active.filter(i => i.category === 'action').map(i => i.name),
+              editOutput:    active.filter(i => i.category === 'output').map(i => i.name),
+              triggerNotes:  '',
+              actionNotes:   '',
+              outputNotes:   '',
               sidePanelOpen: false,
             };
           });
@@ -94,8 +119,42 @@ export class PortalServicesComponent implements OnInit {
     });
   }
 
-  private _parseConfig(cfg: string): string[] {
-    try { const p = JSON.parse(cfg); return p.integrations ?? []; } catch { return []; }
+  private _parseConfig(cfg: string | null | undefined, allAddons: IAddon[]): IntegrationItem[] {
+    if (!cfg) return [];
+    try {
+      const parsed = JSON.parse(cfg);
+      const raw = parsed.integrations ?? [];
+      if (Array.isArray(raw) && raw.length > 0) {
+        return raw
+          .map((item: any) => typeof item === 'string'
+            ? { name: item, confirmed: true, category: this.classifyIntegration(item) }
+            : {
+                name: String(item.name ?? ''),
+                confirmed: item.confirmed === true,
+                category: this.asCategory(item.category)
+              })
+          .filter((item: IntegrationItem) => item.name);
+      }
+
+      const addonIds = Array.isArray(parsed.addonIds) ? parsed.addonIds : [];
+      return addonIds
+        .map((id: number) => allAddons.find(a => a.addonId === id))
+        .filter((a: IAddon | undefined): a is IAddon => !!a)
+        .map((a: IAddon) => ({ name: a.addonName, confirmed: false, category: this.classifyIntegration(a.addonName) }));
+    } catch {
+      return [];
+    }
+  }
+
+  private _parseAddonIds(cfg: string | null | undefined, active: IntegrationItem[], rowAddons: IAddon[]): number[] {
+    if (cfg) {
+      try {
+        const parsed = JSON.parse(cfg);
+        if (Array.isArray(parsed.addonIds)) return parsed.addonIds;
+      } catch { /* fall through */ }
+    }
+    const selected = new Set(active.map(i => i.name.toLowerCase()));
+    return rowAddons.filter(a => selected.has(a.addonName.toLowerCase())).map(a => a.addonId);
   }
 
   toggleGroup(group: CompanyGroup): void {
@@ -104,8 +163,11 @@ export class PortalServicesComponent implements OnInit {
   }
 
   startEdit(row: ServiceRow): void {
-    row.editing    = true;
-    row.editConfig = [...row.activeAddons];
+    row.editing = true;
+    row.editAddonIds = this._parseAddonIds(row.userService.config, row.activeAddons, row.addons);
+    row.editTrigger = row.activeAddons.filter(i => i.category === 'trigger').map(i => i.name);
+    row.editAction = row.activeAddons.filter(i => i.category === 'action').map(i => i.name);
+    row.editOutput = row.activeAddons.filter(i => i.category === 'output').map(i => i.name);
     this.groups.update(g => [...g]);
   }
 
@@ -114,31 +176,53 @@ export class PortalServicesComponent implements OnInit {
     this.groups.update(g => [...g]);
   }
 
-  toggleAddon(row: ServiceRow, addonName: string): void {
-    const idx = row.editConfig.indexOf(addonName);
-    if (idx > -1) row.editConfig.splice(idx, 1);
-    else          row.editConfig.push(addonName);
+  toggleAddon(row: ServiceRow, addon: IAddon): void {
+    const idx = row.editAddonIds.indexOf(addon.addonId);
+    if (idx > -1) {
+      row.editAddonIds.splice(idx, 1);
+    } else {
+      row.editAddonIds.push(addon.addonId);
+      this.addIntegration(row, this.classifyIntegration(addon.addonName), addon.addonName);
+    }
     this.groups.update(g => [...g]);
   }
 
-  isSelected(row: ServiceRow, name: string): boolean {
-    return row.editConfig.includes(name);
+  isSelected(row: ServiceRow, addon: IAddon): boolean {
+    return row.editAddonIds.includes(addon.addonId);
+  }
+
+  toggleIntegration(row: ServiceRow, category: 'trigger' | 'action' | 'output', name: string): void {
+    const list = this.integrationList(row, category);
+    const idx = list.indexOf(name);
+    if (idx > -1) list.splice(idx, 1);
+    else list.push(name);
+    this.groups.update(g => [...g]);
   }
 
   submitConfigRequest(row: ServiceRow): void {
     this.saving.set(row.userService.serviceId);
-    const payload = { integrations: row.editConfig };
-    this.api['http']?.post?.(
-      `/companies/${row.userService.companyId}/services/${row.userService.serviceId}/config-request`,
-      payload
-    ).subscribe?.();
-    setTimeout(() => {
-      row.activeAddons = [...row.editConfig];
-      row.editing      = false;
-      this.saving.set(null);
-      this.groups.update(g => [...g]);
-      this.toast.success(`Configuration request submitted for ${row.service.serviceName}.`);
-    }, 800);
+    this.api.requestServiceConfigChange(row.userService.userServiceId!, {
+      addonIds: row.editAddonIds,
+      trigger: row.editTrigger,
+      action: row.editAction,
+      output: row.editOutput,
+      triggerNotes: row.triggerNotes,
+      actionNotes: row.actionNotes,
+      outputNotes: row.outputNotes
+    }).subscribe({
+      next: updated => {
+        row.userService = updated;
+        row.activeAddons = this._parseConfig(updated.config, row.addons);
+        row.editing = false;
+        this.saving.set(null);
+        this.groups.update(g => [...g]);
+        this.toast.success(`Configuration request submitted for ${row.service.serviceName}.`);
+      },
+      error: err => {
+        this.saving.set(null);
+        this.toast.error(err?.error?.error ?? 'Configuration request could not be submitted.');
+      }
+    });
   }
 
   openSidePanel(row: ServiceRow):  void { row.sidePanelOpen = true;  this.groups.update(g => [...g]); }
@@ -154,5 +238,31 @@ export class PortalServicesComponent implements OnInit {
 
   hasAnyService(): boolean {
     return this.groups().some(g => g.rows.length > 0);
+  }
+
+  integrationList(row: ServiceRow, category: 'trigger' | 'action' | 'output'): string[] {
+    if (category === 'trigger') return row.editTrigger;
+    if (category === 'action') return row.editAction;
+    return row.editOutput;
+  }
+
+  isIntegrationSelected(row: ServiceRow, category: 'trigger' | 'action' | 'output', name: string): boolean {
+    return this.integrationList(row, category).includes(name);
+  }
+
+  private addIntegration(row: ServiceRow, category: 'trigger' | 'action' | 'output', name: string): void {
+    const list = this.integrationList(row, category);
+    if (!list.includes(name)) list.push(name);
+  }
+
+  private classifyIntegration(name: string): 'trigger' | 'action' | 'output' {
+    const lower = name.toLowerCase();
+    if (lower.includes('webhook') || lower.includes('email') || lower.includes('whatsapp') || lower.includes('form')) return 'trigger';
+    if (lower.includes('report') || lower.includes('dashboard') || lower.includes('output') || lower.includes('invoice')) return 'output';
+    return 'action';
+  }
+
+  private asCategory(value: string): 'trigger' | 'action' | 'output' {
+    return value === 'trigger' || value === 'output' ? value : 'action';
   }
 }

@@ -14,7 +14,7 @@
 }
 
 .dservices-header {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
 }
 
 .dservices-title,
@@ -72,7 +72,7 @@
 .dservices-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 1rem;
+  gap: 1.25rem;
   align-items: stretch;
   height: min(680px, calc(100vh - 190px));
   min-height: 430px;
@@ -88,6 +88,10 @@
   flex-direction: column;
   min-height: 0;
   padding: 1rem;
+}
+
+.dservices-panel {
+  justify-content: space-between;
 }
 
 .dservices-search {
@@ -132,6 +136,15 @@
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   color: rgba(229, 236, 248, 0.84);
   padding: 0.85rem 0;
+  text-decoration: none;
+}
+
+.dservices-row--link {
+  cursor: pointer;
+}
+
+.dservices-row--link:hover {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .dservices-row--head {
@@ -202,13 +215,14 @@
 .dservices-loading,
 .dservices-empty {
   color: rgba(210, 222, 240, 0.66);
+  flex: 1;
   padding: 1.5rem 0;
 }
 
 .dservices-pager {
   align-items: center;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  margin-top: 1rem;
+  margin-top: auto;
   padding-top: 1rem;
 }
 
