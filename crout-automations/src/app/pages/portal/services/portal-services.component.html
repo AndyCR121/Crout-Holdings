@@ -76,7 +76,14 @@
           <!-- Card actions -->
           <div class="pservices__card-actions" *ngIf="!row.editing">
             <button class="pservices__btn pservices__btn--secondary" (click)="startEdit(row)">Request Config Change</button>
+            <button class="pservices__btn pservices__btn--secondary" type="button" (click)="toggleVideoEditor(row)" *ngIf="isVideoEditor(row)">
+              {{ row.videoEditorOpen ? 'Close Video Editor' : 'Open Video Editor' }}
+            </button>
             <button class="pservices__btn pservices__btn--ghost" (click)="openSidePanel(row)">View Details</button>
+          </div>
+
+          <div class="pservices__video-editor" *ngIf="row.videoEditorOpen">
+            <ca-portal-video-editor [embedded]="true"></ca-portal-video-editor>
           </div>
 
           <!-- Edit section -->

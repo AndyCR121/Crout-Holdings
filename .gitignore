@@ -1,1 +1,5 @@
+image-encryptor\demo\orignals\*
+/image-encryptor/__pycache__
+*.pyc
+/image-encryptor/demo
 /image-encryptor/test_files
