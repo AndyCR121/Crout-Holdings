@@ -82,6 +82,59 @@ INSERT INTO Packages (package_id,parent_package_id,PackageName,PackageDescriptio
 INSERT INTO PackageServices (package_id,service_id) VALUES
 (1,1),(2,2),(3,3),(4,2),(4,3),(5,5);
 
+INSERT INTO UserServices (company_id,service_id,package_id,Config,Active,Status) VALUES
+(2,3,NULL,'{"integrations":["Trello","Google Sheets","IMAP Email"],"custom":"true"}',1,2),
+(3,2,NULL,'{"integrations":["Google Sheets","AI Agent","IMAP Email"],"custom":"true"}',1,1);
+
+INSERT INTO Addons (service_id, AddonName, AddonDescription, Price)
+SELECT 4, 'AI Video Editor', 'Scheduled AI-generated videos with media review, timeline editing, and backend workflow rendering.', 6000.00
+WHERE NOT EXISTS (SELECT 1 FROM Addons WHERE service_id = 4 AND AddonName = 'AI Video Editor');
+
+INSERT INTO UserServices (company_id, service_id, package_id, Config, Active, Status)
+SELECT 1, 4, NULL, '{"videoEditor":true,"triggers":true}', 1, 1
+WHERE EXISTS (SELECT 1 FROM Companies WHERE company_id = 1)
+  AND NOT EXISTS (SELECT 1 FROM UserServices WHERE company_id = 1 AND service_id = 4 AND Active = 1);
+
+INSERT INTO ServiceTriggerConfigs
+  (service_id, workflow_id, trigger_type, Label, Description, endpoint_path, method, requires_confirmation, payload_template, fields_json, file_upload_json, response_mode, sort_order)
+VALUES
+  (4, 'ai-video-render', 'webhook', 'Queue render', 'Send the current timeline to the AI render workflow.', '/webhook/ai-video-render', 'POST', 1,
+   '{"source":"portal","action":"render"}', NULL, NULL, 'inline', 1),
+  (4, 'ai-video-brief', 'form', 'Generate content brief', 'Create a script, scene plan, captions, and social metadata from campaign inputs.', '/webhook/ai-video-brief', 'POST', 0,
+   '{"source":"portal","action":"brief"}',
+   '[{"key":"topic","label":"Topic","type":"text","required":true,"placeholder":"June promo campaign"},{"key":"platform","label":"Platform","type":"select","required":true,"defaultValue":"instagram","options":[{"label":"Instagram","value":"instagram"},{"label":"TikTok","value":"tiktok"},{"label":"YouTube","value":"youtube"}]},{"key":"tone","label":"Tone","type":"select","defaultValue":"professional","options":[{"label":"Professional","value":"professional"},{"label":"Energetic","value":"energetic"},{"label":"Luxury","value":"luxury"}]},{"key":"notes","label":"Notes","type":"textarea","required":false}]',
+   NULL, 'inline', 2),
+  (4, 'ai-video-email-preview', 'email_mockup', 'Draft approval email', 'Build a structured email payload for video approval workflows.', '/webhook/video-approval-email', 'POST', 0,
+   '{"source":"portal","action":"approvalEmail"}', NULL, NULL, 'inline', 3),
+  (4, 'ai-video-assets', 'file_upload', 'Upload campaign assets', 'Validate and queue source clips, images, audio, or captions for the video workflow.', '/webhook/video-assets', 'POST', 0,
+   '{"source":"portal","action":"uploadAssets"}', NULL,
+   '{"allowedExtensions":["mp4","mov","png","jpg","jpeg","mp3","wav","srt"],"maxSizeMb":50,"maxCount":5}', 'inline', 4)
+ON DUPLICATE KEY UPDATE
+  workflow_id = VALUES(workflow_id),
+  Description = VALUES(Description),
+  endpoint_path = VALUES(endpoint_path),
+  payload_template = VALUES(payload_template),
+  fields_json = VALUES(fields_json),
+  file_upload_json = VALUES(file_upload_json),
+  sort_order = VALUES(sort_order);
+
+INSERT INTO VideoProjects
+  (company_id, user_service_id, service_id, Title, Status, scheduled_for, platform, output_url, metadata_json, timeline_json)
+SELECT
+  1,
+  us.id,
+  4,
+  'Crout weekly automation spotlight',
+  'ready',
+  DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 2 DAY),
+  'instagram',
+  'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+  '{"assets":[{"id":"clip-1","type":"video","name":"Generated intro clip","url":"https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4","duration":12},{"id":"caption-1","type":"caption","name":"Hook captions","url":"","duration":8},{"id":"audio-1","type":"audio","name":"Voiceover draft","url":"","duration":18}],"caption":"Automations that keep working after hours.","hashtags":["#Automation","#AI","#CroutAutomations"]}',
+  '{"tracks":[{"id":"video-track","type":"video","items":[{"id":"item-1","assetId":"clip-1","startTime":0,"endTime":12,"trimStart":0,"trimEnd":12,"position":{"x":50,"y":50,"scale":1}}]},{"id":"caption-track","type":"caption","items":[{"id":"item-2","assetId":"caption-1","startTime":1,"endTime":8,"position":{"x":50,"y":82,"scale":1}}]},{"id":"audio-track","type":"audio","items":[{"id":"item-3","assetId":"audio-1","startTime":0,"endTime":18}]}]}'
+FROM UserServices us
+WHERE us.company_id = 1 AND us.service_id = 4
+  AND NOT EXISTS (SELECT 1 FROM VideoProjects WHERE company_id = 1 AND service_id = 4 AND Title = 'Crout weekly automation spotlight')
+LIMIT 1;
 INSERT INTO UserServices (company_id,service_id,package_id,Config,subscriptionAmount,pricingSnapshot,paymentDate,dueDate,Active,Status) VALUES
 (2,3,NULL,'{"integrations": ["Trello", "Google Sheets", "IMAP Email"], "custom": "true"}',6000.00,'{"baseWorkflow":5000.00,"requiredComponents": [{"key":"ai_usage_base_6m_tokens","amount":1000.00}],"total":6000.00}',CURRENT_TIMESTAMP,DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 30 DAY),1,2),
 (3,2,NULL,'{"integrations": ["Google Sheets", "AI Agent", "IMAP Email"], "custom": "true"}',6000.00,'{"baseWorkflow":5000.00,"requiredComponents": [{"key":"ai_usage_base_6m_tokens","amount":1000.00}],"total":6000.00}',CURRENT_TIMESTAMP,DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 30 DAY),1,1);

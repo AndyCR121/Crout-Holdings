@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Encryptor — Crout Holdings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@300..700&display=swap" rel="stylesheet">
+<style>
+/* ── tokens ──────────────────────────────────────────────────────────── */
+:root,[data-theme="light"]{
+  --color-bg:#f7f6f2;--color-surface:#f9f8f5;--color-surface-2:#fbfbf9;
+  --color-surface-offset:#f3f0ec;--color-surface-dynamic:#e6e4df;
+  --color-divider:#dcd9d5;--color-border:#d4d1ca;
+  --color-text:#28251d;--color-text-muted:#7a7974;--color-text-faint:#bab9b4;
+  --color-primary:#01696f;--color-primary-hover:#0c4e54;--color-primary-active:#0f3638;
+  --color-primary-hl:#cedcd8;
+  --color-success:#437a22;--color-success-hl:#d4dfcc;
+  --color-error:#a12c7b;--color-error-hl:#e0ced7;
+  --color-warning:#964219;--color-warning-hl:#ddcfc6;
+  --color-blue:#006494;--color-blue-hl:#c6d8e4;
+  --color-orange:#da7101;--color-orange-hl:#e7d7c4;
+  --radius-sm:.375rem;--radius-md:.5rem;--radius-lg:.75rem;--radius-xl:1rem;--radius-full:9999px;
+  --shadow-sm:0 1px 2px oklch(.2 .01 80/.06);
+  --shadow-md:0 4px 12px oklch(.2 .01 80/.08);
+  --shadow-lg:0 12px 32px oklch(.2 .01 80/.12);
+  --transition:180ms cubic-bezier(.16,1,.3,1);
+  --font-body:'Inter','Helvetica Neue',sans-serif;
+  --font-mono:'JetBrains Mono','Fira Code',monospace;
+  --text-xs:clamp(.75rem,.7rem + .25vw,.875rem);
+  --text-sm:clamp(.875rem,.8rem + .35vw,1rem);
+  --text-base:clamp(1rem,.95rem + .25vw,1.125rem);
+  --text-lg:clamp(1.125rem,1rem + .75vw,1.5rem);
+  --text-xl:clamp(1.5rem,1.2rem + 1.25vw,2.25rem);
+  --space-1:.25rem;--space-2:.5rem;--space-3:.75rem;--space-4:1rem;
+  --space-5:1.25rem;--space-6:1.5rem;--space-8:2rem;--space-10:2.5rem;
+  --space-12:3rem;--space-16:4rem;
+}
+[data-theme="dark"]{
+  --color-bg:#171614;--color-surface:#1c1b19;--color-surface-2:#201f1d;
+  --color-surface-offset:#1d1c1a;--color-surface-dynamic:#2d2c2a;
+  --color-divider:#262523;--color-border:#393836;
+  --color-text:#cdccca;--color-text-muted:#797876;--color-text-faint:#5a5957;
+  --color-primary:#4f98a3;--color-primary-hover:#227f8b;--color-primary-active:#1a626b;
+  --color-primary-hl:#313b3b;
+  --color-success:#6daa45;--color-success-hl:#3a4435;
+  --color-error:#d163a7;--color-error-hl:#4c3d46;
+  --color-warning:#bb653b;--color-warning-hl:#564942;
+  --color-blue:#5591c7;--color-blue-hl:#3a4550;
+  --color-orange:#fdab43;--color-orange-hl:#564b3e;
+  --shadow-sm:0 1px 2px oklch(0 0 0/.2);
+  --shadow-md:0 4px 12px oklch(0 0 0/.3);
+  --shadow-lg:0 12px 32px oklch(0 0 0/.4);
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme]){--color-bg:#171614;--color-surface:#1c1b19;--color-surface-2:#201f1d;--color-surface-offset:#1d1c1a;--color-surface-dynamic:#2d2c2a;--color-divider:#262523;--color-border:#393836;--color-text:#cdccca;--color-text-muted:#797876;--color-text-faint:#5a5957;--color-primary:#4f98a3;--color-primary-hover:#227f8b;--color-primary-active:#1a626b;--color-primary-hl:#313b3b;--color-success:#6daa45;--color-success-hl:#3a4435;--color-error:#d163a7;--color-error-hl:#4c3d46;--color-warning:#bb653b;--color-warning-hl:#564942;--color-blue:#5591c7;--color-blue-hl:#3a4550;--color-orange:#fdab43;--color-orange-hl:#564b3e;--shadow-sm:0 1px 2px oklch(0 0 0/.2);--shadow-md:0 4px 12px oklch(0 0 0/.3);--shadow-lg:0 12px 32px oklch(0 0 0/.4);}}
+
+/* ── reset ───────────────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;scroll-behavior:smooth}
+body{min-height:100dvh;font-family:var(--font-body);font-size:var(--text-base);color:var(--color-text);background:var(--color-bg);line-height:1.6}
+img,svg{display:block;max-width:100%}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none}
+:focus-visible{outline:2px solid var(--color-primary);outline-offset:3px;border-radius:var(--radius-sm)}
+a,button,input,select,[role="button"]{transition:color var(--transition),background var(--transition),border-color var(--transition),box-shadow var(--transition),opacity var(--transition)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border-width:0}
+
+/* ── layout ──────────────────────────────────────────────────────────── */
+.app{display:grid;grid-template-rows:auto 1fr auto;min-height:100dvh}
+header{display:flex;align-items:center;justify-content:space-between;padding:var(--space-4) var(--space-6);border-bottom:1px solid var(--color-divider);background:var(--color-surface);position:sticky;top:0;z-index:50}
+.logo{display:flex;align-items:center;gap:var(--space-3)}
+.logo-icon{width:32px;height:32px;flex-shrink:0}
+.logo-text{font-size:var(--text-sm);font-weight:600;letter-spacing:-.01em}
+.logo-sub{font-size:var(--text-xs);color:var(--color-text-muted);font-weight:400}
+main{padding:var(--space-8) var(--space-6);max-width:900px;margin-inline:auto;width:100%}
+footer{padding:var(--space-4) var(--space-6);border-top:1px solid var(--color-divider);font-size:var(--text-xs);color:var(--color-text-faint);text-align:center}
+
+/* ── theme toggle ────────────────────────────────────────────────────── */
+.theme-btn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:var(--radius-md);color:var(--color-text-muted)}
+.theme-btn:hover{background:var(--color-surface-offset);color:var(--color-text)}
+
+/* ── api status bar ──────────────────────────────────────────────────── */
+.api-bar{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-4);border-radius:var(--radius-lg);background:var(--color-surface);border:1px solid var(--color-divider);margin-bottom:var(--space-6);font-size:var(--text-sm)}
+.api-dot{width:8px;height:8px;border-radius:50%;background:var(--color-text-faint);flex-shrink:0;transition:background var(--transition)}
+.api-dot.ok{background:var(--color-success)}
+.api-dot.err{background:var(--color-error)}
+.api-dot.checking{background:var(--color-warning);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.api-label{color:var(--color-text-muted)}
+.api-url-input{flex:1;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:var(--space-1) var(--space-3);font-size:var(--text-xs);font-family:var(--font-mono);color:var(--color-text)}
+.api-url-input:focus{outline:none;border-color:var(--color-primary)}
+.btn-recheck{font-size:var(--text-xs);padding:var(--space-1) var(--space-3);border-radius:var(--radius-sm);background:var(--color-surface-offset);color:var(--color-text-muted);border:1px solid var(--color-border)}
+.btn-recheck:hover{background:var(--color-surface-dynamic);color:var(--color-text)}
+
+/* ── tabs ────────────────────────────────────────────────────────────── */
+.tabs{display:flex;gap:var(--space-1);padding:var(--space-1);background:var(--color-surface-offset);border-radius:var(--radius-lg);margin-bottom:var(--space-6);width:fit-content}
+.tab-btn{padding:var(--space-2) var(--space-5);border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:500;color:var(--color-text-muted);display:flex;align-items:center;gap:var(--space-2)}
+.tab-btn.active{background:var(--color-surface);color:var(--color-text);box-shadow:var(--shadow-sm)}
+.tab-btn:hover:not(.active){color:var(--color-text);background:var(--color-surface-dynamic)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* ── section heading ─────────────────────────────────────────────────── */
+.section-title{font-size:var(--text-sm);font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:var(--space-4)}
+
+/* ── drop zone ───────────────────────────────────────────────────────── */
+.drop-zone{border:1.5px dashed var(--color-border);border-radius:var(--radius-lg);padding:var(--space-6) var(--space-4);text-align:center;cursor:pointer;color:var(--color-text-muted);font-size:var(--text-sm);transition:border-color var(--transition),background var(--transition)}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--color-primary);background:var(--color-primary-hl)}
+.drop-zone-icon{margin-inline:auto;margin-bottom:var(--space-2);color:var(--color-text-faint)}
+.drop-zone p{margin:0;font-size:var(--text-xs)}
+.drop-zone strong{color:var(--color-text);font-weight:500}
+
+/* ── file chip ───────────────────────────────────────────────────────── */
+.file-chip{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-4);background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);margin-top:var(--space-2)}
+.file-chip-icon{color:var(--color-primary);flex-shrink:0}
+.file-chip-info{flex:1;min-width:0}
+.file-chip-name{font-size:var(--text-sm);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-chip-meta{font-size:var(--text-xs);color:var(--color-text-muted)}
+.file-chip-remove{color:var(--color-text-faint);padding:var(--space-1);border-radius:var(--radius-sm)}
+.file-chip-remove:hover{color:var(--color-error);background:var(--color-error-hl)}
+
+/* ── key preview ─────────────────────────────────────────────────────── */
+.key-preview{display:flex;align-items:center;gap:var(--space-4);padding:var(--space-3) var(--space-4);background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);margin-top:var(--space-2)}
+.key-thumb{width:56px;height:56px;object-fit:cover;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface-offset)}
+.key-info{flex:1}
+.key-capacity{display:inline-flex;align-items:center;gap:4px;margin-top:var(--space-1);font-size:var(--text-xs);padding:2px var(--space-2);border-radius:var(--radius-full);background:var(--color-primary-hl);color:var(--color-primary)}
+
+/* ── form grid ───────────────────────────────────────────────────────── */
+.form-grid{display:grid;gap:var(--space-5)}
+.form-group{display:grid;gap:var(--space-2)}
+label.form-label{font-size:var(--text-sm);font-weight:500;color:var(--color-text)}
+.form-hint{font-size:var(--text-xs);color:var(--color-text-muted)}
+.input-text{width:100%;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-2) var(--space-3);font-size:var(--text-sm)}
+.input-text:focus{outline:none;border-color:var(--color-primary)}
+
+/* ── output preview ──────────────────────────────────────────────────── */
+.output-preview{background:var(--color-surface-offset);border-radius:var(--radius-lg);padding:var(--space-4);display:flex;gap:var(--space-4);flex-wrap:wrap;font-size:var(--text-xs);color:var(--color-text-muted)}
+.out-badge{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-1) var(--space-3);border-radius:var(--radius-full);background:var(--color-surface);border:1px solid var(--color-border);font-family:var(--font-mono);font-size:var(--text-xs)}
+.out-badge svg{color:var(--color-primary)}
+
+/* ── divider ─────────────────────────────────────────────────────────── */
+.divider{height:1px;background:var(--color-divider);margin:var(--space-6) 0}
+
+/* ── buttons ─────────────────────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:var(--space-2);padding:var(--space-3) var(--space-6);border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:500;line-height:1}
+.btn-primary{background:var(--color-primary);color:#fff}
+.btn-primary:hover{background:var(--color-primary-hover)}
+.btn-primary:active{background:var(--color-primary-active)}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--color-text-muted);border:1px solid var(--color-border)}
+.btn-ghost:hover{background:var(--color-surface-offset);color:var(--color-text)}
+.btn-test{background:var(--color-blue-hl);color:var(--color-blue);border:1px solid color-mix(in oklch,var(--color-blue) 25%,transparent)}
+.btn-test:hover{background:color-mix(in oklch,var(--color-blue) 18%,var(--color-bg))}
+.btn-test:disabled{opacity:.45;cursor:not-allowed}
+.btn-row{display:flex;gap:var(--space-3);flex-wrap:wrap;align-items:center}
+
+/* spinning loader ──────────────────────────────────────────────────────── */
+.spin{animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── CLI command ─────────────────────────────────────────────────────── */
+.cli-block{background:var(--color-bg);border:1px solid var(--color-divider);border-radius:var(--radius-lg);overflow:hidden}
+.cli-header{display:flex;align-items:center;justify-content:space-between;padding:var(--space-2) var(--space-4);background:var(--color-surface-offset);border-bottom:1px solid var(--color-divider);font-size:var(--text-xs);color:var(--color-text-muted)}
+.btn-copy{font-size:var(--text-xs);padding:var(--space-1) var(--space-3);border-radius:var(--radius-sm);background:var(--color-surface);border:1px solid var(--color-border);color:var(--color-text-muted)}
+.btn-copy:hover{background:var(--color-surface-2);color:var(--color-text)}
+.cli-code{padding:var(--space-4);font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-text);white-space:pre-wrap;word-break:break-all;line-height:1.8}
+.cli-kw{color:var(--color-primary);font-weight:500}
+.cli-flag{color:var(--color-warning)}
+.cli-val{color:var(--color-blue)}
+
+/* ── result panel ────────────────────────────────────────────────────── */
+.result-panel{margin-top:var(--space-6);border-radius:var(--radius-xl);overflow:hidden;border:1px solid var(--color-divider);display:none}
+.result-panel.show{display:block}
+.result-header{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-4) var(--space-5);font-weight:600;font-size:var(--text-sm)}
+.result-header.ok{background:var(--color-success-hl);color:var(--color-success)}
+.result-header.err{background:var(--color-error-hl);color:var(--color-error)}
+.result-header.loading{background:var(--color-surface-offset);color:var(--color-text-muted)}
+.result-body{padding:var(--space-5);background:var(--color-surface)}
+.result-row{display:flex;justify-content:space-between;align-items:baseline;padding:var(--space-2) 0;border-bottom:1px solid var(--color-divider);font-size:var(--text-sm);gap:var(--space-4)}
+.result-row:last-child{border-bottom:none}
+.result-key{color:var(--color-text-muted);flex-shrink:0}
+.result-val{font-family:var(--font-mono);font-size:var(--text-xs);text-align:right;word-break:break-all}
+.result-val.good{color:var(--color-success)}
+.result-val.bad{color:var(--color-error)}
+.result-val.warn{color:var(--color-warning)}
+
+/* ── test suite panel ────────────────────────────────────────────────── */
+.test-panel{margin-top:var(--space-8);background:var(--color-surface);border:1px solid var(--color-divider);border-radius:var(--radius-xl);overflow:hidden}
+.test-panel-header{display:flex;align-items:center;justify-content:space-between;padding:var(--space-5) var(--space-6);border-bottom:1px solid var(--color-divider)}
+.test-panel-title{font-weight:600;font-size:var(--text-base);display:flex;align-items:center;gap:var(--space-2)}
+.test-panel-body{padding:var(--space-6)}
+.test-steps{display:grid;gap:var(--space-3);margin-bottom:var(--space-6)}
+.test-step{display:flex;gap:var(--space-4);align-items:flex-start;padding:var(--space-4);border-radius:var(--radius-lg);background:var(--color-surface-2);border:1px solid var(--color-divider)}
+.step-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700}
+.step-icon.idle{background:var(--color-surface-offset);color:var(--color-text-faint)}
+.step-icon.running{background:var(--color-primary-hl);color:var(--color-primary)}
+.step-icon.ok{background:var(--color-success-hl);color:var(--color-success)}
+.step-icon.warn{background:var(--color-warning-hl);color:var(--color-warning)}
+.step-icon.error,.step-icon.fail{background:var(--color-error-hl);color:var(--color-error)}
+.step-content{flex:1;min-width:0}
+.step-label{font-size:var(--text-sm);font-weight:600}
+.step-detail{font-size:var(--text-xs);color:var(--color-text-muted);margin-top:2px;font-family:var(--font-mono)}
+.step-elapsed{font-size:var(--text-xs);color:var(--color-text-faint);margin-top:2px}
+
+/* ── test summary ─────────────────────────────────────────────────────── */
+.test-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:var(--space-4)}
+.kpi{background:var(--color-surface-offset);border-radius:var(--radius-lg);padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-1)}
+.kpi-label{font-size:var(--text-xs);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.05em}
+.kpi-value{font-size:var(--text-lg);font-weight:700;font-family:var(--font-mono)}
+.kpi-value.good{color:var(--color-success)}
+.kpi-value.warn{color:var(--color-warning)}
+.kpi-value.bad{color:var(--color-error)}
+.kpi-sub{font-size:var(--text-xs);color:var(--color-text-faint)}
+
+/* ── accuracy bar ─────────────────────────────────────────────────────── */
+.accuracy-bar-wrap{margin-top:var(--space-4)}
+.accuracy-bar-label{display:flex;justify-content:space-between;font-size:var(--text-xs);color:var(--color-text-muted);margin-bottom:var(--space-2)}
+.accuracy-bar{height:8px;border-radius:var(--radius-full);background:var(--color-surface-dynamic);overflow:hidden}
+.accuracy-fill{height:100%;border-radius:var(--radius-full);background:var(--color-success);transition:width .6s cubic-bezier(.16,1,.3,1)}
+
+/* ── responsive ──────────────────────────────────────────────────────── */
+@media(max-width:600px){
+  main{padding:var(--space-4)}
+  header{padding:var(--space-3) var(--space-4)}
+  .btn-row{flex-direction:column;align-items:stretch}
+  .btn-row .btn{justify-content:center}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ── Header ─────────────────────────────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    <svg class="logo-icon" viewBox="0 0 32 32" fill="none" aria-label="Crout Holdings">
+      <rect width="32" height="32" rx="8" fill="var(--color-primary)"/>
+      <rect x="7" y="10" width="6" height="6" rx="1" fill="white" opacity=".9"/>
+      <rect x="7" y="18" width="6" height="4" rx="1" fill="white" opacity=".5"/>
+      <rect x="15" y="10" width="10" height="2" rx="1" fill="white" opacity=".7"/>
+      <rect x="15" y="14" width="8" height="2" rx="1" fill="white" opacity=".5"/>
+      <rect x="15" y="18" width="10" height="2" rx="1" fill="white" opacity=".7"/>
+      <rect x="15" y="22" width="6" height="2" rx="1" fill="white" opacity=".4"/>
+    </svg>
+    <div>
+      <div class="logo-text">Image Encryptor</div>
+      <div class="logo-sub">Crout Holdings — Dev Tool</div>
+    </div>
+  </div>
+  <button class="theme-btn" data-theme-toggle aria-label="Toggle theme">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</header>
+
+<!-- ── Main ───────────────────────────────────────────────────────────────── -->
+<main>
+
+  <!-- API status -->
+  <div class="api-bar">
+    <div class="api-dot checking" id="apiDot"></div>
+    <span class="api-label">API:</span>
+    <input class="api-url-input" id="apiUrl" value="http://localhost:8787" type="text" aria-label="API base URL">
+    <button class="btn-recheck" id="btnRecheck">Check</button>
+    <span id="apiStatus" style="font-size:var(--text-xs);color:var(--color-text-muted)">Checking…</span>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs" role="tablist">
+    <button class="tab-btn active" role="tab" data-tab="encode" aria-selected="true">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      Encode
+    </button>
+    <button class="tab-btn" role="tab" data-tab="decode" aria-selected="false">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Decode
+    </button>
+    <button class="tab-btn" role="tab" data-tab="test" aria-selected="false">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Test Suite
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════ ENCODE ═══════════════════════════════ -->
+  <div class="tab-panel active" id="panel-encode">
+    <div class="form-grid">
+
+      <!-- Input file -->
+      <div class="form-group">
+        <label class="form-label">File to Encrypt</label>
+        <div class="drop-zone" id="dz-file" tabindex="0" role="button" aria-label="Select file to encrypt">
+          <svg class="drop-zone-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+          <p><strong>Drop file here</strong> or click to browse</p>
+          <p>PDF · DOCX · XLSX · CSV · PNG · JPG</p>
+        </div>
+        <div id="chip-file" style="display:none" class="file-chip">
+          <svg class="file-chip-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+          <div class="file-chip-info"><div class="file-chip-name" id="chip-file-name">—</div><div class="file-chip-meta" id="chip-file-meta">—</div></div>
+          <button class="file-chip-remove" data-clear="file" aria-label="Remove file">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <input type="file" id="input-file" class="sr-only" accept=".pdf,.docx,.doc,.xlsx,.csv,.png,.jpg,.jpeg,.gif,.bmp,.webp">
+      </div>
+
+      <!-- Key image -->
+      <div class="form-group">
+        <label class="form-label">Key Image <span class="form-hint">(base PNG used as encryption carrier)</span></label>
+        <div class="drop-zone" id="dz-key-enc" tabindex="0" role="button" aria-label="Select key image">
+          <svg class="drop-zone-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <p><strong>Drop key image</strong> or click to browse</p>
+          <p>PNG or JPG</p>
+        </div>
+        <div id="chip-key-enc" style="display:none" class="key-preview">
+          <img id="key-thumb-enc" class="key-thumb" src="" alt="Key thumbnail">
+          <div class="key-info">
+            <div class="file-chip-name" id="chip-key-enc-name">—</div>
+            <div class="file-chip-meta" id="chip-key-enc-meta">—</div>
+            <div class="key-capacity" id="chip-key-enc-cap">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span>—</span>
+            </div>
+          </div>
+          <button class="file-chip-remove" data-clear="key-enc" aria-label="Remove key">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <input type="file" id="input-key-enc" class="sr-only" accept="image/png,image/jpeg,image/jpg">
+      </div>
+
+      <!-- Passphrase -->
+      <div class="form-group">
+        <label class="form-label" for="enc-passphrase">Passphrase <span class="form-hint">(optional)</span></label>
+        <input class="input-text" type="password" id="enc-passphrase" placeholder="Leave empty to skip">
+      </div>
+
+      <!-- Output preview -->
+      <div id="enc-output-preview" style="display:none">
+        <div class="section-title">Output files</div>
+        <div class="output-preview">
+          <div class="out-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            <span id="enc-out-name">—</span>
+          </div>
+          <div class="out-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+            <span id="enc-cfg-name">—</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /form-grid -->
+
+    <div class="divider"></div>
+
+    <!-- CLI command -->
+    <div class="section-title">Generated command</div>
+    <div class="cli-block">
+      <div class="cli-header">
+        <span>bash</span>
+        <button class="btn-copy" id="enc-copy-btn" aria-label="Copy command">Copy</button>
+      </div>
+      <div class="cli-code" id="enc-cli"><span class="cli-kw">python</span> main.py <span class="cli-kw">encode</span> <span class="cli-val"># select files above</span></div>
+    </div>
+
+    <div style="margin-top:var(--space-5)" class="btn-row">
+      <button class="btn btn-primary" id="btn-encode" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        Encrypt File
+      </button>
+    </div>
+
+    <!-- Result -->
+    <div class="result-panel" id="enc-result">
+      <div class="result-header" id="enc-result-hdr"></div>
+      <div class="result-body" id="enc-result-body"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ DECODE ═══════════════════════════════ -->
+  <div class="tab-panel" id="panel-decode">
+    <div class="form-grid">
+
+      <!-- Encrypted image -->
+      <div class="form-group">
+        <label class="form-label">Encrypted Image</label>
+        <div class="drop-zone" id="dz-enc-img" tabindex="0" role="button" aria-label="Select encrypted image">
+          <svg class="drop-zone-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <p><strong>Drop encrypted PNG</strong> or click to browse</p>
+        </div>
+        <div id="chip-enc-img" style="display:none" class="file-chip">
+          <svg class="file-chip-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <div class="file-chip-info"><div class="file-chip-name" id="chip-enc-img-name">—</div><div class="file-chip-meta" id="chip-enc-img-meta">—</div></div>
+          <button class="file-chip-remove" data-clear="enc-img" aria-label="Remove">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <input type="file" id="input-enc-img" class="sr-only" accept="image/png">
+      </div>
+
+      <!-- Key image -->
+      <div class="form-group">
+        <label class="form-label">Key Image</label>
+        <div class="drop-zone" id="dz-key-dec" tabindex="0" role="button" aria-label="Select key image">
+          <svg class="drop-zone-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <p><strong>Drop key image</strong> or click to browse</p>
+        </div>
+        <div id="chip-key-dec" style="display:none" class="key-preview">
+          <img id="key-thumb-dec" class="key-thumb" src="" alt="Key thumbnail">
+          <div class="key-info">
+            <div class="file-chip-name" id="chip-key-dec-name">—</div>
+            <div class="file-chip-meta" id="chip-key-dec-meta">—</div>
+          </div>
+          <button class="file-chip-remove" data-clear="key-dec" aria-label="Remove">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <input type="file" id="input-key-dec" class="sr-only" accept="image/png,image/jpeg,image/jpg">
+      </div>
+
+      <!-- Config -->
+      <div class="form-group">
+        <label class="form-label">Config JSON <span class="form-hint">(*.config.json generated during encode)</span></label>
+        <div class="drop-zone" id="dz-cfg" tabindex="0" role="button" aria-label="Select config JSON">
+          <svg class="drop-zone-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <p><strong>Drop config file</strong> or click to browse</p>
+          <p>*.config.json</p>
+        </div>
+        <div id="chip-cfg" style="display:none" class="file-chip">
+          <svg class="file-chip-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+          <div class="file-chip-info">
+            <div class="file-chip-name" id="chip-cfg-name">—</div>
+            <div class="file-chip-meta" id="chip-cfg-meta">—</div>
+          </div>
+          <button class="file-chip-remove" data-clear="cfg" aria-label="Remove">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <input type="file" id="input-cfg" class="sr-only" accept=".json,application/json">
+        <!-- Config info -->
+        <div id="cfg-info" style="display:none;margin-top:var(--space-2);padding:var(--space-3) var(--space-4);background:var(--color-surface-offset);border-radius:var(--radius-md);font-size:var(--text-xs);font-family:var(--font-mono);color:var(--color-text-muted)"></div>
+      </div>
+
+      <!-- Passphrase -->
+      <div class="form-group">
+        <label class="form-label" for="dec-passphrase">Passphrase <span class="form-hint">(if used during encode)</span></label>
+        <input class="input-text" type="password" id="dec-passphrase" placeholder="Leave empty if none was set">
+      </div>
+
+    </div><!-- /form-grid -->
+
+    <div class="divider"></div>
+
+    <!-- CLI -->
+    <div class="section-title">Generated command</div>
+    <div class="cli-block">
+      <div class="cli-header">
+        <span>bash</span>
+        <button class="btn-copy" id="dec-copy-btn" aria-label="Copy command">Copy</button>
+      </div>
+      <div class="cli-code" id="dec-cli"><span class="cli-kw">python</span> main.py <span class="cli-kw">decode</span> <span class="cli-val"># select files above</span></div>
+    </div>
+
+    <div style="margin-top:var(--space-5)" class="btn-row">
+      <button class="btn btn-primary" id="btn-decode" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Decrypt File
+      </button>
+    </div>
+
+    <!-- Result -->
+    <div class="result-panel" id="dec-result">
+      <div class="result-header" id="dec-result-hdr"></div>
+      <div class="result-body" id="dec-result-body"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ TEST ════════════════════════════════ -->
+  <div class="tab-panel" id="panel-test">
+    <p style="font-size:var(--text-sm);color:var(--color-text-muted);margin-bottom:var(--space-6);max-width:60ch">
+      Runs a full <strong>encode → decode</strong> round-trip using the bundled demo assets
+      (<code style="font-family:var(--font-mono);font-size:var(--text-xs)">demo/demo_input.png</code> into
+      <code style="font-family:var(--font-mono);font-size:var(--text-xs)">demo/demo_key.png</code>).
+      Compares encrypted image size vs original key, then verifies decoded output byte-for-byte.
+    </p>
+
+    <div class="btn-row">
+      <button class="btn btn-test" id="btn-test">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Run Test Suite
+      </button>
+    </div>
+
+    <div class="test-panel" id="test-panel" style="display:none">
+      <div class="test-panel-header">
+        <div class="test-panel-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Round-trip Results
+        </div>
+        <span id="test-elapsed" style="font-size:var(--text-xs);color:var(--color-text-faint)"></span>
+      </div>
+      <div class="test-panel-body">
+
+        <!-- Step pipeline -->
+        <div class="test-steps" id="test-steps"></div>
+
+        <!-- KPI summary -->
+        <div class="section-title" id="summary-title" style="display:none">Summary</div>
+        <div class="test-summary" id="test-summary"></div>
+
+        <!-- Accuracy bar -->
+        <div class="accuracy-bar-wrap" id="accuracy-wrap" style="display:none">
+          <div class="accuracy-bar-label">
+            <span>Byte accuracy</span>
+            <span id="accuracy-pct-label">—</span>
+          </div>
+          <div class="accuracy-bar"><div class="accuracy-fill" id="accuracy-fill" style="width:0%"></div></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</main>
+<footer>Crout Holdings PTY LTD — Image Encryptor Dev UI — running against local Python API</footer>
+</div><!-- /app -->
+
+<script>
+/* ── helpers ──────────────────────────────────────────────────────────── */
+function fmtBytes(b){
+  if(b<1024) return b+' B';
+  if(b<1048576) return (b/1024).toFixed(1)+' KB';
+  return (b/1048576).toFixed(2)+' MB';
+}
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ── theme ────────────────────────────────────────────────────────────── */
+(function(){
+  const btn=document.querySelector('[data-theme-toggle]'),r=document.documentElement;
+  let d=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+  r.setAttribute('data-theme',d);
+  function setIcon(){
+    btn.innerHTML=d==='dark'
+      ?'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
+      :'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  }
+  setIcon();
+  btn.addEventListener('click',()=>{d=d==='dark'?'light':'dark';r.setAttribute('data-theme',d);setIcon();});
+})();
+
+/* ── tabs ─────────────────────────────────────────────────────────────── */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false');});
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');btn.setAttribute('aria-selected','true');
+    document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ── API health check ─────────────────────────────────────────────────── */
+const dot=document.getElementById('apiDot');
+const apiStatusEl=document.getElementById('apiStatus');
+const apiUrlInput=document.getElementById('apiUrl');
+let apiOk=false;
+
+async function checkHealth(){
+  const base=apiUrlInput.value.replace(/\/$/,'');
+  dot.className='api-dot checking';
+  apiStatusEl.textContent='Checking…';
+  try{
+    const r=await fetch(base+'/health',{signal:AbortSignal.timeout(4000)});
+    const d=await r.json();
+    dot.className='api-dot ok';
+    apiStatusEl.textContent=d.encryptor_available?'Connected — encryptor ready':'Connected — encryptor module missing';
+    apiStatusEl.style.color=d.encryptor_available?'var(--color-success)':'var(--color-warning)';
+    apiOk=d.encryptor_available;
+  }catch(e){
+    dot.className='api-dot err';
+    apiStatusEl.textContent='Unreachable — start: uvicorn api:app --reload --port 8787';
+    apiStatusEl.style.color='var(--color-error)';
+    apiOk=false;
+  }
+  syncButtons();
+}
+checkHealth();
+document.getElementById('btnRecheck').addEventListener('click',checkHealth);
+
+/* ── state ────────────────────────────────────────────────────────────── */
+const state={
+  file:null,   // File
+  keyEnc:null, // File
+  encImg:null, // File
+  keyDec:null, // File
+  cfg:null,    // File
+};
+
+function syncButtons(){
+  const encOk = state.file && state.keyEnc;
+  const decOk = state.encImg && state.keyDec && state.cfg;
+  document.getElementById('btn-encode').disabled = !(encOk && apiOk);
+  document.getElementById('btn-decode').disabled = !(decOk && apiOk);
+  document.getElementById('btn-test').disabled   = !apiOk;
+}
+
+/* ── drop zone factory ────────────────────────────────────────────────── */
+function makeDropZone(dzId,inputId,accept,onFile){
+  const dz=document.getElementById(dzId);
+  const inp=document.getElementById(inputId);
+  dz.addEventListener('click',()=>inp.click());
+  dz.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();inp.click();}});
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dragover');});
+  dz.addEventListener('dragleave',()=>dz.classList.remove('dragover'));
+  dz.addEventListener('drop',e=>{
+    e.preventDefault();dz.classList.remove('dragover');
+    const f=e.dataTransfer.files[0];if(f) onFile(f);
+  });
+  inp.addEventListener('change',()=>{if(inp.files[0]) onFile(inp.files[0]);inp.value='';});
+}
+
+/* ── show file chip ───────────────────────────────────────────────────── */
+function showChip(chipId,dzId,nameId,metaId,file){
+  document.getElementById(dzId).style.display='none';
+  const chip=document.getElementById(chipId);
+  chip.style.display='flex';
+  document.getElementById(nameId).textContent=file.name;
+  document.getElementById(metaId).textContent=fmtBytes(file.size);
+}
+function clearChip(chipId,dzId){
+  document.getElementById(dzId).style.display='';
+  document.getElementById(chipId).style.display='none';
+}
+
+/* ── key image preview + capacity ────────────────────────────────────── */
+function showKeyPreview(chipId,dzId,nameId,metaId,capEl,thumbId,file){
+  document.getElementById(dzId).style.display='none';
+  document.getElementById(chipId).style.display='flex';
+  document.getElementById(nameId).textContent=file.name;
+  document.getElementById(metaId).textContent=fmtBytes(file.size);
+  const thumb=document.getElementById(thumbId);
+  const url=URL.createObjectURL(file);
+  const img=new Image();
+  img.onload=()=>{
+    thumb.src=url;
+    const pixels=img.naturalWidth*img.naturalHeight;
+    const cap=Math.floor(pixels*3-12); // 3 bytes per pixel minus header
+    const cap_el=document.getElementById(capEl);
+    if(cap_el) cap_el.querySelector('span').textContent='~'+fmtBytes(Math.max(0,cap))+' payload capacity';
+    URL.revokeObjectURL(url);
+  };
+  img.src=url;
+}
+
+/* ── auto-name output preview ────────────────────────────────────────── */
+function updateEncPreview(){
+  const f=state.file;
+  const prev=document.getElementById('enc-output-preview');
+  if(!f){prev.style.display='none';return;}
+  const dot=f.name.lastIndexOf('.');
+  const stem=dot>0?f.name.slice(0,dot):f.name;
+  document.getElementById('enc-out-name').textContent=stem+'-encrypted.png';
+  document.getElementById('enc-cfg-name').textContent=stem+'.config.json';
+  prev.style.display='block';
+}
+
+/* ── wire encode file pickers ────────────────────────────────────────── */
+makeDropZone('dz-file','input-file','',f=>{
+  state.file=f;
+  showChip('chip-file','dz-file','chip-file-name','chip-file-meta',f);
+  updateEncPreview();updateEncCli();syncButtons();
+});
+makeDropZone('dz-key-enc','input-key-enc','',f=>{
+  state.keyEnc=f;
+  showKeyPreview('chip-key-enc','dz-key-enc','chip-key-enc-name','chip-key-enc-meta','chip-key-enc-cap','key-thumb-enc',f);
+  updateEncCli();syncButtons();
+});
+
+/* ── wire decode file pickers ────────────────────────────────────────── */
+makeDropZone('dz-enc-img','input-enc-img','',f=>{
+  state.encImg=f;
+  showChip('chip-enc-img','dz-enc-img','chip-enc-img-name','chip-enc-img-meta',f);
+  updateDecCli();syncButtons();
+});
+makeDropZone('dz-key-dec','input-key-dec','',f=>{
+  state.keyDec=f;
+  showKeyPreview('chip-key-dec','dz-key-dec','chip-key-dec-name','chip-key-dec-meta',null,'key-thumb-dec',f);
+  updateDecCli();syncButtons();
+});
+makeDropZone('dz-cfg','input-cfg','',f=>{
+  state.cfg=f;
+  showChip('chip-cfg','dz-cfg','chip-cfg-name','chip-cfg-meta',f);
+  // read config and show info
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      const info=document.getElementById('cfg-info');
+      const lines=[];
+      if(d.original_filename) lines.push('original: '+d.original_filename);
+      if(d.original_extension) lines.push('type: '+d.original_extension);
+      if(d.file_type) lines.push('encoder: '+d.file_type);
+      if(d.encrypted_output) lines.push('encrypted: '+d.encrypted_output);
+      info.innerHTML=lines.map(l=>'<div>'+escHtml(l)+'</div>').join('');
+      info.style.display=lines.length?'block':'none';
+    }catch{}
+  };
+  reader.readAsText(f);
+  updateDecCli();syncButtons();
+});
+
+/* ── clear buttons ────────────────────────────────────────────────────── */
+document.querySelectorAll('[data-clear]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const k=btn.dataset.clear;
+    if(k==='file'){state.file=null;clearChip('chip-file','dz-file');updateEncPreview();updateEncCli();}
+    if(k==='key-enc'){state.keyEnc=null;clearChip('chip-key-enc','dz-key-enc');updateEncCli();}
+    if(k==='enc-img'){state.encImg=null;clearChip('chip-enc-img','dz-enc-img');updateDecCli();}
+    if(k==='key-dec'){state.keyDec=null;clearChip('chip-key-dec','dz-key-dec');updateDecCli();}
+    if(k==='cfg'){state.cfg=null;clearChip('chip-cfg','dz-cfg');document.getElementById('cfg-info').style.display='none';updateDecCli();}
+    syncButtons();
+  });
+});
+
+/* ── CLI builder ──────────────────────────────────────────────────────── */
+function buildCli(parts){
+  return parts.map(p=>{
+    if(p.type==='kw') return '<span class="cli-kw">'+escHtml(p.v)+'</span>';
+    if(p.type==='flag') return '<span class="cli-flag">'+escHtml(p.v)+'</span>';
+    if(p.type==='val') return '<span class="cli-val">'+escHtml(p.v)+'</span>';
+    return escHtml(p.v||p);
+  }).join(' ');
+}
+function updateEncCli(){
+  const f=state.file,k=state.keyEnc,p=document.getElementById('enc-passphrase').value;
+  const pass=document.getElementById('enc-passphrase').value;
+  let parts=[
+    {type:'kw',v:'python'},{v:'main.py'},{type:'kw',v:'encode'},
+    {type:'flag',v:'--key'},{type:'val',v:k?k.name:'<key.png>'},
+    {type:'flag',v:'--input'},{type:'val',v:f?f.name:'<file>'},
+  ];
+  if(pass) parts.push({type:'flag',v:'--passphrase'},{type:'val',v:'***'});
+  document.getElementById('enc-cli').innerHTML=buildCli(parts);
+}
+function updateDecCli(){
+  const e=state.encImg,k=state.keyDec,c=state.cfg;
+  const pass=document.getElementById('dec-passphrase').value;
+  let parts=[
+    {type:'kw',v:'python'},{v:'main.py'},{type:'kw',v:'decode'},
+    {type:'flag',v:'--key'},{type:'val',v:k?k.name:'<key.png>'},
+    {type:'flag',v:'--input'},{type:'val',v:e?e.name:'<encrypted.png>'},
+    {type:'flag',v:'--config'},{type:'val',v:c?c.name:'<file.config.json>'},
+  ];
+  if(pass) parts.push({type:'flag',v:'--passphrase'},{type:'val',v:'***'});
+  document.getElementById('dec-cli').innerHTML=buildCli(parts);
+}
+document.getElementById('enc-passphrase').addEventListener('input',updateEncCli);
+document.getElementById('dec-passphrase').addEventListener('input',updateDecCli);
+
+/* ── copy button ──────────────────────────────────────────────────────── */
+function bindCopy(btnId,codeId){
+  document.getElementById(btnId).addEventListener('click',()=>{
+    const text=document.getElementById(codeId).innerText;
+    navigator.clipboard.writeText(text).then(()=>{
+      const b=document.getElementById(btnId);
+      b.textContent='Copied!';
+      setTimeout(()=>b.textContent='Copy',1800);
+    });
+  });
+}
+bindCopy('enc-copy-btn','enc-cli');
+bindCopy('dec-copy-btn','dec-cli');
+
+/* ── result panel helpers ─────────────────────────────────────────────── */
+function showResultLoading(hdrId,bodyId,label){
+  const panel=document.getElementById(hdrId).closest('.result-panel');
+  panel.classList.add('show');
+  document.getElementById(hdrId).className='result-header loading';
+  document.getElementById(hdrId).innerHTML=
+    '<span class="spin">◌</span> '+escHtml(label);
+  document.getElementById(bodyId).innerHTML='';
+}
+function showResultOk(hdrId,bodyId,label,rows){
+  document.getElementById(hdrId).className='result-header ok';
+  document.getElementById(hdrId).innerHTML=
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> '+escHtml(label);
+  document.getElementById(bodyId).innerHTML=rows.map(r=>`
+    <div class="result-row">
+      <span class="result-key">${escHtml(r[0])}</span>
+      <span class="result-val ${r[2]||''}">${escHtml(String(r[1]))}</span>
+    </div>`).join('');
+}
+function showResultErr(hdrId,bodyId,msg){
+  document.getElementById(hdrId).className='result-header err';
+  document.getElementById(hdrId).innerHTML=
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Error';
+  document.getElementById(bodyId).innerHTML=
+    '<div style="font-size:var(--text-sm);color:var(--color-error);font-family:var(--font-mono)">'+escHtml(msg)+'</div>';
+}
+
+/* ══════════════════════════ ENCODE API CALL ══════════════════════════ */
+document.getElementById('btn-encode').addEventListener('click',async()=>{
+  const btn=document.getElementById('btn-encode');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spin">◌</span> Encrypting…';
+  showResultLoading('enc-result-hdr','enc-result-body','Sending to API…');
+
+  try{
+    const fd=new FormData();
+    fd.append('file',state.file,state.file.name);
+    fd.append('key',state.keyEnc,state.keyEnc.name);
+    const pass=document.getElementById('enc-passphrase').value;
+    if(pass) fd.append('passphrase',pass);
+
+    const base=apiUrlInput.value.replace(/\/$/,'');
+    const res=await fetch(base+'/encode',{method:'POST',body:fd});
+    const d=await res.json();
+
+    if(!res.ok||!d.passed) throw new Error(d.detail?.message||d.detail||d.message||'Encode failed');
+
+    showResultOk('enc-result-hdr','enc-result-body','Encryption complete',([
+      ['Input file',d.input_filename,''],
+      ['Input size',d.input_size_fmt,''],
+      ['Output file',d.output_filename,''],
+      ['Output size',d.output_size_fmt,''],
+      ['Config file',d.config_filename,''],
+      ['Elapsed',d.elapsed_s+'s',''],
+      ['Message',d.message,''],
+    ]));
+  }catch(e){
+    showResultErr('enc-result-hdr','enc-result-body',e.message);
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Encrypt File';
+    syncButtons();
+  }
+});
+
+/* ══════════════════════════ DECODE API CALL ══════════════════════════ */
+document.getElementById('btn-decode').addEventListener('click',async()=>{
+  const btn=document.getElementById('btn-decode');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spin">◌</span> Decrypting…';
+  showResultLoading('dec-result-hdr','dec-result-body','Sending to API…');
+
+  try{
+    const fd=new FormData();
+    fd.append('encrypted_image',state.encImg,state.encImg.name);
+    fd.append('key',state.keyDec,state.keyDec.name);
+    fd.append('config',state.cfg,state.cfg.name);
+    const pass=document.getElementById('dec-passphrase').value;
+    if(pass) fd.append('passphrase',pass);
+
+    const base=apiUrlInput.value.replace(/\/$/,'');
+    const res=await fetch(base+'/decode',{method:'POST',body:fd});
+    const d=await res.json();
+
+    if(!res.ok||!d.passed) throw new Error(d.detail?.message||d.detail||d.message||'Decode failed');
+
+    showResultOk('dec-result-hdr','dec-result-body','Decryption complete',([
+      ['Recovered file',d.recovered_filename,''],
+      ['Recovered size',d.recovered_size_fmt,''],
+      ['Elapsed',d.elapsed_s+'s',''],
+      ['Message',d.message,''],
+    ]));
+  }catch(e){
+    showResultErr('dec-result-hdr','dec-result-body',e.message);
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Decrypt File';
+    syncButtons();
+  }
+});
+
+/* ══════════════════════════ TEST SUITE API CALL ══════════════════════ */
+const STEP_META={
+  load:   {label:'Load demo assets',      icon:'1'},
+  encode: {label:'Encode (encrypt)',       icon:'2'},
+  decode: {label:'Decode (decrypt)',       icon:'3'},
+};
+
+function renderSteps(steps){
+  const el=document.getElementById('test-steps');
+  el.innerHTML=steps.map(s=>{
+    const meta=STEP_META[s.step]||{label:s.step,icon:'·'};
+    const statusCls=s.status||'idle';
+    const iconHtml=s.status==='running'
+      ?'<span class="spin" style="font-size:14px">◌</span>'
+      :meta.icon;
+    return `
+      <div class="test-step">
+        <div class="step-icon ${statusCls}">${iconHtml}</div>
+        <div class="step-content">
+          <div class="step-label">${escHtml(s.label||meta.label)}</div>
+          ${s.detail?'<div class="step-detail">'+escHtml(s.detail)+'</div>':''}
+          ${s.elapsed_s!=null?'<div class="step-elapsed">'+s.elapsed_s+'s</div>':''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderSummary(sum){
+  document.getElementById('summary-title').style.display='block';
+  const kpis=[
+    {label:'Input file',value:sum.input_file,sub:sum.input_size_fmt},
+    {label:'Key (original)',value:sum.key_orig_size_fmt,sub:'before encryption'},
+    {label:'Encrypted size',value:sum.encrypted_size_fmt,
+      sub:(sum.size_delta_pct>=0?'+':'')+sum.size_delta_pct+'% vs key',
+      cls: Math.abs(sum.size_delta_pct)<=1?'good':'warn'},
+    {label:'Recovered size',value:sum.recovered_size_fmt,
+      cls:sum.recovered_size===sum.input_size?'good':'warn'},
+    {label:'SHA-256 match',value:sum.hash_match?'✓ PASS':'✗ FAIL',cls:sum.hash_match?'good':'bad'},
+    {label:'Byte accuracy',value:sum.accuracy_pct+'%',cls:sum.accuracy_pct>=99.99?'good':sum.accuracy_pct>90?'warn':'bad'},
+    {label:'Encode time',value:sum.encode_elapsed_s+'s',cls:''},
+    {label:'Decode time',value:sum.decode_elapsed_s+'s',cls:''},
+  ];
+  document.getElementById('test-summary').innerHTML=kpis.map(k=>`
+    <div class="kpi">
+      <div class="kpi-label">${escHtml(k.label)}</div>
+      <div class="kpi-value ${k.cls||''}">${escHtml(String(k.value))}</div>
+      ${k.sub?'<div class="kpi-sub">'+escHtml(k.sub)+'</div>':''}
+    </div>`).join('');
+
+  // accuracy bar
+  const wrap=document.getElementById('accuracy-wrap');
+  wrap.style.display='block';
+  document.getElementById('accuracy-pct-label').textContent=sum.accuracy_pct+'%';
+  setTimeout(()=>{
+    document.getElementById('accuracy-fill').style.width=Math.min(100,sum.accuracy_pct)+'%';
+  },80);
+}
+
+document.getElementById('btn-test').addEventListener('click',async()=>{
+  const btn=document.getElementById('btn-test');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spin">◌</span> Running…';
+
+  // reset panel
+  document.getElementById('test-panel').style.display='block';
+  document.getElementById('summary-title').style.display='none';
+  document.getElementById('test-summary').innerHTML='';
+  document.getElementById('accuracy-wrap').style.display='none';
+  document.getElementById('accuracy-fill').style.width='0%';
+  document.getElementById('test-elapsed').textContent='';
+
+  // show pending steps
+  renderSteps([
+    {step:'load',label:'Load demo assets',status:'idle'},
+    {step:'encode',label:'Encode (encrypt)',status:'idle'},
+    {step:'decode',label:'Decode (decrypt)',status:'idle'},
+  ]);
+
+  // animate load step
+  renderSteps([
+    {step:'load',label:'Load demo assets',status:'running'},
+    {step:'encode',label:'Encode (encrypt)',status:'idle'},
+    {step:'decode',label:'Decode (decrypt)',status:'idle'},
+  ]);
+
+  try{
+    const base=apiUrlInput.value.replace(/\/$/,'');
+    const res=await fetch(base+'/test',{method:'POST',signal:AbortSignal.timeout(120000)});
+    const d=await res.json();
+
+    if(!res.ok||!d.passed) throw new Error(
+      (d.steps&&d.steps.find(s=>s.status==='error'||s.status==='fail')?.detail)||
+      d.detail||'Test failed'
+    );
+
+    renderSteps(d.steps);
+    renderSummary(d.summary);
+    document.getElementById('test-elapsed').textContent='Total: '+d.elapsed_s+'s';
+
+  }catch(e){
+    renderSteps([
+      {step:'load',label:'Test failed',status:'error',detail:e.message},
+    ]);
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Run Test Suite';
+    syncButtons();
+  }
+});
+
+/* initial CLI render */
+updateEncCli();updateDecCli();
+</script>
+</body>
+</html>

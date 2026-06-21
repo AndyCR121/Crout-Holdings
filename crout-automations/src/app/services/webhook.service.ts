@@ -53,10 +53,9 @@ export interface WebhookResponse {
 export class WebhookService {
   private readonly http = inject(HttpClient);
   private readonly env = inject(EnvironmentService);
-  private get base(): string { return this.env.apiUrl; }
 
   submitContact(payload: ContactPayload): Observable<WebhookResponse> {
-    return this.http.post<WebhookResponse>(`${this.base}/contact-requests`, payload, { withCredentials: true }).pipe(
+    return this.http.post<WebhookResponse>(`${this.env.apiUrl}/contact/submit`, payload).pipe(
       timeout(15_000),
       catchError((err: HttpErrorResponse) => {
         const message = err.status === 0

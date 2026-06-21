@@ -1,0 +1,146 @@
+<ng-template #editorContent>
+  <main class="video-editor-page" [class.video-editor-page--embedded]="embedded">
+    <header class="video-editor-page__header">
+      <div>
+        <span>AI Video Editor</span>
+        <h1>Video Workspace</h1>
+        <p>Review scheduled AI videos, adjust timeline timing, save edits, and queue backend renders.</p>
+      </div>
+      <div class="video-editor-page__actions" *ngIf="project()">
+        <button type="button" (click)="saveTimeline()" [disabled]="saving()">
+          {{ saving() ? 'Saving...' : 'Save Timeline' }}
+        </button>
+        <button type="button" class="is-primary" (click)="renderProject()" [disabled]="rendering()">
+          {{ rendering() ? 'Queueing...' : 'Re-render' }}
+        </button>
+      </div>
+    </header>
+
+    <section class="video-empty" *ngIf="loading()">
+      <p>Loading video projects...</p>
+    </section>
+
+    <section class="video-empty" *ngIf="!loading() && !project()">
+      <h2>No video projects yet</h2>
+      <p>AI Video Editor projects will appear here once the Marketing Systems video add-on is configured for your company.</p>
+    </section>
+
+    <ng-container *ngIf="!loading() && project() as activeProject">
+      <section class="schedule-strip" aria-label="Scheduled videos">
+        <button
+          type="button"
+          *ngFor="let item of projects()"
+          [class.active]="item.id === activeProject.id"
+          (click)="selectProject(item.id)"
+        >
+          <span>{{ item.scheduledFor ? (item.scheduledFor | date:'EEE d') : 'Draft' }}</span>
+          <strong>{{ item.title }}</strong>
+          <em [ngClass]="statusClass(item.status)">{{ item.status }}</em>
+        </button>
+      </section>
+
+      <section class="video-editor-grid">
+        <aside class="media-library">
+          <div class="panel-head">
+            <span>Media</span>
+            <strong>{{ assets().length }} assets</strong>
+          </div>
+          <article *ngFor="let asset of assets()" [attr.data-type]="asset.type">
+            <div class="media-library__thumb">
+              <span>{{ asset.type }}</span>
+            </div>
+            <div>
+              <strong>{{ asset.name }}</strong>
+              <small *ngIf="asset.duration">{{ asset.duration }}s</small>
+            </div>
+          </article>
+        </aside>
+
+        <section class="preview-panel">
+          <div class="panel-head">
+            <span>Preview</span>
+            <strong>{{ activeProject.platform }}</strong>
+          </div>
+          <video *ngIf="activeProject.outputUrl" [src]="activeProject.outputUrl" controls></video>
+          <div class="preview-panel__fallback" *ngIf="!activeProject.outputUrl">
+            <span>{{ activeProject.title }}</span>
+          </div>
+          <div class="preview-panel__meta">
+            <p>{{ activeProject.metadata?.caption }}</p>
+            <span *ngFor="let tag of activeProject.metadata?.hashtags">{{ tag }}</span>
+          </div>
+        </section>
+
+        <aside class="property-panel">
+          <div class="panel-head">
+            <span>Render</span>
+            <strong>v{{ activeProject.timelineVersion }}</strong>
+          </div>
+          <label>
+            Notes
+            <textarea rows="6" [ngModel]="renderNotes()" (ngModelChange)="renderNotes.set($event)"></textarea>
+          </label>
+          <p>
+            Render requests go through the backend gateway. Local environments without live workflow credentials queue in mock mode.
+          </p>
+        </aside>
+      </section>
+
+      <section class="timeline-panel">
+        <div class="panel-head">
+          <span>Timeline</span>
+          <strong>Drag items or edit timing</strong>
+        </div>
+
+        <div class="timeline-track" *ngFor="let track of timeline()" (dragover)="$event.preventDefault()" (drop)="dropOnTrack(track, $event)">
+          <div class="timeline-track__label">{{ track.type }}</div>
+          <div class="timeline-track__rail">
+            <div
+              class="timeline-item"
+              *ngFor="let item of track.items"
+              draggable="true"
+              (dragstart)="dragStart(item)"
+              [style.left.%]="trackLeft(item)"
+              [style.width.%]="trackWidth(item)"
+            >
+              <strong>{{ assetName(item.assetId) }}</strong>
+              <label>
+                Start
+                <input type="number" min="0" [ngModel]="item.startTime" (ngModelChange)="updateItem(track, item, 'startTime', $event)" />
+              </label>
+              <label>
+                End
+                <input type="number" min="1" [ngModel]="item.endTime" (ngModelChange)="updateItem(track, item, 'endTime', $event)" />
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="trigger-workspace" *ngIf="triggers().length">
+        <div class="panel-head">
+          <span>Workflow Triggers</span>
+          <strong>{{ triggers().length }} actions</strong>
+        </div>
+        <ca-service-trigger-renderer
+          [configs]="triggers()"
+          [companyId]="selectedCompanyId()"
+          [userServiceId]="selectedUserServiceId()"
+        />
+      </section>
+    </ng-container>
+  </main>
+</ng-template>
+
+<ng-container *ngIf="embedded; else fullPage">
+  <ng-container *ngTemplateOutlet="editorContent"></ng-container>
+</ng-container>
+
+<ng-template #fullPage>
+  <div class="portal-layout">
+  <ca-portal-sidebar />
+  <main class="portal-main">
+    <ng-container *ngTemplateOutlet="editorContent"></ng-container>
+  </main>
+  </div>
+</ng-template>

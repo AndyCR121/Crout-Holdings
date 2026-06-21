@@ -93,6 +93,11 @@ export const routes: Routes = [
             canonical: '/services/marketing-systems'
           }
         }
+      },
+      {
+        path: 'ai-video-editor',
+        redirectTo: 'marketing-systems',
+        pathMatch: 'full'
       }
     ]
   },
@@ -125,6 +130,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/portal/services/portal-services.component').then(m => m.PortalServicesComponent),
+  },
+  {
+    path: 'client/video-editor',
+    canActivate: [authGuard],
+    redirectTo: 'client/services',
+    pathMatch: 'full',
   },
   {
     path: 'client/profile',
