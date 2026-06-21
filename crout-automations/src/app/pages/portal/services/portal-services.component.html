@@ -69,7 +69,7 @@
           <div class="pservices__addons" *ngIf="row.activeAddons.length > 0">
             <span class="pservices__addons-label">Active Integrations</span>
             <ul class="pservices__addons-list">
-              <li *ngFor="let a of row.activeAddons">{{ a }}</li>
+              <li *ngFor="let a of row.activeAddons" [class.pservices__addon-chip--pending]="!a.confirmed" [title]="a.confirmed ? 'Confirmed integration' : 'Pending confirmation'">{{ a.name }}</li>
             </ul>
           </div>
 
@@ -88,11 +88,11 @@
 
           <!-- Edit section -->
           <div class="pservices__edit" *ngIf="row.editing">
-            <p class="pservices__edit-hint">Select the integrations you'd like — we'll action the changes within 24 hours.</p>
+            <p class="pservices__edit-hint">Select the add-ons and workflow integrations you need. New selections remain pending until confirmed in consultation.</p>
             <ul class="pservices__addon-toggle-list">
-              <li *ngFor="let addon of row.addons" class="pservices__addon-toggle" [class.pservices__addon-toggle--active]="isSelected(row, addon.addonName)" (click)="toggleAddon(row, addon.addonName)">
+              <li *ngFor="let addon of row.addons" class="pservices__addon-toggle" [class.pservices__addon-toggle--active]="isSelected(row, addon)" (click)="toggleAddon(row, addon)">
                 <span class="pservices__addon-check">
-                  <svg *ngIf="isSelected(row, addon.addonName)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg *ngIf="isSelected(row, addon)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
                 </span>
                 <span class="pservices__addon-info">
                   <strong>{{ addon.addonName }}</strong>
@@ -100,6 +100,34 @@
                 </span>
               </li>
             </ul>
+            <div class="pservices__integration-help">
+              <span aria-hidden="true">?</span>
+              <p>Configure how the automation starts, what it should do or process, and how you want to receive the result. Exact details can still be discussed in consultation.</p>
+            </div>
+
+            <div class="pservices__integration-groups">
+              <section>
+                <h4>Trigger</h4>
+                <div class="pservices__chips">
+                  <button *ngFor="let option of integrationOptions.trigger" type="button" [class.active]="isIntegrationSelected(row, 'trigger', option)" (click)="toggleIntegration(row, 'trigger', option)">{{ option }}</button>
+                </div>
+                <textarea [(ngModel)]="row.triggerNotes" placeholder="How should the workflow start?"></textarea>
+              </section>
+              <section>
+                <h4>Action</h4>
+                <div class="pservices__chips">
+                  <button *ngFor="let option of integrationOptions.action" type="button" [class.active]="isIntegrationSelected(row, 'action', option)" (click)="toggleIntegration(row, 'action', option)">{{ option }}</button>
+                </div>
+                <textarea [(ngModel)]="row.actionNotes" placeholder="What should the workflow do or process?"></textarea>
+              </section>
+              <section>
+                <h4>Output</h4>
+                <div class="pservices__chips">
+                  <button *ngFor="let option of integrationOptions.output" type="button" [class.active]="isIntegrationSelected(row, 'output', option)" (click)="toggleIntegration(row, 'output', option)">{{ option }}</button>
+                </div>
+                <textarea [(ngModel)]="row.outputNotes" placeholder="How should results be delivered?"></textarea>
+              </section>
+            </div>
             <div class="pservices__edit-actions">
               <button class="pservices__btn pservices__btn--ghost" (click)="cancelEdit(row)">Cancel</button>
               <button class="pservices__btn pservices__btn--primary" (click)="submitConfigRequest(row)" [disabled]="saving() === row.userService.serviceId">
@@ -136,7 +164,7 @@
               <div *ngIf="row.activeAddons.length">
                 <p class="pservices__side-section-label">Active Integrations</p>
                 <ul class="pservices__side-features">
-                  <li *ngFor="let a of row.activeAddons">{{ a }}</li>
+                  <li *ngFor="let a of row.activeAddons">{{ a.name }} <span *ngIf="!a.confirmed">(pending)</span></li>
                 </ul>
               </div>
             </div>

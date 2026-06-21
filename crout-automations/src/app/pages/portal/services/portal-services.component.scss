@@ -215,6 +215,13 @@ $radius-sm:    8px;
       border-radius: 20px;
       font-size:     12px;
       color:         $teal;
+
+      &.pservices__addon-chip--pending {
+        background: rgba(148,163,184,0.08);
+        border-color: rgba(148,163,184,0.44);
+        border-style: dashed;
+        color: rgba(226,232,240,0.68);
+      }
     }
   }
 
@@ -300,6 +307,90 @@ $radius-sm:    8px;
     display:     flex;
     align-items: center;
     gap:         10px;
+  }
+
+  &__integration-help {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid rgba(79,163,184,0.24);
+    border-radius: 10px;
+    background: rgba(79,163,184,0.08);
+
+    span {
+      display: inline-grid;
+      place-items: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      background: rgba(79,163,184,0.22);
+      color: #a7e8f5;
+      font-weight: 800;
+      flex: 0 0 auto;
+    }
+
+    p {
+      color: $text-muted;
+      font-size: 12px;
+      line-height: 1.5;
+      margin: 0;
+    }
+  }
+
+  &__integration-groups {
+    display: grid;
+    gap: 12px;
+
+    section {
+      border: 1px solid $border;
+      border-radius: 10px;
+      padding: 12px;
+      background: rgba(255,255,255,0.025);
+    }
+
+    h4 {
+      color: $text;
+      font-size: 13px;
+      margin: 0 0 10px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 68px;
+      resize: vertical;
+      margin-top: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+      color: $text;
+      padding: 10px 12px;
+      font: inherit;
+      outline: none;
+    }
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    button {
+      border: 1px dashed rgba(148,163,184,0.42);
+      border-radius: 999px;
+      background: rgba(148,163,184,0.08);
+      color: rgba(226,232,240,0.68);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 7px 10px;
+
+      &.active {
+        border-color: rgba(234,123,50,0.56);
+        background: rgba(234,123,50,0.12);
+        color: #ffb77d;
+      }
+    }
   }
 
   // ── Buttons ──────────────────────────────────────────────────────────────

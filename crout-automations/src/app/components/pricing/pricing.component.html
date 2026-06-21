@@ -66,7 +66,7 @@
             }
           }
 
-          <a href="/contact-us/" class="pricing__card-cta"
+          <a [href]="serviceUrl(svc)" class="pricing__card-cta"
              [class.pricing__card-cta--highlight]="i % 2 === 0">
             Choose Plan
           </a>
@@ -121,13 +121,19 @@
 
               <!-- Base service rows — one per service in the active package -->
               @for (svc of activeServices(view); track svc.serviceId) {
-                @if (!svc.conditional) {
-                  <li class="pricing__suite-item">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                    <span class="pricing__suite-item-label">{{ svc.serviceName }} (base)</span>
-                    <span class="pricing__suite-item-price">R{{ formatPrice(svc.price) }}</span>
-                  </li>
-                }
+                <li class="pricing__suite-item">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span class="pricing__suite-item-label">{{ svc.serviceName }} (base)</span>
+                  <span class="pricing__suite-item-price">R{{ formatPrice(svc.price) }}</span>
+                </li>
+              }
+
+              @for (component of requiredPricingComponents; track component.pricingComponentId) {
+                <li class="pricing__suite-item">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span class="pricing__suite-item-label">{{ component.componentName }}</span>
+                  <span class="pricing__suite-item-price">R{{ formatPrice(component.amount) }}</span>
+                </li>
               }
 
               <!-- Addon toggles -->
@@ -150,35 +156,6 @@
                   <span class="pricing__suite-item-label">{{ state.addon.addonName }}</span>
                   <span class="pricing__suite-item-price pricing__suite-item-price--addon">
                     + R{{ formatPrice(state.addon.price) }}
-                  </span>
-                </li>
-              }
-
-              <!-- Conditional service toggle -->
-              @if (view.childPkg && view.conditionalService) {
-                <li
-                  class="pricing__suite-item pricing__suite-item--conditional"
-                  [class.pricing__suite-item--active]="view.conditionalEnabled"
-                >
-                  <button
-                    class="pricing__suite-toggle"
-                    [class.pricing__suite-toggle--on]="view.conditionalEnabled"
-                    [attr.aria-pressed]="view.conditionalEnabled"
-                    [attr.aria-label]="'Toggle ' + view.conditionalService.serviceName"
-                    (click)="toggleConditional(view)"
-                  >
-                    <span class="pricing__suite-toggle-track">
-                      <span class="pricing__suite-toggle-thumb"></span>
-                    </span>
-                  </button>
-                  <span class="pricing__suite-item-label">
-                    {{ view.conditionalService.serviceName }}
-                    @if (!view.conditionalEnabled) {
-                      <em class="pricing__suite-optional-label">optional</em>
-                    }
-                  </span>
-                  <span class="pricing__suite-item-price">
-                    + R{{ formatPrice(view.conditionalService.price) }}
                   </span>
                 </li>
               }
@@ -216,7 +193,7 @@
               }
             </div>
 
-            <a href="/contact-us/" class="pricing__suite-cta">Get this Package</a>
+            <a [href]="packageUrl(view)" class="pricing__suite-cta">Get this Package</a>
             <p class="pricing__suite-cta-note">Custom scoping call included</p>
           </div>
 

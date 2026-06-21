@@ -4,9 +4,9 @@
 -- Jaco/pwd2   => 0caa77b9629fd93e1ce1b2b9d57a10c4ea5bd6b7a4c7d914302938c72daf3d16
 USE crout_automations;
 
-INSERT INTO Users (user_id,Username,PasswordHash,FirstName,Surname,Email,CellNumber,Active,IsAdmin) VALUES
-(1,'Andrew','46ac9751bd26a64ea89c86ff4ec44cb5d237c197eafeb3fd69f28842b8682b6c','Andrew','Crout','andrew@crout-holdings.com','(+27) 64 656 9894',1,1),
-(2,'Jaco','0caa77b9629fd93e1ce1b2b9d57a10c4ea5bd6b7a4c7d914302938c72daf3d16','Jaco','Visser','admin@woodenweld.co.za','(+27) 79 024 6945',1,0);
+INSERT INTO Users (user_id,Username,PasswordHash,FirstName,Surname,Email,CellNumber,Active,IsAdmin,isDev,referral) VALUES
+(1,'Andrew','46ac9751bd26a64ea89c86ff4ec44cb5d237c197eafeb3fd69f28842b8682b6c','Andrew','Crout','andrew@crout-holdings.com','(+27) 64 656 9894',1,1,1,'ANDREW'),
+(2,'Jaco','0caa77b9629fd93e1ce1b2b9d57a10c4ea5bd6b7a4c7d914302938c72daf3d16','Jaco','Visser','admin@woodenweld.co.za','(+27) 79 024 6945',1,0,0,NULL);
 
 INSERT INTO Companies (company_id,user_id,CompanyName,Industry,Email,Phone,Address,Active) VALUES
 (1,1,'Crout Holdings','Technology / Automation','andrew@crout-holdings.com','(+27) 64 656 9894','Bloemfontein, Free State, ZA',1),
@@ -14,11 +14,37 @@ INSERT INTO Companies (company_id,user_id,CompanyName,Industry,Email,Phone,Addre
 (3,2,'Globefurn','Furniture / Retail',NULL,NULL,NULL,1);
 
 INSERT INTO Services (service_id,ServiceName,Price,HasAddons,Conditional,ServiceDescription) VALUES
-(1,'WhatsApp Agent',3000.00,1,0,'A flexible WhatsApp Agent that handles enquiries, automates quotes, creates job cards, and manages client comms.'),
-(2,'Quote System',3000.00,1,0,'End-to-end quote automation — triggered by email, webhook, or WhatsApp, linked to Xero, and approved automatically.'),
-(3,'Project Management System',3000.00,1,0,'Auto-generate job cards from any trigger — email, webhook, or WhatsApp — synced with Trello and managed by AI agents.'),
-(4,'Marketing Systems',3000.00,1,0,'Automated marketing workflows — bulk messaging, campaign triggers, and scheduled broadcasts via WhatsApp and email.'),
-(5,'WhatsApp Agent [Xero Suite Add-on]',3000.00,1,1,'The WhatsApp Agent as a conditional add-on within the Xero Suite package.');
+(1,'WhatsApp Agent',5000.00,1,0,'A flexible WhatsApp Agent that handles enquiries, automates quotes, creates job cards, and manages client comms.'),
+(2,'Quote System',5000.00,1,0,'End-to-end quote automation — triggered by email, webhook, or WhatsApp, linked to Xero, and approved automatically.'),
+(3,'Project Management System',5000.00,1,0,'Auto-generate job cards from any trigger — email, webhook, or WhatsApp — synced with Trello and managed by AI agents.'),
+(4,'Marketing Systems',5000.00,1,0,'Automated marketing workflows — bulk messaging, campaign triggers, and scheduled broadcasts via WhatsApp and email.'),
+(5,'WhatsApp Agent [Xero Suite Add-on]',5000.00,1,1,'The WhatsApp Agent as a conditional add-on within the Xero Suite package.');
+INSERT INTO PricingComponents
+  (component_key, component_name, category, pricing_type, amount, is_required_default, is_active)
+VALUES
+  ('ai_usage_base_6m_tokens','AI Usage Base (6M bundled tokens)','ai_usage','fixed',1000.00,1,1),
+  ('integration_email','Email / Gmail / IMAP','integration','fixed',500.00,0,1),
+  ('integration_trello_jira','Trello / Jira','integration','from_price',1000.00,0,1),
+  ('integration_drive_client','Google Drive (client-shared environment)','integration','fixed',300.00,0,1),
+  ('integration_drive_crout','Google Drive (Crout-managed environment)','integration','fixed',600.00,0,1),
+  ('integration_whatsapp','WhatsApp Integration','integration','fixed',2000.00,0,1),
+  ('whatsapp_marketing_500','WhatsApp Marketing Messages (per 500)','whatsapp_billing','usage_block',2000.00,0,1),
+  ('whatsapp_utility_500','WhatsApp Utility Messages (per 500)','whatsapp_billing','usage_block',800.00,0,1),
+  ('whatsapp_authentication_500','WhatsApp Authentication Messages (per 500)','whatsapp_billing','usage_block',600.00,0,1),
+  ('whatsapp_service_response','WhatsApp Service Response (client initiated)','whatsapp_billing','usage_block',0.00,0,1),
+  ('report_template','Template Report','reporting','fixed',500.00,0,1),
+  ('report_complex_template','Template Complex Report','reporting','fixed',1000.00,0,1),
+  ('report_custom_new','Brand-New Custom Report','reporting','fixed',2000.00,0,1),
+  ('dashboard_standard','Dashboard Integration','dashboard','fixed',500.00,0,1),
+  ('dashboard_custom_jwt','Custom Dashboard Integration (JWT)','dashboard','fixed',1000.00,0,1),
+  ('complexity_insurance_grade','Insurance-Grade Workflows','complexity','percentage_uplift',30.00,0,1)
+ON DUPLICATE KEY UPDATE
+  component_name = VALUES(component_name),
+  category = VALUES(category),
+  pricing_type = VALUES(pricing_type),
+  amount = VALUES(amount),
+  is_required_default = VALUES(is_required_default),
+  is_active = VALUES(is_active);
 
 INSERT INTO ServiceFeatures (service_id,Feature,SortOrder) VALUES
 (1,'Client Support',1),(1,'Team Notifications',2),(1,'Client Notifications',3),
@@ -109,3 +135,6 @@ FROM UserServices us
 WHERE us.company_id = 1 AND us.service_id = 4
   AND NOT EXISTS (SELECT 1 FROM VideoProjects WHERE company_id = 1 AND service_id = 4 AND Title = 'Crout weekly automation spotlight')
 LIMIT 1;
+INSERT INTO UserServices (company_id,service_id,package_id,Config,subscriptionAmount,pricingSnapshot,paymentDate,dueDate,Active,Status) VALUES
+(2,3,NULL,'{"integrations": ["Trello", "Google Sheets", "IMAP Email"], "custom": "true"}',6000.00,'{"baseWorkflow":5000.00,"requiredComponents": [{"key":"ai_usage_base_6m_tokens","amount":1000.00}],"total":6000.00}',CURRENT_TIMESTAMP,DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 30 DAY),1,2),
+(3,2,NULL,'{"integrations": ["Google Sheets", "AI Agent", "IMAP Email"], "custom": "true"}',6000.00,'{"baseWorkflow":5000.00,"requiredComponents": [{"key":"ai_usage_base_6m_tokens","amount":1000.00}],"total":6000.00}',CURRENT_TIMESTAMP,DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 30 DAY),1,1);

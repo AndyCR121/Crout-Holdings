@@ -10,5 +10,7 @@ public record UserDto(
     string Email,
     string? CellNumber,
     bool IsAdmin,
+    bool IsDev,
+    string? Referral,
     string? ProfilePicture = null
 );

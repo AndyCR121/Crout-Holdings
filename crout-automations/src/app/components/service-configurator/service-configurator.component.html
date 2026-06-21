@@ -36,13 +36,20 @@
 
               <!-- Base service rows -->
               @for (svc of activeServices(view); track svc.serviceId) {
-                @if (!svc.conditional) {
-                  <li class="pricing__suite-item">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                    <span class="pricing__suite-item-label">{{ svc.serviceName }} (base)</span>
-                    <span class="pricing__suite-item-price">R{{ formatPrice(svc.price) }}</span>
-                  </li>
-                }
+                <li class="pricing__suite-item">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span class="pricing__suite-item-label">{{ svc.serviceName }} (base)</span>
+                  <span class="pricing__suite-item-price">R{{ formatPrice(svc.price) }}</span>
+                </li>
+              }
+
+              <!-- Required defaults -->
+              @for (component of requiredPricingComponents; track component.pricingComponentId) {
+                <li class="pricing__suite-item">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span class="pricing__suite-item-label">{{ component.componentName }}</span>
+                  <span class="pricing__suite-item-price">R{{ formatPrice(component.amount) }}</span>
+                </li>
               }
 
               <!-- Addon toggles -->
@@ -131,7 +138,38 @@
               }
             </div>
 
-            <a href="/contact-us/" class="pricing__suite-cta">Get Started</a>
+            <label class="pricing__suite-referral">
+              <span>Referral code</span>
+              <input [(ngModel)]="referralCode" placeholder="Optional" />
+            </label>
+
+            @if (isLoggedIn()) {
+              @if (hasCompanies()) {
+                <label class="pricing__suite-referral">
+                  <span>Company</span>
+                  <select [(ngModel)]="selectedCompanyId">
+                    @for (company of companyList(); track company.companyId) {
+                      <option [ngValue]="company.companyId">{{ company.companyName }}</option>
+                    }
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  class="pricing__suite-cta"
+                  [disabled]="savingConfig() === view.pkg.packageId"
+                  (click)="addToAccount(view)"
+                >
+                  {{ savingConfig() === view.pkg.packageId ? 'Adding...' : 'Add to My Account' }}
+                </button>
+                <a [href]="contactUrl(view)" class="pricing__suite-secondary-cta">Ask about this config</a>
+              } @else {
+                <a routerLink="/client/profile" class="pricing__suite-cta">Add a Company First</a>
+                <a [href]="contactUrl(view)" class="pricing__suite-secondary-cta">Use Contact Us</a>
+              }
+            } @else {
+              <button type="button" class="pricing__suite-cta" (click)="openAuthPrompt()">Login or Sign Up</button>
+              <a [href]="contactUrl(view)" class="pricing__suite-secondary-cta">Use Contact Us</a>
+            }
             <p class="pricing__suite-cta-note">Custom scoping call included</p>
           </div>
 
@@ -139,4 +177,8 @@
       </div>
     }
   </div>
+}
+
+@if (showAuthModal()) {
+  <ca-auth-modal (close)="showAuthModal.set(false)" />
 }

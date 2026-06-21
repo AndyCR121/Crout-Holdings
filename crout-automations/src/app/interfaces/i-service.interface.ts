@@ -7,6 +7,8 @@ export interface IUser {
   cellNumber?: string;
   active: boolean;
   isAdmin: boolean;
+  isDev: boolean;
+  referral?: string;
   password?: string;
   createdAt?: string;
   profilePicture?: string;
@@ -44,6 +46,17 @@ export interface IAddon {
   price: number;
 }
 
+export interface IPricingComponent {
+  pricingComponentId: number;
+  componentKey: string;
+  componentName: string;
+  category: string;
+  pricingType: string;
+  amount: number;
+  isRequiredDefault: boolean;
+  isActive: boolean;
+}
+
 export interface IServiceFeature {
   featureId: number;
   serviceId: number;
@@ -77,6 +90,11 @@ export interface IUserService {
   config: string;
   status: UserServiceStatus;
   subscriptionId?: string;
+  subscriptionAmount?: number;
+  pricingSnapshot?: string;
+  paymentDate?: string;
+  dueDate?: string;
+  createdAt?: string;
 }
 
 /** Holds the selected addon IDs for a specific service in a company context. */
@@ -90,4 +108,76 @@ export interface IPagedResult<T> {
   total: number;
   page: number;
   pageSize: number;
+}
+
+export interface IDevServiceAssignment {
+  devServiceId?: number;
+  userId?: number;
+  userServiceId: number;
+  developerName?: string;
+  developerEmail?: string;
+  referral?: string;
+  companyId: number;
+  companyName: string;
+  serviceId: number;
+  serviceName: string;
+  subscriptionId?: string;
+  status: UserServiceStatus;
+  commissionPerc: number;
+  cost: number;
+  totalCommission: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface IDevPortalService {
+  devServiceId?: number;
+  userId?: number;
+  userServiceId: number;
+  companyId: number;
+  companyName: string;
+  companyEmail?: string;
+  companyPhone?: string;
+  companyAddress?: string;
+  serviceId: number;
+  serviceName: string;
+  serviceDescription?: string;
+  subscriptionId?: string;
+  status: UserServiceStatus;
+  config?: string;
+  pricingSnapshot?: string;
+  guideStep: number;
+  isMaintenance: boolean;
+  subscriptionAmount: number;
+  commissionPerc: number;
+  totalCommission: number;
+  isActive: boolean;
+  createdAt: string;
+  dueDate?: string;
+  paymentDate?: string;
+}
+
+export interface IDevDashboard {
+  assignedCount: number;
+  liveCount: number;
+  inDevelopmentCount: number;
+  pendingCount: number;
+  monthlySubscriptionTotal: number;
+  monthlyCommissionTotal: number;
+  recentAssigned: IDevPortalService[];
+}
+
+export interface ICreateDevServiceAssignment {
+  userId: number;
+  userServiceId: number;
+  commissionPerc: number;
+  cost: number;
+}
+
+export interface IUpdateDevServiceAssignment {
+  userId: number;
+  commissionPerc: number;
+  cost: number;
+  isActive: boolean;
 }

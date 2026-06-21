@@ -33,11 +33,14 @@ builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
 builder.Services.AddScoped<IUserServiceRepository, UserServiceRepository>();
 builder.Services.AddScoped<IServiceRequestRepository, ServiceRequestRepository>();
+builder.Services.AddScoped<IContactRequestRepository, ContactRequestRepository>();
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
 builder.Services.AddScoped<IAddonRepository, AddonRepository>();
 builder.Services.AddScoped<IServiceFeatureRepository, ServiceFeatureRepository>();
 builder.Services.AddScoped<IServiceTriggerRepository, ServiceTriggerRepository>();
 builder.Services.AddScoped<IVideoProjectRepository, VideoProjectRepository>();
+builder.Services.AddScoped<IDevServiceRepository, DevServiceRepository>();
+builder.Services.AddScoped<IDevPortalRepository, DevPortalRepository>();
 
 // -- Application Services -----------------------------------------------------
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -46,6 +49,8 @@ builder.Services.AddScoped<IServiceCatalogService, ServiceCatalogService>();
 builder.Services.AddScoped<IServiceRequestService, ServiceRequestService>();
 builder.Services.AddScoped<IServiceTriggerService, ServiceTriggerService>();
 builder.Services.AddScoped<IVideoProjectService, VideoProjectService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IContactRequestService, ContactRequestService>();
 
 // -- Paystack proxy -----------------------------------------------------------
 // Uses a named HttpClient scoped to the Paystack base URL.

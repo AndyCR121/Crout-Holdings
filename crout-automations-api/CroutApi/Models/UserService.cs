@@ -10,4 +10,9 @@ public class UserService
     public string? Config { get; set; }
     public bool Active { get; set; } = true;
     public int Status { get; set; } = 0;
+    public decimal SubscriptionAmount { get; set; }
+    public string? PricingSnapshot { get; set; }
+    public DateTime? PaymentDate { get; set; }
+    public DateTime? DueDate { get; set; }
+    public DateTime CreatedAt { get; set; }
 }

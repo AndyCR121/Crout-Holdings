@@ -62,11 +62,10 @@ export class MarketingSystemsComponent implements OnInit {
       this.allServices.set(allSvcs ?? []);
       const raw = allSvcs?.find(s => s.serviceName === SERVICE_NAME);
       if (raw) {
-        const [addons, pkgs] = await Promise.all([
-          this.api.getAddonsByService(raw.serviceId).toPromise(),
-          this.api.getPackagesByService(raw.serviceId).toPromise(),
-        ]);
-        this.addons.set(addons ?? []);
+        const pkgs = await this.api.getPackagesByService(raw.serviceId).toPromise();
+        const serviceIds = [...new Set((pkgs ?? []).flatMap(pkg => pkg.serviceIds ?? [raw.serviceId]))];
+        const addons = await Promise.all(serviceIds.map(id => this.api.getAddonsByService(id).toPromise()));
+        this.addons.set(addons.flat().filter((addon): addon is IAddon => !!addon));
         this.packages.set(pkgs ?? []);
         this.service.set(raw);
       }

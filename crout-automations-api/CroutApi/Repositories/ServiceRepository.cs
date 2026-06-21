@@ -46,6 +46,17 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
             new { serviceId });
     }
 
+    public async Task<IEnumerable<Addon>> GetAddonsByIdsAsync(IEnumerable<int> addonIds)
+    {
+        var ids = addonIds.Distinct().ToArray();
+        if (ids.Length == 0) return [];
+
+        using var conn = db.GetConnection();
+        return await conn.QueryAsync<Addon>(
+            "SELECT addon_id AS AddonId, service_id AS ServiceId, AddonName, AddonDescription, Price FROM Addons WHERE addon_id IN @ids",
+            new { ids });
+    }
+
     public async Task<IEnumerable<Package>> GetPackagesByServiceAsync(int serviceId)
     {
         using var conn = db.GetConnection();
@@ -53,7 +64,13 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
             @"SELECT p.package_id AS PackageId, p.parent_package_id AS ParentPackageId, p.PackageName, p.PackageDescription, p.Discount, p.minimumRequiredAddons AS MinimumRequiredAddons
               FROM Packages p
               INNER JOIN PackageServices ps ON ps.package_id = p.package_id
-              WHERE ps.service_id = @serviceId",
+              WHERE ps.service_id = @serviceId
+                 OR p.parent_package_id IN (
+                    SELECT parent.package_id
+                    FROM Packages parent
+                    INNER JOIN PackageServices parent_ps ON parent_ps.package_id = parent.package_id
+                    WHERE parent_ps.service_id = @serviceId
+                 )",
             new { serviceId })).ToList();
 
         await EnrichPackageServiceIds(conn, packages);
@@ -67,6 +84,37 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
             "SELECT package_id AS PackageId, parent_package_id AS ParentPackageId, PackageName, PackageDescription, Discount, minimumRequiredAddons AS MinimumRequiredAddons FROM Packages")).ToList();
         await EnrichPackageServiceIds(conn, packages);
         return packages;
+    }
+
+    public async Task<Package?> GetPackageByIdAsync(int packageId)
+    {
+        using var conn = db.GetConnection();
+        var package = await conn.QuerySingleOrDefaultAsync<Package>(
+            "SELECT package_id AS PackageId, parent_package_id AS ParentPackageId, PackageName, PackageDescription, Discount, minimumRequiredAddons AS MinimumRequiredAddons FROM Packages WHERE package_id=@packageId",
+            new { packageId });
+        if (package is null) return null;
+        await EnrichPackageServiceIds(conn, [package]);
+        return package;
+    }
+
+    public async Task<IEnumerable<PricingComponent>> GetRequiredPricingComponentsAsync()
+    {
+        using var conn = db.GetConnection();
+        return await conn.QueryAsync<PricingComponent>(
+            """
+            SELECT
+              pricing_component_id AS PricingComponentId,
+              component_key AS ComponentKey,
+              component_name AS ComponentName,
+              category AS Category,
+              pricing_type AS PricingType,
+              amount AS Amount,
+              is_required_default AS IsRequiredDefault,
+              is_active AS IsActive
+            FROM PricingComponents
+            WHERE is_active = 1 AND is_required_default = 1
+            ORDER BY pricing_component_id
+            """);
     }
 
     private static async Task EnrichPackageServiceIds(System.Data.IDbConnection conn, List<Package> packages)

@@ -6,6 +6,7 @@ using CroutApi.Models;
 using CroutApi.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MySqlConnector;
 
 namespace CroutApi.Controllers;
 
@@ -19,6 +20,7 @@ public class AdminController(
     IAddonRepository addons,
     IServiceFeatureRepository serviceFeatures,
     IServiceRepository services,
+    IDevServiceRepository devServices,
     EncryptionHelper enc) : ControllerBase
 {
     private int CallerId =>
@@ -38,10 +40,11 @@ public class AdminController(
     public async Task<IActionResult> GetUsers(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
-        [FromQuery] string? search = null)
+        [FromQuery] string? search = null,
+        [FromQuery] bool? isDev = null)
     {
         if (!CallerIsAdmin) return Forbid();
-        var (items, total) = await users.GetAllAsync(page, pageSize, search);
+        var (items, total) = await users.GetAllAsync(page, pageSize, search, isDev);
         return Ok(new { items, total, page, pageSize });
     }
 
@@ -70,6 +73,10 @@ public class AdminController(
         if (await users.EmailExistsAsync(dto.Email))
             return Conflict(new { error = "Email already in use." });
 
+        var referral = string.IsNullOrWhiteSpace(dto.Referral) ? null : dto.Referral.Trim();
+        if (referral is not null && await users.ReferralExistsAsync(referral))
+            return Conflict(new { error = "Referral code already in use." });
+
         var user = new User
         {
             Username     = dto.Username.Trim(),
@@ -79,6 +86,8 @@ public class AdminController(
             CellNumber   = dto.CellNumber?.Trim(),
             Active       = dto.Active,
             IsAdmin      = dto.IsAdmin,
+            IsDev        = dto.IsDev,
+            Referral     = referral,
             PasswordHash = enc.Hash(Guid.NewGuid().ToString()),
         };
 
@@ -92,6 +101,9 @@ public class AdminController(
     {
         if (!CallerIsAdmin) return Forbid();
         body.UserId = id;
+        body.Referral = string.IsNullOrWhiteSpace(body.Referral) ? null : body.Referral.Trim();
+        if (body.Referral is not null && await users.ReferralExistsAsync(body.Referral, id))
+            return Conflict(new { error = "Referral code already in use." });
         await users.AdminUpdateAsync(body);
         return Ok(await users.GetByIdAsync(id));
     }
@@ -364,5 +376,101 @@ public class AdminController(
         if (!CallerIsAdmin) return Forbid();
         await serviceFeatures.DeleteAsync(id);
         return NoContent();
+    }
+
+    // Dev Management
+
+    [HttpGet("dev-users")]
+    public async Task<IActionResult> GetDevUsers(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? search = null)
+    {
+        if (!CallerIsAdmin) return Forbid();
+        var (items, total) = await users.GetAllAsync(page, pageSize, search, true);
+        return Ok(new { items, total, page, pageSize });
+    }
+
+    [HttpGet("dev-services")]
+    public async Task<IActionResult> GetDevServices(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? search = null,
+        [FromQuery] int? developerId = null,
+        [FromQuery] int? companyId = null,
+        [FromQuery] int? serviceId = null,
+        [FromQuery] string? referral = null,
+        [FromQuery] bool? assigned = null,
+        [FromQuery] bool? active = null)
+    {
+        if (!CallerIsAdmin) return Forbid();
+        var (items, total) = await devServices.GetAllAsync(page, pageSize, search, developerId, companyId, serviceId, referral, assigned, active);
+        return Ok(new { items, total, page, pageSize });
+    }
+
+    [HttpPost("dev-services")]
+    public async Task<IActionResult> CreateDevService([FromBody] CreateDevServiceDto dto)
+    {
+        if (!CallerIsAdmin) return Forbid();
+        var validation = await ValidateDevAssignmentAsync(dto.UserId, dto.UserServiceId);
+        if (validation is not null) return validation;
+
+        try
+        {
+            var commissionPerc = dto.CommissionPerc <= 0 ? 20.00m : dto.CommissionPerc;
+            var costOverride = dto.Cost > 0 ? dto.Cost : (decimal?)null;
+            var newId = await devServices.CreateWithSubscriptionSnapshotAsync(dto.UserId, dto.UserServiceId, commissionPerc, costOverride);
+            return Created($"/api/admin/dev-services/{newId}", await devServices.GetByIdAsync(newId));
+        }
+        catch (MySqlException ex) when (ex.Number == 1062)
+        {
+            return Conflict(new { error = "This client service already has a Developer assignment." });
+        }
+    }
+
+    [HttpPut("dev-services/{id:int}")]
+    public async Task<IActionResult> UpdateDevService(int id, [FromBody] UpdateDevServiceDto dto)
+    {
+        if (!CallerIsAdmin) return Forbid();
+        var existing = await devServices.GetByIdAsync(id);
+        if (existing is null) return NotFound();
+
+        var validation = await ValidateDeveloperAsync(dto.UserId);
+        if (validation is not null) return validation;
+
+        existing.UserId = dto.UserId;
+        existing.CommissionPerc = dto.CommissionPerc <= 0 ? 20.00m : dto.CommissionPerc;
+        existing.Cost = dto.Cost < 0 ? 0 : dto.Cost;
+        existing.IsActive = dto.IsActive;
+        await devServices.UpdateAsync(existing);
+        return Ok(await devServices.GetByIdAsync(id));
+    }
+
+    [HttpDelete("dev-services/{id:int}")]
+    public async Task<IActionResult> DeleteDevService(int id)
+    {
+        if (!CallerIsAdmin) return Forbid();
+        var existing = await devServices.GetByIdAsync(id);
+        if (existing is null) return NotFound();
+        await devServices.DeactivateAsync(id);
+        return NoContent();
+    }
+
+    private async Task<IActionResult?> ValidateDevAssignmentAsync(int userId, int userServiceId)
+    {
+        var developerValidation = await ValidateDeveloperAsync(userId);
+        if (developerValidation is not null) return developerValidation;
+        if (!await devServices.UserServiceExistsAsync(userServiceId))
+            return BadRequest(new { error = "Client service not found." });
+        return null;
+    }
+
+    private async Task<IActionResult?> ValidateDeveloperAsync(int userId)
+    {
+        var user = await users.GetByIdAsync(userId);
+        if (user is null) return BadRequest(new { error = "Developer user not found." });
+        if (!user.Active) return BadRequest(new { error = "Developer user must be active." });
+        if (!user.IsDev) return BadRequest(new { error = "Selected user is not marked as a Developer." });
+        return null;
     }
 }

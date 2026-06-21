@@ -11,5 +11,8 @@ public class User
     public string? CellNumber { get; set; }
     public bool Active { get; set; } = true;
     public bool IsAdmin { get; set; }
+    public bool IsDev { get; set; }
+    public string? Referral { get; set; }
+    public DateTime CreatedAt { get; set; }
     public string? ProfilePicture { get; set; }
 }

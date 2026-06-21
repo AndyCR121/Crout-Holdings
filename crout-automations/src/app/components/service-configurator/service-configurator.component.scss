@@ -349,7 +349,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
   padding: var(--space-3) var(--space-6);
+  border: 0;
   border-radius: var(--radius-lg);
   background: var(--color-orange);
   color: #fff;
@@ -363,6 +365,47 @@
   &:hover {
     background: var(--color-orange-hover);
     transform: translateY(-2px);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: wait;
+    transform: none;
+  }
+}
+
+.pricing__suite-secondary-cta {
+  display: flex;
+  justify-content: center;
+  color: rgba(255,255,255,0.72);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover { color: #fff; }
+}
+
+.pricing__suite-referral {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: rgba(255,255,255,0.5);
+
+  input,
+  select {
+    width: 100%;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: var(--radius-md);
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.9);
+    padding: 10px 12px;
+    font: inherit;
+    outline: none;
+
+    &:focus { border-color: var(--color-orange); }
+    &::placeholder { color: rgba(255,255,255,0.35); }
   }
 }
 

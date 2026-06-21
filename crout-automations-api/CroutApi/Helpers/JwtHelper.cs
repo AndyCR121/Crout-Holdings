@@ -22,13 +22,14 @@ public sealed class JwtHelper
     }
 
     /// <summary>Generates a signed JWT for the given user.</summary>
-    public string GenerateToken(int userId, string username, bool isAdmin)
+    public string GenerateToken(int userId, string username, bool isAdmin, bool isDev)
     {
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub,        userId.ToString()),
             new Claim(JwtRegisteredClaimNames.UniqueName, username),
             new Claim("is_admin",                         isAdmin.ToString().ToLowerInvariant()),
+            new Claim("is_dev",                           isDev.ToString().ToLowerInvariant()),
             new Claim(JwtRegisteredClaimNames.Jti,        Guid.NewGuid().ToString()),
         };
 

@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using CroutApi.DTOs.Services;
 using CroutApi.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,6 +9,8 @@ namespace CroutApi.Controllers;
 [Route("api/services")]
 public class ServicesController(IServiceCatalogService catalog) : ControllerBase
 {
+    private int UserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
     /// <summary>GET /api/services — all service catalogue entries with their features</summary>
     [HttpGet]
     public async Task<IActionResult> GetAll() => Ok(await catalog.GetServicesAsync());
@@ -27,6 +31,10 @@ public class ServicesController(IServiceCatalogService catalog) : ControllerBase
     [HttpGet("{id:int}/addons")]
     public async Task<IActionResult> GetAddons(int id) => Ok(await catalog.GetAddonsByServiceAsync(id));
 
+    /// <summary>GET /api/services/pricing-components/required</summary>
+    [HttpGet("pricing-components/required")]
+    public async Task<IActionResult> GetRequiredPricingComponents() => Ok(await catalog.GetRequiredPricingComponentsAsync());
+
     /// <summary>GET /api/services/{id}/packages</summary>
     [HttpGet("{id:int}/packages")]
     public async Task<IActionResult> GetPackages(int id) => Ok(await catalog.GetPackagesByServiceAsync(id));
@@ -35,5 +43,23 @@ public class ServicesController(IServiceCatalogService catalog) : ControllerBase
     [HttpGet("company/{companyId:int}")]
     [Microsoft.AspNetCore.Authorization.Authorize]
     public async Task<IActionResult> GetByCompany(int companyId) =>
-        Ok(await catalog.GetUserServicesAsync(companyId));
+        Ok(await catalog.GetUserServicesAsync(UserId, companyId));
+
+    /// <summary>POST /api/services/user-services — creates a UserServices row from a selected website configuration.</summary>
+    [HttpPost("user-services")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<IActionResult> CreateUserService([FromBody] CreateUserServiceFromConfigDto dto)
+    {
+        var created = await catalog.CreateUserServiceAsync(UserId, dto);
+        return Created($"/api/services/company/{created.CompanyId}", created);
+    }
+
+    /// <summary>PUT /api/services/user-services/{userServiceId}/config-request — stores a pending service config change.</summary>
+    [HttpPut("user-services/{userServiceId:int}/config-request")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<IActionResult> RequestConfigChange(int userServiceId, [FromBody] RequestServiceConfigChangeDto dto)
+    {
+        var updated = await catalog.RequestConfigChangeAsync(UserId, userServiceId, dto);
+        return Ok(updated);
+    }
 }

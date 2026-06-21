@@ -8,6 +8,7 @@ public interface IUserRepository
     Task<User?> GetByIdAsync(int userId);
     Task<bool> UsernameExistsAsync(string username);
     Task<bool> EmailExistsAsync(string email);
+    Task<bool> ReferralExistsAsync(string referral, int? exceptUserId = null);
     Task<int> CreateAsync(User user);
     Task UpdateAsync(User user);
     Task AdminUpdateAsync(User user);
@@ -15,7 +16,7 @@ public interface IUserRepository
     Task UpdatePictureAsync(int userId, string? pictureData);
 
     // Admin
-    Task<(IEnumerable<User> Items, int Total)> GetAllAsync(int page, int pageSize, string? search);
+    Task<(IEnumerable<User> Items, int Total)> GetAllAsync(int page, int pageSize, string? search, bool? isDev = null);
     Task SetActiveAsync(int userId, bool active);
     Task SetAdminAsync(int userId, bool isAdmin);
     Task DeleteAsync(int userId);

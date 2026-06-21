@@ -164,6 +164,14 @@ export class AuthService {
       .subscribe();
   }
 
+  expireSession(redirectTo = '/'): void {
+    deleteCookie('ca_user');
+    deleteCookie('ca_jwt');
+    deleteAvatar();
+    this.currentUser.set(null);
+    this.router.navigateByUrl(redirectTo);
+  }
+
   // ── Helpers ────────────────────────────────────────────────────────────────
   /**
    * Persist session:

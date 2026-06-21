@@ -26,6 +26,7 @@ export class PortalSidebarComponent implements OnInit {
   readonly initials       = computed(() => this.shell.initials());
   readonly primaryCompany = this.shell.primaryCompany;
   readonly isAdmin        = computed(() => this.shell.isAdmin());
+  readonly isDev          = computed(() => !!this.user()?.isDev);
 
   ngOnInit(): void {
     const uid = this.user()?.userId;
@@ -34,6 +35,10 @@ export class PortalSidebarComponent implements OnInit {
 
   isActive(path: string): boolean {
     return typeof window !== 'undefined' && (window.location.pathname === path || window.location.pathname.startsWith(path));
+  }
+
+  portalLabel(): string {
+    return this.isActive('/dev') ? 'Dev Portal' : 'Client Portal';
   }
 
   logout(): void { this.shell.logout(); }

@@ -9,4 +9,6 @@ public class CreateUserDto
     public string? CellNumber { get; set; }
     public bool Active  { get; set; } = true;
     public bool IsAdmin { get; set; } = false;
+    public bool IsDev { get; set; } = false;
+    public string? Referral { get; set; }
 }
