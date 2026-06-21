@@ -49,6 +49,20 @@ function normalizePackage(raw: any): IPackage {
   };
 }
 
+function normalizeUserService(raw: any): IUserService {
+  return {
+    userServiceId: raw.userServiceId ?? raw.id ?? raw.Id,
+    companyId: raw.companyId ?? raw.CompanyId,
+    serviceId: raw.serviceId ?? raw.ServiceId,
+    packageId: raw.packageId ?? raw.PackageId,
+    addonIds: raw.addonIds ?? [],
+    active: raw.active ?? raw.Active ?? false,
+    config: raw.config ?? raw.Config ?? '{}',
+    status: raw.status ?? raw.Status ?? 0,
+    subscriptionId: raw.subscriptionId ?? raw.SubscriptionId,
+  };
+}
+
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly http = inject(HttpClient);
@@ -140,7 +154,10 @@ export class ApiService {
   getCompanyServices(companyId: number): Observable<IUserService[]> {
     return this.http
       .get<IUserService[]>(`${this.base}/companies/${companyId}/services`, { headers: this.authHeaders(), withCredentials: true })
-      .pipe(catchError(err => throwError(() => err)));
+      .pipe(
+        map(arr => (arr as any[]).map(normalizeUserService)),
+        catchError(err => throwError(() => err))
+      );
   }
 
   // ─── Service Config ───────────────────────────────────────────────────────

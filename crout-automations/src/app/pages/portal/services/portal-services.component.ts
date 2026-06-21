@@ -8,6 +8,7 @@ import { ApiService } from '../../../services/api.service';
 import { ToastService } from '../../../services/toast.service';
 import { IUserService, IService, IAddon, ICompany } from '../../../interfaces/i-service.interface';
 import { PortalSidebarComponent } from '../../../components/portal-sidebar/portal-sidebar.component';
+import { PortalVideoEditorComponent } from '../video-editor/portal-video-editor.component';
 
 interface ServiceRow {
   userService:   IUserService;
@@ -17,6 +18,7 @@ interface ServiceRow {
   editing:       boolean;
   editConfig:    string[];
   sidePanelOpen: boolean;
+  videoEditorOpen: boolean;
 }
 
 interface CompanyGroup {
@@ -28,7 +30,7 @@ interface CompanyGroup {
 @Component({
   selector: 'ca-portal-services',
   standalone: true,
-  imports: [CommonModule, FormsModule, PortalSidebarComponent],
+  imports: [CommonModule, FormsModule, PortalSidebarComponent, PortalVideoEditorComponent],
   templateUrl: './portal-services.component.html',
   styleUrls: ['./portal-services.component.scss'],
 })
@@ -81,6 +83,7 @@ export class PortalServicesComponent implements OnInit {
               editing:       false,
               editConfig:    [...active],
               sidePanelOpen: false,
+              videoEditorOpen: false,
             };
           });
           return { company, rows, expanded: true };
@@ -95,7 +98,29 @@ export class PortalServicesComponent implements OnInit {
   }
 
   private _parseConfig(cfg: string): string[] {
-    try { const p = JSON.parse(cfg); return p.integrations ?? []; } catch { return []; }
+    try {
+      const p = JSON.parse(cfg);
+      const integrations = Array.isArray(p?.integrations) ? p.integrations : [];
+      return integrations
+        .map((item: unknown) => this._integrationLabel(item))
+        .filter((label: string | null): label is string => !!label);
+    } catch {
+      return [];
+    }
+  }
+
+  private _integrationLabel(item: unknown): string | null {
+    if (typeof item === 'string') return item;
+    if (item == null || typeof item !== 'object') return null;
+
+    const record = item as Record<string, any>;
+    const nestedAddon = record['addon'];
+    if (nestedAddon && typeof nestedAddon === 'object') {
+      const nested = nestedAddon as Record<string, any>;
+      return nested['addonName'] ?? nested['AddonName'] ?? nested['name'] ?? nested['label'] ?? null;
+    }
+
+    return record['addonName'] ?? record['AddonName'] ?? record['name'] ?? record['label'] ?? record['serviceName'] ?? null;
   }
 
   toggleGroup(group: CompanyGroup): void {
@@ -144,6 +169,15 @@ export class PortalServicesComponent implements OnInit {
   openSidePanel(row: ServiceRow):  void { row.sidePanelOpen = true;  this.groups.update(g => [...g]); }
   closeSidePanel(row: ServiceRow): void { row.sidePanelOpen = false; this.groups.update(g => [...g]); }
 
+  isVideoEditor(row: ServiceRow): boolean {
+    return row.service.serviceName === 'Marketing Systems' && !!this._parseObject(row.userService.config)?.['videoEditor'];
+  }
+
+  toggleVideoEditor(row: ServiceRow): void {
+    row.videoEditorOpen = !row.videoEditorOpen;
+    this.groups.update(g => [...g]);
+  }
+
   statusLabel(s: number): string {
     return ['Disabled', 'In Development', 'Live', 'Pending'][s] ?? 'Unknown';
   }
@@ -154,5 +188,9 @@ export class PortalServicesComponent implements OnInit {
 
   hasAnyService(): boolean {
     return this.groups().some(g => g.rows.length > 0);
+  }
+
+  private _parseObject(cfg: string): Record<string, any> | null {
+    try { return JSON.parse(cfg); } catch { return null; }
   }
 }
