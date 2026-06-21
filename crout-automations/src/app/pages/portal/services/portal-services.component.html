@@ -89,6 +89,10 @@
           <!-- Edit section -->
           <div class="pservices__edit" *ngIf="row.editing">
             <p class="pservices__edit-hint">Select the add-ons and workflow integrations you need. New selections remain pending until confirmed in consultation.</p>
+            <div class="pservices__credential-note">
+              <span aria-hidden="true">i</span>
+              <p>Credentials are encrypted and saved directly into n8n. They are not stored in plain text. Credential names are generated as Company Name | Service | Credential Integration.</p>
+            </div>
             <ul class="pservices__addon-toggle-list">
               <li *ngFor="let addon of row.addons" class="pservices__addon-toggle" [class.pservices__addon-toggle--active]="isSelected(row, addon)" (click)="toggleAddon(row, addon)">
                 <span class="pservices__addon-check">
@@ -146,6 +150,10 @@
               </button>
               <h3>{{ row.service.serviceName }}</h3>
               <p class="pservices__side-desc">{{ row.service.serviceDescription }}</p>
+              <div class="pservices__credential-note">
+                <span aria-hidden="true">i</span>
+                <p>Credentials are encrypted and saved directly into n8n. They are not stored in plain text. Credential names are generated as Company Name | Service | Credential Integration.</p>
+              </div>
               <div class="pservices__side-meta">
                 <div><span>Company</span><strong>{{ group.company.companyName }}</strong></div>
                 <div><span>Status</span>

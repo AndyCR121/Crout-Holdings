@@ -30,6 +30,13 @@ public class DevPortalServiceDto
 
 public record DevGuideStepUpdateDto(int Step);
 public record DevMaintenanceUpdateDto(bool IsMaintenance);
+public record DevGuideIntegrationsUpdateDto(
+    string[]? Trigger,
+    string[]? Action,
+    string[]? Output,
+    string? TriggerNotes,
+    string? ActionNotes,
+    string? OutputNotes);
 
 public class DevDashboardDto
 {

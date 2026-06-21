@@ -25,7 +25,7 @@
         <div class="dguide-empty">Assigned service guide was not found.</div>
       } @else {
         <div class="dguide-grid">
-          <section class="dguide-panel">
+          <section class="dguide-panel dguide-panel--sop">
             <div class="dguide-panel-head">
               <h2>Implementation SOP</h2>
               <span>Click a step number to mark progress.</span>
@@ -33,15 +33,72 @@
 
             <ol class="dguide-steps">
               @for (step of steps; track step.step) {
-                <li [class.is-complete]="isComplete(step)">
-                  <button type="button" (click)="markStep(step)" [disabled]="savingStep() === step.step">
+                <li [class.is-complete]="isComplete(step)" [class.is-automatic]="isAutomaticStep(step)" [class.has-editor]="step.step === 2">
+                  <button type="button" (click)="markStep(step)" [disabled]="savingStep() === step.step || isAutomaticStep(step)" [attr.title]="isAutomaticStep(step) ? 'Automatic after step 2 confirmation' : null">
                     {{ savingStep() === step.step ? '...' : step.step }}
                   </button>
-                  <div>
+                  <div
+                    [class.dguide-step-summary]="step.step === 2"
+                    [attr.role]="step.step === 2 ? 'button' : null"
+                    [attr.tabindex]="step.step === 2 ? 0 : null"
+                    [attr.aria-expanded]="step.step === 2 ? integrationEditorOpen() : null"
+                    [attr.title]="step.step === 2 ? 'Toggle integration editor' : null"
+                    (click)="step.step === 2 && toggleIntegrationEditor()"
+                    (keydown.enter)="step.step === 2 && toggleIntegrationEditor()"
+                    (keydown.space)="step.step === 2 && toggleIntegrationEditor()"
+                  >
                     <h3>{{ step.title }}</h3>
                     <p>Status after completion: {{ step.statusHint }}</p>
                     <small>{{ step.detail }}</small>
+                    @if (isAutomaticStep(step)) {
+                      <em class="dguide-auto-note">{{ automaticStepNote(step) }}</em>
+                    }
                   </div>
+                  @if (step.step === 2 && integrationEditorOpen()) {
+                    <div class="dguide-integration-editor">
+                      <section>
+                        <h4>Triggers</h4>
+                        <div class="dguide-option-chips">
+                          @for (option of integrationOptions.trigger; track option) {
+                            <button type="button" [class.active]="isIntegrationSelected('trigger', option)" (click)="toggleIntegration('trigger', option)">
+                              {{ option }}
+                            </button>
+                          }
+                        </div>
+                        <textarea [(ngModel)]="triggerNotes" placeholder="Client trigger notes, webhook source, inbox, form URL, schedule, or WhatsApp entry point"></textarea>
+                      </section>
+
+                      <section>
+                        <h4>Actions</h4>
+                        <div class="dguide-option-chips">
+                          @for (option of integrationOptions.action; track option) {
+                            <button type="button" [class.active]="isIntegrationSelected('action', option)" (click)="toggleIntegration('action', option)">
+                              {{ option }}
+                            </button>
+                          }
+                        </div>
+                        <textarea [(ngModel)]="actionNotes" placeholder="Confirmed apps, workflow actions, data mapping, and processing notes"></textarea>
+                      </section>
+
+                      <section>
+                        <h4>Outputs</h4>
+                        <div class="dguide-option-chips">
+                          @for (option of integrationOptions.output; track option) {
+                            <button type="button" [class.active]="isIntegrationSelected('output', option)" (click)="toggleIntegration('output', option)">
+                              {{ option }}
+                            </button>
+                          }
+                        </div>
+                        <textarea [(ngModel)]="outputNotes" placeholder="Confirmed outputs, recipient channels, dashboards, reports, or response behavior"></textarea>
+                      </section>
+
+                      <div class="dguide-integration-actions">
+                        <button type="button" class="dguide-confirm" [disabled]="savingIntegrations()" (click)="saveIntegrationConfirmation()">
+                          {{ savingIntegrations() ? 'Saving...' : 'Confirm Integrations' }}
+                        </button>
+                      </div>
+                    </div>
+                  }
                 </li>
               }
             </ol>

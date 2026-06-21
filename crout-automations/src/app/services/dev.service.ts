@@ -43,6 +43,17 @@ export class DevService {
     return this.http.post<IDevPortalService>(`${this.base}/services/${userServiceId}/guide/step`, { step }, { headers: this.authHeaders(), withCredentials: true });
   }
 
+  updateGuideIntegrations(userServiceId: number, payload: {
+    trigger: string[];
+    action: string[];
+    output: string[];
+    triggerNotes?: string;
+    actionNotes?: string;
+    outputNotes?: string;
+  }): Observable<IDevPortalService> {
+    return this.http.post<IDevPortalService>(`${this.base}/services/${userServiceId}/guide/integrations`, payload, { headers: this.authHeaders(), withCredentials: true });
+  }
+
   updateMaintenance(userServiceId: number, isMaintenance: boolean): Observable<IDevPortalService> {
     return this.http.post<IDevPortalService>(`${this.base}/services/${userServiceId}/maintenance`, { isMaintenance }, { headers: this.authHeaders(), withCredentials: true });
   }

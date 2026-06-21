@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { PortalSidebarComponent } from '../../../components/portal-sidebar/portal-sidebar.component';
 import { IDevPortalService } from '../../../interfaces/i-service.interface';
@@ -16,7 +17,7 @@ interface GuideStep {
 @Component({
   selector: 'ca-dev-service-guide',
   standalone: true,
-  imports: [CommonModule, RouterModule, PortalSidebarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, PortalSidebarComponent],
   templateUrl: './dev-service-guide.component.html',
   styleUrls: ['./dev-service-guide.component.scss'],
 })
@@ -28,27 +29,30 @@ export class DevServiceGuideComponent implements OnInit {
   readonly guide = signal<IDevPortalService | null>(null);
   readonly loading = signal(true);
   readonly savingStep = signal<number | null>(null);
+  readonly savingIntegrations = signal(false);
   readonly savingMaintenance = signal(false);
+  readonly integrationEditorOpen = signal(true);
   readonly userServiceId = Number(this.route.snapshot.paramMap.get('userServiceId'));
+
+  readonly integrationOptions = {
+    trigger: ['Webhook', 'Email / IMAP', 'WhatsApp Message', 'Website Form', 'Scheduled Trigger'],
+    action: ['Xero', 'Google Sheets', 'Trello', 'CRM Update', 'AI Agent', 'Custom Setup', 'Marketing Messaging'],
+    output: ['Email Response', 'WhatsApp Reply', 'Dashboard', 'Report', 'Invoice / Quote']
+  };
+
+  editTrigger: string[] = [];
+  editAction: string[] = [];
+  editOutput: string[] = [];
+  triggerNotes = '';
+  actionNotes = '';
+  outputNotes = '';
 
   readonly steps: GuideStep[] = [
     { step: 1, title: 'Contact client and confirm meeting', statusHint: 'Pending', detail: 'Confirm meeting date/time using the company email and phone shown on this page.' },
-    { step: 2, title: 'Confirm workflow integrations', statusHint: 'In Development', detail: 'Review Trigger, Action and Output selections with the client. Confirmed items become implementation scope.' },
-    { step: 3, title: 'Send payment and credential setup email', statusHint: 'In Development', detail: 'Thank the client and point them to subscriptions payment plus service credential setup.' },
-    { step: 4, title: 'Credential setup reminder', statusHint: 'In Development', detail: 'Remind the client credentials are encrypted and saved directly into n8n, not stored in plain text.' },
-    { step: 5, title: 'Create n8n credentials', statusHint: 'In Development', detail: 'Credentials should be created in n8n as Company | Service | Integration.' },
-    { step: 6, title: 'Store credential reference', statusHint: 'In Development', detail: 'Record the n8n credential reference against the integration when available.' },
-    { step: 7, title: 'Handle failed n8n test connection', statusHint: 'In Development', detail: 'Return and display n8n failure reasons so the client can correct credentials.' },
-    { step: 8, title: 'Wait for credentials and Paystack payment', statusHint: 'In Development', detail: 'When all credentials and payment are complete, notify the assigned developer.' },
-    { step: 9, title: 'Unlock development', statusHint: 'In Development', detail: 'Service status moves into development and build work can start.' },
-    { step: 10, title: 'Build n8n workflow', statusHint: 'In Development', detail: 'Open the auto-created workflow and build from selected configuration, integrations and notes.' },
-    { step: 11, title: 'Create/update n8n note node', statusHint: 'In Development', detail: 'Add selected configuration, integrations and meeting notes to the workflow note node.' },
-    { step: 12, title: 'Testing', statusHint: 'In Development', detail: 'Run at least 10 realistic test runs and target 90-100% output accuracy against agreed expectations.' },
-    { step: 13, title: 'Publish workflow', statusHint: 'Live', detail: 'Publish the n8n workflow after successful testing.' },
-    { step: 14, title: 'Maintenance check', statusHint: 'Live', detail: 'On service review, maintenance mode should show the user the service is being updated.' },
-    { step: 15, title: 'Live-state sync', statusHint: 'Live', detail: 'When not in maintenance, compare n8n live/published state and keep local status aligned.' },
-    { step: 16, title: 'Mark live workflow complete', statusHint: 'Live', detail: 'Live n8n workflows should show the testing/live step completed in the dev portal.' },
-    { step: 17, title: 'Maintenance mode control', statusHint: 'Live', detail: 'Use the maintenance button when updates are being made for any reason.' },
+    { step: 2, title: 'Confirm workflow integrations', statusHint: 'Pending', detail: 'Review Trigger, Action and Output selections with the client. Confirmed items become implementation scope.' },
+    { step: 3, title: 'Send payment and credential setup email', statusHint: 'Pending', detail: 'Automatic after workflow integrations are confirmed. The client is sent the subscription payment request and credential setup instructions.' },
+    { step: 4, title: 'Payment and credential completion', statusHint: 'In Development', detail: 'Automatic after the linked subscription is paid and all required integration credentials are filled in.' },
+    { step: 5, title: 'Workflow published and service live', statusHint: 'Live', detail: 'Automatic after the developer publishes the workflow in n8n and the dashboard check confirms the live workflow state.' },
   ];
 
   readonly configChips = computed(() => this.extractChips(this.guide()?.config));
@@ -63,6 +67,7 @@ export class DevServiceGuideComponent implements OnInit {
     this.dev.getGuide(this.userServiceId).subscribe({
       next: guide => {
         this.guide.set(guide);
+        this.hydrateIntegrationEditor(guide);
         this.loading.set(false);
       },
       error: () => {
@@ -73,6 +78,7 @@ export class DevServiceGuideComponent implements OnInit {
   }
 
   markStep(step: GuideStep): void {
+    if (step.step === 3) return;
     this.savingStep.set(step.step);
     this.dev.updateGuideStep(this.userServiceId, step.step).subscribe({
       next: guide => {
@@ -84,6 +90,45 @@ export class DevServiceGuideComponent implements OnInit {
         this.savingStep.set(null);
         this.toast.error(err?.error?.error ?? 'Could not update guide step.');
       },
+    });
+  }
+
+  toggleIntegrationEditor(): void {
+    this.integrationEditorOpen.update(open => !open);
+  }
+
+  toggleIntegration(category: 'trigger' | 'action' | 'output', name: string): void {
+    const list = this.integrationList(category);
+    const index = list.indexOf(name);
+    if (index >= 0) list.splice(index, 1);
+    else list.push(name);
+  }
+
+  isIntegrationSelected(category: 'trigger' | 'action' | 'output', name: string): boolean {
+    return this.integrationList(category).includes(name);
+  }
+
+  saveIntegrationConfirmation(): void {
+    this.savingIntegrations.set(true);
+    this.dev.updateGuideIntegrations(this.userServiceId, {
+      trigger: this.editTrigger,
+      action: this.editAction,
+      output: this.editOutput,
+      triggerNotes: this.triggerNotes,
+      actionNotes: this.actionNotes,
+      outputNotes: this.outputNotes,
+    }).subscribe({
+      next: guide => {
+        this.guide.set(guide);
+        this.hydrateIntegrationEditor(guide);
+        this.savingIntegrations.set(false);
+        this.integrationEditorOpen.set(false);
+        this.toast.success('Workflow integrations confirmed.');
+      },
+      error: err => {
+        this.savingIntegrations.set(false);
+        this.toast.error(err?.error?.error ?? 'Could not confirm workflow integrations.');
+      }
     });
   }
 
@@ -106,6 +151,16 @@ export class DevServiceGuideComponent implements OnInit {
 
   isComplete(step: GuideStep): boolean {
     return (this.guide()?.guideStep ?? 0) >= step.step;
+  }
+
+  isAutomaticStep(step: GuideStep): boolean {
+    return step.step === 3 || step.step === 4 || step.step === 5;
+  }
+
+  automaticStepNote(step: GuideStep): string {
+    if (step.step === 4) return 'Ticks automatically once payment is confirmed and required credentials are completed.';
+    if (step.step === 5) return 'Ticks automatically after the n8n published-workflow check passes, then completes the SOP and notifies the client that the service is live.';
+    return 'Runs automatically after Confirm Integrations.';
   }
 
   formatDate(value?: string | null): string {
@@ -157,5 +212,52 @@ export class DevServiceGuideComponent implements OnInit {
       return label ? [String(label)] : [];
     }
     return [];
+  }
+
+  private integrationList(category: 'trigger' | 'action' | 'output'): string[] {
+    if (category === 'trigger') return this.editTrigger;
+    if (category === 'action') return this.editAction;
+    return this.editOutput;
+  }
+
+  private hydrateIntegrationEditor(guide: IDevPortalService): void {
+    const config = this.parseJson(guide.config);
+    this.editTrigger = this.mergeUnique([
+      ...this.pickValues(config, ['trigger', 'triggers']),
+      ...this.pickIntegrationCategory(config, 'trigger')
+    ]);
+    this.editAction = this.mergeUnique([
+      ...this.pickValues(config, ['action', 'actions', 'addons']),
+      ...this.pickIntegrationCategory(config, 'action')
+    ]);
+    this.editOutput = this.mergeUnique([
+      ...this.pickValues(config, ['output', 'outputs']),
+      ...this.pickIntegrationCategory(config, 'output')
+    ]);
+
+    const notes = config && typeof config === 'object'
+      ? (config as Record<string, any>)['notes']
+      : null;
+    this.triggerNotes = notes?.trigger ?? '';
+    this.actionNotes = notes?.action ?? '';
+    this.outputNotes = notes?.output ?? '';
+  }
+
+  private pickIntegrationCategory(source: unknown, category: 'trigger' | 'action' | 'output'): string[] {
+    if (!source || typeof source !== 'object') return [];
+    const raw = (source as Record<string, unknown>)['integrations'];
+    if (!Array.isArray(raw)) return [];
+    return raw.flatMap(item => {
+      if (typeof item === 'string') return category === 'action' ? [item] : [];
+      if (!item || typeof item !== 'object') return [];
+      const record = item as Record<string, unknown>;
+      const itemCategory = record['category'];
+      const name = record['name'] ?? record['label'] ?? record['addonName'];
+      return itemCategory === category && name ? [String(name)] : [];
+    });
+  }
+
+  private mergeUnique(values: string[]): string[] {
+    return [...new Set(values.filter(v => !!v?.trim()).map(v => v.trim()))];
   }
 }

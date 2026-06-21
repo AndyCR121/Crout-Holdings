@@ -57,8 +57,16 @@ public class DevController(IUserRepository users, IDevPortalRepository devPortal
     public async Task<IActionResult> UpdateGuideStep(int userServiceId, [FromBody] DevGuideStepUpdateDto dto)
     {
         if (!await IsDeveloperAsync()) return Forbid();
-        if (dto.Step is < 1 or > 17) return BadRequest(new { error = "Guide step must be between 1 and 17." });
+        if (dto.Step is < 1 or > 5) return BadRequest(new { error = "Guide step must be between 1 and 5." });
         var guide = await devPortal.UpdateGuideStepAsync(CallerId, userServiceId, dto.Step);
+        return guide is null ? NotFound(new { error = "Assigned service was not found." }) : Ok(guide);
+    }
+
+    [HttpPost("services/{userServiceId:int}/guide/integrations")]
+    public async Task<IActionResult> UpdateGuideIntegrations(int userServiceId, [FromBody] DevGuideIntegrationsUpdateDto dto)
+    {
+        if (!await IsDeveloperAsync()) return Forbid();
+        var guide = await devPortal.UpdateGuideIntegrationsAsync(CallerId, userServiceId, dto);
         return guide is null ? NotFound(new { error = "Assigned service was not found." }) : Ok(guide);
     }
 

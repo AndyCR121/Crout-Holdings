@@ -1,6 +1,7 @@
 using CroutApi.DTOs;
 using CroutApi.Helpers;
 using Dapper;
+using System.Text.Json.Nodes;
 
 namespace CroutApi.Repositories;
 
@@ -120,9 +121,8 @@ public class DevPortalRepository(DbHelper db) : IDevPortalRepository
         using var conn = db.GetConnection();
         var status = step switch
         {
-            >= 13 => 2,
-            >= 9 => 1,
-            >= 2 => 1,
+            >= 5 => 2,
+            >= 4 => 1,
             _ => 3
         };
 
@@ -138,6 +138,60 @@ public class DevPortalRepository(DbHelper db) : IDevPortalRepository
               AND ds.isActive = 1
             """,
             new { userId, userServiceId, step, status });
+
+        return affected == 0 ? null : await GetGuideAsync(userId, userServiceId);
+    }
+
+    public async Task<DevPortalServiceDto?> UpdateGuideIntegrationsAsync(int userId, int userServiceId, DevGuideIntegrationsUpdateDto dto)
+    {
+        using var conn = db.GetConnection();
+        var current = await conn.QuerySingleOrDefaultAsync<string?>(
+            """
+            SELECT us.Config
+            FROM UserServices us
+            JOIN DevServices ds ON ds.userServiceId = us.id
+            WHERE us.id = @userServiceId
+              AND us.Active = 1
+              AND ds.userId = @userId
+              AND ds.isActive = 1
+            """,
+            new { userId, userServiceId });
+
+        if (current is null) return null;
+
+        var trigger = Normalize(dto.Trigger);
+        var action = Normalize(dto.Action);
+        var output = Normalize(dto.Output);
+        var config = ParseConfig(current);
+        config["trigger"] = new JsonArray(trigger.Select(v => JsonValue.Create(v)).ToArray<JsonNode?>());
+        config["action"] = new JsonArray(action.Select(v => JsonValue.Create(v)).ToArray<JsonNode?>());
+        config["output"] = new JsonArray(output.Select(v => JsonValue.Create(v)).ToArray<JsonNode?>());
+        config["integrations"] = new JsonArray(
+            trigger.Select(v => IntegrationNode(v, "trigger"))
+                .Concat(action.Select(v => IntegrationNode(v, "action")))
+                .Concat(output.Select(v => IntegrationNode(v, "output")))
+                .ToArray<JsonNode?>());
+        config["notes"] = new JsonObject
+        {
+            ["trigger"] = string.IsNullOrWhiteSpace(dto.TriggerNotes) ? null : dto.TriggerNotes.Trim(),
+            ["action"] = string.IsNullOrWhiteSpace(dto.ActionNotes) ? null : dto.ActionNotes.Trim(),
+            ["output"] = string.IsNullOrWhiteSpace(dto.OutputNotes) ? null : dto.OutputNotes.Trim()
+        };
+        config["confirmedByDevAt"] = DateTime.UtcNow;
+
+        var affected = await conn.ExecuteAsync(
+            """
+            UPDATE UserServices us
+            JOIN DevServices ds ON ds.userServiceId = us.id
+            SET us.Config = @config,
+                us.devGuideStep = GREATEST(COALESCE(us.devGuideStep, 0), 3),
+                us.Status = 3
+            WHERE us.id = @userServiceId
+              AND us.Active = 1
+              AND ds.userId = @userId
+              AND ds.isActive = 1
+            """,
+            new { userId, userServiceId, config = config.ToJsonString() });
 
         return affected == 0 ? null : await GetGuideAsync(userId, userServiceId);
     }
@@ -206,4 +260,31 @@ public class DevPortalRepository(DbHelper db) : IDevPortalRepository
             """,
             new { userId, userServiceId });
     }
+
+    private static string[] Normalize(string[]? values) =>
+        (values ?? [])
+        .Where(v => !string.IsNullOrWhiteSpace(v))
+        .Select(v => v.Trim())
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToArray();
+
+    private static JsonObject ParseConfig(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return [];
+        try
+        {
+            return JsonNode.Parse(raw) as JsonObject ?? [];
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private static JsonObject IntegrationNode(string name, string category) => new()
+    {
+        ["name"] = name,
+        ["confirmed"] = true,
+        ["category"] = category
+    };
 }
