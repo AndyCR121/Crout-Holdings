@@ -17,6 +17,11 @@ export const routes: Routes = [
     }
   },
   {
+    path: 'home',
+    redirectTo: '',
+    pathMatch: 'full'
+  },
+  {
     path: 'client',
     redirectTo: 'client/dashboard',
     pathMatch: 'full'
@@ -133,7 +138,6 @@ export const routes: Routes = [
   },
   {
     path: 'client/video-editor',
-    canActivate: [authGuard],
     redirectTo: 'client/services',
     pathMatch: 'full',
   },
@@ -211,6 +215,18 @@ export const routes: Routes = [
     canActivate: [authGuard, adminGuard],
     loadComponent: () =>
       import('./pages/admin/dev-management/admin-dev-management.component').then(m => m.AdminDevManagementComponent),
+  },
+  {
+    path: 'admin/client-services',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./pages/admin/client-services/admin-client-services.component').then(m => m.AdminClientServicesComponent),
+  },
+  {
+    path: 'admin/paystack-management',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./pages/admin/paystack-management/admin-paystack-management.component').then(m => m.AdminPaystackManagementComponent),
   },
   {
     path: 'admin/addons',

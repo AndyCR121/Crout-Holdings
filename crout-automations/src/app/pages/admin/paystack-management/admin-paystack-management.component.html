@@ -1,0 +1,105 @@
+<div class="admin-layout">
+  <ca-admin-sidebar />
+  <main class="admin-main">
+    <div class="admin-page admin-page--wide">
+      <div class="admin-page-header">
+        <div>
+          <h1 class="admin-page-title">Paystack Management</h1>
+          <span class="admin-badge">{{ total() }} subscription mappings</span>
+        </div>
+      </div>
+
+      <div class="admin-toolbar">
+        <input class="admin-input" [ngModel]="search()" (ngModelChange)="search.set($event)" placeholder="Search client, company, service, subscription" />
+        <select class="admin-input" [ngModel]="mappingStatus()" (ngModelChange)="mappingStatus.set($event)">
+          <option value="">All mapping states</option>
+          <option value="mapped">Mapped</option>
+          <option value="unmapped">Unmapped</option>
+          <option value="needs_review">Needs Review</option>
+          <option value="failed">Failed</option>
+        </select>
+        <button class="btn-link" (click)="applyFilters()">Filter</button>
+      </div>
+
+      <div class="admin-note">
+        Manual recovery tool for linking Paystack subscription references to client services when automatic assignment needs review.
+      </div>
+
+      <div *ngIf="error()" class="admin-error">{{ error() }}</div>
+
+      <div *ngIf="loading()" class="admin-loading">
+        <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
+      </div>
+
+      <div *ngIf="!loading()" class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Company</th>
+              <th>Service</th>
+              <th>Subscription</th>
+              <th>Mapping</th>
+              <th>Status</th>
+              <th>Amount</th>
+              <th>Due</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of items()" [class.editing]="editingId() === row.userServiceId">
+              <ng-container *ngIf="editingId() !== row.userServiceId">
+                <td>{{ row.clientName }}<br><span class="admin-muted">{{ row.clientEmail }}</span></td>
+                <td>{{ row.companyName }}</td>
+                <td>{{ row.serviceName }}<br><span class="admin-muted">{{ row.packageName || 'No package' }}</span></td>
+                <td>{{ row.subscriptionId || 'Unmapped' }}</td>
+                <td><span class="admin-pill" [class.green]="row.mappingStatus === 'mapped'">{{ row.mappingStatus }}</span></td>
+                <td>{{ statusLabel(row.status) }}</td>
+                <td>R{{ row.subscriptionAmount | number:'1.2-2' }}</td>
+                <td>{{ row.dueDate ? (row.dueDate | date:'yyyy/MM/dd') : 'None' }}</td>
+                <td class="admin-actions">
+                  <button class="btn-edit" (click)="startEdit(row)">Map</button>
+                  <button class="btn-delete" (click)="clear(row)" [disabled]="saving() === row.userServiceId || !row.subscriptionId">Clear</button>
+                </td>
+              </ng-container>
+              <ng-container *ngIf="editingId() === row.userServiceId">
+                <td colspan="9">
+                  <div class="admin-edit-grid">
+                    <label>Subscription ID
+                      <input class="admin-input" [ngModel]="editSubscriptionId()" (ngModelChange)="editSubscriptionId.set($event)" placeholder="SUB_xxx or Paystack reference" />
+                    </label>
+                    <label>Status
+                      <select class="admin-input" [ngModel]="editStatus()" (ngModelChange)="editStatus.set($event)">
+                        <option [ngValue]="0">Disabled</option>
+                        <option [ngValue]="1">In Development</option>
+                        <option [ngValue]="2">Live</option>
+                        <option [ngValue]="3">Pending</option>
+                      </select>
+                    </label>
+                    <label>Payment Date
+                      <input class="admin-input" type="date" [ngModel]="editPaymentDate()" (ngModelChange)="editPaymentDate.set($event)" />
+                    </label>
+                    <label>Due Date
+                      <input class="admin-input" type="date" [ngModel]="editDueDate()" (ngModelChange)="editDueDate.set($event)" />
+                    </label>
+                    <div class="admin-modal-actions">
+                      <button class="btn-save" [disabled]="saving() === row.userServiceId" (click)="save(row)">Save</button>
+                      <button class="btn-cancel" (click)="cancelEdit()">Cancel</button>
+                    </div>
+                  </div>
+                </td>
+              </ng-container>
+            </tr>
+            <tr *ngIf="items().length === 0"><td colspan="9" class="admin-empty">No Paystack mappings found.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="admin-pagination">
+        <button class="btn-page" [disabled]="page() === 1" (click)="prevPage()">Prev</button>
+        <span>Page {{ page() }}</span>
+        <button class="btn-page" [disabled]="page() * pageSize >= total()" (click)="nextPage()">Next</button>
+      </div>
+    </div>
+  </main>
+</div>

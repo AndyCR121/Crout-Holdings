@@ -13,6 +13,9 @@ import {
   ICreateDevServiceAssignment,
   IDevServiceAssignment,
   IUpdateDevServiceAssignment,
+  IAdminClientService,
+  IAdminClientServiceUpsert,
+  IAdminPaystackMapping,
 } from '../interfaces/i-service.interface';
 
 export interface PagedResult<T> { items: T[]; total: number; page: number; pageSize: number; }
@@ -189,5 +192,56 @@ export class AdminService {
 
   deleteDevService(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/dev-services/${id}`, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  // Client Service Management
+  getClientServices(
+    page = 1,
+    pageSize = 20,
+    filters: { search?: string; userId?: number; companyId?: number; serviceId?: number; active?: boolean } = {},
+  ): Observable<PagedResult<IAdminClientService>> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    for (const [key, value] of Object.entries(filters)) {
+      if (value !== undefined && value !== null && value !== '') params = params.set(key, String(value));
+    }
+    return this.http.get<PagedResult<IAdminClientService>>(`${this.base}/client-services`, { params, headers: this.authHeaders(), withCredentials: true });
+  }
+
+  createClientService(dto: IAdminClientServiceUpsert): Observable<IAdminClientService> {
+    return this.http.post<IAdminClientService>(`${this.base}/client-services`, dto, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  updateClientService(id: number, dto: Partial<IAdminClientServiceUpsert>): Observable<IAdminClientService> {
+    return this.http.put<IAdminClientService>(`${this.base}/client-services/${id}`, dto, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  deleteClientService(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/client-services/${id}`, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  // Paystack Subscription Mapping
+  getPaystackMappings(
+    page = 1,
+    pageSize = 20,
+    filters: { search?: string; mappingStatus?: string } = {},
+  ): Observable<PagedResult<IAdminPaystackMapping>> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    for (const [key, value] of Object.entries(filters)) {
+      if (value !== undefined && value !== null && value !== '') params = params.set(key, String(value));
+    }
+    return this.http.get<PagedResult<IAdminPaystackMapping>>(`${this.base}/paystack-mappings`, { params, headers: this.authHeaders(), withCredentials: true });
+  }
+
+  updatePaystackMapping(userServiceId: number, dto: {
+    subscriptionId?: string | null;
+    status: number;
+    paymentDate?: string | null;
+    dueDate?: string | null;
+  }): Observable<IAdminClientService> {
+    return this.http.put<IAdminClientService>(`${this.base}/paystack-mappings/${userServiceId}`, dto, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  clearPaystackMapping(userServiceId: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/paystack-mappings/${userServiceId}`, { headers: this.authHeaders(), withCredentials: true });
   }
 }

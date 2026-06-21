@@ -181,3 +181,58 @@ export interface IUpdateDevServiceAssignment {
   cost: number;
   isActive: boolean;
 }
+
+export interface IAdminClientService {
+  userServiceId: number;
+  companyId: number;
+  companyName: string;
+  userId: number;
+  clientName: string;
+  clientEmail: string;
+  serviceId: number;
+  serviceName: string;
+  packageId?: number;
+  packageName?: string;
+  subscriptionId?: string;
+  config?: string;
+  active: boolean;
+  status: UserServiceStatus;
+  subscriptionAmount: number;
+  pricingSnapshot?: string;
+  paymentDate?: string;
+  dueDate?: string;
+  createdAt: string;
+}
+
+export interface IAdminClientServiceUpsert {
+  companyId: number;
+  serviceId: number;
+  packageId?: number | null;
+  config?: string;
+  active: boolean;
+  status: UserServiceStatus;
+  subscriptionAmount: number;
+  subscriptionId?: string | null;
+  paymentDate?: string | null;
+  dueDate?: string | null;
+}
+
+export interface IAdminPaystackMapping {
+  userServiceId: number;
+  companyId: number;
+  companyName: string;
+  userId: number;
+  clientName: string;
+  clientEmail: string;
+  serviceId: number;
+  serviceName: string;
+  packageId?: number;
+  packageName?: string;
+  subscriptionId?: string;
+  subscriptionAmount: number;
+  status: UserServiceStatus;
+  active: boolean;
+  mappingStatus: 'mapped' | 'unmapped' | 'failed' | 'needs_review';
+  paymentDate?: string;
+  dueDate?: string;
+}

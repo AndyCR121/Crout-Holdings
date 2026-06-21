@@ -18,6 +18,22 @@
   border-radius: 50px;
   padding: 0.35rem 0.5rem;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+
+  @media (max-width: 1024px) {
+    max-width: calc(100vw - 112px);
+  }
+
+  @media (max-width: 768px) {
+    left: 1rem;
+    transform: none;
+    max-width: calc(100vw - 5.75rem);
+  }
+
+  @media (max-width: 420px) {
+    left: 0.75rem;
+    max-width: calc(100vw - 4.75rem);
+    height: 46px !important;
+  }
 }
 
 // Brand logo link
@@ -88,7 +104,7 @@
   flex-shrink: 0;
   margin: 0 0.25rem;
 
-  @media (max-width: 640px) {
+  @media (max-width: 768px) {
     display: none;
   }
 }
@@ -155,7 +171,7 @@
     background: rgba(255, 255, 255, 0.08);
   }
 
-  @media (max-width: 640px) {
+  @media (max-width: 768px) {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -207,7 +223,17 @@
     &:hover { background: #c96a10 !important; }
   }
 
-  @media (min-width: 641px) {
+  @media (min-width: 769px) {
     display: none !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .ca-navbar-brand-text {
+    display: none;
+  }
+
+  .ca-navbar-logo {
+    height: 32px;
   }
 }

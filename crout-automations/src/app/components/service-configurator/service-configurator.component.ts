@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, OnInit, SimpleChanges, computed, inject, signal } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, SimpleChanges, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -52,12 +52,26 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
   readonly PACKAGE_DISCOUNT = 0.15;
   skeletonPackages = Array(1).fill(null);
 
+  constructor() {
+    effect(() => {
+      const companies = this.companyList();
+      if (!this.selectedCompanyId && companies.length > 0) {
+        this.selectedCompanyId = companies.find(c => c.active)?.companyId ?? companies[0].companyId;
+      }
+    });
+  }
+
   ngOnInit(): void {
     const user = this.user();
     if (user) this.companies.load(user.userId);
     this.api.getRequiredPricingComponents().subscribe({
       next: components => {
-        this.requiredPricingComponents = components.filter(c => c.isActive && c.isRequiredDefault);
+        this.requiredPricingComponents = components.filter(c =>
+          c.isActive
+          && c.isRequiredDefault
+          && !c.componentName.toLowerCase().includes('setup')
+          && !c.componentKey.toLowerCase().includes('setup')
+        );
       },
       error: () => {
         this.requiredPricingComponents = [];
@@ -73,15 +87,12 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
 
   // ── View builders ─────────────────────────────────────────────────────────
   private buildViews(): void {
-    this.packageViews = this.packages.map(pkg => {
-      const parentPkg = pkg.parentPackageId != null
-        ? this.packages.find(p => p.packageId === pkg.parentPackageId)
-        : null;
+    const rootPackages = this.packages.filter(pkg => pkg.parentPackageId == null);
 
-      const serviceIds = [...new Set([
-        ...(parentPkg?.serviceIds ?? []),
-        ...(pkg.serviceIds ?? [])
-      ])];
+    this.packageViews = rootPackages.map(pkg => {
+      const childPkg = this.packages.find(p => p.parentPackageId === pkg.packageId) ?? null;
+      const serviceIds = [...new Set([...(pkg.serviceIds ?? [])])];
+      const childServiceIds = childPkg?.serviceIds ?? [];
 
       // Root service rows
       const rootServices: IService[] = serviceIds.reduce<IService[]>((acc, id) => {
@@ -89,6 +100,10 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
         if (svc) acc.push(svc);
         return acc;
       }, []);
+      const conditionalService = childServiceIds
+        .map(id => this.allServices.find(s => s.serviceId === id))
+        .find((svc): svc is IService => !!svc && (svc.conditional || !serviceIds.includes(svc.serviceId)))
+        ?? null;
 
       // Root addon states (non-conditional services' addons)
       const rootAddonStates: IAddonState[] = serviceIds.flatMap(svcId =>
@@ -99,8 +114,8 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
 
       return {
         pkg,
-        childPkg: null,
-        conditionalService: null,
+        childPkg,
+        conditionalService,
         conditionalEnabled: false,
         rootServices,
         rootAddonStates,

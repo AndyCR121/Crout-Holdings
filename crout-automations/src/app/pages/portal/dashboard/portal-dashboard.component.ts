@@ -72,8 +72,41 @@ export class PortalDashboardComponent implements OnInit {
   getAddonNames(config: string): string[] {
     try {
       const parsed = JSON.parse(config);
-      return parsed.integrations ?? [];
-    } catch { return []; }
+      const values = [
+        ...(Array.isArray(parsed.integrations) ? parsed.integrations : []),
+        ...(Array.isArray(parsed.trigger) ? parsed.trigger : []),
+        ...(Array.isArray(parsed.action) ? parsed.action : []),
+        ...(Array.isArray(parsed.output) ? parsed.output : []),
+      ];
+      const labels = values
+        .map(value => this.formatChipValue(value))
+        .filter((value): value is string => !!value);
+      return [...new Set(labels)];
+    } catch {
+      return config ? [this.formatChipValue(config) ?? 'Not configured'] : ['Not configured'];
+    }
+  }
+
+  formatChipValue(value: unknown): string | null {
+    if (value == null || value === '') return 'Not configured';
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
+    if (typeof value !== 'object') return String(value);
+
+    const record = value as Record<string, any>;
+    const nestedAddon = record['addon'];
+    if (nestedAddon && typeof nestedAddon === 'object') {
+      const nested = nestedAddon as Record<string, any>;
+      return nested['addonName'] ?? nested['AddonName'] ?? nested['name'] ?? nested['label'] ?? null;
+    }
+
+    return record['label']
+      ?? record['name']
+      ?? record['addonName']
+      ?? record['AddonName']
+      ?? record['title']
+      ?? record['type']
+      ?? record['value']
+      ?? JSON.stringify(record);
   }
 
   statusLabel(s: number): string {

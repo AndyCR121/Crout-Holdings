@@ -20,6 +20,7 @@ public class AdminController(
     IAddonRepository addons,
     IServiceFeatureRepository serviceFeatures,
     IServiceRepository services,
+    IUserServiceRepository userServices,
     IDevServiceRepository devServices,
     EncryptionHelper enc) : ControllerBase
 {
@@ -375,6 +376,105 @@ public class AdminController(
     {
         if (!CallerIsAdmin) return Forbid();
         await serviceFeatures.DeleteAsync(id);
+        return NoContent();
+    }
+
+    // Client Service Management
+
+    [HttpGet("client-services")]
+    public async Task<IActionResult> GetClientServices(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? search = null,
+        [FromQuery] int? userId = null,
+        [FromQuery] int? companyId = null,
+        [FromQuery] int? serviceId = null,
+        [FromQuery] bool? active = null)
+    {
+        if (!CallerIsAdmin) return Forbid();
+        var (items, total) = await userServices.AdminGetAllAsync(page, pageSize, search, userId, companyId, serviceId, active);
+        return Ok(new { items, total, page, pageSize });
+    }
+
+    [HttpPost("client-services")]
+    public async Task<IActionResult> CreateClientService([FromBody] AdminUpsertClientServiceDto dto)
+    {
+        if (!CallerIsAdmin) return Forbid();
+        if (await companies.AdminGetByIdAsync(dto.CompanyId) is null)
+            return BadRequest(new { error = "Company not found." });
+        if (await services.GetByIdAsync(dto.ServiceId) is null)
+            return BadRequest(new { error = "Service not found." });
+        if (dto.PackageId is not null && await services.GetPackageByIdAsync(dto.PackageId.Value) is null)
+            return BadRequest(new { error = "Package not found." });
+
+        var userService = new UserService
+        {
+            CompanyId = dto.CompanyId,
+            ServiceId = dto.ServiceId,
+            PackageId = dto.PackageId,
+            SubscriptionId = string.IsNullOrWhiteSpace(dto.SubscriptionId) ? null : dto.SubscriptionId.Trim(),
+            Config = string.IsNullOrWhiteSpace(dto.Config) ? "{}" : dto.Config,
+            Active = dto.Active,
+            Status = dto.Status,
+            SubscriptionAmount = dto.SubscriptionAmount < 0 ? 0 : dto.SubscriptionAmount,
+            PaymentDate = dto.PaymentDate,
+            DueDate = dto.DueDate
+        };
+
+        var id = await userServices.AdminCreateAsync(userService);
+        return Created($"/api/admin/client-services/{id}", await userServices.AdminGetRowByIdAsync(id));
+    }
+
+    [HttpPut("client-services/{id:int}")]
+    public async Task<IActionResult> UpdateClientService(int id, [FromBody] AdminUpdateClientServiceConfigDto dto)
+    {
+        if (!CallerIsAdmin) return Forbid();
+        if (await userServices.GetByIdAsync(id) is null) return NotFound();
+        if (dto.PackageId is not null && await services.GetPackageByIdAsync(dto.PackageId.Value) is null)
+            return BadRequest(new { error = "Package not found." });
+
+        await userServices.AdminUpdateAsync(id, dto);
+        return Ok(await userServices.AdminGetRowByIdAsync(id));
+    }
+
+    [HttpDelete("client-services/{id:int}")]
+    public async Task<IActionResult> DeleteClientService(int id)
+    {
+        if (!CallerIsAdmin) return Forbid();
+        if (await userServices.GetByIdAsync(id) is null) return NotFound();
+        await userServices.AdminDeactivateAsync(id);
+        return NoContent();
+    }
+
+    // Paystack Subscription Mapping
+
+    [HttpGet("paystack-mappings")]
+    public async Task<IActionResult> GetPaystackMappings(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? search = null,
+        [FromQuery] string? mappingStatus = null)
+    {
+        if (!CallerIsAdmin) return Forbid();
+        var (items, total) = await userServices.AdminGetPaystackMappingsAsync(page, pageSize, search, mappingStatus);
+        return Ok(new { items, total, page, pageSize });
+    }
+
+    [HttpPut("paystack-mappings/{userServiceId:int}")]
+    public async Task<IActionResult> UpdatePaystackMapping(int userServiceId, [FromBody] AdminMapPaystackSubscriptionDto dto)
+    {
+        if (!CallerIsAdmin) return Forbid();
+        if (await userServices.GetByIdAsync(userServiceId) is null) return NotFound();
+        await userServices.AdminUpdatePaystackMappingAsync(userServiceId, dto);
+        return Ok(await userServices.AdminGetRowByIdAsync(userServiceId));
+    }
+
+    [HttpDelete("paystack-mappings/{userServiceId:int}")]
+    public async Task<IActionResult> ClearPaystackMapping(int userServiceId)
+    {
+        if (!CallerIsAdmin) return Forbid();
+        if (await userServices.GetByIdAsync(userServiceId) is null) return NotFound();
+        await userServices.AdminUpdatePaystackMappingAsync(userServiceId, new AdminMapPaystackSubscriptionDto(null, 3, null, null));
         return NoContent();
     }
 

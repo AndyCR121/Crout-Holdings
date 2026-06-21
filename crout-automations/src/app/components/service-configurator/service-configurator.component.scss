@@ -407,6 +407,16 @@
     &:focus { border-color: var(--color-orange); }
     &::placeholder { color: rgba(255,255,255,0.35); }
   }
+
+  select {
+    color-scheme: dark;
+    cursor: pointer;
+
+    option {
+      background: #0f2744;
+      color: rgba(255,255,255,0.92);
+    }
+  }
 }
 
 .pricing__suite-cta-note {

@@ -1,0 +1,140 @@
+<div class="admin-layout">
+  <ca-admin-sidebar />
+  <main class="admin-main">
+    <div class="admin-page admin-page--wide">
+      <div class="admin-page-header">
+        <div>
+          <h1 class="admin-page-title">Client Services</h1>
+          <span class="admin-badge">{{ total() }} assignments</span>
+        </div>
+        <button class="btn-create" (click)="showCreate.set(true)">Add Service</button>
+      </div>
+
+      <div class="admin-toolbar">
+        <input class="admin-input" [ngModel]="search()" (ngModelChange)="search.set($event)" placeholder="Search client, company, service, subscription" />
+        <select class="admin-input" [ngModel]="activeFilter()" (ngModelChange)="activeFilter.set($event)">
+          <option value="">All active states</option>
+          <option value="true">Active</option>
+          <option value="false">Inactive</option>
+        </select>
+        <button class="btn-link" (click)="applyFilters()">Filter</button>
+      </div>
+
+      <div *ngIf="error()" class="admin-error">{{ error() }}</div>
+
+      <div *ngIf="loading()" class="admin-loading">
+        <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
+      </div>
+
+      <div *ngIf="!loading()" class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Company</th>
+              <th>Service</th>
+              <th>Status</th>
+              <th>Amount</th>
+              <th>Subscription</th>
+              <th>Active</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of items()" [class.editing]="editingId() === row.userServiceId">
+              <ng-container *ngIf="editingId() !== row.userServiceId">
+                <td>{{ row.clientName }}<br><span class="admin-muted">{{ row.clientEmail }}</span></td>
+                <td>{{ row.companyName }}</td>
+                <td>{{ row.serviceName }}<br><span class="admin-muted">{{ row.packageName || 'No package' }}</span></td>
+                <td>{{ statusLabel(row.status) }}</td>
+                <td>R{{ row.subscriptionAmount | number:'1.2-2' }}</td>
+                <td>{{ row.subscriptionId || 'Unmapped' }}</td>
+                <td><span class="admin-pill" [class.green]="row.active">{{ row.active ? 'Yes' : 'No' }}</span></td>
+                <td class="admin-actions">
+                  <button class="btn-edit" (click)="startEdit(row)">Edit</button>
+                  <button class="btn-delete" (click)="deactivate(row)" [disabled]="!row.active">Deactivate</button>
+                </td>
+              </ng-container>
+              <ng-container *ngIf="editingId() === row.userServiceId">
+                <td colspan="8">
+                  <div class="admin-edit-grid">
+                    <label>Status
+                      <select class="admin-input" [(ngModel)]="editBuffer().status">
+                        <option [ngValue]="0">Disabled</option>
+                        <option [ngValue]="1">In Development</option>
+                        <option [ngValue]="2">Live</option>
+                        <option [ngValue]="3">Pending</option>
+                      </select>
+                    </label>
+                    <label>Subscription Amount
+                      <input class="admin-input" type="number" [(ngModel)]="editBuffer().subscriptionAmount" />
+                    </label>
+                    <label>Subscription ID
+                      <input class="admin-input" [(ngModel)]="editBuffer().subscriptionId" />
+                    </label>
+                    <label>Due Date
+                      <input class="admin-input" type="date" [(ngModel)]="editBuffer().dueDate" />
+                    </label>
+                    <label class="admin-checkbox"><input type="checkbox" [(ngModel)]="editBuffer().active" /> Active</label>
+                    <label class="admin-edit-grid__wide">Config JSON
+                      <textarea class="admin-input admin-textarea" [(ngModel)]="editBuffer().config"></textarea>
+                    </label>
+                    <div class="admin-modal-actions">
+                      <button class="btn-save" [disabled]="saving()" (click)="saveEdit(row)">Save</button>
+                      <button class="btn-cancel" (click)="cancelEdit()">Cancel</button>
+                    </div>
+                  </div>
+                </td>
+              </ng-container>
+            </tr>
+            <tr *ngIf="items().length === 0"><td colspan="8" class="admin-empty">No client services found.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="admin-pagination">
+        <button class="btn-page" [disabled]="page() === 1" (click)="prevPage()">Prev</button>
+        <span>Page {{ page() }}</span>
+        <button class="btn-page" [disabled]="page() * pageSize >= total()" (click)="nextPage()">Next</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="admin-modal-backdrop" *ngIf="showCreate()" (click)="showCreate.set(false)">
+  <div class="admin-modal" (click)="$event.stopPropagation()">
+    <h3>Add Client Service</h3>
+    <label>Company
+      <select class="admin-input" [(ngModel)]="createBuffer().companyId">
+        <option *ngFor="let company of companies()" [ngValue]="company.companyId">{{ company.companyName }}</option>
+      </select>
+    </label>
+    <label>Service
+      <select class="admin-input" [(ngModel)]="createBuffer().serviceId">
+        <option *ngFor="let service of services()" [ngValue]="service.serviceId">{{ service.serviceName }}</option>
+      </select>
+    </label>
+    <label>Status
+      <select class="admin-input" [(ngModel)]="createBuffer().status">
+        <option [ngValue]="0">Disabled</option>
+        <option [ngValue]="1">In Development</option>
+        <option [ngValue]="2">Live</option>
+        <option [ngValue]="3">Pending</option>
+      </select>
+    </label>
+    <label>Subscription Amount
+      <input class="admin-input" type="number" [(ngModel)]="createBuffer().subscriptionAmount" />
+    </label>
+    <label>Subscription ID
+      <input class="admin-input" [(ngModel)]="createBuffer().subscriptionId" placeholder="Optional" />
+    </label>
+    <label>Config JSON
+      <textarea class="admin-input admin-textarea" [(ngModel)]="createBuffer().config"></textarea>
+    </label>
+    <label class="admin-checkbox"><input type="checkbox" [(ngModel)]="createBuffer().active" /> Active</label>
+    <div class="admin-modal-actions">
+      <button class="btn-save" [disabled]="saving()" (click)="create()">Create</button>
+      <button class="btn-cancel" (click)="showCreate.set(false)">Cancel</button>
+    </div>
+  </div>
+</div>

@@ -16,6 +16,11 @@
   right: 1rem;
   z-index: 1000;
   display: block;
+
+  @media (max-width: 420px) {
+    top: 0.75rem;
+    right: 0.75rem;
+  }
 }
 
 .ca-account-btn-wrap {
@@ -127,6 +132,39 @@
   font-size:   14px;
   font-weight: 600;
   color:       #fff;
+}
+
+@media (max-width: 768px) {
+  .ca-account-trigger {
+    min-width: 0;
+    gap: 6px;
+    padding: 6px;
+
+    &:not(.is-logged-in) {
+      padding: 9px;
+    }
+  }
+
+  .ca-account-identity,
+  .ca-account-login-label {
+    display: none;
+  }
+
+  .ca-avatar {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (max-width: 420px) {
+  .ca-account-trigger {
+    padding: 5px;
+  }
+
+  .ca-avatar {
+    width: 30px;
+    height: 30px;
+  }
 }
 
 // ── Caret ──────────────────────────────────────────────────────────────────

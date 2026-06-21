@@ -1,0 +1,49 @@
+@import '../admin-table.shared';
+
+.admin-page--wide {
+  max-width: 1280px;
+}
+
+.admin-toolbar {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) 180px auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.admin-muted {
+  color: rgba(255,255,255,0.42);
+  font-size: 12px;
+}
+
+.admin-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 12px;
+  align-items: end;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    color: rgba(255,255,255,0.55);
+    font-size: 12px;
+  }
+}
+
+.admin-edit-grid__wide {
+  grid-column: 1 / -1;
+}
+
+.admin-textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+@media (max-width: 900px) {
+  .admin-toolbar,
+  .admin-edit-grid {
+    grid-template-columns: 1fr;
+  }
+}

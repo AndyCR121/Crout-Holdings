@@ -1,0 +1,51 @@
+@import '../admin-table.shared';
+
+.admin-page--wide {
+  max-width: 1280px;
+}
+
+.admin-toolbar {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) 190px auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.admin-note {
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.55);
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 10px 12px;
+  margin-bottom: 18px;
+}
+
+.admin-muted {
+  color: rgba(255,255,255,0.42);
+  font-size: 12px;
+}
+
+.admin-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 12px;
+  align-items: end;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    color: rgba(255,255,255,0.55);
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-toolbar,
+  .admin-edit-grid {
+    grid-template-columns: 1fr;
+  }
+}
