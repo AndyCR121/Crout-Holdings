@@ -1,0 +1,300 @@
+<section class="marketing-workspace">
+  <header class="marketing-workspace__header">
+    <div>
+      <span class="marketing-workspace__eyebrow">Marketing Workspace</span>
+      <h3>Content operations</h3>
+      <p>Plan posts, review generated content, manage assets, and run publishing workflows for {{ company.companyName }}.</p>
+    </div>
+    <div class="marketing-workspace__actions">
+      <div class="marketing-workspace__menu">
+        <button class="marketing-workspace__btn marketing-workspace__btn--primary" type="button" (click)="actionMenuOpen.set(!actionMenuOpen())">
+          Actions
+        </button>
+        <div class="marketing-workspace__menu-list" *ngIf="actionMenuOpen()">
+          <button type="button" (click)="openDialog('generate')">Generate New Content</button>
+          <button type="button" (click)="openDialog('generate')">Schedule New Post</button>
+          <button type="button" (click)="openDialog('upload')">Upload Assets</button>
+          <button type="button" (click)="renderProject()" [disabled]="!selectedProject">Trigger Immediate Render</button>
+          <button type="button" (click)="actionMenuOpen.set(false)">Sync Platforms</button>
+          <button type="button" (click)="updateCredentials.emit(); actionMenuOpen.set(false)">Refresh Credentials</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="marketing-workspace__limits">
+    <article>
+      <span>Allowed Days</span>
+      <strong>{{ limits.allowedDays.join(', ') }}</strong>
+    </article>
+    <article>
+      <span>Posts / Week</span>
+      <strong>{{ limits.postsPerWeek ?? 'Backend managed' }}</strong>
+    </article>
+    <article>
+      <span>Video Limit</span>
+      <strong>{{ limits.videosPerWeek ?? 'By package' }}</strong>
+    </article>
+    <article>
+      <span>Photo Limit</span>
+      <strong>{{ limits.photosPerWeek ?? 'By package' }}</strong>
+    </article>
+  </section>
+
+  <section class="marketing-calendar">
+    <div class="marketing-calendar__bar">
+      <div>
+        <span>Week Schedule</span>
+        <strong>{{ currentWeekStart() | date:'MMM d' }} - {{ weekEnd | date:'MMM d, y' }}</strong>
+      </div>
+      <div class="marketing-calendar__nav">
+        <button type="button" (click)="previousWeek()" aria-label="Previous week">‹</button>
+        <button type="button" (click)="today()">Today</button>
+        <button type="button" (click)="nextWeek()" aria-label="Next week">›</button>
+      </div>
+    </div>
+
+    <div class="marketing-calendar__grid">
+      <article class="marketing-calendar__day" *ngFor="let day of weekDays">
+        <header>
+          <span>{{ day | date:'EEE' }}</span>
+          <strong>{{ day | date:'d' }}</strong>
+        </header>
+        <ng-container *ngIf="scheduledForDay(day).length; else emptyDay">
+          <button
+            class="marketing-calendar__item"
+            type="button"
+            *ngFor="let project of scheduledForDay(day)"
+            [class.active]="project.id === selectedProject?.id"
+            (click)="selectProject(project)"
+          >
+            <span class="marketing-calendar__thumb">{{ project.outputUrl ? 'Media' : 'Post' }}</span>
+            <strong>{{ project.title }}</strong>
+            <small>{{ project.platform }} · {{ project.scheduledFor | date:'shortTime' }}</small>
+            <em [ngClass]="statusClass(project.status)">{{ project.status }}</em>
+          </button>
+        </ng-container>
+        <ng-template #emptyDay>
+          <p>No posts scheduled.</p>
+        </ng-template>
+      </article>
+    </div>
+  </section>
+
+  <nav class="marketing-workspace__tabs">
+    <button type="button" [class.active]="activeTab() === 'editor'" (click)="setTab('editor')">Video Editor</button>
+    <button type="button" *ngIf="hasAnalyticalAi" [class.active]="activeTab() === 'analytics'" (click)="setTab('analytics')">Analytics</button>
+  </nav>
+
+  <section class="marketing-editor" *ngIf="activeTab() === 'editor'">
+    <aside class="marketing-assets">
+      <div class="marketing-panel-head">
+        <span>Assets</span>
+        <button type="button" (click)="openDialog('upload')">Upload</button>
+      </div>
+      <input class="marketing-assets__search" type="search" placeholder="Search assets" />
+      <ng-container *ngIf="assets.length; else noAssets">
+        <button type="button" class="marketing-assets__item" *ngFor="let asset of assets" [class.active]="asset.id === selectedAsset?.id" (click)="selectAsset(asset)">
+          <span>{{ asset.type }}</span>
+          <strong>{{ asset.name }}</strong>
+          <small>{{ asset.source }}</small>
+        </button>
+      </ng-container>
+      <ng-template #noAssets>
+        <p class="marketing-empty">Uploaded and generated files will appear here.</p>
+      </ng-template>
+    </aside>
+
+    <section class="marketing-preview">
+      <div class="marketing-panel-head">
+        <span>Live Preview</span>
+        <strong>{{ selectedProject?.platform || 'No platform selected' }}</strong>
+      </div>
+      <ng-container *ngIf="selectedProject; else noSelection">
+        <video *ngIf="selectedProject.outputUrl" [src]="selectedProject.outputUrl" controls></video>
+        <div class="marketing-preview__fallback" *ngIf="!selectedProject.outputUrl">
+          <strong>{{ selectedProject.title }}</strong>
+          <span>{{ selectedProject.status }}</span>
+        </div>
+      </ng-container>
+      <ng-template #noSelection>
+        <div class="marketing-preview__fallback">
+          <strong>No content selected</strong>
+          <span>Select a scheduled post or upload an asset to start.</span>
+        </div>
+      </ng-template>
+    </section>
+
+    <aside class="marketing-context">
+      <div class="marketing-panel-head">
+        <span>Edit Request</span>
+        <strong>{{ selectedProject?.status || 'Draft' }}</strong>
+      </div>
+      <label>
+        Instructions
+        <textarea rows="7" [ngModel]="renderNotes()" (ngModelChange)="renderNotes.set($event)" placeholder="Caption changes, scene notes, asset swaps, or render instructions"></textarea>
+      </label>
+      <button class="marketing-workspace__btn marketing-workspace__btn--primary" type="button" (click)="renderProject()" [disabled]="!selectedProject">
+        Generate Content Batch
+      </button>
+      <p>Generation and edits are handled by backend workflows. This workspace prepares the request without exposing provider or workflow details.</p>
+    </aside>
+
+    <section class="marketing-timeline">
+      <div class="marketing-panel-head">
+        <span>Timeline</span>
+        <strong>{{ timeline.length ? 'Scene sequence' : 'Awaiting generated timeline' }}</strong>
+      </div>
+      <ng-container *ngIf="timeline.length; else noTimeline">
+        <div class="marketing-timeline__track" *ngFor="let track of timeline">
+          <div class="marketing-timeline__label">{{ track.type }}</div>
+          <div class="marketing-timeline__rail">
+            <div class="marketing-timeline__clip" *ngFor="let item of track.items" [style.left.%]="trackLeft(item)" [style.width.%]="trackWidth(item)">
+              <strong>{{ assetName(item.assetId) }}</strong>
+              <span>{{ item.startTime }}s - {{ item.endTime }}s</span>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+      <ng-template #noTimeline>
+        <p class="marketing-empty">Video scenes, captions, audio, and overlays will appear here after the backend workflow creates a timeline.</p>
+      </ng-template>
+    </section>
+  </section>
+
+  <section class="marketing-analytics" *ngIf="activeTab() === 'analytics' && hasAnalyticalAi">
+    <p class="marketing-analytics__note">
+      Analytics are generated 7 days after the first post is published. These insights help the analytical AI workflow improve future content direction, platform targeting, and viewer engagement over time.
+    </p>
+    <ng-container *ngIf="analyticsPlatforms.length; else analyticsWaiting">
+      <div class="marketing-analytics__grid">
+        <article *ngFor="let platform of analyticsPlatforms">
+          <span>{{ platform.platform }}</span>
+          <strong>{{ platform.views }} views</strong>
+          <p>{{ platform.likes }} likes · {{ platform.shares }} shares · {{ platform.comments }} comments</p>
+          <em>{{ platform.engagementRate }} engagement</em>
+        </article>
+      </div>
+      <div class="marketing-analytics__summary" *ngIf="topAnalyticsPlatform as topPlatform">
+        <h4>Performance Summary</h4>
+        <p>This post is performing best on {{ topPlatform.platform }}. The next workflow run should test a tighter opening hook and a clearer save/share prompt.</p>
+      </div>
+    </ng-container>
+    <ng-template #analyticsWaiting>
+      <div class="marketing-empty">
+        Analytics are not ready for this selection yet. Posted content will show platform cards, improvement notes, and planned experiments after the 7-day analysis window.
+      </div>
+    </ng-template>
+  </section>
+
+  <section class="marketing-details">
+    <div class="marketing-panel-head">
+      <span>Selected Post Details</span>
+      <strong>{{ selectedProject?.status || 'No selection' }}</strong>
+    </div>
+    <dl *ngIf="selectedProject as project; else noDetails">
+      <div><dt>Title</dt><dd>{{ project.title }}</dd></div>
+      <div><dt>Content Type</dt><dd>{{ project.outputUrl ? 'Video' : 'Generated Post' }}</dd></div>
+      <div><dt>Platform</dt><dd>{{ project.platform }}</dd></div>
+      <div><dt>Scheduled</dt><dd>{{ project.scheduledFor ? (project.scheduledFor | date:'medium') : 'Draft' }}</dd></div>
+      <div><dt>Caption</dt><dd>{{ project.metadata?.caption || 'No caption added yet.' }}</dd></div>
+      <div><dt>Tags</dt><dd>{{ project.metadata?.hashtags?.join(' ') || 'No tags added yet.' }}</dd></div>
+      <div><dt>Last Updated</dt><dd>{{ project.updatedAt | date:'medium' }}</dd></div>
+    </dl>
+    <ng-template #noDetails>
+      <p class="marketing-empty">Select a scheduled post to view caption, platform, schedule, and analytics availability.</p>
+    </ng-template>
+  </section>
+
+  <details class="marketing-advanced">
+    <summary>Advanced Automation Controls</summary>
+    <div class="marketing-advanced__grid">
+      <article><span>Scheduler Frequency</span><strong>{{ limits.postsPerBatch ? 'Batch based' : 'Backend managed' }}</strong></article>
+      <article><span>Next Generation</span><strong>{{ limits.nextGeneration ? (limits.nextGeneration | date:'medium') : 'Awaiting schedule' }}</strong></article>
+      <article><span>Last Generated</span><strong>{{ limits.lastRun ? (limits.lastRun | date:'medium') : 'No recent run' }}</strong></article>
+      <article><span>Queue Size</span><strong>{{ limits.queueSize ?? projects().length }}</strong></article>
+    </div>
+    <p class="marketing-empty" *ngIf="triggersLoading">Loading automation controls...</p>
+    <div class="marketing-advanced__actions" *ngIf="!triggersLoading && triggers.length">
+      <button
+        type="button"
+        *ngFor="let config of triggers"
+        (click)="runAdvancedControl(config)"
+        [disabled]="runningAutomationId() === config.id"
+      >
+        {{ runningAutomationId() === config.id ? 'Starting...' : automationLabel(config) }}
+      </button>
+    </div>
+    <p class="marketing-empty" *ngIf="!triggersLoading && !triggers.length">No scheduler controls are configured yet.</p>
+  </details>
+</section>
+
+<div class="marketing-dialog" *ngIf="activeDialog() as dialog">
+  <div class="marketing-dialog__backdrop" (click)="closeDialog()"></div>
+  <section class="marketing-dialog__panel">
+    <header>
+      <h3>{{ dialog === 'generate' ? 'Generate / Schedule Content' : 'Upload Assets' }}</h3>
+      <button type="button" (click)="closeDialog()" aria-label="Close">×</button>
+    </header>
+
+    <form class="marketing-form" *ngIf="dialog === 'generate'" (ngSubmit)="submitDraft()">
+      <label>
+        Content type
+        <select [ngModel]="draftForm().contentType" (ngModelChange)="updateDraft('contentType', $event)" name="contentType">
+          <option value="photo">Photo</option>
+          <option value="video">Video</option>
+        </select>
+      </label>
+      <label>
+        Topic
+        <input [ngModel]="draftForm().topic" (ngModelChange)="updateDraft('topic', $event)" name="topic" required />
+      </label>
+      <fieldset>
+        <legend>Platforms</legend>
+        <button type="button" *ngFor="let platform of availablePlatforms" [class.active]="isPlatformSelected(platform)" (click)="onPlatformToggle(platform)">
+          {{ platform }}
+        </button>
+      </fieldset>
+      <label>
+        Tone
+        <select [ngModel]="draftForm().tone" (ngModelChange)="updateDraft('tone', $event)" name="tone">
+          <option *ngFor="let tone of tones" [value]="tone">{{ tone }}</option>
+        </select>
+      </label>
+      <div class="marketing-form__two">
+        <label>
+          Publish date
+          <input type="date" [ngModel]="draftForm().publishDate" (ngModelChange)="updateDraft('publishDate', $event)" name="publishDate" />
+        </label>
+        <label>
+          Publish time
+          <input type="time" [ngModel]="draftForm().publishTime" (ngModelChange)="updateDraft('publishTime', $event)" name="publishTime" />
+        </label>
+      </div>
+      <label>
+        Notes
+        <textarea rows="4" [ngModel]="draftForm().notes" (ngModelChange)="updateDraft('notes', $event)" name="notes"></textarea>
+      </label>
+      <p class="marketing-form__warning">Manual schedules are validated by the backend. If this replaces generated content, the closest matching item by content type and time will be returned for confirmation.</p>
+      <div class="marketing-dialog__actions">
+        <button type="button" class="marketing-workspace__btn" (click)="closeDialog()">Cancel</button>
+        <button type="submit" class="marketing-workspace__btn marketing-workspace__btn--primary">Submit Request</button>
+      </div>
+    </form>
+
+    <form class="marketing-form" *ngIf="dialog === 'upload'" (ngSubmit)="submitUpload()">
+      <label>
+        Files
+        <input type="file" multiple accept="image/*,video/*,audio/*,.pdf,.doc,.docx" (change)="onFilesSelected($event)" />
+      </label>
+      <ul class="marketing-form__files" *ngIf="uploadFiles().length">
+        <li *ngFor="let file of uploadFiles()">{{ file.name }}</li>
+      </ul>
+      <p class="marketing-form__warning">Assets are held in the workspace UI until the media upload API is connected.</p>
+      <div class="marketing-dialog__actions">
+        <button type="button" class="marketing-workspace__btn" (click)="closeDialog()">Cancel</button>
+        <button type="submit" class="marketing-workspace__btn marketing-workspace__btn--primary">Add Assets</button>
+      </div>
+    </form>
+  </section>
+</div>

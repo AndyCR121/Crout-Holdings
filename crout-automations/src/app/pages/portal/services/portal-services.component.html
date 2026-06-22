@@ -77,14 +77,7 @@
           <div class="pservices__card-actions" *ngIf="!row.editing">
             <button class="pservices__btn pservices__btn--secondary" (click)="startEdit(row)">Request Config Change</button>
             <button class="pservices__btn pservices__btn--secondary" type="button" (click)="openCredentials(row)">Update Credentials</button>
-            <button class="pservices__btn pservices__btn--secondary" type="button" (click)="toggleVideoEditor(row)" *ngIf="isVideoEditor(row)">
-              {{ row.videoEditorOpen ? 'Close Video Editor' : 'Open Video Editor' }}
-            </button>
             <button class="pservices__btn pservices__btn--ghost" (click)="openSidePanel(row, group.company)">View Details</button>
-          </div>
-
-          <div class="pservices__video-editor" *ngIf="row.videoEditorOpen">
-            <ca-portal-video-editor [embedded]="true"></ca-portal-video-editor>
           </div>
 
           <!-- Edit section -->
@@ -205,8 +198,17 @@
                 </section>
 
                 <section class="pservices__workspace">
-                  <ng-container *ngIf="isVideoEditor(row); else triggerWorkspace">
-                    <ca-portal-video-editor [embedded]="true"></ca-portal-video-editor>
+                  <ng-container *ngIf="isMarketingSystem(row); else triggerWorkspace">
+                    <ca-marketing-workspace
+                      [service]="row.service"
+                      [userService]="row.userService"
+                      [company]="group.company"
+                      [integrations]="row.activeAddons"
+                      [triggers]="row.triggerConfigs"
+                      [triggersLoading]="row.triggersLoading"
+                      (updateCredentials)="openCredentials(row)"
+                      (triggerExecuted)="onTriggerExecuted()"
+                    ></ca-marketing-workspace>
                   </ng-container>
                   <ng-template #triggerWorkspace>
                     <div class="pservices__workspace-head">

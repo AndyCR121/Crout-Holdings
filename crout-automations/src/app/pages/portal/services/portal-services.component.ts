@@ -8,8 +8,8 @@ import { ApiService } from '../../../services/api.service';
 import { ToastService } from '../../../services/toast.service';
 import { IUserService, IService, IAddon, ICompany } from '../../../interfaces/i-service.interface';
 import { PortalSidebarComponent } from '../../../components/portal-sidebar/portal-sidebar.component';
-import { PortalVideoEditorComponent } from '../video-editor/portal-video-editor.component';
 import { ServiceTriggerRendererComponent } from '../../../components/service-trigger-renderer/service-trigger-renderer.component';
+import { MarketingWorkspaceComponent } from '../../../components/marketing-workspace/marketing-workspace.component';
 import { ServiceTriggerConfig } from '../../../interfaces/i-service-trigger.interface';
 import { ServiceTriggerApiService } from '../../../services/service-trigger-api.service';
 
@@ -33,7 +33,6 @@ interface ServiceRow {
   actionNotes:   string;
   outputNotes:   string;
   sidePanelOpen: boolean;
-  videoEditorOpen: boolean;
   credentialsOpen: boolean;
   credentialIntegration: string;
   credentialFields: { key: string; value: string }[];
@@ -50,7 +49,7 @@ interface CompanyGroup {
 @Component({
   selector: 'ca-portal-services',
   standalone: true,
-  imports: [CommonModule, FormsModule, PortalSidebarComponent, PortalVideoEditorComponent, ServiceTriggerRendererComponent],
+  imports: [CommonModule, FormsModule, PortalSidebarComponent, ServiceTriggerRendererComponent, MarketingWorkspaceComponent],
   templateUrl: './portal-services.component.html',
   styleUrls: ['./portal-services.component.scss'],
 })
@@ -118,7 +117,6 @@ export class PortalServicesComponent implements OnInit {
               actionNotes:   '',
               outputNotes:   '',
               sidePanelOpen: false,
-              videoEditorOpen: false,
               credentialsOpen: false,
               credentialIntegration: active[0]?.name ?? rowAddons[0]?.addonName ?? svc.serviceName,
               credentialFields: this.defaultCredentialFields(),
@@ -326,13 +324,8 @@ export class PortalServicesComponent implements OnInit {
     });
   }
 
-  isVideoEditor(row: ServiceRow): boolean {
-    return row.service.serviceName === 'Marketing Systems' && !!this._parseObject(row.userService.config)?.['videoEditor'];
-  }
-
-  toggleVideoEditor(row: ServiceRow): void {
-    row.videoEditorOpen = !row.videoEditorOpen;
-    this.groups.update(g => [...g]);
+  isMarketingSystem(row: ServiceRow): boolean {
+    return row.service.serviceName.toLowerCase() === 'marketing systems';
   }
 
   statusLabel(s: number): string {
@@ -347,10 +340,6 @@ export class PortalServicesComponent implements OnInit {
     return this.groups().some(g => g.rows.length > 0);
   }
 
-  private _parseObject(cfg: string): Record<string, any> | null {
-    try { return JSON.parse(cfg); } catch { return null; }
-  }
-  
   integrationList(row: ServiceRow, category: 'trigger' | 'action' | 'output'): string[] {
     if (category === 'trigger') return row.editTrigger;
     if (category === 'action') return row.editAction;
@@ -378,7 +367,6 @@ export class PortalServicesComponent implements OnInit {
   }
 
   private loadTriggers(row: ServiceRow, company?: ICompany): void {
-    if (this.isVideoEditor(row)) return;
     const companyId = company?.companyId ?? row.userService.companyId;
     if (!companyId || !row.service.serviceId || row.triggersLoading || row.triggerConfigs.length) return;
 
