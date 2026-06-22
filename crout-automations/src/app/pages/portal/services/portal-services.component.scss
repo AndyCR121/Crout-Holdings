@@ -608,7 +608,7 @@ $radius-sm:    8px;
   }
 
   &__side-panel-close {
-    align-self:    flex-end;
+    align-self:    flex-start;
     padding:       8px;
     background:    transparent;
     border:        none;
@@ -702,6 +702,48 @@ $radius-sm:    8px;
     &__workspace {
       height: auto;
       max-height: none;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .pservices {
+    &__title {
+      font-size: 24px;
+    }
+
+    &__group-header,
+    &__card-title-row,
+    &__edit-actions,
+    &__credential-actions {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    &__group-right {
+      align-items: flex-start;
+      width: 100%;
+    }
+
+    &__card-header,
+    &__addons,
+    &__card-actions,
+    &__edit {
+      padding-left: 14px;
+      padding-right: 14px;
+    }
+
+    &__addon-toggle-list {
+      grid-template-columns: 1fr;
+    }
+
+    &__btn {
+      justify-content: center;
+      width: 100%;
+    }
+
+    &__side-panel-drawer {
+      padding: 14px;
     }
   }
 }

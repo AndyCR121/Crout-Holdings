@@ -421,7 +421,7 @@
 
 @media (max-width: 720px) {
   .dguide-wrap {
-    padding: 1rem;
+    padding: 0;
   }
 
   .dguide-header,
@@ -431,5 +431,27 @@
 
   .dguide-header-actions {
     align-items: flex-start;
+  }
+
+  .dguide-header h1 {
+    font-size: 1.55rem;
+  }
+
+  .dguide-steps li {
+    grid-template-columns: 1fr;
+  }
+
+  .dguide-steps > li > button {
+    width: 100%;
+  }
+
+  .dguide-integration-editor {
+    grid-column: 1;
+  }
+
+  .dguide-option-chips button,
+  .dguide-maintenance,
+  .dguide-confirm {
+    white-space: normal;
   }
 }

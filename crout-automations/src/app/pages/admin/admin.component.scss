@@ -151,9 +151,11 @@
 }
 
 .admin-main {
+  overflow-x: hidden;
   overflow-y: auto;
   padding:    86px 32px 32px;
   width:      100%;
+  min-width:  0;
   height:     100%;
   @include admin-scrollbar;
 }
@@ -163,4 +165,19 @@
   .admin-sidebar { position: static; height: auto; flex-direction: row; flex-wrap: wrap; padding: 12px; gap: 8px; }
   .admin-nav { flex-direction: row; flex-wrap: wrap; }
   .admin-main { padding: 16px; height: auto; overflow-y: visible; }
+}
+
+@media (max-height: 620px) {
+  .admin-sidebar {
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+
+  .admin-nav {
+    flex: 0 0 auto;
+  }
+
+  .admin-sidebar-footer {
+    margin-top: 16px;
+  }
 }

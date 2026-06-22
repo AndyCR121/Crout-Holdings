@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { ICompany, IService, IUserService } from '../../interfaces/i-service.interface';
 import { ServiceTriggerConfig } from '../../interfaces/i-service-trigger.interface';
 import { MediaAsset, TimelineItem, TimelineTrack, VideoProject } from '../../interfaces/i-video-project.interface';
-import { ServiceTriggerApiService } from '../../services/service-trigger-api.service';
 import { ToastService } from '../../services/toast.service';
 import { VideoProjectService } from '../../services/video-project.service';
 
@@ -65,7 +64,6 @@ interface MarketingAnalyticsPlatform {
 })
 export class MarketingWorkspaceComponent implements OnInit, OnChanges {
   private readonly videos = inject(VideoProjectService);
-  private readonly triggerApi = inject(ServiceTriggerApiService);
   private readonly toast = inject(ToastService);
 
   @Input({ required: true }) service!: IService;
@@ -88,7 +86,6 @@ export class MarketingWorkspaceComponent implements OnInit, OnChanges {
   readonly currentWeekStart = signal(this.startOfWeek(new Date()));
   readonly uploadFiles = signal<File[]>([]);
   readonly renderNotes = signal('');
-  readonly runningAutomationId = signal<number | null>(null);
 
   readonly tones = ['Professional', 'Casual', 'Friendly', 'Luxury', 'Promotional', 'Educational'];
   readonly fallbackPlatforms = ['Instagram', 'TikTok', 'YouTube Shorts', 'Facebook', 'LinkedIn', 'X'];
@@ -272,25 +269,6 @@ export class MarketingWorkspaceComponent implements OnInit, OnChanges {
     this.closeDialog();
   }
 
-  runAdvancedControl(config: ServiceTriggerConfig): void {
-    if (!this.company?.companyId) return;
-    this.runningAutomationId.set(config.id);
-    this.triggerApi.execute(config.id, this.company.companyId, this.userService.userServiceId ?? null, {
-      source: 'marketing-workspace',
-      action: this.automationLabel(config)
-    }).subscribe({
-      next: response => {
-        this.runningAutomationId.set(null);
-        this.toast.success(response.message ?? `${this.automationLabel(config)} started.`);
-        this.triggerExecuted.emit();
-      },
-      error: err => {
-        this.runningAutomationId.set(null);
-        this.toast.error(err?.error?.error ?? `${this.automationLabel(config)} could not be started.`);
-      }
-    });
-  }
-
   renderProject(): void {
     const project = this.selectedProject;
     if (!project) return;
@@ -298,6 +276,10 @@ export class MarketingWorkspaceComponent implements OnInit, OnChanges {
       next: response => this.toast.success(response.message),
       error: err => this.toast.error(err?.error?.error ?? 'Content render could not be queued.')
     });
+  }
+
+  submitSelectedPost(): void {
+    this.renderProject();
   }
 
   trackWidth(item: TimelineItem): number {
@@ -315,16 +297,6 @@ export class MarketingWorkspaceComponent implements OnInit, OnChanges {
 
   statusClass(status: string): string {
     return `is-${status}`;
-  }
-
-  automationLabel(config: ServiceTriggerConfig): string {
-    const label = `${config.label} ${config.description ?? ''}`.toLowerCase();
-    if (label.includes('queue') || label.includes('render')) return 'Generate Content Batch';
-    if (label.includes('schedule')) return 'Run Scheduler';
-    if (label.includes('sync') || label.includes('platform')) return 'Sync Platforms';
-    if (label.includes('analytics')) return 'Refresh Analytics';
-    if (label.includes('brief') || label.includes('content')) return 'Generate Content Brief';
-    return config.label || 'Run Automation';
   }
 
   private loadProjects(): void {

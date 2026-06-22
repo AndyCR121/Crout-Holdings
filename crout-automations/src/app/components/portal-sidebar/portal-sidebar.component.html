@@ -1,11 +1,40 @@
-<aside class="portal-sidebar">
+<button
+  type="button"
+  class="shell-mobile-toggle portal-mobile-toggle"
+  (click)="openSidebar()"
+  [attr.aria-expanded]="sidebarOpen"
+  aria-controls="portal-sidebar"
+>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <line x1="3" y1="6" x2="21" y2="6"/>
+    <line x1="3" y1="12" x2="21" y2="12"/>
+    <line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+  Menu
+</button>
+
+<button
+  type="button"
+  class="shell-sidebar-backdrop"
+  [class.is-open]="sidebarOpen"
+  (click)="closeSidebar()"
+  aria-label="Close portal menu"
+></button>
+
+<aside id="portal-sidebar" class="portal-sidebar" [class.is-open]="sidebarOpen">
   <div class="portal-logo">
+    <button type="button" class="shell-sidebar-close" (click)="closeSidebar()" aria-label="Close portal menu">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
     <span class="portal-logo-mark">CA</span>
     <span class="portal-logo-name">{{ portalLabel() }}</span>
   </div>
 
   <nav class="portal-nav" aria-label="Portal navigation">
-    <a href="/client/dashboard" class="portal-nav-item"
+    <a href="/client/dashboard" class="portal-nav-item" (click)="closeSidebar()"
        [class.active]="isActive('/client/dashboard')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="3"  y="3"  width="7" height="7" rx="1"/>
@@ -15,14 +44,14 @@
       </svg>
       Dashboard
     </a>
-    <a href="/client/services" class="portal-nav-item"
+    <a href="/client/services" class="portal-nav-item" (click)="closeSidebar()"
        [class.active]="isActive('/client/services')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M12 2l9 4.5V12c0 5-4 9.3-9 10.5C7 21.3 3 17 3 12V6.5L12 2z"/>
       </svg>
       Services
     </a>
-    <a href="/client/profile" class="portal-nav-item"
+    <a href="/client/profile" class="portal-nav-item" (click)="closeSidebar()"
        [class.active]="isActive('/client/profile')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="8" r="4"/>
@@ -30,7 +59,7 @@
       </svg>
       Profile
     </a>
-    <a href="/client/billing/subscriptions" class="portal-nav-item"
+    <a href="/client/billing/subscriptions" class="portal-nav-item" (click)="closeSidebar()"
        [class.active]="isActive('/client/billing')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="2" y="5" width="20" height="14" rx="2"/>
@@ -43,6 +72,7 @@
       *ngIf="isDev()"
       href="/dev/dashboard"
       class="portal-nav-item portal-nav-item--admin"
+      (click)="closeSidebar()"
       [class.active]="isActive('/dev/dashboard')"
     >
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -55,6 +85,7 @@
       *ngIf="isDev()"
       href="/dev/services"
       class="portal-nav-item portal-nav-item--admin"
+      (click)="closeSidebar()"
       [class.active]="isActive('/dev/services')"
     >
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -79,6 +110,7 @@
       *ngIf="isAdmin()"
       href="/admin/users"
       class="portal-nav-item portal-nav-item--admin"
+      (click)="closeSidebar()"
     >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>

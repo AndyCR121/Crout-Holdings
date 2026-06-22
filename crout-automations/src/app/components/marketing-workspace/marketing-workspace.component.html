@@ -1,9 +1,29 @@
 <section class="marketing-workspace">
   <header class="marketing-workspace__header">
-    <div>
-      <span class="marketing-workspace__eyebrow">Marketing Workspace</span>
-      <h3>Content operations</h3>
-      <p>Plan posts, review generated content, manage assets, and run publishing workflows for {{ company.companyName }}.</p>
+    <div class="marketing-workspace__header-main">
+      <div>
+        <span class="marketing-workspace__eyebrow">Marketing Workspace</span>
+        <h3>Content operations</h3>
+        <p>Plan posts, review generated content, manage assets, and run publishing workflows for {{ company.companyName }}.</p>
+      </div>
+      <section class="marketing-workspace__limits">
+        <article>
+          <span>Allowed Days</span>
+          <strong>{{ limits.allowedDays.join(', ') }}</strong>
+        </article>
+        <article>
+          <span>Posts / Week</span>
+          <strong>{{ limits.postsPerWeek ?? 'Backend managed' }}</strong>
+        </article>
+        <article>
+          <span>Video Limit</span>
+          <strong>{{ limits.videosPerWeek ?? 'By package' }}</strong>
+        </article>
+        <article>
+          <span>Photo Limit</span>
+          <strong>{{ limits.photosPerWeek ?? 'By package' }}</strong>
+        </article>
+      </section>
     </div>
     <div class="marketing-workspace__actions">
       <div class="marketing-workspace__menu">
@@ -11,35 +31,13 @@
           Actions
         </button>
         <div class="marketing-workspace__menu-list" *ngIf="actionMenuOpen()">
-          <button type="button" (click)="openDialog('generate')">Generate New Content</button>
           <button type="button" (click)="openDialog('generate')">Schedule New Post</button>
-          <button type="button" (click)="openDialog('upload')">Upload Assets</button>
-          <button type="button" (click)="renderProject()" [disabled]="!selectedProject">Trigger Immediate Render</button>
-          <button type="button" (click)="actionMenuOpen.set(false)">Sync Platforms</button>
-          <button type="button" (click)="updateCredentials.emit(); actionMenuOpen.set(false)">Refresh Credentials</button>
+          <button type="button" disabled title="In development">Sync Platforms</button>
+          <button type="button" disabled title="In development">Refresh Credentials</button>
         </div>
       </div>
     </div>
   </header>
-
-  <section class="marketing-workspace__limits">
-    <article>
-      <span>Allowed Days</span>
-      <strong>{{ limits.allowedDays.join(', ') }}</strong>
-    </article>
-    <article>
-      <span>Posts / Week</span>
-      <strong>{{ limits.postsPerWeek ?? 'Backend managed' }}</strong>
-    </article>
-    <article>
-      <span>Video Limit</span>
-      <strong>{{ limits.videosPerWeek ?? 'By package' }}</strong>
-    </article>
-    <article>
-      <span>Photo Limit</span>
-      <strong>{{ limits.photosPerWeek ?? 'By package' }}</strong>
-    </article>
-  </section>
 
   <section class="marketing-calendar">
     <div class="marketing-calendar__bar">
@@ -90,9 +88,11 @@
     <aside class="marketing-assets">
       <div class="marketing-panel-head">
         <span>Assets</span>
-        <button type="button" (click)="openDialog('upload')">Upload</button>
       </div>
-      <input class="marketing-assets__search" type="search" placeholder="Search assets" />
+      <div class="marketing-assets__tools">
+        <input class="marketing-assets__search" type="search" placeholder="Search assets" />
+        <button type="button" class="marketing-assets__upload" (click)="openDialog('upload')" aria-label="Upload assets" title="Upload assets">+</button>
+      </div>
       <ng-container *ngIf="assets.length; else noAssets">
         <button type="button" class="marketing-assets__item" *ngFor="let asset of assets" [class.active]="asset.id === selectedAsset?.id" (click)="selectAsset(asset)">
           <span>{{ asset.type }}</span>
@@ -124,21 +124,6 @@
         </div>
       </ng-template>
     </section>
-
-    <aside class="marketing-context">
-      <div class="marketing-panel-head">
-        <span>Edit Request</span>
-        <strong>{{ selectedProject?.status || 'Draft' }}</strong>
-      </div>
-      <label>
-        Instructions
-        <textarea rows="7" [ngModel]="renderNotes()" (ngModelChange)="renderNotes.set($event)" placeholder="Caption changes, scene notes, asset swaps, or render instructions"></textarea>
-      </label>
-      <button class="marketing-workspace__btn marketing-workspace__btn--primary" type="button" (click)="renderProject()" [disabled]="!selectedProject">
-        Generate Content Batch
-      </button>
-      <p>Generation and edits are handled by backend workflows. This workspace prepares the request without exposing provider or workflow details.</p>
-    </aside>
 
     <section class="marketing-timeline">
       <div class="marketing-panel-head">
@@ -201,6 +186,15 @@
       <div><dt>Tags</dt><dd>{{ project.metadata?.hashtags?.join(' ') || 'No tags added yet.' }}</dd></div>
       <div><dt>Last Updated</dt><dd>{{ project.updatedAt | date:'medium' }}</dd></div>
     </dl>
+    <div class="marketing-details__request">
+      <label>
+        Edit Instructions
+        <textarea rows="4" [ngModel]="renderNotes()" (ngModelChange)="renderNotes.set($event)" placeholder="Caption changes, scene notes, asset swaps, or schedule changes"></textarea>
+      </label>
+      <button class="marketing-workspace__btn marketing-workspace__btn--primary" type="button" (click)="submitSelectedPost()" [disabled]="!selectedProject">
+        Submit Changes
+      </button>
+    </div>
     <ng-template #noDetails>
       <p class="marketing-empty">Select a scheduled post to view caption, platform, schedule, and analytics availability.</p>
     </ng-template>
@@ -214,18 +208,6 @@
       <article><span>Last Generated</span><strong>{{ limits.lastRun ? (limits.lastRun | date:'medium') : 'No recent run' }}</strong></article>
       <article><span>Queue Size</span><strong>{{ limits.queueSize ?? projects().length }}</strong></article>
     </div>
-    <p class="marketing-empty" *ngIf="triggersLoading">Loading automation controls...</p>
-    <div class="marketing-advanced__actions" *ngIf="!triggersLoading && triggers.length">
-      <button
-        type="button"
-        *ngFor="let config of triggers"
-        (click)="runAdvancedControl(config)"
-        [disabled]="runningAutomationId() === config.id"
-      >
-        {{ runningAutomationId() === config.id ? 'Starting...' : automationLabel(config) }}
-      </button>
-    </div>
-    <p class="marketing-empty" *ngIf="!triggersLoading && !triggers.length">No scheduler controls are configured yet.</p>
   </details>
 </section>
 

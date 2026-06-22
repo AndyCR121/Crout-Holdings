@@ -21,6 +21,7 @@ export class PortalComponent implements OnInit {
   /** Read from shared cache — no extra HTTP call. */
   readonly companies      = this.companySvc.companies;
   readonly primaryCompany = this.companySvc.primaryCompany;
+  sidebarOpen = false;
 
   readonly initials = computed(() => {
     const u = this.user();
@@ -34,6 +35,10 @@ export class PortalComponent implements OnInit {
     // Reads from cache — only fires an HTTP request if not already loaded.
     this.companySvc.load(uid);
   }
+
+  openSidebar(): void { this.sidebarOpen = true; }
+
+  closeSidebar(): void { this.sidebarOpen = false; }
 
   logout(): void {
     this.companySvc.clear();

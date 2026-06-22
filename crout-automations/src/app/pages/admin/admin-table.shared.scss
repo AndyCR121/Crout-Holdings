@@ -2,6 +2,7 @@
 
 .admin-page {
   max-width: 1100px;
+  min-width: 0;
 }
 
 .admin-page-header {
@@ -50,13 +51,17 @@
 // ── Table ────────────────────────────────────────────────────────────────────
 .admin-table-wrap {
   overflow-x:    auto;
+  max-width:     100%;
+  min-width:     0;
   border-radius: 10px;
   border:        1px solid rgba(255,255,255,0.08);
   margin-bottom: 20px;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .admin-table {
-  width:           100%;
+  width:           max(100%, 680px);
   border-collapse: collapse;
   font-size:       13.5px;
 
@@ -268,4 +273,63 @@
   color:                rgba(255,255,255,0.40);
   font-variant-numeric: tabular-nums;
   margin-left:          auto;
+}
+
+@media (max-width: 700px) {
+  .admin-page {
+    max-width: none;
+  }
+
+  .admin-page-header,
+  .admin-modal-actions,
+  .admin-pagination {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .admin-page-title {
+    font-size: 20px;
+  }
+
+  .admin-badge {
+    align-self: flex-start;
+  }
+
+  .admin-table-wrap {
+    border-radius: 8px;
+    margin-inline: -2px;
+  }
+
+  .admin-table { font-size: 13px; }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 10px;
+  }
+
+  .admin-actions {
+    white-space: normal;
+  }
+
+  .btn-edit,
+  .btn-link,
+  .btn-save,
+  .btn-cancel,
+  .btn-delete,
+  .btn-create,
+  .btn-page {
+    min-height: 34px;
+  }
+
+  .admin-modal-backdrop {
+    align-items: flex-start;
+    padding: 74px 12px 16px;
+    overflow-y: auto;
+  }
+
+  .admin-modal {
+    min-width: 0;
+    padding: 22px 18px;
+  }
 }

@@ -58,7 +58,7 @@
 // ── Service cards grid ───────────────────────────────────────────────────────
 .pd-grid {
   display:               grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
   gap:                   16px;
 }
 
@@ -207,4 +207,33 @@
 
   h3 { color: rgba(255,255,255,0.70); font-size: 18px; font-weight: 700; margin: 0; }
   p  { font-size: 14px; margin: 0; max-width: 36ch; }
+}
+
+@media (max-width: 640px) {
+  .pd-title {
+    font-size: 24px;
+  }
+
+  .pd-sub {
+    margin-bottom: 22px;
+  }
+
+  .pd-company-header,
+  .pd-card-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .pd-company-count,
+  .pd-status-badge {
+    white-space: normal;
+  }
+
+  .pd-card {
+    padding: 16px;
+  }
+
+  .pd-chart-dates {
+    display: none;
+  }
 }

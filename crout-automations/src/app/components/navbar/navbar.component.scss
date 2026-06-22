@@ -183,9 +183,11 @@
   display: none;
   position: absolute;
   top: calc(100% + 0.75rem);
-  left: 50%;
-  transform: translateX(-50%);
-  min-width: 200px;
+  left: 0;
+  transform: none;
+  width: min(240px, calc(100vw - 2rem));
+  min-width: min(200px, calc(100vw - 2rem));
+  max-width: calc(100vw - 2rem);
   background: rgba(10, 37, 64, 0.97);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
@@ -225,6 +227,12 @@
 
   @media (min-width: 769px) {
     display: none !important;
+  }
+
+  @media (max-width: 420px) {
+    width: min(220px, calc(100vw - 1.5rem));
+    min-width: min(190px, calc(100vw - 1.5rem));
+    max-width: calc(100vw - 1.5rem);
   }
 }
 

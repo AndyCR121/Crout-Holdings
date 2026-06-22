@@ -20,11 +20,16 @@ export class AdminComponent implements OnInit {
     if (!u) return '';
     return ((u.firstName?.[0] ?? '') + (u.surname?.[0] ?? '')).toUpperCase() || u.username[0].toUpperCase();
   });
+  sidebarOpen = false;
 
   ngOnInit(): void {
     const user = this.user();
     if (!user || !user.isAdmin) this.router.navigate(['/']);
   }
+
+  openSidebar(): void { this.sidebarOpen = true; }
+
+  closeSidebar(): void { this.sidebarOpen = false; }
 
   logout(): void { this.auth.logout(); }
 }

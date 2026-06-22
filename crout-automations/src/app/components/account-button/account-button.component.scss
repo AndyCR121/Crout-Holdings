@@ -195,6 +195,10 @@
   animation:     caDropIn 160ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.ca-account-dropdown-close {
+  display: none;
+}
+
 @keyframes caDropIn {
   from { opacity: 0; transform: translateY(-6px) scale(0.97); }
   to   { opacity: 1; transform: translateY(0)    scale(1);    }
@@ -244,4 +248,44 @@
   height:     1px;
   background: rgba(255, 255, 255, 0.10);
   margin:     4px 6px;
+}
+
+@media (max-width: 768px) {
+  .ca-account-dropdown {
+    position: fixed;
+    top: 4.75rem;
+    right: 0.75rem;
+    width: min(320px, calc(100vw - 1.5rem));
+    min-width: 0;
+    max-height: calc(100dvh - 5.5rem);
+    overflow-y: auto;
+    padding: 0.5rem;
+  }
+
+  .ca-account-dropdown-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    margin: 0 0 0.35rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.88);
+    cursor: pointer;
+  }
+
+  .ca-dd-item {
+    min-height: 42px;
+  }
+}
+
+@media (max-width: 420px) {
+  .ca-account-dropdown {
+    top: 4rem;
+    right: 0.5rem;
+    width: calc(100vw - 1rem);
+    max-height: calc(100dvh - 4.5rem);
+  }
 }

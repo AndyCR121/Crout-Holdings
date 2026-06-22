@@ -24,10 +24,15 @@ export class AdminSidebarComponent {
 
   readonly user     = computed(() => this.shell.currentUser());
   readonly initials = computed(() => this.shell.initials());
+  sidebarOpen = false;
 
   isActive(path: string): boolean {
     return typeof window !== 'undefined' && window.location.pathname === path;
   }
+
+  openSidebar(): void { this.sidebarOpen = true; }
+
+  closeSidebar(): void { this.sidebarOpen = false; }
 
   logout(): void { this.shell.logout(); }
 }

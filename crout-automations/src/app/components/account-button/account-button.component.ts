@@ -49,6 +49,8 @@ export class AccountButtonComponent implements OnInit {
 
   closeModal(): void { this.showAuthModal.set(false); }
 
+  closeDropdown(): void { this.open.set(false); }
+
   /** Use window.location — Angular Router is not available in Custom Elements context (WordPress). */
   navigate(path: string): void {
     this.open.set(false);
