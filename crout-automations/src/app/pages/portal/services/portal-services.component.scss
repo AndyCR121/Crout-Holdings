@@ -556,6 +556,8 @@ $radius-sm:    8px;
 
   &__side-summary,
   &__workspace {
+    height: 820px !important;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -570,7 +572,7 @@ $radius-sm:    8px;
     border: 1px solid $border;
     border-radius: $radius-sm;
     background: rgba(255,255,255,0.025);
-    min-height: calc(100vh - 48px);
+    // min-height: calc(100vh - 48px);
     padding: 16px;
   }
 

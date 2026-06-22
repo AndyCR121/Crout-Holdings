@@ -1,6 +1,9 @@
 .trigger-panel {
+  height: calc(800px - 70px);
+  overflow-y: auto;
   display: grid;
   gap: 1rem;
+  border-radius: 8px;
 }
 
 .trigger-card {
