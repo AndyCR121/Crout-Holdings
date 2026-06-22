@@ -552,7 +552,7 @@ public class AdminController(
         if (!CallerIsAdmin) return Forbid();
         var existing = await devServices.GetByIdAsync(id);
         if (existing is null) return NotFound();
-        await devServices.DeactivateAsync(id);
+        await devServices.DeleteAsync(id);
         return NoContent();
     }
 

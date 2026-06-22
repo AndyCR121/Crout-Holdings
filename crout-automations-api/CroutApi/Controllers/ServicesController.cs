@@ -62,4 +62,13 @@ public class ServicesController(IServiceCatalogService catalog) : ControllerBase
         var updated = await catalog.RequestConfigChangeAsync(UserId, userServiceId, dto);
         return Ok(updated);
     }
+
+    /// <summary>PUT /api/services/user-services/{userServiceId}/credentials — sends credential values through the backend gateway and stores only metadata.</summary>
+    [HttpPut("user-services/{userServiceId:int}/credentials")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<IActionResult> UpdateCredentials(int userServiceId, [FromBody] UpdateServiceCredentialsDto dto)
+    {
+        var updated = await catalog.UpdateCredentialsAsync(UserId, userServiceId, dto);
+        return Ok(updated);
+    }
 }

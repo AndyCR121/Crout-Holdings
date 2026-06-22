@@ -1,25 +1,27 @@
 namespace CroutApi.DTOs;
 
-public record AdminClientServiceRowDto(
-    int UserServiceId,
-    int CompanyId,
-    string CompanyName,
-    int UserId,
-    string ClientName,
-    string ClientEmail,
-    int ServiceId,
-    string ServiceName,
-    int? PackageId,
-    string? PackageName,
-    string? SubscriptionId,
-    string? Config,
-    bool Active,
-    int Status,
-    decimal SubscriptionAmount,
-    string? PricingSnapshot,
-    DateTime? PaymentDate,
-    DateTime? DueDate,
-    DateTime CreatedAt);
+public class AdminClientServiceRowDto
+{
+    public int UserServiceId { get; set; }
+    public int CompanyId { get; set; }
+    public string CompanyName { get; set; } = string.Empty;
+    public int UserId { get; set; }
+    public string ClientName { get; set; } = string.Empty;
+    public string ClientEmail { get; set; } = string.Empty;
+    public int ServiceId { get; set; }
+    public string ServiceName { get; set; } = string.Empty;
+    public int? PackageId { get; set; }
+    public string? PackageName { get; set; }
+    public string? SubscriptionId { get; set; }
+    public string? Config { get; set; }
+    public bool Active { get; set; }
+    public int Status { get; set; }
+    public decimal SubscriptionAmount { get; set; }
+    public string? PricingSnapshot { get; set; }
+    public DateTime? PaymentDate { get; set; }
+    public DateTime? DueDate { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
 
 public record AdminUpsertClientServiceDto(
     int CompanyId,
@@ -43,24 +45,26 @@ public record AdminUpdateClientServiceConfigDto(
     DateTime? PaymentDate,
     DateTime? DueDate);
 
-public record AdminPaystackMappingRowDto(
-    int UserServiceId,
-    int CompanyId,
-    string CompanyName,
-    int UserId,
-    string ClientName,
-    string ClientEmail,
-    int ServiceId,
-    string ServiceName,
-    int? PackageId,
-    string? PackageName,
-    string? SubscriptionId,
-    decimal SubscriptionAmount,
-    int Status,
-    bool Active,
-    string MappingStatus,
-    DateTime? PaymentDate,
-    DateTime? DueDate);
+public class AdminPaystackMappingRowDto
+{
+    public int UserServiceId { get; set; }
+    public int CompanyId { get; set; }
+    public string CompanyName { get; set; } = string.Empty;
+    public int UserId { get; set; }
+    public string ClientName { get; set; } = string.Empty;
+    public string ClientEmail { get; set; } = string.Empty;
+    public int ServiceId { get; set; }
+    public string ServiceName { get; set; } = string.Empty;
+    public int? PackageId { get; set; }
+    public string? PackageName { get; set; }
+    public string? SubscriptionId { get; set; }
+    public decimal SubscriptionAmount { get; set; }
+    public int Status { get; set; }
+    public bool Active { get; set; }
+    public string MappingStatus { get; set; } = string.Empty;
+    public DateTime? PaymentDate { get; set; }
+    public DateTime? DueDate { get; set; }
+}
 
 public record AdminMapPaystackSubscriptionDto(
     string? SubscriptionId,

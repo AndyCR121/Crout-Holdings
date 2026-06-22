@@ -158,7 +158,7 @@ public class UserServiceRepository(DbHelper db) : IUserServiceRepository
               us.subscription_id AS SubscriptionId,
               us.Config AS Config,
               us.Active AS Active,
-              us.Status AS Status,
+              CAST(us.Status AS SIGNED) AS Status,
               COALESCE(us.subscriptionAmount, 0.00) AS SubscriptionAmount,
               us.pricingSnapshot AS PricingSnapshot,
               us.paymentDate AS PaymentDate,
@@ -197,7 +197,7 @@ public class UserServiceRepository(DbHelper db) : IUserServiceRepository
               us.subscription_id AS SubscriptionId,
               us.Config AS Config,
               us.Active AS Active,
-              us.Status AS Status,
+              CAST(us.Status AS SIGNED) AS Status,
               COALESCE(us.subscriptionAmount, 0.00) AS SubscriptionAmount,
               us.pricingSnapshot AS PricingSnapshot,
               us.paymentDate AS PaymentDate,
@@ -322,7 +322,7 @@ public class UserServiceRepository(DbHelper db) : IUserServiceRepository
               p.PackageName AS PackageName,
               us.subscription_id AS SubscriptionId,
               COALESCE(us.subscriptionAmount, 0.00) AS SubscriptionAmount,
-              us.Status AS Status,
+              CAST(us.Status AS SIGNED) AS Status,
               us.Active AS Active,
               CASE
                 WHEN us.Active = 0 AND us.subscription_id IS NOT NULL AND us.subscription_id <> '' THEN 'failed'

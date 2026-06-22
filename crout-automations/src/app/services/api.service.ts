@@ -230,4 +230,16 @@ export class ApiService {
         catchError(err => throwError(() => err))
       );
   }
+
+  updateServiceCredentials(userServiceId: number, payload: {
+    integrationName: string;
+    fields: Record<string, string>;
+  }): Observable<IUserService> {
+    return this.http
+      .put<any>(`${this.base}/services/user-services/${userServiceId}/credentials`, payload, { headers: this.authHeaders(), withCredentials: true })
+      .pipe(
+        map(normalizeUserService),
+        catchError(err => throwError(() => err))
+      );
+  }
 }

@@ -15,4 +15,5 @@ public interface IServiceCatalogService
     Task<IEnumerable<UserService>> GetUserServicesAsync(int userId, int companyId);
     Task<UserService> CreateUserServiceAsync(int userId, CreateUserServiceFromConfigDto dto);
     Task<UserService> RequestConfigChangeAsync(int userId, int userServiceId, RequestServiceConfigChangeDto dto);
+    Task<UserService> UpdateCredentialsAsync(int userId, int userServiceId, UpdateServiceCredentialsDto dto);
 }

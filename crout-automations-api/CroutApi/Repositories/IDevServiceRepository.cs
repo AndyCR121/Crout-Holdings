@@ -20,6 +20,6 @@ public interface IDevServiceRepository
     Task<int> CreateAsync(DevService devService);
     Task<int> CreateWithSubscriptionSnapshotAsync(int userId, int userServiceId, decimal commissionPerc, decimal? costOverride = null);
     Task UpdateAsync(DevService devService);
-    Task DeactivateAsync(int devServiceId);
+    Task DeleteAsync(int devServiceId);
     Task<bool> UserServiceExistsAsync(int userServiceId);
 }

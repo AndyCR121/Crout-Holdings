@@ -76,10 +76,11 @@
           <!-- Card actions -->
           <div class="pservices__card-actions" *ngIf="!row.editing">
             <button class="pservices__btn pservices__btn--secondary" (click)="startEdit(row)">Request Config Change</button>
+            <button class="pservices__btn pservices__btn--secondary" type="button" (click)="openCredentials(row)">Update Credentials</button>
             <button class="pservices__btn pservices__btn--secondary" type="button" (click)="toggleVideoEditor(row)" *ngIf="isVideoEditor(row)">
               {{ row.videoEditorOpen ? 'Close Video Editor' : 'Open Video Editor' }}
             </button>
-            <button class="pservices__btn pservices__btn--ghost" (click)="openSidePanel(row)">View Details</button>
+            <button class="pservices__btn pservices__btn--ghost" (click)="openSidePanel(row, group.company)">View Details</button>
           </div>
 
           <div class="pservices__video-editor" *ngIf="row.videoEditorOpen">
@@ -148,32 +149,83 @@
               <button class="pservices__side-panel-close" (click)="closeSidePanel(row)" aria-label="Close">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
-              <h3>{{ row.service.serviceName }}</h3>
-              <p class="pservices__side-desc">{{ row.service.serviceDescription }}</p>
-              <div class="pservices__credential-note">
-                <span aria-hidden="true">i</span>
-                <p>Credentials are encrypted and saved directly into n8n. They are not stored in plain text. Credential names are generated as Company Name | Service | Credential Integration.</p>
-              </div>
-              <div class="pservices__side-meta">
-                <div><span>Company</span><strong>{{ group.company.companyName }}</strong></div>
-                <div><span>Status</span>
-                  <strong [ngClass]="statusClass(row.userService.status)">{{ statusLabel(row.userService.status) }}</strong>
-                </div>
-                <div *ngIf="row.userService.subscriptionId">
-                  <span>Subscription</span><strong>{{ row.userService.subscriptionId }}</strong>
-                </div>
-              </div>
-              <div *ngIf="row.service.features?.length">
-                <p class="pservices__side-section-label">Features</p>
-                <ul class="pservices__side-features">
-                  <li *ngFor="let f of row.service.features">{{ f }}</li>
-                </ul>
-              </div>
-              <div *ngIf="row.activeAddons.length">
-                <p class="pservices__side-section-label">Active Integrations</p>
-                <ul class="pservices__side-features">
-                  <li *ngFor="let a of row.activeAddons">{{ a.name }} <span *ngIf="!a.confirmed">(pending)</span></li>
-                </ul>
+              <div class="pservices__side-layout">
+                <section class="pservices__side-summary">
+                  <h3>{{ row.service.serviceName }}</h3>
+                  <p class="pservices__side-desc">{{ row.service.serviceDescription }}</p>
+                  <div class="pservices__credential-note">
+                    <span aria-hidden="true">i</span>
+                    <p>Credentials are encrypted and saved directly into n8n. They are not stored in plain text. Credential names are generated as Company Name | Service | Credential Integration.</p>
+                  </div>
+                  <button class="pservices__btn pservices__btn--primary" type="button" (click)="openCredentials(row)">
+                    Update Credentials
+                  </button>
+                  <div class="pservices__credentials-form" *ngIf="row.credentialsOpen">
+                    <label>
+                      Integration
+                      <select [(ngModel)]="row.credentialIntegration">
+                        <option *ngFor="let integration of row.activeAddons" [ngValue]="integration.name">{{ integration.name }}</option>
+                        <option *ngIf="row.activeAddons.length === 0" [ngValue]="row.service.serviceName">{{ row.service.serviceName }}</option>
+                      </select>
+                    </label>
+                    <div class="pservices__credential-fields">
+                      <label *ngFor="let field of row.credentialFields">
+                        {{ field.key }}
+                        <input [type]="field.key.toLowerCase().includes('password') || field.key.toLowerCase().includes('key') ? 'password' : 'text'" [(ngModel)]="field.value" autocomplete="off" />
+                      </label>
+                    </div>
+                    <div class="pservices__credential-actions">
+                      <button class="pservices__btn pservices__btn--ghost" type="button" (click)="cancelCredentials(row)">Cancel</button>
+                      <button class="pservices__btn pservices__btn--primary" type="button" (click)="submitCredentials(row)" [disabled]="savingCredentials() === row.userService.userServiceId">
+                        {{ savingCredentials() === row.userService.userServiceId ? 'Sending...' : 'Send Credentials' }}
+                      </button>
+                    </div>
+                  </div>
+                  <div class="pservices__side-meta">
+                    <div><span>Company</span><strong>{{ group.company.companyName }}</strong></div>
+                    <div><span>Status</span>
+                      <strong [ngClass]="statusClass(row.userService.status)">{{ statusLabel(row.userService.status) }}</strong>
+                    </div>
+                    <div *ngIf="row.userService.subscriptionId">
+                      <span>Subscription</span><strong>{{ row.userService.subscriptionId }}</strong>
+                    </div>
+                  </div>
+                  <div *ngIf="row.service.features?.length">
+                    <p class="pservices__side-section-label">Features</p>
+                    <ul class="pservices__side-features">
+                      <li *ngFor="let f of row.service.features">{{ f }}</li>
+                    </ul>
+                  </div>
+                  <div *ngIf="row.activeAddons.length">
+                    <p class="pservices__side-section-label">Active Integrations</p>
+                    <ul class="pservices__side-features">
+                      <li *ngFor="let a of row.activeAddons">{{ a.name }} <span *ngIf="!a.confirmed">(pending)</span></li>
+                    </ul>
+                  </div>
+                </section>
+
+                <section class="pservices__workspace">
+                  <ng-container *ngIf="isVideoEditor(row); else triggerWorkspace">
+                    <ca-portal-video-editor [embedded]="true"></ca-portal-video-editor>
+                  </ng-container>
+                  <ng-template #triggerWorkspace>
+                    <div class="pservices__workspace-head">
+                      <h3>Manual Service Controls</h3>
+                      <p>Run available service triggers through the backend workflow gateway.</p>
+                    </div>
+                    <p class="pservices__workspace-empty" *ngIf="row.triggersLoading">Loading service controls...</p>
+                    <ca-service-trigger-renderer
+                      *ngIf="!row.triggersLoading && row.triggerConfigs.length"
+                      [configs]="row.triggerConfigs"
+                      [companyId]="group.company.companyId"
+                      [userServiceId]="row.userService.userServiceId ?? null"
+                      (executed)="onTriggerExecuted()"
+                    ></ca-service-trigger-renderer>
+                    <p class="pservices__workspace-empty" *ngIf="!row.triggersLoading && !row.triggerConfigs.length">
+                      No manual controls are configured for this service yet.
+                    </p>
+                  </ng-template>
+                </section>
               </div>
             </div>
           </div>

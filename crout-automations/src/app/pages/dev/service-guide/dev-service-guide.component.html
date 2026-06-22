@@ -59,7 +59,7 @@
                       <section>
                         <h4>Triggers</h4>
                         <div class="dguide-option-chips">
-                          @for (option of integrationOptions.trigger; track option) {
+                          @for (option of integrationOptions().trigger; track option) {
                             <button type="button" [class.active]="isIntegrationSelected('trigger', option)" (click)="toggleIntegration('trigger', option)">
                               {{ option }}
                             </button>
@@ -71,7 +71,7 @@
                       <section>
                         <h4>Actions</h4>
                         <div class="dguide-option-chips">
-                          @for (option of integrationOptions.action; track option) {
+                          @for (option of integrationOptions().action; track option) {
                             <button type="button" [class.active]="isIntegrationSelected('action', option)" (click)="toggleIntegration('action', option)">
                               {{ option }}
                             </button>
@@ -83,7 +83,7 @@
                       <section>
                         <h4>Outputs</h4>
                         <div class="dguide-option-chips">
-                          @for (option of integrationOptions.output; track option) {
+                          @for (option of integrationOptions().output; track option) {
                             <button type="button" [class.active]="isIntegrationSelected('output', option)" (click)="toggleIntegration('output', option)">
                               {{ option }}
                             </button>
@@ -126,9 +126,9 @@
               </div>
               <div class="dguide-chip-block">
                 <h3>Triggers</h3>
-                @if (configChips().trigger.length || pricingChips().trigger.length) {
+                @if (displayChips().trigger.length) {
                   <div class="dguide-chips">
-                    @for (chip of configChips().trigger.concat(pricingChips().trigger); track chip) {
+                    @for (chip of displayChips().trigger; track chip) {
                       <span>{{ chip }}</span>
                     }
                   </div>
@@ -138,9 +138,9 @@
               </div>
               <div class="dguide-chip-block">
                 <h3>Actions</h3>
-                @if (configChips().action.length || pricingChips().action.length) {
+                @if (displayChips().action.length) {
                   <div class="dguide-chips">
-                    @for (chip of configChips().action.concat(pricingChips().action); track chip) {
+                    @for (chip of displayChips().action; track chip) {
                       <span>{{ chip }}</span>
                     }
                   </div>
@@ -150,9 +150,9 @@
               </div>
               <div class="dguide-chip-block">
                 <h3>Outputs</h3>
-                @if (configChips().output.length || pricingChips().output.length) {
+                @if (displayChips().output.length) {
                   <div class="dguide-chips">
-                    @for (chip of configChips().output.concat(pricingChips().output); track chip) {
+                    @for (chip of displayChips().output; track chip) {
                       <span>{{ chip }}</span>
                     }
                   </div>

@@ -2,6 +2,7 @@ using CroutApi.Models;
 using CroutApi.DTOs.Services;
 using CroutApi.Repositories;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace CroutApi.Services;
 
@@ -182,12 +183,74 @@ public class ServiceCatalogService(
         return await userServices.GetByIdAsync(userServiceId) ?? userService;
     }
 
+    public async Task<UserService> UpdateCredentialsAsync(int userId, int userServiceId, UpdateServiceCredentialsDto dto)
+    {
+        var userService = await userServices.GetByIdAsync(userServiceId)
+            ?? throw new KeyNotFoundException("User service not found.");
+        var company = await companies.GetByIdAsync(userService.CompanyId)
+            ?? throw new KeyNotFoundException("Company not found.");
+        if (company.UserId != userId)
+            throw new UnauthorizedAccessException("Company does not belong to this user.");
+
+        var service = await services.GetByIdAsync(userService.ServiceId)
+            ?? throw new KeyNotFoundException("Service not found.");
+
+        var integrationName = string.IsNullOrWhiteSpace(dto.IntegrationName)
+            ? throw new ArgumentException("Integration is required.")
+            : dto.IntegrationName.Trim();
+        var fields = (dto.Fields ?? [])
+            .Where(pair => !string.IsNullOrWhiteSpace(pair.Key) && !string.IsNullOrWhiteSpace(pair.Value))
+            .ToDictionary(pair => pair.Key.Trim(), pair => pair.Value, StringComparer.OrdinalIgnoreCase);
+        if (fields.Count == 0)
+            throw new ArgumentException("At least one credential field is required.");
+
+        var config = ParseConfig(userService.Config);
+        var existingCredentials = config["credentialReferences"] as JsonArray ?? [];
+        var credentialName = $"{company.CompanyName} | {service.ServiceName} | {integrationName}";
+        var credentialReference = new JsonObject
+        {
+            ["integrationName"] = integrationName,
+            ["credentialName"] = credentialName,
+            ["mode"] = "mock",
+            ["status"] = "queued",
+            ["fieldNames"] = new JsonArray(fields.Keys.Select(k => JsonValue.Create(k)).ToArray<JsonNode?>()),
+            ["submittedAt"] = DateTime.UtcNow,
+            ["message"] = "Credential values were sent through the backend gateway. Local mode stores only metadata and queues n8n credential capture."
+        };
+
+        var updatedCredentials = new JsonArray(
+            existingCredentials
+                .Where(node => !string.Equals(node?["integrationName"]?.GetValue<string>(), integrationName, StringComparison.OrdinalIgnoreCase))
+                .Select(node => node?.DeepClone())
+                .Concat([credentialReference])
+                .ToArray<JsonNode?>());
+
+        config["credentialReferences"] = updatedCredentials;
+        config["credentialsUpdatedAt"] = DateTime.UtcNow;
+
+        await userServices.UpdateConfigAsync(userServiceId, config.ToJsonString(), userService.Status);
+        return await userServices.GetByIdAsync(userServiceId) ?? userService;
+    }
+
     private static string[] Normalize(string[]? values) =>
         (values ?? [])
         .Where(v => !string.IsNullOrWhiteSpace(v))
         .Select(v => v.Trim())
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .ToArray();
+
+    private static JsonObject ParseConfig(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return [];
+        try
+        {
+            return JsonNode.Parse(raw) as JsonObject ?? [];
+        }
+        catch
+        {
+            return [];
+        }
+    }
 
     private async Task<HashSet<int>> ResolvePackageServiceIdsAsync(Package? package, int fallbackServiceId)
     {

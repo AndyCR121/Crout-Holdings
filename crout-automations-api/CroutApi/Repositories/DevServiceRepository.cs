@@ -145,11 +145,11 @@ public class DevServiceRepository(DbHelper db) : IDevServiceRepository
             devService);
     }
 
-    public async Task DeactivateAsync(int devServiceId)
+    public async Task DeleteAsync(int devServiceId)
     {
         using var conn = db.GetConnection();
         await conn.ExecuteAsync(
-            "UPDATE DevServices SET isActive = 0 WHERE devServiceId = @devServiceId",
+            "DELETE FROM DevServices WHERE devServiceId = @devServiceId",
             new { devServiceId });
     }
 

@@ -9,6 +9,9 @@ import { ToastService } from '../../../services/toast.service';
 import { IUserService, IService, IAddon, ICompany } from '../../../interfaces/i-service.interface';
 import { PortalSidebarComponent } from '../../../components/portal-sidebar/portal-sidebar.component';
 import { PortalVideoEditorComponent } from '../video-editor/portal-video-editor.component';
+import { ServiceTriggerRendererComponent } from '../../../components/service-trigger-renderer/service-trigger-renderer.component';
+import { ServiceTriggerConfig } from '../../../interfaces/i-service-trigger.interface';
+import { ServiceTriggerApiService } from '../../../services/service-trigger-api.service';
 
 interface IntegrationItem {
   name: string;
@@ -31,6 +34,11 @@ interface ServiceRow {
   outputNotes:   string;
   sidePanelOpen: boolean;
   videoEditorOpen: boolean;
+  credentialsOpen: boolean;
+  credentialIntegration: string;
+  credentialFields: { key: string; value: string }[];
+  triggerConfigs: ServiceTriggerConfig[];
+  triggersLoading: boolean;
 }
 
 interface CompanyGroup {
@@ -42,7 +50,7 @@ interface CompanyGroup {
 @Component({
   selector: 'ca-portal-services',
   standalone: true,
-  imports: [CommonModule, FormsModule, PortalSidebarComponent, PortalVideoEditorComponent],
+  imports: [CommonModule, FormsModule, PortalSidebarComponent, PortalVideoEditorComponent, ServiceTriggerRendererComponent],
   templateUrl: './portal-services.component.html',
   styleUrls: ['./portal-services.component.scss'],
 })
@@ -50,11 +58,13 @@ export class PortalServicesComponent implements OnInit {
   private readonly auth  = inject(AuthService);
   private readonly api   = inject(ApiService);
   private readonly toast = inject(ToastService);
+  private readonly triggersApi = inject(ServiceTriggerApiService);
 
   readonly user    = computed(() => this.auth.currentUser());
   readonly groups  = signal<CompanyGroup[]>([]);
   readonly loading = signal(true);
   readonly saving  = signal<number | null>(null);
+  readonly savingCredentials = signal<number | null>(null);
 
   readonly integrationOptions = {
     trigger: ['Webhook', 'Email / IMAP', 'WhatsApp Message', 'Website Form', 'Scheduled Trigger'],
@@ -109,6 +119,11 @@ export class PortalServicesComponent implements OnInit {
               outputNotes:   '',
               sidePanelOpen: false,
               videoEditorOpen: false,
+              credentialsOpen: false,
+              credentialIntegration: active[0]?.name ?? rowAddons[0]?.addonName ?? svc.serviceName,
+              credentialFields: this.defaultCredentialFields(),
+              triggerConfigs: [],
+              triggersLoading: false,
             };
           });
           return { company, rows, expanded: true };
@@ -248,8 +263,68 @@ export class PortalServicesComponent implements OnInit {
     });
   }
 
-  openSidePanel(row: ServiceRow):  void { row.sidePanelOpen = true;  this.groups.update(g => [...g]); }
+  openSidePanel(row: ServiceRow, company?: ICompany): void {
+    row.sidePanelOpen = true;
+    this.loadTriggers(row, company);
+    this.groups.update(g => [...g]);
+  }
   closeSidePanel(row: ServiceRow): void { row.sidePanelOpen = false; this.groups.update(g => [...g]); }
+
+  openCredentials(row: ServiceRow): void {
+    row.sidePanelOpen = true;
+    row.credentialsOpen = true;
+    row.credentialIntegration = row.credentialIntegration || row.activeAddons[0]?.name || row.service.serviceName;
+    if (!row.credentialFields.length) row.credentialFields = this.defaultCredentialFields();
+    this.groups.update(g => [...g]);
+  }
+
+  onTriggerExecuted(): void {
+    this.toast.success('Service trigger sent.');
+  }
+
+  cancelCredentials(row: ServiceRow): void {
+    row.credentialsOpen = false;
+    row.credentialFields = this.defaultCredentialFields();
+    this.groups.update(g => [...g]);
+  }
+
+  submitCredentials(row: ServiceRow): void {
+    const userServiceId = row.userService.userServiceId;
+    if (userServiceId == null) {
+      this.toast.error('Credentials could not be submitted because this service is missing its assignment id.');
+      return;
+    }
+
+    const fields = row.credentialFields.reduce((acc, field) => {
+      const key = field.key.trim();
+      if (key && field.value.trim()) acc[key] = field.value;
+      return acc;
+    }, {} as Record<string, string>);
+
+    if (!row.credentialIntegration.trim() || Object.keys(fields).length === 0) {
+      this.toast.error('Select an integration and enter at least one credential field.');
+      return;
+    }
+
+    this.savingCredentials.set(userServiceId);
+    this.api.updateServiceCredentials(userServiceId, {
+      integrationName: row.credentialIntegration,
+      fields,
+    }).subscribe({
+      next: updated => {
+        row.userService = updated;
+        row.credentialsOpen = false;
+        row.credentialFields = this.defaultCredentialFields();
+        this.savingCredentials.set(null);
+        this.groups.update(g => [...g]);
+        this.toast.success('Credentials sent securely for n8n setup.');
+      },
+      error: err => {
+        this.savingCredentials.set(null);
+        this.toast.error(err?.error?.error ?? 'Credentials could not be submitted.');
+      },
+    });
+  }
 
   isVideoEditor(row: ServiceRow): boolean {
     return row.service.serviceName === 'Marketing Systems' && !!this._parseObject(row.userService.config)?.['videoEditor'];
@@ -300,5 +375,33 @@ export class PortalServicesComponent implements OnInit {
 
   private asCategory(value: string): 'trigger' | 'action' | 'output' {
     return value === 'trigger' || value === 'output' ? value : 'action';
+  }
+
+  private loadTriggers(row: ServiceRow, company?: ICompany): void {
+    if (this.isVideoEditor(row)) return;
+    const companyId = company?.companyId ?? row.userService.companyId;
+    if (!companyId || !row.service.serviceId || row.triggersLoading || row.triggerConfigs.length) return;
+
+    row.triggersLoading = true;
+    this.triggersApi.getConfigs(companyId, row.service.serviceId).subscribe({
+      next: configs => {
+        row.triggerConfigs = configs;
+        row.triggersLoading = false;
+        this.groups.update(g => [...g]);
+      },
+      error: () => {
+        row.triggerConfigs = [];
+        row.triggersLoading = false;
+        this.groups.update(g => [...g]);
+      }
+    });
+  }
+
+  private defaultCredentialFields(): { key: string; value: string }[] {
+    return [
+      { key: 'Username / Email', value: '' },
+      { key: 'Password / API Key', value: '' },
+      { key: 'Tenant / Account ID', value: '' },
+    ];
   }
 }

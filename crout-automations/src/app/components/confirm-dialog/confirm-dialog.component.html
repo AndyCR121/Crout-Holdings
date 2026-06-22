@@ -21,8 +21,8 @@
     <p class="ca-confirm-message">{{ dialog.state()!.message }}</p>
 
     <div class="ca-confirm-actions">
-      <button class="ca-confirm-btn ca-confirm-btn--cancel" (click)="dialog.cancel()">Cancel</button>
-      <button class="ca-confirm-btn ca-confirm-btn--danger" (click)="dialog.confirm()">
+      <button type="button" class="ca-confirm-btn ca-confirm-btn--cancel" (click)="dialog.cancel()">Cancel</button>
+      <button type="button" class="ca-confirm-btn ca-confirm-btn--danger" (click)="dialog.confirm()">
         {{ dialog.state()!.confirmLabel }}
       </button>
     </div>

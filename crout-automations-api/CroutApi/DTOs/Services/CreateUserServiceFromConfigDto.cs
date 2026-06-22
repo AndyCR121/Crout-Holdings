@@ -18,3 +18,8 @@ public record RequestServiceConfigChangeDto(
     string? ActionNotes,
     string? OutputNotes
 );
+
+public record UpdateServiceCredentialsDto(
+    string IntegrationName,
+    Dictionary<string, string>? Fields
+);

@@ -201,13 +201,21 @@ export class AdminDevManagementComponent implements OnInit {
   async onDelete(row: IDevServiceAssignment): Promise<void> {
     if (!row.devServiceId) return;
     const confirmed = await this.confirm.open(
-      'Deactivate Assignment',
-      `Deactivate the Developer assignment for ${row.companyName} - ${row.serviceName}?`
+      'Delete Assignment',
+      `Delete the Developer assignment for ${row.companyName} - ${row.serviceName}?`
     );
     if (!confirmed) return;
+    this.saving.set(true);
     this.admin.deleteDevService(row.devServiceId).subscribe({
-      next: () => this.loadAssignments(),
-      error: () => this.error.set('Failed to deactivate Developer assignment.'),
+      next: () => {
+        this.assignments.update(items => items.filter(item => item.devServiceId !== row.devServiceId));
+        this.total.update(count => Math.max(0, count - 1));
+        this.saving.set(false);
+      },
+      error: err => {
+        this.error.set(err?.error?.error ?? 'Failed to delete Developer assignment.');
+        this.saving.set(false);
+      },
     });
   }
 

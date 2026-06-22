@@ -34,7 +34,7 @@ export class DevServiceGuideComponent implements OnInit {
   readonly integrationEditorOpen = signal(true);
   readonly userServiceId = Number(this.route.snapshot.paramMap.get('userServiceId'));
 
-  readonly integrationOptions = {
+  readonly baseIntegrationOptions = {
     trigger: ['Webhook', 'Email / IMAP', 'WhatsApp Message', 'Website Form', 'Scheduled Trigger'],
     action: ['Xero', 'Google Sheets', 'Trello', 'CRM Update', 'AI Agent', 'Custom Setup', 'Marketing Messaging'],
     output: ['Email Response', 'WhatsApp Reply', 'Dashboard', 'Report', 'Invoice / Quote']
@@ -57,6 +57,23 @@ export class DevServiceGuideComponent implements OnInit {
 
   readonly configChips = computed(() => this.extractChips(this.guide()?.config));
   readonly pricingChips = computed(() => this.extractChips(this.guide()?.pricingSnapshot));
+  readonly displayChips = computed(() => {
+    const config = this.configChips();
+    const pricing = this.pricingChips();
+    return {
+      trigger: config.trigger.length ? config.trigger : this.mergeUnique([...config.trigger, ...pricing.trigger]),
+      action: config.action.length ? config.action : this.mergeUnique([...config.action, ...pricing.action]),
+      output: config.output.length ? config.output : this.mergeUnique([...config.output, ...pricing.output]),
+    };
+  });
+  readonly integrationOptions = computed(() => {
+    const display = this.displayChips();
+    return {
+      trigger: this.mergeUnique([...this.baseIntegrationOptions.trigger, ...display.trigger]),
+      action: this.mergeUnique([...this.baseIntegrationOptions.action, ...display.action]),
+      output: this.mergeUnique([...this.baseIntegrationOptions.output, ...display.output]),
+    };
+  });
 
   ngOnInit(): void {
     this.loadGuide();
@@ -222,17 +239,21 @@ export class DevServiceGuideComponent implements OnInit {
 
   private hydrateIntegrationEditor(guide: IDevPortalService): void {
     const config = this.parseJson(guide.config);
+    const pricing = this.parseJson(guide.pricingSnapshot);
     this.editTrigger = this.mergeUnique([
       ...this.pickValues(config, ['trigger', 'triggers']),
-      ...this.pickIntegrationCategory(config, 'trigger')
+      ...this.pickIntegrationCategory(config, 'trigger'),
+      ...this.pickValues(pricing, ['trigger', 'triggers'])
     ]);
     this.editAction = this.mergeUnique([
       ...this.pickValues(config, ['action', 'actions', 'addons']),
-      ...this.pickIntegrationCategory(config, 'action')
+      ...this.pickIntegrationCategory(config, 'action'),
+      ...this.pickValues(pricing, ['action', 'actions', 'addons', 'integrations', 'services', 'selectedAddons', 'requiredComponents', 'selectedService'])
     ]);
     this.editOutput = this.mergeUnique([
       ...this.pickValues(config, ['output', 'outputs']),
-      ...this.pickIntegrationCategory(config, 'output')
+      ...this.pickIntegrationCategory(config, 'output'),
+      ...this.pickValues(pricing, ['output', 'outputs', 'deliverables'])
     ]);
 
     const notes = config && typeof config === 'object'

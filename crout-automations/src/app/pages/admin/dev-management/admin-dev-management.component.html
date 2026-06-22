@@ -6,7 +6,7 @@
       <div class="admin-page-header">
         <h1 class="admin-page-title">Developer Management</h1>
         <div class="admin-page-header-actions">
-          <button class="btn-create" (click)="openCreate()">+ Add Assignment</button>
+          <button type="button" class="btn-create" (click)="openCreate()">+ Add Assignment</button>
         </div>
       </div>
 
@@ -59,8 +59,8 @@
               <option value="true">Active</option>
               <option value="false">Inactive</option>
             </select>
-            <button class="btn-save" (click)="applyFilters()">Filter</button>
-            <button class="btn-cancel" (click)="clearFilters()">Clear</button>
+            <button type="button" class="btn-save" (click)="applyFilters()">Filter</button>
+            <button type="button" class="btn-cancel" (click)="clearFilters()">Clear</button>
           </div>
         </div>
 
@@ -90,11 +90,11 @@
                   <td>{{ statusLabel(row.status) }}</td>
                   <td><span class="admin-pill" [class.green]="row.isActive">{{ row.isActive ? 'Active' : 'Inactive' }}</span></td>
                   <td class="admin-actions">
-                    <button *ngIf="row.devServiceId; else assignAction" class="btn-edit" (click)="startEdit(row)">Edit</button>
+                    <button type="button" *ngIf="row.devServiceId; else assignAction" class="btn-edit" (click)="startEdit(row)">Edit</button>
                     <ng-template #assignAction>
-                      <button class="btn-save" (click)="openCreateFor(row)">Assign</button>
+                      <button type="button" class="btn-save" (click)="openCreateFor(row)">Assign</button>
                     </ng-template>
-                    <button *ngIf="row.devServiceId" class="btn-delete" (click)="onDelete(row)">Delete</button>
+                    <button type="button" *ngIf="row.devServiceId" class="btn-delete" [disabled]="saving()" (click)="onDelete(row)">Delete</button>
                   </td>
                 </ng-container>
 
@@ -119,8 +119,8 @@
                     </select>
                   </td>
                   <td class="admin-actions">
-                    <button class="btn-save" [disabled]="saving()" (click)="saveEdit(row)">Save</button>
-                    <button class="btn-cancel" (click)="cancelEdit(row.devServiceId)">Cancel</button>
+                    <button type="button" class="btn-save" [disabled]="saving()" (click)="saveEdit(row)">Save</button>
+                    <button type="button" class="btn-cancel" (click)="cancelEdit(row.devServiceId)">Cancel</button>
                   </td>
                 </ng-container>
               </tr>
@@ -132,9 +132,9 @@
         </div>
 
         <div class="admin-pagination">
-          <button class="btn-page" [disabled]="page() === 1" (click)="prevPage()">Prev</button>
+          <button type="button" class="btn-page" [disabled]="page() === 1" (click)="prevPage()">Prev</button>
           <span>Page {{ page() }} of {{ totalPages }}</span>
-          <button class="btn-page" [disabled]="!hasMore" (click)="nextPage()">Next</button>
+          <button type="button" class="btn-page" [disabled]="!hasMore" (click)="nextPage()">Next</button>
         </div>
       </section>
     </div>
@@ -171,8 +171,8 @@
     </label>
 
     <div class="admin-modal-actions">
-      <button class="btn-save" [disabled]="saving()" (click)="submitCreate()">{{ saving() ? 'Saving...' : 'Create' }}</button>
-      <button class="btn-cancel" (click)="showCreate.set(false)">Cancel</button>
+      <button type="button" class="btn-save" [disabled]="saving()" (click)="submitCreate()">{{ saving() ? 'Saving...' : 'Create' }}</button>
+      <button type="button" class="btn-cancel" (click)="showCreate.set(false)">Cancel</button>
     </div>
   </div>
 </div>
