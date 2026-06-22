@@ -79,6 +79,11 @@
     </div>
   </section>
 
+  <section class="marketing-mobile-note">
+    <strong>Video editor is not supported on small screens.</strong>
+    <p>Use a tablet, laptop, or desktop to edit videos. On this screen you can still review the scheduled videos list and selected post summary.</p>
+  </section>
+
   <nav class="marketing-workspace__tabs">
     <button type="button" [class.active]="activeTab() === 'editor'" (click)="setTab('editor')">Video Editor</button>
     <button type="button" *ngIf="hasAnalyticalAi" [class.active]="activeTab() === 'analytics'" (click)="setTab('analytics')">Analytics</button>

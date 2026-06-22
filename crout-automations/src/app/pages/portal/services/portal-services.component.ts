@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, computed } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
@@ -53,7 +53,7 @@ interface CompanyGroup {
   templateUrl: './portal-services.component.html',
   styleUrls: ['./portal-services.component.scss'],
 })
-export class PortalServicesComponent implements OnInit {
+export class PortalServicesComponent implements OnInit, OnDestroy {
   private readonly auth  = inject(AuthService);
   private readonly api   = inject(ApiService);
   private readonly toast = inject(ToastService);
@@ -133,6 +133,10 @@ export class PortalServicesComponent implements OnInit {
       },
       error: () => this.loading.set(false),
     });
+  }
+
+  ngOnDestroy(): void {
+    this.unlockDrawerScroll();
   }
 
   private _parseConfig(cfg: string | null | undefined, allAddons: IAddon[]): IntegrationItem[] {
@@ -263,14 +267,21 @@ export class PortalServicesComponent implements OnInit {
 
   openSidePanel(row: ServiceRow, company?: ICompany): void {
     row.sidePanelOpen = true;
+    this.lockDrawerScroll();
     this.loadTriggers(row, company);
     this.groups.update(g => [...g]);
   }
-  closeSidePanel(row: ServiceRow): void { row.sidePanelOpen = false; this.groups.update(g => [...g]); }
+
+  closeSidePanel(row: ServiceRow): void {
+    row.sidePanelOpen = false;
+    this.groups.update(g => [...g]);
+    if (!this.hasOpenSidePanel()) this.unlockDrawerScroll();
+  }
 
   openCredentials(row: ServiceRow): void {
     row.sidePanelOpen = true;
     row.credentialsOpen = true;
+    this.lockDrawerScroll();
     row.credentialIntegration = row.credentialIntegration || row.activeAddons[0]?.name || row.service.serviceName;
     if (!row.credentialFields.length) row.credentialFields = this.defaultCredentialFields();
     this.groups.update(g => [...g]);
@@ -391,5 +402,17 @@ export class PortalServicesComponent implements OnInit {
       { key: 'Password / API Key', value: '' },
       { key: 'Tenant / Account ID', value: '' },
     ];
+  }
+
+  private hasOpenSidePanel(): boolean {
+    return this.groups().some(group => group.rows.some(row => row.sidePanelOpen));
+  }
+
+  private lockDrawerScroll(): void {
+    document.body.classList.add('pservices-drawer-open');
+  }
+
+  private unlockDrawerScroll(): void {
+    document.body.classList.remove('pservices-drawer-open');
   }
 }

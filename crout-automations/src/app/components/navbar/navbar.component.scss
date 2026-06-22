@@ -236,6 +236,16 @@
   }
 }
 
+@media (max-width: 768px) {
+  .ca-navbar-brand-text {
+    display: none;
+  }
+
+  .ca-navbar-logo {
+    height: 32px;
+  }
+}
+
 @media (max-width: 420px) {
   .ca-navbar-brand-text {
     display: none;

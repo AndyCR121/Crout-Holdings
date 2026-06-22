@@ -31,6 +31,9 @@
  *   <ca-admin-addons></ca-admin-addons>
  *   <ca-admin-service-features></ca-admin-service-features>
  *   <ca-admin-companies></ca-admin-companies>
+ *   <ca-admin-dev-management></ca-admin-dev-management>
+ *   <ca-admin-client-services></ca-admin-client-services>
+ *   <ca-admin-paystack-management></ca-admin-paystack-management>
  *
  * Portal pages (standalone — include their own sidebar):
  *   <ca-portal-dashboard></ca-portal-dashboard>
@@ -39,8 +42,13 @@
  *   <ca-portal-subscriptions></ca-portal-subscriptions>
  *   <ca-portal-payment-methods></ca-portal-payment-methods>
  *
- * NOTE: <ca-nav> and <ca-footer> are intentionally excluded.
- * They live in wordpress-theme/ and are handled by the WP theme layer.
+ * Dev pages (standalone â€” include their own sidebar):
+ *   <ca-dev-dashboard></ca-dev-dashboard>
+ *   <ca-dev-services></ca-dev-services>
+ *   <ca-dev-service-guide></ca-dev-service-guide>
+ *
+ * NOTE: <ca-navbar>, <ca-footer>, <ca-account-button>, and <ca-auth-modal>
+ * are intentionally registered for separate Elementor header/footer/account usage.
  *
  * NOTE: <ca-admin-sidebar> and <ca-portal-sidebar> are intentionally excluded.
  * They are embedded directly inside the sub-page components above.
@@ -80,6 +88,7 @@ import { HomeComponent } from '../app/pages/home/home.component';
 import { ContactComponent } from '../app/pages/contact/contact.component';
 import { ServicesComponent } from '../app/pages/services/services.component';
 import { ServiceConfiguratorComponent } from '../app/components/service-configurator/service-configurator.component';
+import { PrivacyPolicyPageComponent } from '../app/pages/privacy-policy/privacy-policy.page';
 
 // ── Service sub-pages ────────────────────────────────────────────────────────
 import { MarketingSystemsComponent } from '../app/pages/services/marketing-systems/marketing-systems.component';
@@ -94,6 +103,9 @@ import { AdminPackagesComponent } from '../app/pages/admin/packages/admin-packag
 import { AdminAddonsComponent } from '../app/pages/admin/addons/admin-addons.component';
 import { AdminServiceFeaturesComponent } from '../app/pages/admin/service-features/admin-service-features.component';
 import { AdminCompaniesComponent } from '../app/pages/admin/companies/admin-companies.component';
+import { AdminDevManagementComponent } from '../app/pages/admin/dev-management/admin-dev-management.component';
+import { AdminClientServicesComponent } from '../app/pages/admin/client-services/admin-client-services.component';
+import { AdminPaystackManagementComponent } from '../app/pages/admin/paystack-management/admin-paystack-management.component';
 
 // ── Portal sub-pages (standalone — embed PortalSidebarComponent internally) ──
 import { PortalDashboardComponent } from '../app/pages/portal/dashboard/portal-dashboard.component';
@@ -101,6 +113,9 @@ import { PortalServicesComponent } from '../app/pages/portal/services/portal-ser
 import { PortalProfileComponent } from '../app/pages/portal/profile/portal-profile.component';
 import { PortalSubscriptionsComponent } from '../app/pages/portal/billing/subscriptions/portal-subscriptions.component';
 import { PortalPaymentMethodsComponent } from '../app/pages/portal/billing/payment-methods/portal-payment-methods.component';
+import { DevDashboardComponent } from '../app/pages/dev/dashboard/dev-dashboard.component';
+import { DevServicesComponent } from '../app/pages/dev/services/dev-services.component';
+import { DevServiceGuideComponent } from '../app/pages/dev/service-guide/dev-service-guide.component';
 
 (async () => {
   const app = await createApplication({
@@ -131,6 +146,7 @@ import { PortalPaymentMethodsComponent } from '../app/pages/portal/billing/payme
     ['ca-home',                   HomeComponent],
     ['ca-contact',                ContactComponent],
     ['ca-services',               ServicesComponent],
+    ['ca-page-privacy-policy',    PrivacyPolicyPageComponent],
 
     // ── Service sub-pages ──────────────────────────────────────────────────
     ['ca-quote-system',           QuoteSystemComponent],
@@ -145,6 +161,9 @@ import { PortalPaymentMethodsComponent } from '../app/pages/portal/billing/payme
     ['ca-admin-addons',           AdminAddonsComponent],
     ['ca-admin-service-features', AdminServiceFeaturesComponent],
     ['ca-admin-companies',        AdminCompaniesComponent],
+    ['ca-admin-dev-management',   AdminDevManagementComponent],
+    ['ca-admin-client-services',  AdminClientServicesComponent],
+    ['ca-admin-paystack-management', AdminPaystackManagementComponent],
 
     // ── Portal sub-pages ───────────────────────────────────────────────────
     ['ca-portal-dashboard',       PortalDashboardComponent],
@@ -152,6 +171,11 @@ import { PortalPaymentMethodsComponent } from '../app/pages/portal/billing/payme
     ['ca-portal-profile',         PortalProfileComponent],
     ['ca-portal-subscriptions',   PortalSubscriptionsComponent],
     ['ca-portal-payment-methods', PortalPaymentMethodsComponent],
+
+    // â”€â”€ Dev sub-pages â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    ['ca-dev-dashboard',          DevDashboardComponent],
+    ['ca-dev-services',           DevServicesComponent],
+    ['ca-dev-service-guide',      DevServiceGuideComponent],
   ];
 
   for (const [tag, component] of elements) {

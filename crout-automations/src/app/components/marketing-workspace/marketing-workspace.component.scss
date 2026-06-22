@@ -481,6 +481,7 @@ $blue: #4fa3b8;
 }
 
 .marketing-analytics__note,
+.marketing-mobile-note,
 .marketing-form__warning,
 .marketing-empty {
   margin: 0;
@@ -491,6 +492,20 @@ $blue: #4fa3b8;
   font-size: 13px;
   line-height: 1.5;
   padding: 12px;
+}
+
+.marketing-mobile-note {
+  display: none;
+
+  strong {
+    display: block;
+    color: #ffb56e;
+    margin-bottom: 4px;
+  }
+
+  p {
+    margin: 0;
+  }
 }
 
 .marketing-analytics {
@@ -692,14 +707,60 @@ $blue: #4fa3b8;
 }
 
 @media (max-width: 720px) {
+  .marketing-workspace {
+    gap: 10px;
+  }
+
   .marketing-workspace__header,
   .marketing-calendar__bar {
     align-items: flex-start;
     flex-direction: column;
   }
 
+  .marketing-workspace__header,
+  .marketing-calendar {
+    padding: 10px;
+  }
+
+  .marketing-workspace__header-main {
+    grid-template-columns: 1fr;
+  }
+
+  .marketing-workspace__header h3 {
+    font-size: 17px;
+  }
+
+  .marketing-workspace__actions,
+  .marketing-workspace__tabs,
+  .marketing-editor,
+  .marketing-analytics,
+  .marketing-details,
+  .marketing-advanced {
+    display: none !important;
+  }
+
+  .marketing-mobile-note {
+    display: block;
+  }
+
+  .marketing-workspace__limits {
+    grid-template-columns: 1fr;
+  }
+
   .marketing-calendar__grid {
-    grid-template-columns: repeat(7, minmax(148px, 1fr));
+    grid-auto-columns: minmax(148px, 72vw);
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding-bottom: 8px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .marketing-calendar__day {
+    scroll-snap-align: start;
   }
 
   .marketing-timeline__track,

@@ -388,6 +388,14 @@
   display: none;
 }
 
+body.pservices-drawer-open {
+  overflow: hidden;
+}
+
+body.pservices-drawer-open .portal-main {
+  overflow: hidden;
+}
+
 @media (max-width: 768px) {
   .shell-mobile-toggle {
     position: fixed;
