@@ -39,7 +39,10 @@
                 <span>Commission</span>
               </div>
               @for (item of assigned(); track item.userServiceId) {
-                <a class="dservices-row dservices-row--link" [routerLink]="['/dev/services', item.userServiceId, 'guide']">
+                <a
+                  class="dservices-row dservices-row--link"
+                  [routerLink]="['/dev/services/guide']"
+                  [queryParams]="{ userServiceId: item.userServiceId }">
                   <span>{{ item.companyName }}</span>
                   <span>{{ item.serviceName }}</span>
                   <span><em class="dservices-status" [class]="statusClass(item.status)">{{ statusLabel(item.status) }}</em></span>

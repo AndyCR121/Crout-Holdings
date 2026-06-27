@@ -32,7 +32,7 @@ export class DevServiceGuideComponent implements OnInit {
   readonly savingIntegrations = signal(false);
   readonly savingMaintenance = signal(false);
   readonly integrationEditorOpen = signal(true);
-  readonly userServiceId = Number(this.route.snapshot.paramMap.get('userServiceId'));
+  readonly userServiceId = signal<number | null>(null);
 
   readonly baseIntegrationOptions = {
     trigger: ['Webhook', 'Email / IMAP', 'WhatsApp Message', 'Website Form', 'Scheduled Trigger'],
@@ -76,18 +76,36 @@ export class DevServiceGuideComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.loadGuide();
+    this.route.queryParamMap.subscribe(queryParams => {
+      const userServiceId = this.parseUserServiceId(queryParams.get('userServiceId'));
+      this.userServiceId.set(userServiceId);
+
+      if (userServiceId === null) {
+        this.guide.set(null);
+        this.loading.set(false);
+        return;
+      }
+
+      this.loadGuide(userServiceId);
+    });
   }
 
-  loadGuide(): void {
+  loadGuide(userServiceId = this.userServiceId()): void {
+    if (userServiceId === null) {
+      this.guide.set(null);
+      this.loading.set(false);
+      return;
+    }
+
     this.loading.set(true);
-    this.dev.getGuide(this.userServiceId).subscribe({
+    this.dev.getGuide(userServiceId).subscribe({
       next: guide => {
         this.guide.set(guide);
         this.hydrateIntegrationEditor(guide);
         this.loading.set(false);
       },
       error: () => {
+        this.guide.set(null);
         this.loading.set(false);
         this.toast.error('Failed to load service guide.');
       },
@@ -95,9 +113,10 @@ export class DevServiceGuideComponent implements OnInit {
   }
 
   markStep(step: GuideStep): void {
-    if (step.step === 3) return;
+    const userServiceId = this.userServiceId();
+    if (userServiceId === null || step.step === 3) return;
     this.savingStep.set(step.step);
-    this.dev.updateGuideStep(this.userServiceId, step.step).subscribe({
+    this.dev.updateGuideStep(userServiceId, step.step).subscribe({
       next: guide => {
         this.guide.set(guide);
         this.savingStep.set(null);
@@ -126,8 +145,11 @@ export class DevServiceGuideComponent implements OnInit {
   }
 
   saveIntegrationConfirmation(): void {
+    const userServiceId = this.userServiceId();
+    if (userServiceId === null) return;
+
     this.savingIntegrations.set(true);
-    this.dev.updateGuideIntegrations(this.userServiceId, {
+    this.dev.updateGuideIntegrations(userServiceId, {
       trigger: this.editTrigger,
       action: this.editAction,
       output: this.editOutput,
@@ -150,10 +172,11 @@ export class DevServiceGuideComponent implements OnInit {
   }
 
   toggleMaintenance(): void {
+    const userServiceId = this.userServiceId();
     const current = this.guide();
-    if (!current) return;
+    if (userServiceId === null || !current) return;
     this.savingMaintenance.set(true);
-    this.dev.updateMaintenance(this.userServiceId, !current.isMaintenance).subscribe({
+    this.dev.updateMaintenance(userServiceId, !current.isMaintenance).subscribe({
       next: guide => {
         this.guide.set(guide);
         this.savingMaintenance.set(false);
@@ -280,5 +303,13 @@ export class DevServiceGuideComponent implements OnInit {
 
   private mergeUnique(values: string[]): string[] {
     return [...new Set(values.filter(v => !!v?.trim()).map(v => v.trim()))];
+  }
+
+  private parseUserServiceId(value: string | null): number | null {
+    if (!value?.trim()) return null;
+    if (!/^\d+$/.test(value)) return null;
+
+    const userServiceId = Number(value);
+    return Number.isSafeInteger(userServiceId) && userServiceId > 0 ? userServiceId : null;
   }
 }

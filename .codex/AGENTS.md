@@ -5,7 +5,7 @@
 2. Read the Layer 2 map(s) relevant to the task: `Architecture.md` plus `Frontend.md` and/or `API.md`.
 3. Read `.codex/layer-3/Notes.md`.
 4. Establish an explicit initial search scope from those files and the task.
-5. For any non-trivial, unfamiliar, cross-file, feature, or bug-investigation task, use the read-only `context_mapper` subagent with `gpt-5.4-mini` when available. Give it only the initial scope, wait for its report, then implement with `gpt-5.4`.
+5. For any non-trivial, unfamiliar, cross-file, feature, bug-investigation task, or layer 3 notes updates, use the read-only `context_mapper` subagent with `gpt-5.4-mini` when available. Give it only the initial scope, wait for its report, then implement with `gpt-5.4`.
 
 Skip the mapper only for a trivial, obvious, isolated single-file edit. State why in the final report.
 
