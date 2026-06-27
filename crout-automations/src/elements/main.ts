@@ -172,7 +172,7 @@ import { DevServiceGuideComponent } from '../app/pages/dev/service-guide/dev-ser
     ['ca-portal-subscriptions',   PortalSubscriptionsComponent],
     ['ca-portal-payment-methods', PortalPaymentMethodsComponent],
 
-    // â”€â”€ Dev sub-pages â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Dev sub-pages ──────────────────────────────────────────────────────
     ['ca-dev-dashboard',          DevDashboardComponent],
     ['ca-dev-services',           DevServicesComponent],
     ['ca-dev-service-guide',      DevServiceGuideComponent],
