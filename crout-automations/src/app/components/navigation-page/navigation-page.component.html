@@ -1,0 +1,21 @@
+<section class="ca-navigation-page" role="status" aria-live="polite">
+  <div class="ca-navigation-page__card">
+    <div
+      class="ca-navigation-page__spinner"
+      [class.is-idle]="!shouldRedirect"
+      aria-hidden="true"></div>
+
+    <p class="ca-navigation-page__eyebrow">Navigation Redirect</p>
+
+    @if (destination) {
+      <h1 class="ca-navigation-page__title">Taking you to your next page...</h1>
+      <p class="ca-navigation-page__body">Navigating to:</p>
+      <p class="ca-navigation-page__destination">{{ destination }}</p>
+    } @else {
+      <h1 class="ca-navigation-page__title">Redirect destination is not configured.</h1>
+      <p class="ca-navigation-page__body">
+        Add a valid navigation value to send visitors to the correct page.
+      </p>
+    }
+  </div>
+</section>

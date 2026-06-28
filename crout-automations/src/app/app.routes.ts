@@ -179,7 +179,7 @@ export const routes: Routes = [
       import('./pages/dev/service-guide/dev-service-guide.component').then(m => m.DevServiceGuideComponent),
   },
   {
-    path: 'dev/services',
+    path: 'dev/dev-services',
     canActivate: [authGuard, devGuard],
     loadComponent: () =>
       import('./pages/dev/services/dev-services.component').then(m => m.DevServicesComponent),

@@ -41,7 +41,7 @@
               @for (item of assigned(); track item.userServiceId) {
                 <a
                   class="dservices-row dservices-row--link"
-                  [routerLink]="['/dev/services/guide']"
+                  [routerLink]="['/dev/dev-services/guide']"
                   [queryParams]="{ userServiceId: item.userServiceId }">
                   <span>{{ item.companyName }}</span>
                   <span>{{ item.serviceName }}</span>

@@ -1,4 +1,4 @@
-import { Component, inject, Input } from '@angular/core';
+import { Component, inject, Input, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -12,14 +12,32 @@ import { AuthService } from '../../services/auth.service';
 })
 export class NavbarComponent {
   readonly auth = inject(AuthService);
+  private readonly host = inject(ElementRef<HTMLElement>);
   menuOpen = false;
   @Input() assetsBase: string = '/assets/';
 
-  toggleMenu(): void {
+  toggleMenu(event?: Event): void {
+    event?.stopPropagation();
     this.menuOpen = !this.menuOpen;
   }
 
   closeMenu(): void {
     this.menuOpen = false;
+  }
+
+  onMenuClick(event: Event): void {
+    event.stopPropagation();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    if (!this.menuOpen) return;
+    if (this.host.nativeElement.contains(event.target as Node)) return;
+    this.closeMenu();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    this.closeMenu();
   }
 }

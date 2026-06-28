@@ -31,7 +31,7 @@
   </ul>
 
   <!-- Hamburger (mobile) -->
-  <button class="ca-navbar-hamburger" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen" aria-label="Toggle navigation">
+  <button class="ca-navbar-hamburger" type="button" (click)="toggleMenu($event)" [attr.aria-expanded]="menuOpen" aria-label="Toggle navigation">
     <svg *ngIf="!menuOpen" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <line x1="3" y1="6"  x2="21" y2="6"/>
       <line x1="3" y1="12" x2="21" y2="12"/>
@@ -44,7 +44,7 @@
   </button>
 
   <!-- Mobile Drawer -->
-  <div class="ca-navbar-mobile" [class.open]="menuOpen">
+  <div class="ca-navbar-mobile" [class.ca-navbar-mobile--open]="menuOpen" (click)="onMenuClick($event)">
     <a href="/" (click)="closeMenu()">Home</a>
     <a href="/services" (click)="closeMenu()">Services</a>
     <a href="/contact-us" (click)="closeMenu()">Contact</a>

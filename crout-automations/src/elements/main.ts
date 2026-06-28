@@ -65,13 +65,6 @@ import { authInterceptor } from '../app/interceptors/auth.interceptor';
 import { errorInterceptor } from '../app/interceptors/error.interceptor';
 
 // ── Public section components ────────────────────────────────────────────────
-import { HeroComponent } from '../app/components/hero/hero.component';
-import { PainPointComponent } from '../app/components/pain-point/pain-point.component';
-import { ServicesOverviewComponent } from '../app/components/services-overview/services-overview.component';
-import { HowItWorksComponent } from '../app/components/how-it-works/how-it-works.component';
-import { WhyCroutComponent } from '../app/components/why-crout/why-crout.component';
-import { PricingComponent } from '../app/components/pricing/pricing.component';
-import { CtaBannerComponent } from '../app/components/cta-banner/cta-banner.component';
 import { PrivacyPolicyComponent } from '../app/components/privacy-policy/privacy-policy.component';
 
 // ── Auth / Account ───────────────────────────────────────────────────────────
@@ -116,6 +109,7 @@ import { PortalPaymentMethodsComponent } from '../app/pages/portal/billing/payme
 import { DevDashboardComponent } from '../app/pages/dev/dashboard/dev-dashboard.component';
 import { DevServicesComponent } from '../app/pages/dev/services/dev-services.component';
 import { DevServiceGuideComponent } from '../app/pages/dev/service-guide/dev-service-guide.component';
+import { NavigationPageComponent } from '../app/components/navigation-page/navigation-page.component';
 
 (async () => {
   const app = await createApplication({
@@ -147,6 +141,7 @@ import { DevServiceGuideComponent } from '../app/pages/dev/service-guide/dev-ser
     ['ca-contact',                ContactComponent],
     ['ca-services',               ServicesComponent],
     ['ca-page-privacy-policy',    PrivacyPolicyPageComponent],
+    ['ca-navigation-page',        NavigationPageComponent],
 
     // ── Service sub-pages ──────────────────────────────────────────────────
     ['ca-quote-system',           QuoteSystemComponent],

@@ -1,3 +1,115 @@
-// AdminSidebarComponent styles
-// All layout rules live in src/styles/_shell-layouts.scss (globally imported).
-// Place any sidebar-specific overrides here if needed in future.
+:host {
+  .shell-mobile-toggle,
+  .shell-sidebar-close,
+  .shell-sidebar-backdrop {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  :host {
+    .shell-mobile-toggle {
+      position: fixed;
+      top: 4.75rem;
+      left: 1rem;
+      z-index: 890;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-height: 38px;
+      padding: 0 0.8rem;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 8px;
+      background: rgba(10, 22, 40, 0.94);
+      color: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+      cursor: pointer;
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .shell-sidebar-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 1090;
+      border: 0;
+      background: rgba(2, 8, 18, 0.62);
+      cursor: pointer;
+
+      &.is-open {
+        display: block;
+      }
+    }
+
+    .shell-sidebar-close {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      flex: 0 0 auto;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      color: rgba(255, 255, 255, 0.88);
+      cursor: pointer;
+    }
+
+    .admin-sidebar {
+      position: fixed !important;
+      inset: 0 auto 0 0;
+      z-index: 1100;
+      width: min(86vw, 320px);
+      height: 100dvh !important;
+      max-height: 100dvh;
+      display: flex !important;
+      flex-direction: column !important;
+      flex-wrap: nowrap !important;
+      gap: 0 !important;
+      padding: 18px 14px !important;
+      overflow-y: auto !important;
+      transform: translateX(-105%);
+      transition: transform 180ms ease;
+      box-shadow: 18px 0 44px rgba(0, 0, 0, 0.38);
+
+      &.is-open {
+        transform: translateX(0);
+      }
+    }
+
+    .admin-logo {
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding: 0 4px 16px;
+    }
+
+    .admin-nav {
+      flex-direction: column !important;
+      flex-wrap: nowrap !important;
+      gap: 6px !important;
+    }
+
+    .admin-nav-item,
+    .admin-logout-btn {
+      width: 100%;
+      min-height: 42px;
+    }
+
+    .admin-sidebar-footer {
+      margin-top: auto;
+    }
+  }
+}
+
+@media (max-width: 420px) {
+  :host {
+    .shell-mobile-toggle {
+      top: 4rem;
+      left: 0.75rem;
+      min-height: 36px;
+      padding: 0 0.7rem;
+    }
+  }
+}
