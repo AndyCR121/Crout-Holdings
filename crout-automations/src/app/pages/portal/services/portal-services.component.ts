@@ -12,6 +12,8 @@ import { ServiceTriggerRendererComponent } from '../../../components/service-tri
 import { MarketingWorkspaceComponent } from '../../../components/marketing-workspace/marketing-workspace.component';
 import { ServiceTriggerConfig } from '../../../interfaces/i-service-trigger.interface';
 import { ServiceTriggerApiService } from '../../../services/service-trigger-api.service';
+import { IntegrationStatusBadgeComponent } from '../../../components/integration-status-badge/integration-status-badge.component';
+import { IntegrationStatusService } from '../../../services/integration-status.service';
 
 interface IntegrationItem {
   name: string;
@@ -49,7 +51,7 @@ interface CompanyGroup {
 @Component({
   selector: 'ca-portal-services',
   standalone: true,
-  imports: [CommonModule, FormsModule, PortalSidebarComponent, ServiceTriggerRendererComponent, MarketingWorkspaceComponent],
+  imports: [CommonModule, FormsModule, PortalSidebarComponent, ServiceTriggerRendererComponent, MarketingWorkspaceComponent, IntegrationStatusBadgeComponent],
   templateUrl: './portal-services.component.html',
   styleUrls: ['./portal-services.component.scss'],
 })
@@ -58,6 +60,7 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
   private readonly api   = inject(ApiService);
   private readonly toast = inject(ToastService);
   private readonly triggersApi = inject(ServiceTriggerApiService);
+  private readonly integrationStatus = inject(IntegrationStatusService);
 
   readonly user    = computed(() => this.auth.currentUser());
   readonly groups  = signal<CompanyGroup[]>([]);
@@ -340,11 +343,11 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
   }
 
   statusLabel(s: number): string {
-    return ['Disabled', 'In Development', 'Live', 'Pending'][s] ?? 'Unknown';
+    return this.integrationStatus.label(null, s);
   }
 
   statusClass(s: number): string {
-    return ['status-disabled', 'status-dev', 'status-live', 'status-pending'][s] ?? '';
+    return this.integrationStatus.cssClass(null, s);
   }
 
   hasAnyService(): boolean {

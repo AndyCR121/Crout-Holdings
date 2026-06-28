@@ -1,3 +1,4 @@
+using CroutApi.DTOs.Services;
 using CroutApi.Helpers;
 using CroutApi.Models;
 using Dapper;
@@ -7,14 +8,22 @@ namespace CroutApi.Repositories;
 public class UserRepository(DbHelper db) : IUserRepository
 {
     private const string SelectCols =
-        "user_id AS UserId, Username, PasswordHash, FirstName, Surname, Email, CellNumber, Active, IsAdmin, isDev AS IsDev, referral AS Referral, CreatedAt, ProfilePicture";
+        "user_id AS UserId, Username, PasswordHash, token_version AS TokenVersion, FirstName, Surname, Email, CellNumber, Active, IsAdmin, isDev AS IsDev, referral AS Referral, CreatedAt, ProfilePicture";
 
     public async Task<User?> GetByUsernameAsync(string username)
     {
         using var conn = db.GetConnection();
         return await conn.QuerySingleOrDefaultAsync<User>(
-            $"SELECT {SelectCols} FROM Users WHERE Username = @username AND Active = 1",
+            $"SELECT {SelectCols} FROM Users WHERE (Username = @username OR Email = @username) AND Active = 1",
             new { username });
+    }
+
+    public async Task<User?> GetByEmailAsync(string email)
+    {
+        using var conn = db.GetConnection();
+        return await conn.QuerySingleOrDefaultAsync<User>(
+            $"SELECT {SelectCols} FROM Users WHERE Email = @email AND Active = 1",
+            new { email });
     }
 
     public async Task<User?> GetByIdAsync(int userId)
@@ -23,6 +32,21 @@ public class UserRepository(DbHelper db) : IUserRepository
         return await conn.QuerySingleOrDefaultAsync<User>(
             $"SELECT {SelectCols} FROM Users WHERE user_id = @userId",
             new { userId });
+    }
+
+    public async Task<User?> GetActiveDeveloperByReferralAsync(string referral)
+    {
+        using var conn = db.GetConnection();
+        return await conn.QuerySingleOrDefaultAsync<User>(
+            $"""
+            SELECT {SelectCols}
+            FROM Users
+            WHERE Active = 1
+              AND isDev = 1
+              AND referral = @referral
+              AND TRIM(COALESCE(referral, '')) <> ''
+            """,
+            new { referral });
     }
 
     public async Task<bool> UsernameExistsAsync(string username)
@@ -43,6 +67,40 @@ public class UserRepository(DbHelper db) : IUserRepository
         return await conn.ExecuteScalarAsync<int>(
             "SELECT COUNT(1) FROM Users WHERE referral = @referral AND (@exceptUserId IS NULL OR user_id <> @exceptUserId)",
             new { referral, exceptUserId }) > 0;
+    }
+
+    public async Task<bool> IsActiveDeveloperReferralAsync(string referral)
+    {
+        using var conn = db.GetConnection();
+        return await conn.ExecuteScalarAsync<int>(
+            """
+            SELECT COUNT(1)
+            FROM Users
+            WHERE Active = 1
+              AND isDev = 1
+              AND referral = @referral
+              AND TRIM(COALESCE(referral, '')) <> ''
+            """,
+            new { referral }) > 0;
+    }
+
+    public async Task<IEnumerable<DeveloperReferralOptionDto>> GetActiveDeveloperReferralOptionsAsync()
+    {
+        using var conn = db.GetConnection();
+        return await conn.QueryAsync<DeveloperReferralOptionDto>(
+            """
+            SELECT
+              user_id AS UserId,
+              FirstName,
+              Surname,
+              referral AS Referral
+            FROM Users
+            WHERE Active = 1
+              AND isDev = 1
+              AND referral IS NOT NULL
+              AND TRIM(referral) <> ''
+            ORDER BY FirstName, Surname, referral
+            """);
     }
 
     public async Task<int> CreateAsync(User user)
@@ -77,6 +135,14 @@ public class UserRepository(DbHelper db) : IUserRepository
         await conn.ExecuteAsync(
             "UPDATE Users SET PasswordHash=@passwordHash WHERE user_id=@userId",
             new { userId, passwordHash });
+    }
+
+    public async Task IncrementTokenVersionAsync(int userId)
+    {
+        using var conn = db.GetConnection();
+        await conn.ExecuteAsync(
+            "UPDATE Users SET token_version = token_version + 1 WHERE user_id = @userId",
+            new { userId });
     }
 
     public async Task UpdatePictureAsync(int userId, string? pictureData)

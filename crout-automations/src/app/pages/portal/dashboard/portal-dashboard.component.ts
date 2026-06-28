@@ -8,11 +8,13 @@ import { CompanySvcFilterPipe } from '../../../pipes/company-svc-filter.pipe';
 import { forkJoin, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { PortalSidebarComponent } from '../../../components/portal-sidebar/portal-sidebar.component';
+import { IntegrationStatusBadgeComponent } from '../../../components/integration-status-badge/integration-status-badge.component';
+import { IntegrationStatusService } from '../../../services/integration-status.service';
 
 @Component({
   selector: 'ca-portal-dashboard',
   standalone: true,
-  imports: [CommonModule, CompanySvcFilterPipe, PortalSidebarComponent],
+  imports: [CommonModule, CompanySvcFilterPipe, PortalSidebarComponent, IntegrationStatusBadgeComponent],
   templateUrl: './portal-dashboard.component.html',
   styleUrls: ['./portal-dashboard.component.scss'],
 })
@@ -20,6 +22,7 @@ export class PortalDashboardComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly api  = inject(ApiService);
   private readonly n8n  = inject(N8nService);
+  private readonly integrationStatus = inject(IntegrationStatusService);
 
   readonly development = true;
 
@@ -110,11 +113,11 @@ export class PortalDashboardComponent implements OnInit {
   }
 
   statusLabel(s: number): string {
-    return ['Disabled', 'In Development', 'Live', 'Pending'][s] ?? 'Unknown';
+    return this.integrationStatus.label(null, s);
   }
 
   statusClass(s: number): string {
-    return ['status-disabled', 'status-dev', 'status-live', 'status-pending'][s] ?? '';
+    return this.integrationStatus.cssClass(null, s);
   }
 
   chartBars(serviceId: number): { x: number; h: number; w: number; isError: boolean; label: string }[] {

@@ -219,6 +219,14 @@ export class AdminService {
     return this.http.delete<void>(`${this.base}/client-services/${id}`, { headers: this.authHeaders(), withCredentials: true });
   }
 
+  pauseClientServiceIntegration(id: number): Observable<IAdminClientService> {
+    return this.http.post<IAdminClientService>(`${this.base}/client-services/${id}/integration/pause`, {}, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  startClientServiceIntegration(id: number): Observable<IAdminClientService> {
+    return this.http.post<IAdminClientService>(`${this.base}/client-services/${id}/integration/start`, {}, { headers: this.authHeaders(), withCredentials: true });
+  }
+
   // Paystack Subscription Mapping
   getPaystackMappings(
     page = 1,

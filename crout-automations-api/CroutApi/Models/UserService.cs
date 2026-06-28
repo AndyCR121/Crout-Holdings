@@ -15,4 +15,6 @@ public class UserService
     public DateTime? PaymentDate { get; set; }
     public DateTime? DueDate { get; set; }
     public DateTime CreatedAt { get; set; }
+    public string? IntegrationStatus { get; set; }
+    public string? IntegrationWorkflowName { get; set; }
 }

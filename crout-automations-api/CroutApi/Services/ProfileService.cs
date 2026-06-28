@@ -32,9 +32,10 @@ public class ProfileService(
     public async Task ChangePasswordAsync(int userId, ChangePasswordRequest request)
     {
         var user = await users.GetByIdAsync(userId) ?? throw new KeyNotFoundException();
-        if (user.PasswordHash != enc.Hash(request.CurrentPassword))
+        if (!enc.Verify(request.CurrentPassword, user.PasswordHash))
             throw new UnauthorizedAccessException("Current password is incorrect.");
         await users.UpdatePasswordAsync(userId, enc.Hash(request.NewPassword));
+        await users.IncrementTokenVersionAsync(userId);
     }
 
     public async Task<UserDto> UpdateAvatarAsync(int userId, string base64Data)

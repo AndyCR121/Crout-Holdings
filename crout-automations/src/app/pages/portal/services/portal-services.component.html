@@ -58,9 +58,7 @@
           <div class="pservices__card-header">
             <div class="pservices__card-title-row">
               <h2 class="pservices__card-title">{{ row.service.serviceName }}</h2>
-              <span class="pservices__status" [ngClass]="statusClass(row.userService.status)">
-                {{ statusLabel(row.userService.status) }}
-              </span>
+              <ca-integration-status-badge [integrationStatus]="row.userService.integrationStatus" [legacyStatus]="row.userService.status" />
             </div>
             <p class="pservices__card-desc">{{ row.service.serviceDescription }}</p>
           </div>
@@ -177,7 +175,10 @@
                   <div class="pservices__side-meta">
                     <div><span>Company</span><strong>{{ group.company.companyName }}</strong></div>
                     <div><span>Status</span>
-                      <strong [ngClass]="statusClass(row.userService.status)">{{ statusLabel(row.userService.status) }}</strong>
+                      <strong><ca-integration-status-badge [integrationStatus]="row.userService.integrationStatus" [legacyStatus]="row.userService.status" /></strong>
+                    </div>
+                    <div *ngIf="row.userService.integrationWorkflowName">
+                      <span>Workflow</span><strong>{{ row.userService.integrationWorkflowName }}</strong>
                     </div>
                     <div *ngIf="row.userService.subscriptionId">
                       <span>Subscription</span><strong>{{ row.userService.subscriptionId }}</strong>

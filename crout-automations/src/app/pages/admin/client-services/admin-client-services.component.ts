@@ -6,11 +6,13 @@ import { AuthService } from '../../../services/auth.service';
 import { AdminService } from '../../../services/admin.service';
 import { AdminSidebarComponent } from '../../../components/admin-sidebar/admin-sidebar.component';
 import { IAdminClientService, IAdminClientServiceUpsert, ICompany, IService, UserServiceStatus } from '../../../interfaces/i-service.interface';
+import { IntegrationStatusBadgeComponent } from '../../../components/integration-status-badge/integration-status-badge.component';
+import { IntegrationStatusService } from '../../../services/integration-status.service';
 
 @Component({
   selector: 'ca-admin-client-services',
   standalone: true,
-  imports: [CommonModule, FormsModule, AdminSidebarComponent],
+  imports: [CommonModule, FormsModule, AdminSidebarComponent, IntegrationStatusBadgeComponent],
   templateUrl: './admin-client-services.component.html',
   styleUrls: ['./admin-client-services.component.scss'],
 })
@@ -18,12 +20,15 @@ export class AdminClientServicesComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly admin = inject(AdminService);
   private readonly router = inject(Router);
+  private readonly integrationStatus = inject(IntegrationStatusService);
 
   readonly items = signal<IAdminClientService[]>([]);
   readonly companies = signal<ICompany[]>([]);
   readonly services = signal<IService[]>([]);
   readonly loading = signal(true);
   readonly saving = signal(false);
+  readonly lifecycleLoadingId = signal<number | null>(null);
+  readonly lifecycleAction = signal<'pause' | 'start' | null>(null);
   readonly error = signal<string | null>(null);
   readonly page = signal(1);
   readonly total = signal(0);
@@ -151,8 +156,50 @@ export class AdminClientServicesComponent implements OnInit {
     });
   }
 
+  canPause(row: IAdminClientService): boolean {
+    return row.integrationStatus === 'Live';
+  }
+
+  canStart(row: IAdminClientService): boolean {
+    return row.integrationStatus === 'Paused' || row.integrationStatus === 'Failed' || row.integrationStatus === 'Development';
+  }
+
+  pause(row: IAdminClientService): void {
+    this.lifecycleLoadingId.set(row.userServiceId);
+    this.lifecycleAction.set('pause');
+    this.admin.pauseClientServiceIntegration(row.userServiceId).subscribe({
+      next: updated => {
+        this.items.update(items => items.map(item => item.userServiceId === updated.userServiceId ? updated : item));
+        this.lifecycleLoadingId.set(null);
+        this.lifecycleAction.set(null);
+      },
+      error: err => {
+        this.error.set(err?.error?.error ?? 'Failed to pause integration.');
+        this.lifecycleLoadingId.set(null);
+        this.lifecycleAction.set(null);
+      }
+    });
+  }
+
+  start(row: IAdminClientService): void {
+    this.lifecycleLoadingId.set(row.userServiceId);
+    this.lifecycleAction.set('start');
+    this.admin.startClientServiceIntegration(row.userServiceId).subscribe({
+      next: updated => {
+        this.items.update(items => items.map(item => item.userServiceId === updated.userServiceId ? updated : item));
+        this.lifecycleLoadingId.set(null);
+        this.lifecycleAction.set(null);
+      },
+      error: err => {
+        this.error.set(err?.error?.error ?? 'Failed to start integration.');
+        this.lifecycleLoadingId.set(null);
+        this.lifecycleAction.set(null);
+      }
+    });
+  }
+
   statusLabel(status: number): string {
-    return ['Disabled', 'In Development', 'Live', 'Pending'][status] ?? 'Unknown';
+    return this.integrationStatus.label(null, status);
   }
 
   private toDateInput(value?: string): string | null {

@@ -64,4 +64,70 @@ public class AuthController(IAuthService auth) : ControllerBase
         });
         return Ok(new { message = "Logged out." });
     }
+
+    [HttpPost("password-reset/request")]
+    public async Task<IActionResult> RequestPasswordReset([FromBody] PasswordResetRequest request)
+    {
+        try
+        {
+            return Ok(await auth.RequestPasswordResetAsync(request));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
+    [HttpPost("password-reset/resend")]
+    public async Task<IActionResult> ResendPasswordReset([FromBody] PasswordResetResendRequest request)
+    {
+        try
+        {
+            return Ok(await auth.ResendPasswordResetAsync(request));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
+    [HttpPost("password-reset/verify")]
+    public async Task<IActionResult> VerifyPasswordResetOtp([FromBody] PasswordResetVerifyRequest request)
+    {
+        try
+        {
+            await auth.VerifyPasswordResetOtpAsync(request);
+            return NoContent();
+        }
+        catch (Exception ex) when (ex is KeyNotFoundException or ArgumentException)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [HttpPost("password-reset/complete")]
+    public async Task<IActionResult> CompletePasswordReset([FromBody] PasswordResetCompleteRequest request)
+    {
+        try
+        {
+            await auth.CompletePasswordResetAsync(request);
+            return NoContent();
+        }
+        catch (Exception ex) when (ex is KeyNotFoundException or ArgumentException)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
 }

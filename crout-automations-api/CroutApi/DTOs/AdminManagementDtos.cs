@@ -21,6 +21,11 @@ public class AdminClientServiceRowDto
     public DateTime? PaymentDate { get; set; }
     public DateTime? DueDate { get; set; }
     public DateTime CreatedAt { get; set; }
+    public string? IntegrationStatus { get; set; }
+    public string? IntegrationWorkflowName { get; set; }
+    public string? IntegrationLastError { get; set; }
+    public DateTime? IntegrationPublishedDate { get; set; }
+    public DateTime? IntegrationPausedDate { get; set; }
 }
 
 public record AdminUpsertClientServiceDto(

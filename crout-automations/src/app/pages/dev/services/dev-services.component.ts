@@ -7,17 +7,20 @@ import { PortalSidebarComponent } from '../../../components/portal-sidebar/porta
 import { IDevPortalService } from '../../../interfaces/i-service.interface';
 import { DevService } from '../../../services/dev.service';
 import { ToastService } from '../../../services/toast.service';
+import { IntegrationStatusBadgeComponent } from '../../../components/integration-status-badge/integration-status-badge.component';
+import { IntegrationStatusService } from '../../../services/integration-status.service';
 
 @Component({
   selector: 'ca-dev-services',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, PortalSidebarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, PortalSidebarComponent, IntegrationStatusBadgeComponent],
   templateUrl: './dev-services.component.html',
   styleUrls: ['./dev-services.component.scss'],
 })
 export class DevServicesComponent implements OnInit {
   private readonly dev = inject(DevService);
   private readonly toast = inject(ToastService);
+  private readonly integrationStatus = inject(IntegrationStatusService);
 
   readonly assigned = signal<IDevPortalService[]>([]);
   readonly available = signal<IDevPortalService[]>([]);
@@ -154,10 +157,14 @@ export class DevServicesComponent implements OnInit {
   }
 
   statusLabel(status: number): string {
-    return ['Disabled', 'In Development', 'Live', 'Pending'][status] ?? 'Unknown';
+    return this.integrationStatus.label(null, status);
   }
 
   statusClass(status: number): string {
-    return ['status-disabled', 'status-dev', 'status-live', 'status-pending'][status] ?? '';
+    return this.integrationStatus.cssClass(null, status);
+  }
+
+  guideHref(userServiceId: number): string {
+    return `/dev/dev-services/guide/?userServiceId=${userServiceId}`;
   }
 }

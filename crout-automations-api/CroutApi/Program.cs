@@ -3,6 +3,7 @@ using CroutApi.Repositories;
 using CroutApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json;
@@ -29,6 +30,7 @@ builder.Services.AddSingleton(new EncryptionHelper(hmacSecret));
 
 // -- Repositories -------------------------------------------------------------
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IPasswordResetRepository, PasswordResetRepository>();
 builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
 builder.Services.AddScoped<IUserServiceRepository, UserServiceRepository>();
@@ -41,6 +43,7 @@ builder.Services.AddScoped<IServiceTriggerRepository, ServiceTriggerRepository>(
 builder.Services.AddScoped<IVideoProjectRepository, VideoProjectRepository>();
 builder.Services.AddScoped<IDevServiceRepository, DevServiceRepository>();
 builder.Services.AddScoped<IDevPortalRepository, DevPortalRepository>();
+builder.Services.AddScoped<IIntegrationRepository, IntegrationRepository>();
 
 // -- Application Services -----------------------------------------------------
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -51,6 +54,10 @@ builder.Services.AddScoped<IServiceTriggerService, ServiceTriggerService>();
 builder.Services.AddScoped<IVideoProjectService, VideoProjectService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IContactRequestService, ContactRequestService>();
+builder.Services.AddScoped<IIntegrationService, IntegrationService>();
+
+builder.Services.Configure<N8nOptions>(builder.Configuration.GetSection("N8n"));
+builder.Services.AddHttpClient<IN8nWorkflowClient, N8nWorkflowClient>();
 
 // -- Paystack proxy -----------------------------------------------------------
 // Uses a named HttpClient scoped to the Paystack base URL.
@@ -76,6 +83,32 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
       IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
       NameClaimType            = "unique_name",
       RoleClaimType            = "role",
+    };
+    o.Events = new JwtBearerEvents
+    {
+      OnTokenValidated = async ctx =>
+      {
+        var principal = ctx.Principal;
+        if (principal is null)
+        {
+          ctx.Fail("Missing principal.");
+          return;
+        }
+
+        var tokenVersionClaim = principal.FindFirst("token_version")?.Value;
+        if (!int.TryParse(tokenVersionClaim, out var tokenVersion))
+        {
+          ctx.Fail("Missing token version.");
+          return;
+        }
+
+        var repo = ctx.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
+        var user = await repo.GetByIdAsync(JwtHelper.GetUserId(principal));
+        if (user is null || !user.Active || user.TokenVersion != tokenVersion)
+        {
+          ctx.Fail("Token revoked.");
+        }
+      }
     };
   });
 

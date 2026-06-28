@@ -11,9 +11,12 @@
         </div>
         @if (guide()) {
           <div class="dguide-header-actions">
-            <span class="dguide-status" [class]="statusClass(guide()?.status)">{{ statusLabel(guide()?.status) }}</span>
+            <ca-integration-status-badge [integrationStatus]="guide()?.integrationStatus" [legacyStatus]="guide()?.status" />
             <button type="button" class="dguide-maintenance" (click)="toggleMaintenance()" [disabled]="savingMaintenance()">
               {{ guide()?.isMaintenance ? 'Disable Maintenance' : 'Enable Maintenance' }}
+            </button>
+            <button type="button" class="dguide-maintenance" (click)="publishIntegration()" [disabled]="publishing()">
+              {{ publishing() ? 'Publishing...' : 'Publish' }}
             </button>
           </div>
         }
@@ -114,6 +117,8 @@
                 <div><dt>Email</dt><dd>{{ guide()!.companyEmail || 'Not supplied' }}</dd></div>
                 <div><dt>Phone</dt><dd>{{ guide()!.companyPhone || 'Not supplied' }}</dd></div>
                 <div><dt>Address</dt><dd>{{ guide()!.companyAddress || 'Not supplied' }}</dd></div>
+                <div><dt>Workflow</dt><dd>{{ guide()!.integrationWorkflowName || 'Provisioning' }}</dd></div>
+                <div *ngIf="guide()!.integrationLastError"><dt>Last Error</dt><dd>{{ guide()!.integrationLastError }}</dd></div>
                 <div><dt>Due</dt><dd>{{ formatDate(guide()!.dueDate) }}</dd></div>
                 <div><dt>Subscription</dt><dd>{{ guide()!.subscriptionId || 'None' }}</dd></div>
                 <div><dt>Maintenance</dt><dd>{{ guide()!.isMaintenance ? 'Enabled' : 'Disabled' }}</dd></div>

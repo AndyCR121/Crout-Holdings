@@ -1,15 +1,14 @@
 <div class="ca-modal-backdrop" role="dialog" aria-modal="true" aria-label="Account">
   <div class="ca-modal-box">
 
-    <!-- Header -->
     <div class="ca-modal-header">
       <div class="ca-modal-tabs">
         <button
-          [class.active]="tab() === 'login'"
+          [class.active]="view() === 'auth' && tab() === 'login'"
           (click)="switchTab('login')"
         >Login</button>
         <button
-          [class.active]="tab() === 'signup'"
+          [class.active]="view() === 'auth' && tab() === 'signup'"
           (click)="switchTab('signup')"
         >Sign Up</button>
       </div>
@@ -20,13 +19,11 @@
       </button>
     </div>
 
-    <!-- Error -->
     @if (error()) {
       <div class="ca-modal-error">{{ error() }}</div>
     }
 
-    <!-- LOGIN -->
-    @if (tab() === 'login') {
+    @if (view() === 'auth' && tab() === 'login') {
       <form class="ca-modal-form" (ngSubmit)="submitLogin()" novalidate>
         <div class="ca-field">
           <label>Username or Email</label>
@@ -38,20 +35,29 @@
         </div>
         <div class="ca-field">
           <label>Password</label>
-          <input
-            type="password" [(ngModel)]="loginPwd" name="loginPwd"
-            placeholder="••••••••"
-            autocomplete="current-password"
-          />
+          <div class="ca-password-field">
+            <input
+              [type]="isPasswordVisible('login') ? 'text' : 'password'" [(ngModel)]="loginPwd" name="loginPwd"
+              placeholder="********"
+              autocomplete="current-password"
+            />
+            <button type="button" class="ca-password-toggle" (click)="togglePasswordVisibility('login')" [attr.aria-label]="isPasswordVisible('login') ? 'Hide password' : 'Show password'" [attr.aria-pressed]="isPasswordVisible('login')">
+              @if (isPasswordVisible('login')) {
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.9 10.9 0 0 1 12 20C7 20 2.73 16.89 1 12c.92-2.6 2.62-4.79 4.78-6.32"/><path d="M10.58 10.58A2 2 0 1 0 13.41 13.4"/><path d="M1 1l22 22"/><path d="M9.88 4.24A10.94 10.94 0 0 1 12 4c5 0 9.27 3.11 11 8a10.95 10.95 0 0 1-4.24 5.36"/></svg>
+              } @else {
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+              }
+            </button>
+          </div>
         </div>
+        <button type="button" class="ca-text-link" (click)="openForgotPassword()">Forgot Password?</button>
         <button type="submit" class="ca-btn-primary" [disabled]="loading()">
-          {{ loading() ? 'Signing in…' : 'Sign In' }}
+          {{ loading() ? 'Signing in...' : 'Sign In' }}
         </button>
       </form>
     }
 
-    <!-- SIGN UP -->
-    @if (tab() === 'signup') {
+    @if (view() === 'auth' && tab() === 'signup') {
       <form class="ca-modal-form" (ngSubmit)="submitSignup()" novalidate>
         <div class="ca-field-row">
           <div class="ca-field">
@@ -73,16 +79,97 @@
         </div>
         <div class="ca-field">
           <label>Password <span class="req">*</span></label>
-          <input type="password" [(ngModel)]="signupPwd" name="pwd" placeholder="••••••••" autocomplete="new-password" />
+          <div class="ca-password-field">
+            <input [type]="isPasswordVisible('signup') ? 'text' : 'password'" [(ngModel)]="signupPwd" name="pwd" placeholder="********" autocomplete="new-password" />
+            <button type="button" class="ca-password-toggle" (click)="togglePasswordVisibility('signup')" [attr.aria-label]="isPasswordVisible('signup') ? 'Hide password' : 'Show password'" [attr.aria-pressed]="isPasswordVisible('signup')">
+              @if (isPasswordVisible('signup')) {
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.9 10.9 0 0 1 12 20C7 20 2.73 16.89 1 12c.92-2.6 2.62-4.79 4.78-6.32"/><path d="M10.58 10.58A2 2 0 1 0 13.41 13.4"/><path d="M1 1l22 22"/><path d="M9.88 4.24A10.94 10.94 0 0 1 12 4c5 0 9.27 3.11 11 8a10.95 10.95 0 0 1-4.24 5.36"/></svg>
+              } @else {
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+              }
+            </button>
+          </div>
         </div>
         <div class="ca-field">
           <label>Confirm Password <span class="req">*</span></label>
-          <input type="password" [(ngModel)]="signupPwd2" name="pwd2" placeholder="••••••••" autocomplete="new-password" />
+          <div class="ca-password-field">
+            <input [type]="isPasswordVisible('signupConfirm') ? 'text' : 'password'" [(ngModel)]="signupPwd2" name="pwd2" placeholder="********" autocomplete="new-password" />
+            <button type="button" class="ca-password-toggle" (click)="togglePasswordVisibility('signupConfirm')" [attr.aria-label]="isPasswordVisible('signupConfirm') ? 'Hide password' : 'Show password'" [attr.aria-pressed]="isPasswordVisible('signupConfirm')">
+              @if (isPasswordVisible('signupConfirm')) {
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.9 10.9 0 0 1 12 20C7 20 2.73 16.89 1 12c.92-2.6 2.62-4.79 4.78-6.32"/><path d="M10.58 10.58A2 2 0 1 0 13.41 13.4"/><path d="M1 1l22 22"/><path d="M9.88 4.24A10.94 10.94 0 0 1 12 4c5 0 9.27 3.11 11 8a10.95 10.95 0 0 1-4.24 5.36"/></svg>
+              } @else {
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+              }
+            </button>
+          </div>
         </div>
         <button type="submit" class="ca-btn-primary" [disabled]="loading()">
-          {{ loading() ? 'Creating account…' : 'Create Account' }}
+          {{ loading() ? 'Creating account...' : 'Create Account' }}
         </button>
-        <p class="ca-modal-hint">You can add your company/companies after signing up under <strong>Profile → Companies</strong>.</p>
+        <p class="ca-modal-hint">You can add your company/companies after signing up under <strong>Profile -> Companies</strong>.</p>
+      </form>
+    }
+
+    @if (view() === 'forgot-request') {
+      <form class="ca-modal-form" (ngSubmit)="submitPasswordResetRequest()" novalidate>
+        <div class="ca-field">
+          <label>Email</label>
+          <input type="email" [(ngModel)]="resetEmail" name="resetEmail" placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <p class="ca-modal-hint">We&apos;ll email you a 6-digit OTP that expires in 10 minutes.</p>
+        <button type="submit" class="ca-btn-primary" [disabled]="loading()">
+          {{ loading() ? 'Sending code...' : 'Send OTP' }}
+        </button>
+        <button type="button" class="ca-text-link ca-text-link--secondary" (click)="backToLogin()">Back to Login</button>
+      </form>
+    }
+
+    @if (view() === 'forgot-verify') {
+      <form class="ca-modal-form" (ngSubmit)="verifyPasswordResetOtp()" novalidate>
+        <div class="ca-field">
+          <label>6-Digit OTP</label>
+          <input type="text" [ngModel]="resetOtp" (input)="onOtpInputEvent($event)" (keydown)="onOtpKeydown($event)" (paste)="onOtpPaste($event)" name="resetOtp" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="123456" autocomplete="one-time-code" />
+        </div>
+        <button type="submit" class="ca-btn-primary" [disabled]="loading()">
+          {{ loading() ? 'Verifying...' : 'Verify OTP' }}
+        </button>
+        <button type="button" class="ca-text-link" (click)="resendPasswordResetOtp()">Resend OTP</button>
+        <button type="button" class="ca-text-link ca-text-link--secondary" (click)="backToLogin()">Back to Login</button>
+      </form>
+    }
+
+    @if (view() === 'forgot-reset') {
+      <form class="ca-modal-form" (ngSubmit)="submitPasswordReset()" novalidate>
+        <div class="ca-field">
+          <label>New Password</label>
+          <div class="ca-password-field">
+            <input [type]="isPasswordVisible('reset') ? 'text' : 'password'" [(ngModel)]="resetPassword" name="resetPassword" placeholder="********" autocomplete="new-password" />
+            <button type="button" class="ca-password-toggle" (click)="togglePasswordVisibility('reset')" [attr.aria-label]="isPasswordVisible('reset') ? 'Hide password' : 'Show password'" [attr.aria-pressed]="isPasswordVisible('reset')">
+              @if (isPasswordVisible('reset')) {
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.9 10.9 0 0 1 12 20C7 20 2.73 16.89 1 12c.92-2.6 2.62-4.79 4.78-6.32"/><path d="M10.58 10.58A2 2 0 1 0 13.41 13.4"/><path d="M1 1l22 22"/><path d="M9.88 4.24A10.94 10.94 0 0 1 12 4c5 0 9.27 3.11 11 8a10.95 10.95 0 0 1-4.24 5.36"/></svg>
+              } @else {
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+              }
+            </button>
+          </div>
+        </div>
+        <div class="ca-field">
+          <label>Confirm Password</label>
+          <div class="ca-password-field">
+            <input [type]="isPasswordVisible('resetConfirm') ? 'text' : 'password'" [(ngModel)]="resetConfirmPassword" name="resetConfirmPassword" placeholder="********" autocomplete="new-password" />
+            <button type="button" class="ca-password-toggle" (click)="togglePasswordVisibility('resetConfirm')" [attr.aria-label]="isPasswordVisible('resetConfirm') ? 'Hide password' : 'Show password'" [attr.aria-pressed]="isPasswordVisible('resetConfirm')">
+              @if (isPasswordVisible('resetConfirm')) {
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.9 10.9 0 0 1 12 20C7 20 2.73 16.89 1 12c.92-2.6 2.62-4.79 4.78-6.32"/><path d="M10.58 10.58A2 2 0 1 0 13.41 13.4"/><path d="M1 1l22 22"/><path d="M9.88 4.24A10.94 10.94 0 0 1 12 4c5 0 9.27 3.11 11 8a10.95 10.95 0 0 1-4.24 5.36"/></svg>
+              } @else {
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+              }
+            </button>
+          </div>
+        </div>
+        <p class="ca-modal-hint">Password must be at least 7 characters and include an uppercase letter, a number, and a special character.</p>
+        <button type="submit" class="ca-btn-primary" [disabled]="loading()">
+          {{ loading() ? 'Resetting password...' : 'Reset Password' }}
+        </button>
       </form>
     }
 

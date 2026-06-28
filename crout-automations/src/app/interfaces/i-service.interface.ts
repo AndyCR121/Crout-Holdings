@@ -57,6 +57,15 @@ export interface IPricingComponent {
   isActive: boolean;
 }
 
+export interface IDeveloperReferralOption {
+  userId: number;
+  firstName: string;
+  surname: string;
+  referral: string;
+}
+
+export type IntegrationLifecycleStatus = 'Development' | 'Live' | 'Paused' | 'Failed';
+
 export interface IServiceFeature {
   featureId: number;
   serviceId: number;
@@ -95,6 +104,8 @@ export interface IUserService {
   paymentDate?: string;
   dueDate?: string;
   createdAt?: string;
+  integrationStatus?: IntegrationLifecycleStatus | null;
+  integrationWorkflowName?: string | null;
 }
 
 /** Holds the selected addon IDs for a specific service in a company context. */
@@ -129,6 +140,8 @@ export interface IDevServiceAssignment {
   isActive: boolean;
   createdAt: string;
   updatedAt?: string;
+  integrationStatus?: IntegrationLifecycleStatus | null;
+  integrationWorkflowName?: string | null;
 }
 
 export interface IDevPortalService {
@@ -156,6 +169,11 @@ export interface IDevPortalService {
   createdAt: string;
   dueDate?: string;
   paymentDate?: string;
+  integrationStatus?: IntegrationLifecycleStatus | null;
+  integrationWorkflowName?: string | null;
+  integrationLastError?: string | null;
+  integrationPublishedDate?: string | null;
+  integrationPausedDate?: string | null;
 }
 
 export interface IDevDashboard {
@@ -202,6 +220,11 @@ export interface IAdminClientService {
   paymentDate?: string;
   dueDate?: string;
   createdAt: string;
+  integrationStatus?: IntegrationLifecycleStatus | null;
+  integrationWorkflowName?: string | null;
+  integrationLastError?: string | null;
+  integrationPublishedDate?: string | null;
+  integrationPausedDate?: string | null;
 }
 
 export interface IAdminClientServiceUpsert {

@@ -45,13 +45,26 @@
               <ng-container *ngIf="editingId() !== row.userServiceId">
                 <td>{{ row.clientName }}<br><span class="admin-muted">{{ row.clientEmail }}</span></td>
                 <td>{{ row.companyName }}</td>
-                <td>{{ row.serviceName }}<br><span class="admin-muted">{{ row.packageName || 'No package' }}</span></td>
-                <td>{{ statusLabel(row.status) }}</td>
+                <td>
+                  {{ row.serviceName }}<br>
+                  <span class="admin-muted">{{ row.packageName || 'No package' }}</span><br>
+                  <span class="admin-muted" *ngIf="row.integrationWorkflowName">{{ row.integrationWorkflowName }}</span>
+                </td>
+                <td>
+                  <ca-integration-status-badge [integrationStatus]="row.integrationStatus" [legacyStatus]="row.status" />
+                  <div class="admin-muted" *ngIf="row.integrationLastError">{{ row.integrationLastError }}</div>
+                </td>
                 <td>R{{ row.subscriptionAmount | number:'1.2-2' }}</td>
                 <td>{{ row.subscriptionId || 'Unmapped' }}</td>
                 <td><span class="admin-pill" [class.green]="row.active">{{ row.active ? 'Yes' : 'No' }}</span></td>
                 <td class="admin-actions">
                   <button class="btn-edit" (click)="startEdit(row)">Edit</button>
+                  <button class="btn-edit" *ngIf="canPause(row)" (click)="pause(row)" [disabled]="lifecycleLoadingId() === row.userServiceId">
+                    {{ lifecycleLoadingId() === row.userServiceId && lifecycleAction() === 'pause' ? 'Pausing...' : 'Pause' }}
+                  </button>
+                  <button class="btn-edit" *ngIf="canStart(row)" (click)="start(row)" [disabled]="lifecycleLoadingId() === row.userServiceId">
+                    {{ lifecycleLoadingId() === row.userServiceId && lifecycleAction() === 'start' ? 'Starting...' : 'Start' }}
+                  </button>
                   <button class="btn-delete" (click)="deactivate(row)" [disabled]="!row.active">Deactivate</button>
                 </td>
               </ng-container>

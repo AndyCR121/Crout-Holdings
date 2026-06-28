@@ -223,8 +223,15 @@ export class PricingComponent implements OnInit {
     return this.fullTotal(view) - this.discountedTotal(view);
   }
 
-  formatPrice(n: number): string {
-    return n.toLocaleString('en-ZA');
+  startingPrice(): number {
+    return this.visibleServicesLimited.reduce((lowest, service) => {
+      const price = service.price ?? 0;
+      return lowest === null || price < lowest ? price : lowest;
+    }, null as number | null) ?? 0;
+  }
+
+  formatPrice(n: number | null | undefined): string {
+    return Number(n ?? 0).toLocaleString('en-ZA');
   }
 
   serviceUrl(service: IService | null | undefined): string {

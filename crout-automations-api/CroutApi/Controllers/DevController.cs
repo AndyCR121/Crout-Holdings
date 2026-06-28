@@ -2,6 +2,7 @@ using System.Security.Claims;
 using CroutApi.DTOs;
 using CroutApi.Helpers;
 using CroutApi.Repositories;
+using CroutApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MySqlConnector;
@@ -11,7 +12,7 @@ namespace CroutApi.Controllers;
 [ApiController]
 [Route("api/dev")]
 [Authorize]
-public class DevController(IUserRepository users, IDevPortalRepository devPortal) : ControllerBase
+public class DevController(IUserRepository users, IDevPortalRepository devPortal, IIntegrationService integrationService) : ControllerBase
 {
     private int CallerId =>
         JwtHelper.GetUserId(User);
@@ -67,6 +68,17 @@ public class DevController(IUserRepository users, IDevPortalRepository devPortal
     {
         if (!await IsDeveloperAsync()) return Forbid();
         var guide = await devPortal.UpdateGuideIntegrationsAsync(CallerId, userServiceId, dto);
+        if (guide is not null)
+            await integrationService.SynchronizeAsync(userServiceId);
+        return guide is null ? NotFound(new { error = "Assigned service was not found." }) : Ok(guide);
+    }
+
+    [HttpPost("services/{userServiceId:int}/integration/publish")]
+    public async Task<IActionResult> PublishIntegration(int userServiceId)
+    {
+        if (!await IsDeveloperAsync()) return Forbid();
+        await integrationService.PublishAsync(userServiceId, CallerId);
+        var guide = await devPortal.GetGuideAsync(CallerId, userServiceId);
         return guide is null ? NotFound(new { error = "Assigned service was not found." }) : Ok(guide);
     }
 

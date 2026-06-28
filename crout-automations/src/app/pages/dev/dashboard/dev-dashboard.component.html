@@ -53,7 +53,7 @@
                     <h2>{{ item.serviceName }}</h2>
                     <p>{{ item.companyName }}</p>
                   </div>
-                  <span class="dev-status" [class]="statusClass(item.status)">{{ statusLabel(item.status) }}</span>
+                  <ca-integration-status-badge [integrationStatus]="item.integrationStatus" [legacyStatus]="item.status" />
                 </div>
                 <div class="dev-service-money">
                   <span>Subscription</span>

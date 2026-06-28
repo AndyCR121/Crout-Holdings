@@ -4,6 +4,7 @@ using CroutApi.DTOs.Auth;
 using CroutApi.Helpers;
 using CroutApi.Models;
 using CroutApi.Repositories;
+using CroutApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MySqlConnector;
@@ -22,6 +23,7 @@ public class AdminController(
     IServiceRepository services,
     IUserServiceRepository userServices,
     IDevServiceRepository devServices,
+    IIntegrationService integrationService,
     EncryptionHelper enc) : ControllerBase
 {
     private int CallerId =>
@@ -422,6 +424,7 @@ public class AdminController(
         };
 
         var id = await userServices.AdminCreateAsync(userService);
+        await integrationService.EnsureProvisionedAsync(id);
         return Created($"/api/admin/client-services/{id}", await userServices.AdminGetRowByIdAsync(id));
     }
 
@@ -444,6 +447,24 @@ public class AdminController(
         if (await userServices.GetByIdAsync(id) is null) return NotFound();
         await userServices.AdminDeactivateAsync(id);
         return NoContent();
+    }
+
+    [HttpPost("client-services/{id:int}/integration/pause")]
+    public async Task<IActionResult> PauseClientServiceIntegration(int id)
+    {
+        if (!CallerIsAdmin) return Forbid();
+        if (await userServices.GetByIdAsync(id) is null) return NotFound();
+        await integrationService.PauseAsync(id, CallerId);
+        return Ok(await userServices.AdminGetRowByIdAsync(id));
+    }
+
+    [HttpPost("client-services/{id:int}/integration/start")]
+    public async Task<IActionResult> StartClientServiceIntegration(int id)
+    {
+        if (!CallerIsAdmin) return Forbid();
+        if (await userServices.GetByIdAsync(id) is null) return NotFound();
+        await integrationService.StartAsync(id, CallerId);
+        return Ok(await userServices.AdminGetRowByIdAsync(id));
     }
 
     // Paystack Subscription Mapping

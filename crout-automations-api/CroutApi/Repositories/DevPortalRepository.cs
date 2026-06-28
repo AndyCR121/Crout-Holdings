@@ -32,11 +32,17 @@ public class DevPortalRepository(DbHelper db) : IDevPortalRepository
           ds.isActive AS IsActive,
           ds.createdAt AS CreatedAt,
           us.dueDate AS DueDate,
-          us.paymentDate AS PaymentDate
+          us.paymentDate AS PaymentDate,
+          i.status AS IntegrationStatus,
+          i.workflow_name AS IntegrationWorkflowName,
+          i.last_error AS IntegrationLastError,
+          i.published_date AS IntegrationPublishedDate,
+          i.paused_date AS IntegrationPausedDate
         FROM DevServices ds
         JOIN UserServices us ON us.id = ds.userServiceId
         JOIN Companies c ON c.company_id = us.company_id
         JOIN Services s ON s.service_id = us.service_id
+        LEFT JOIN Integrations i ON i.user_service_id = us.id
         """;
 
     private const string AvailableSelect = """
@@ -64,11 +70,17 @@ public class DevPortalRepository(DbHelper db) : IDevPortalRepository
           0 AS IsActive,
           us.CreatedAt AS CreatedAt,
           us.dueDate AS DueDate,
-          us.paymentDate AS PaymentDate
+          us.paymentDate AS PaymentDate,
+          i.status AS IntegrationStatus,
+          i.workflow_name AS IntegrationWorkflowName,
+          i.last_error AS IntegrationLastError,
+          i.published_date AS IntegrationPublishedDate,
+          i.paused_date AS IntegrationPausedDate
         FROM UserServices us
         JOIN Companies c ON c.company_id = us.company_id
         JOIN Services s ON s.service_id = us.service_id
         LEFT JOIN DevServices activeDs ON activeDs.userServiceId = us.id AND activeDs.isActive = 1
+        LEFT JOIN Integrations i ON i.user_service_id = us.id
         """;
 
     public async Task<DevDashboardDto> GetDashboardAsync(int userId)

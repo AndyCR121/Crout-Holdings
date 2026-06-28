@@ -4,17 +4,20 @@ import { PortalSidebarComponent } from '../../../components/portal-sidebar/porta
 import { IDevDashboard, IDevPortalService } from '../../../interfaces/i-service.interface';
 import { AuthService } from '../../../services/auth.service';
 import { DevService } from '../../../services/dev.service';
+import { IntegrationStatusBadgeComponent } from '../../../components/integration-status-badge/integration-status-badge.component';
+import { IntegrationStatusService } from '../../../services/integration-status.service';
 
 @Component({
   selector: 'ca-dev-dashboard',
   standalone: true,
-  imports: [CommonModule, PortalSidebarComponent],
+  imports: [CommonModule, PortalSidebarComponent, IntegrationStatusBadgeComponent],
   templateUrl: './dev-dashboard.component.html',
   styleUrls: ['./dev-dashboard.component.scss'],
 })
 export class DevDashboardComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly dev = inject(DevService);
+  private readonly integrationStatus = inject(IntegrationStatusService);
 
   readonly user = computed(() => this.auth.currentUser());
   readonly dashboard = signal<IDevDashboard | null>(null);
@@ -43,10 +46,10 @@ export class DevDashboardComponent implements OnInit {
   }
 
   statusLabel(status: number): string {
-    return ['Disabled', 'In Development', 'Live', 'Pending'][status] ?? 'Unknown';
+    return this.integrationStatus.label(null, status);
   }
 
   statusClass(status: number): string {
-    return ['status-disabled', 'status-dev', 'status-live', 'status-pending'][status] ?? '';
+    return this.integrationStatus.cssClass(null, status);
   }
 }

@@ -57,4 +57,8 @@ export class DevService {
   updateMaintenance(userServiceId: number, isMaintenance: boolean): Observable<IDevPortalService> {
     return this.http.post<IDevPortalService>(`${this.base}/services/${userServiceId}/maintenance`, { isMaintenance }, { headers: this.authHeaders(), withCredentials: true });
   }
+
+  publishIntegration(userServiceId: number): Observable<IDevPortalService> {
+    return this.http.post<IDevPortalService>(`${this.base}/services/${userServiceId}/integration/publish`, {}, { headers: this.authHeaders(), withCredentials: true });
+  }
 }

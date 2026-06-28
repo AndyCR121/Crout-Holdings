@@ -41,11 +41,10 @@
               @for (item of assigned(); track item.userServiceId) {
                 <a
                   class="dservices-row dservices-row--link"
-                  [routerLink]="['/dev/dev-services/guide']"
-                  [queryParams]="{ userServiceId: item.userServiceId }">
+                  [href]="guideHref(item.userServiceId)">
                   <span>{{ item.companyName }}</span>
                   <span>{{ item.serviceName }}</span>
-                  <span><em class="dservices-status" [class]="statusClass(item.status)">{{ statusLabel(item.status) }}</em></span>
+                  <span><ca-integration-status-badge [integrationStatus]="item.integrationStatus" [legacyStatus]="item.status" /></span>
                   <span>{{ formatDate(item.dueDate) }}</span>
                   <span>{{ formatMoney(item.subscriptionAmount) }}</span>
                   <strong>{{ formatMoney(item.totalCommission) }}</strong>
@@ -86,7 +85,7 @@
                       <h3>{{ item.serviceName }}</h3>
                       <p>{{ item.companyName }}</p>
                     </div>
-                    <span class="dservices-status" [class]="statusClass(item.status)">{{ statusLabel(item.status) }}</span>
+                    <ca-integration-status-badge [integrationStatus]="item.integrationStatus" [legacyStatus]="item.status" />
                   </div>
                   <dl>
                     <div><dt>Created</dt><dd>{{ formatDate(item.createdAt) }}</dd></div>

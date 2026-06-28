@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS Users (
   user_id      INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
   Username     VARCHAR(100) NOT NULL UNIQUE,
   PasswordHash VARCHAR(64)  NOT NULL COMMENT 'HMAC-SHA256 hex',
+  token_version INT         NOT NULL DEFAULT 0,
   FirstName    VARCHAR(100) NOT NULL,
   Surname      VARCHAR(100) NOT NULL,
   Email        VARCHAR(255) NOT NULL UNIQUE,
@@ -113,6 +114,30 @@ CREATE TABLE IF NOT EXISTS UserServices (
   CONSTRAINT fk_us_company FOREIGN KEY (company_id) REFERENCES Companies(company_id) ON DELETE CASCADE,
   CONSTRAINT fk_us_service FOREIGN KEY (service_id) REFERENCES Services(service_id),
   CONSTRAINT fk_us_package FOREIGN KEY (package_id) REFERENCES Packages(package_id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS Integrations (
+  integration_id            INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  user_service_id           INT          NOT NULL,
+  company_id                INT          NOT NULL,
+  workflow_id               VARCHAR(255)     NULL,
+  workflow_name             VARCHAR(255) NOT NULL,
+  status                    VARCHAR(20)  NOT NULL DEFAULT 'Development',
+  published_by              INT              NULL,
+  published_date            DATETIME         NULL,
+  paused_by                 INT              NULL,
+  paused_date               DATETIME         NULL,
+  last_error                TEXT             NULL,
+  node_mappings_json        JSON             NULL,
+  workflow_definition_json  JSON             NULL,
+  createdAt                 DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt                 DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_integrations_user_service FOREIGN KEY (user_service_id) REFERENCES UserServices(id) ON DELETE CASCADE,
+  CONSTRAINT fk_integrations_company FOREIGN KEY (company_id) REFERENCES Companies(company_id) ON DELETE CASCADE,
+  CONSTRAINT fk_integrations_published_by FOREIGN KEY (published_by) REFERENCES Users(user_id) ON DELETE SET NULL,
+  CONSTRAINT fk_integrations_paused_by FOREIGN KEY (paused_by) REFERENCES Users(user_id) ON DELETE SET NULL,
+  UNIQUE KEY ux_integrations_user_service (user_service_id),
+  KEY ix_integrations_company_status (company_id, status)
 );
 
 CREATE TABLE IF NOT EXISTS DevServices (
@@ -231,5 +256,22 @@ CREATE TABLE IF NOT EXISTS ContactRequests (
     EmailSent          TINYINT(1)   NOT NULL DEFAULT 0,
     CreatedAt          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     KEY idx_contact_requests_email (Email),
-    KEY idx_contact_requests_created (CreatedAt)
+  KEY idx_contact_requests_created (CreatedAt)
   );
+
+CREATE TABLE IF NOT EXISTS PasswordResetOtps (
+  password_reset_otp_id INT         NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  reset_request_id      CHAR(36)    NOT NULL,
+  user_id               INT         NOT NULL,
+  otp_hash              VARCHAR(64) NOT NULL COMMENT 'HMAC-SHA256 hex',
+  attempt_count         TINYINT     NOT NULL DEFAULT 0,
+  expires_at            DATETIME    NOT NULL,
+  verified_at           DATETIME        NULL,
+  consumed_at           DATETIME        NULL,
+  invalidated_at        DATETIME        NULL,
+  created_at            DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at            DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_password_reset_user FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+  KEY idx_password_reset_request (reset_request_id),
+  KEY idx_password_reset_user (user_id, created_at)
+);

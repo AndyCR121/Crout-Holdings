@@ -13,21 +13,24 @@ public class UserServiceRepository(DbHelper db) : IUserServiceRepository
         return await conn.QueryAsync<UserService>(
             """
             SELECT
-              id AS Id,
-              company_id AS CompanyId,
-              service_id AS ServiceId,
-              package_id AS PackageId,
-              subscription_id AS SubscriptionId,
-              Config,
-              Active,
-              Status,
-              COALESCE(subscriptionAmount, 0.00) AS SubscriptionAmount,
-              pricingSnapshot AS PricingSnapshot,
-              paymentDate AS PaymentDate,
-              dueDate AS DueDate,
-              CreatedAt AS CreatedAt
-            FROM UserServices
-            WHERE company_id=@companyId AND Active=1
+              us.id AS Id,
+              us.company_id AS CompanyId,
+              us.service_id AS ServiceId,
+              us.package_id AS PackageId,
+              us.subscription_id AS SubscriptionId,
+              us.Config,
+              us.Active,
+              us.Status,
+              COALESCE(us.subscriptionAmount, 0.00) AS SubscriptionAmount,
+              us.pricingSnapshot AS PricingSnapshot,
+              us.paymentDate AS PaymentDate,
+              us.dueDate AS DueDate,
+              us.CreatedAt AS CreatedAt,
+              i.status AS IntegrationStatus,
+              i.workflow_name AS IntegrationWorkflowName
+            FROM UserServices us
+            LEFT JOIN Integrations i ON i.user_service_id = us.id
+            WHERE us.company_id=@companyId AND us.Active=1
             """,
             new { companyId });
     }
@@ -51,16 +54,39 @@ public class UserServiceRepository(DbHelper db) : IUserServiceRepository
               service_id AS ServiceId,
               package_id AS PackageId,
               subscription_id AS SubscriptionId,
-              Config,
-              Active,
-              Status,
+              us.Config,
+              us.Active,
+              us.Status,
               COALESCE(subscriptionAmount, 0.00) AS SubscriptionAmount,
               pricingSnapshot AS PricingSnapshot,
               paymentDate AS PaymentDate,
               dueDate AS DueDate,
-              CreatedAt AS CreatedAt
-            FROM UserServices
-            WHERE id = @userServiceId
+              us.CreatedAt AS CreatedAt,
+              i.status AS IntegrationStatus,
+              i.workflow_name AS IntegrationWorkflowName
+            FROM UserServices us
+            LEFT JOIN Integrations i ON i.user_service_id = us.id
+            WHERE us.id = @userServiceId
+            """,
+            new { userServiceId });
+    }
+
+    public async Task<UserServiceIntegrationContextDto?> GetIntegrationContextAsync(int userServiceId)
+    {
+        using var conn = db.GetConnection();
+        return await conn.QuerySingleOrDefaultAsync<UserServiceIntegrationContextDto>(
+            """
+            SELECT
+              us.id AS UserServiceId,
+              us.company_id AS CompanyId,
+              c.CompanyName AS CompanyName,
+              us.service_id AS ServiceId,
+              s.ServiceName AS ServiceName,
+              us.Config AS Config
+            FROM UserServices us
+            JOIN Companies c ON c.company_id = us.company_id
+            JOIN Services s ON s.service_id = us.service_id
+            WHERE us.id = @userServiceId
             """,
             new { userServiceId });
     }
@@ -163,12 +189,18 @@ public class UserServiceRepository(DbHelper db) : IUserServiceRepository
               us.pricingSnapshot AS PricingSnapshot,
               us.paymentDate AS PaymentDate,
               us.dueDate AS DueDate,
-              us.CreatedAt AS CreatedAt
+              us.CreatedAt AS CreatedAt,
+              i.status AS IntegrationStatus,
+              i.workflow_name AS IntegrationWorkflowName,
+              i.last_error AS IntegrationLastError,
+              i.published_date AS IntegrationPublishedDate,
+              i.paused_date AS IntegrationPausedDate
             FROM UserServices us
             JOIN Companies c ON c.company_id = us.company_id
             JOIN Users u ON u.user_id = c.user_id
             JOIN Services s ON s.service_id = us.service_id
             LEFT JOIN Packages p ON p.package_id = us.package_id
+            LEFT JOIN Integrations i ON i.user_service_id = us.id
             {where}
             ORDER BY us.CreatedAt DESC, us.id DESC
             LIMIT @pageSize OFFSET @offset
@@ -202,12 +234,18 @@ public class UserServiceRepository(DbHelper db) : IUserServiceRepository
               us.pricingSnapshot AS PricingSnapshot,
               us.paymentDate AS PaymentDate,
               us.dueDate AS DueDate,
-              us.CreatedAt AS CreatedAt
+              us.CreatedAt AS CreatedAt,
+              i.status AS IntegrationStatus,
+              i.workflow_name AS IntegrationWorkflowName,
+              i.last_error AS IntegrationLastError,
+              i.published_date AS IntegrationPublishedDate,
+              i.paused_date AS IntegrationPausedDate
             FROM UserServices us
             JOIN Companies c ON c.company_id = us.company_id
             JOIN Users u ON u.user_id = c.user_id
             JOIN Services s ON s.service_id = us.service_id
             LEFT JOIN Packages p ON p.package_id = us.package_id
+            LEFT JOIN Integrations i ON i.user_service_id = us.id
             WHERE us.id = @userServiceId
             """,
             new { userServiceId });

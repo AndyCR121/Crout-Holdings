@@ -139,8 +139,19 @@
             </div>
 
             <label class="pricing__suite-referral">
-              <span>Referral code</span>
-              <input [(ngModel)]="referralCode" placeholder="Optional" />
+              <span>Developer referral (optional)</span>
+              <select [(ngModel)]="referralCode">
+                <option [ngValue]="''">No developer referral</option>
+                @if (developerReferralsLoading) {
+                  <option disabled>Loading developer referrals...</option>
+                } @else if (!hasDeveloperReferralOptions) {
+                  <option disabled>No developer referrals available</option>
+                } @else {
+                  @for (option of developerReferrals; track option.userId) {
+                    <option [ngValue]="option.referral">{{ developerReferralLabel(option) }}</option>
+                  }
+                }
+              </select>
             </label>
 
             @if (isLoggedIn()) {

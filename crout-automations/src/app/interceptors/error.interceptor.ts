@@ -1,4 +1,4 @@
-import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
+import { HttpContextToken, HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
 import { ToastService } from '../services/toast.service';
@@ -16,6 +16,8 @@ const STATUS_MESSAGES: Record<number, string> = {
   503: 'Service unavailable. Please try again later.',
 };
 
+export const SUPPRESS_ERROR_TOAST = new HttpContextToken<boolean>(() => false);
+
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const toast = inject(ToastService);
   const auth = inject(AuthService);
@@ -28,7 +30,9 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         STATUS_MESSAGES[err.status] ??
         `Unexpected error (${err.status})`;
 
-      toast.error(message);
+      if (!req.context.get(SUPPRESS_ERROR_TOAST)) {
+        toast.error(message);
+      }
 
       if (err.status === 401) {
         auth.expireSession('/');

@@ -11,6 +11,9 @@ public class ServicesController(IServiceCatalogService catalog) : ControllerBase
 {
     private int UserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
+    [HttpGet("developer-referrals")]
+    public async Task<IActionResult> GetDeveloperReferrals() => Ok(await catalog.GetDeveloperReferralOptionsAsync());
+
     /// <summary>GET /api/services — all service catalogue entries with their features</summary>
     [HttpGet]
     public async Task<IActionResult> GetAll() => Ok(await catalog.GetServicesAsync());

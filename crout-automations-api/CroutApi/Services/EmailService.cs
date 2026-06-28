@@ -5,13 +5,13 @@ using CroutApi.Models;
 
 namespace CroutApi.Services;
 
-public class EmailService(ILogger<EmailService> logger) : IEmailService
+public class EmailService(ILogger<EmailService> logger, IWebHostEnvironment env, IConfiguration config) : IEmailService
 {
     public async Task<bool> SendContactRequestAsync(ContactRequest request)
     {
-        var host = Environment.GetEnvironmentVariable("SMTP_HOST");
-        var to = Environment.GetEnvironmentVariable("CONTACT_TO_EMAIL");
-        var from = Environment.GetEnvironmentVariable("SMTP_FROM_EMAIL") ?? to;
+        var host = GetSetting("SMTP_HOST", "Mail:Smtp:Host");
+        var to = GetSetting("CONTACT_TO_EMAIL", "Mail:Contact:ToEmail");
+        var from = GetSetting("SMTP_FROM_EMAIL", "Mail:Smtp:FromEmail") ?? to;
 
         if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(to) || string.IsNullOrWhiteSpace(from))
         {
@@ -19,12 +19,12 @@ public class EmailService(ILogger<EmailService> logger) : IEmailService
             return false;
         }
 
-        var port = int.TryParse(Environment.GetEnvironmentVariable("SMTP_PORT"), out var parsedPort)
+        var port = int.TryParse(GetSetting("SMTP_PORT", "Mail:Smtp:Port"), out var parsedPort)
             ? parsedPort
             : 587;
-        var enableSsl = !string.Equals(Environment.GetEnvironmentVariable("SMTP_ENABLE_SSL"), "false", StringComparison.OrdinalIgnoreCase);
-        var username = Environment.GetEnvironmentVariable("SMTP_USERNAME");
-        var password = Environment.GetEnvironmentVariable("SMTP_PASSWORD");
+        var enableSsl = !string.Equals(GetSetting("SMTP_ENABLE_SSL", "Mail:Smtp:EnableSsl"), "false", StringComparison.OrdinalIgnoreCase);
+        var username = GetSetting("SMTP_USERNAME", "Mail:Smtp:Username");
+        var password = GetSetting("SMTP_PASSWORD", "Mail:Smtp:Password");
 
         using var client = new SmtpClient(host, port) { EnableSsl = enableSsl };
         if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
@@ -50,6 +50,45 @@ public class EmailService(ILogger<EmailService> logger) : IEmailService
         catch (Exception ex)
         {
             logger.LogError(ex, "Contact email failed for {Email}", request.Email);
+            return false;
+        }
+    }
+
+    public async Task<bool> SendPasswordResetOtpAsync(string email, string displayName, string otp)
+    {
+        var host = GetSetting("SMTP_HOST", "Mail:Smtp:Host");
+        var from = GetSetting("SMTP_FROM_EMAIL", "Mail:Smtp:FromEmail");
+
+        if (env.IsDevelopment())
+        {
+            logger.LogInformation("Password reset email suppressed in development for {Email}. OTP: {Otp}", email, otp);
+            return true;
+        }
+
+        if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(from))
+        {
+            logger.LogWarning("Password reset email skipped because SMTP_HOST or SMTP_FROM_EMAIL is not configured.");
+            return false;
+        }
+
+        using var client = BuildClient(host);
+        using var message = new MailMessage
+        {
+            From = new MailAddress(from),
+            Subject = "Your Crout Automations password reset code",
+            Body = BuildPasswordResetBody(displayName, otp),
+            IsBodyHtml = true,
+        };
+        message.To.Add(email);
+
+        try
+        {
+            await client.SendMailAsync(message);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Password reset email failed for {Email}", email);
             return false;
         }
     }
@@ -80,5 +119,39 @@ public class EmailService(ILogger<EmailService> logger) : IEmailService
         }
 
         return body.ToString();
+    }
+
+    private SmtpClient BuildClient(string host)
+    {
+        var port = int.TryParse(GetSetting("SMTP_PORT", "Mail:Smtp:Port"), out var parsedPort)
+            ? parsedPort
+            : 587;
+        var enableSsl = !string.Equals(GetSetting("SMTP_ENABLE_SSL", "Mail:Smtp:EnableSsl"), "false", StringComparison.OrdinalIgnoreCase);
+        var username = GetSetting("SMTP_USERNAME", "Mail:Smtp:Username");
+        var password = GetSetting("SMTP_PASSWORD", "Mail:Smtp:Password");
+
+        var client = new SmtpClient(host, port) { EnableSsl = enableSsl };
+        if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
+        {
+            client.Credentials = new NetworkCredential(username, password);
+        }
+
+        return client;
+    }
+
+    private string BuildPasswordResetBody(string displayName, string otp)
+    {
+        var templatePath = Path.Combine(env.ContentRootPath, "Templates", "PasswordResetOtp.html");
+        var template = File.ReadAllText(templatePath);
+
+        return template
+            .Replace("{{displayName}}", WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(displayName) ? "there" : displayName))
+            .Replace("{{otp}}", WebUtility.HtmlEncode(otp));
+    }
+
+    private string? GetSetting(string environmentVariable, string configurationKey)
+    {
+        return Environment.GetEnvironmentVariable(environmentVariable)
+            ?? config[configurationKey];
     }
 }

@@ -1,11 +1,11 @@
-import { Component, Input, OnChanges, OnInit, SimpleChanges, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, Input, OnChanges, OnInit, SimpleChanges, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { IService, IAddon, IPackage, IPricingComponent } from '../../interfaces/i-service.interface';
+import { IAddon, IPackage, IPricingComponent, IService, IDeveloperReferralOption } from '../../interfaces/i-service.interface';
 import { IAddonState, IPackageView } from '../../interfaces/i-service-display.interface';
-import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 import { CompanyService } from '../../services/company.service';
 import { ToastService } from '../../services/toast.service';
 import { AuthModalComponent } from '../auth-modal/auth-modal.component';
@@ -30,7 +30,7 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
   /** Packages scoped to this service (root + child) */
   @Input() packages: IPackage[] = [];
   /**
-   * Full services list — needed to resolve conditional services that live
+   * Full services list, needed to resolve conditional services that live
    * in a child package (the Conditional flag is on the IService row).
    */
   @Input() allServices: IService[] = [];
@@ -39,6 +39,8 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
 
   packageViews: IPackageView[] = [];
   requiredPricingComponents: IPricingComponent[] = [];
+  developerReferrals: IDeveloperReferralOption[] = [];
+  developerReferralsLoading = false;
   referralCode = '';
   selectedCompanyId: number | null = null;
   savingConfig = signal<number | null>(null);
@@ -64,6 +66,9 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
   ngOnInit(): void {
     const user = this.user();
     if (user) this.companies.load(user.userId);
+
+    this.loadDeveloperReferrals();
+
     this.api.getRequiredPricingComponents().subscribe({
       next: components => {
         this.requiredPricingComponents = components.filter(c =>
@@ -85,7 +90,34 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
     }
   }
 
-  // ── View builders ─────────────────────────────────────────────────────────
+  get hasDeveloperReferralOptions(): boolean {
+    return this.developerReferrals.length > 0;
+  }
+
+  developerReferralLabel(option: IDeveloperReferralOption): string {
+    return `${option.firstName} ${option.surname} - ${option.referral}`.replace(/\s+/g, ' ').trim();
+  }
+
+  private loadDeveloperReferrals(): void {
+    this.developerReferralsLoading = true;
+    this.api.getDeveloperReferrals().subscribe({
+      next: referrals => {
+        this.developerReferrals = referrals;
+        this.developerReferralsLoading = false;
+      },
+      error: () => {
+        this.developerReferrals = [];
+        this.developerReferralsLoading = false;
+        this.toast.error('Developer referrals could not be loaded. You can continue without one.');
+      }
+    });
+  }
+
+  private selectedReferral(): string | undefined {
+    const referral = this.referralCode.trim();
+    return referral || undefined;
+  }
+
   private buildViews(): void {
     const rootPackages = this.packages.filter(pkg => pkg.parentPackageId == null);
 
@@ -94,18 +126,17 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
       const serviceIds = [...new Set([...(pkg.serviceIds ?? [])])];
       const childServiceIds = childPkg?.serviceIds ?? [];
 
-      // Root service rows
       const rootServices: IService[] = serviceIds.reduce<IService[]>((acc, id) => {
         const svc = this.allServices.find(s => s.serviceId === id);
         if (svc) acc.push(svc);
         return acc;
       }, []);
+
       const conditionalService = childServiceIds
         .map(id => this.allServices.find(s => s.serviceId === id))
         .find((svc): svc is IService => !!svc && (svc.conditional || !serviceIds.includes(svc.serviceId)))
         ?? null;
 
-      // Root addon states (non-conditional services' addons)
       const rootAddonStates: IAddonState[] = serviceIds.flatMap(svcId =>
         this.addons
           .filter(a => a.serviceId === svcId)
@@ -126,18 +157,15 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
     });
   }
 
-  // ── Toggle helpers ────────────────────────────────────────────────────────
   toggleConditional(view: IPackageView): void {
     view.conditionalEnabled = !view.conditionalEnabled;
 
-    if (view.conditionalEnabled && view.childPkg) {
-      if (view.childAddonStates.length === 0) {
-        view.childAddonStates = (view.childPkg.serviceIds ?? []).flatMap(svcId =>
-          this.addons
-            .filter(a => a.serviceId === svcId)
-            .map(a => ({ addon: a, enabled: false, isConditionalChild: true }))
-        );
-      }
+    if (view.conditionalEnabled && view.childPkg && view.childAddonStates.length === 0) {
+      view.childAddonStates = (view.childPkg.serviceIds ?? []).flatMap(svcId =>
+        this.addons
+          .filter(a => a.serviceId === svcId)
+          .map(a => ({ addon: a, enabled: false, isConditionalChild: true }))
+      );
     }
 
     view.addonStates = this.buildMergedAddonList(view);
@@ -152,7 +180,6 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
     state.enabled = !state.enabled;
   }
 
-  // ── Active package resolution ─────────────────────────────────────────────
   activePkg(view: IPackageView): IPackage {
     return view.conditionalEnabled && view.childPkg ? view.childPkg : view.pkg;
   }
@@ -164,6 +191,7 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
         if (svc) acc.push(svc);
         return acc;
       }, []);
+
       const seen = new Set(view.rootServices.map(s => s.serviceId));
       const merged = [...view.rootServices];
       for (const svc of childServices) {
@@ -171,10 +199,10 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
       }
       return merged;
     }
+
     return view.rootServices;
   }
 
-  // ── Discount helpers ──────────────────────────────────────────────────────
   enabledAddonCount(view: IPackageView): number {
     return view.addonStates.filter(s => s.enabled).length;
   }
@@ -192,7 +220,6 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
     return Math.max(0, this.minAddonsRequired(view) - this.enabledAddonCount(view));
   }
 
-  // ── Price helpers ─────────────────────────────────────────────────────────
   basePrice(view: IPackageView): number {
     return this.activeServices(view).reduce((sum, svc) => sum + (svc.price ?? 0), 0);
   }
@@ -231,8 +258,10 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
       package: this.activePkg(view).packageName,
       config: encodeURIComponent(JSON.stringify(this.buildContactConfig(view)))
     });
-    const referral = this.referralCode.trim();
+
+    const referral = this.selectedReferral();
     if (referral) params.set('referral', referral);
+
     return `/contact-us/?${params.toString()}`;
   }
 
@@ -250,7 +279,7 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
       serviceId: service.serviceId,
       packageId: this.activePkg(view).packageId,
       addonIds: view.addonStates.filter(s => s.enabled).map(s => s.addon.addonId),
-      referral: this.referralCode.trim() || undefined,
+      referral: this.selectedReferral(),
       requestNote: 'Created from website service configurator.'
     }).subscribe({
       next: () => {

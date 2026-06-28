@@ -9,8 +9,12 @@ namespace CroutApi.Services;
 public class ServiceCatalogService(
     IServiceRepository services,
     IUserServiceRepository userServices,
-    ICompanyRepository companies) : IServiceCatalogService
+    IDevServiceRepository devServices,
+    ICompanyRepository companies,
+    IUserRepository users,
+    IIntegrationService integrationService) : IServiceCatalogService
 {
+    public Task<IEnumerable<DeveloperReferralOptionDto>> GetDeveloperReferralOptionsAsync() => users.GetActiveDeveloperReferralOptionsAsync();
     public Task<IEnumerable<Service>>    GetServicesAsync()                      => services.GetAllAsync();
     public Task<Service?>                GetServiceByIdAsync(int serviceId)      => services.GetByIdAsync(serviceId);
     public Task<IEnumerable<Addon>>      GetAddonsByServiceAsync(int id)         => services.GetAddonsByServiceAsync(id);
@@ -75,6 +79,14 @@ public class ServiceCatalogService(
         var total = discountUnlocked
             ? Math.Round(fullTotal * (1 - discount), 2, MidpointRounding.AwayFromZero)
             : fullTotal;
+        var referral = string.IsNullOrWhiteSpace(dto.Referral) ? null : dto.Referral.Trim();
+        User? referredDeveloper = null;
+        if (referral is not null)
+        {
+            referredDeveloper = await users.GetActiveDeveloperByReferralAsync(referral);
+            if (referredDeveloper is null)
+                throw new ArgumentException("Selected developer referral is no longer valid.");
+        }
 
         var config = new
         {
@@ -84,7 +96,7 @@ public class ServiceCatalogService(
             packageName = package?.PackageName,
             addonIds,
             integrations = selectedAddons.Select(a => new { name = a.AddonName, confirmed = false, category = ClassifyIntegration(a.AddonName) }),
-            referral = string.IsNullOrWhiteSpace(dto.Referral) ? null : dto.Referral.Trim(),
+            referral,
             requestNote = string.IsNullOrWhiteSpace(dto.RequestNote) ? null : dto.RequestNote.Trim()
         };
 
@@ -117,6 +129,15 @@ public class ServiceCatalogService(
         };
 
         var id = await userServices.CreateAsync(userService);
+        await integrationService.EnsureProvisionedAsync(id);
+        if (referredDeveloper is not null)
+        {
+            await devServices.CreateWithSubscriptionSnapshotAsync(
+                referredDeveloper.UserId,
+                id,
+                commissionPerc: 20.00m);
+        }
+
         var created = await userServices.GetByIdAsync(id);
         if (created is not null) return created;
 

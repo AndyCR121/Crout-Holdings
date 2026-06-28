@@ -1,11 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { distinctUntilChanged, map } from 'rxjs';
 import { PortalSidebarComponent } from '../../../components/portal-sidebar/portal-sidebar.component';
 import { IDevPortalService } from '../../../interfaces/i-service.interface';
 import { DevService } from '../../../services/dev.service';
 import { ToastService } from '../../../services/toast.service';
+import { IntegrationStatusBadgeComponent } from '../../../components/integration-status-badge/integration-status-badge.component';
+import { IntegrationStatusService } from '../../../services/integration-status.service';
 
 interface GuideStep {
   step: number;
@@ -17,20 +21,25 @@ interface GuideStep {
 @Component({
   selector: 'ca-dev-service-guide',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, PortalSidebarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, PortalSidebarComponent, IntegrationStatusBadgeComponent],
   templateUrl: './dev-service-guide.component.html',
   styleUrls: ['./dev-service-guide.component.scss'],
 })
 export class DevServiceGuideComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly dev = inject(DevService);
   private readonly toast = inject(ToastService);
+  private readonly integrationStatus = inject(IntegrationStatusService);
+  private redirectingToServices = false;
 
   readonly guide = signal<IDevPortalService | null>(null);
   readonly loading = signal(true);
   readonly savingStep = signal<number | null>(null);
   readonly savingIntegrations = signal(false);
   readonly savingMaintenance = signal(false);
+  readonly publishing = signal(false);
   readonly integrationEditorOpen = signal(true);
   readonly userServiceId = signal<number | null>(null);
 
@@ -76,38 +85,44 @@ export class DevServiceGuideComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.route.queryParamMap.subscribe(queryParams => {
-      const userServiceId = this.parseUserServiceId(queryParams.get('userServiceId'));
-      this.userServiceId.set(userServiceId);
+    this.route.queryParamMap
+      .pipe(
+        map(queryParams => this.parseUserServiceId(queryParams.get('userServiceId'))),
+        distinctUntilChanged(),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(userServiceId => {
+        this.userServiceId.set(userServiceId);
 
-      if (userServiceId === null) {
-        this.guide.set(null);
-        this.loading.set(false);
-        return;
-      }
+        if (userServiceId === null) {
+          this.handleGuideLoadFailure();
+          return;
+        }
 
-      this.loadGuide(userServiceId);
-    });
+        this.loadGuide(userServiceId);
+      });
   }
 
   loadGuide(userServiceId = this.userServiceId()): void {
     if (userServiceId === null) {
-      this.guide.set(null);
-      this.loading.set(false);
+      this.handleGuideLoadFailure();
       return;
     }
 
     this.loading.set(true);
     this.dev.getGuide(userServiceId).subscribe({
       next: guide => {
+        if (!guide) {
+          this.handleGuideLoadFailure();
+          return;
+        }
+
         this.guide.set(guide);
         this.hydrateIntegrationEditor(guide);
         this.loading.set(false);
       },
       error: () => {
-        this.guide.set(null);
-        this.loading.set(false);
-        this.toast.error('Failed to load service guide.');
+        this.handleGuideLoadFailure();
       },
     });
   }
@@ -193,6 +208,23 @@ export class DevServiceGuideComponent implements OnInit {
     return (this.guide()?.guideStep ?? 0) >= step.step;
   }
 
+  publishIntegration(): void {
+    const userServiceId = this.userServiceId();
+    if (userServiceId === null) return;
+    this.publishing.set(true);
+    this.dev.publishIntegration(userServiceId).subscribe({
+      next: guide => {
+        this.guide.set(guide);
+        this.publishing.set(false);
+        this.toast.success('Integration published.');
+      },
+      error: err => {
+        this.publishing.set(false);
+        this.toast.error(err?.error?.error ?? 'Could not publish integration.');
+      }
+    });
+  }
+
   isAutomaticStep(step: GuideStep): boolean {
     return step.step === 3 || step.step === 4 || step.step === 5;
   }
@@ -210,11 +242,11 @@ export class DevServiceGuideComponent implements OnInit {
 
   statusLabel(status?: number): string {
     if (this.guide()?.isMaintenance) return 'Undergoing Maintenance';
-    return ['Disabled', 'In Development', 'Live', 'Pending'][status ?? 0] ?? 'Unknown';
+    return this.integrationStatus.label(this.guide()?.integrationStatus, status ?? 0);
   }
 
   statusClass(status?: number): string {
-    return ['status-disabled', 'status-dev', 'status-live', 'status-pending'][status ?? 0] ?? '';
+    return this.integrationStatus.cssClass(this.guide()?.integrationStatus, status ?? 0);
   }
 
   private extractChips(raw?: string | null): Record<'trigger' | 'action' | 'output', string[]> {
@@ -311,5 +343,16 @@ export class DevServiceGuideComponent implements OnInit {
 
     const userServiceId = Number(value);
     return Number.isSafeInteger(userServiceId) && userServiceId > 0 ? userServiceId : null;
+  }
+
+  private handleGuideLoadFailure(): void {
+    this.guide.set(null);
+    this.loading.set(false);
+
+    if (this.redirectingToServices) return;
+
+    this.redirectingToServices = true;
+    this.toast.error('Unable to load the selected guide. Please select a service again.');
+    void this.router.navigate(['/dev/dev-services'], { replaceUrl: true });
   }
 }

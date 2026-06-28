@@ -41,9 +41,7 @@
                           <h2 class="pd-card-name">{{ svc.serviceName }}</h2>
                           <p class="pd-card-desc">{{ svc.serviceDescription }}</p>
                         </div>
-                        <span class="pd-status-badge" [class]="statusClass(us.status)">
-                          {{ statusLabel(us.status) }}
-                        </span>
+                        <ca-integration-status-badge [integrationStatus]="us.integrationStatus" [legacyStatus]="us.status" />
                       </div>
 
                       @let addons = getAddonNames(us.config);

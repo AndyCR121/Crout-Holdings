@@ -1,9 +1,10 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of, tap, catchError, map, switchMap } from 'rxjs';
 import { IUser } from '../interfaces/i-service.interface';
 import { EnvironmentService } from './environment.service';
+import { SUPPRESS_ERROR_TOAST } from '../interceptors/error.interceptor';
 
 export interface ILoginPayload { identifier: string; password: string; }
 export interface ISignupPayload {
@@ -11,6 +12,7 @@ export interface ISignupPayload {
   firstName: string; surname: string;
 }
 export interface IAuthResponse { token: string; user: IUser; }
+export interface IPasswordResetSessionResponse { resetRequestId: string; }
 
 /** Cookie helpers */
 function readCookie(name: string): string | null {
@@ -121,10 +123,37 @@ export class AuthService {
   }
 
   // ── Password Reset Request ─────────────────────────────────────────────────
-  requestPasswordReset(email: string): Observable<void> {
+  requestPasswordReset(email: string): Observable<IPasswordResetSessionResponse> {
+    const context = new HttpContext().set(SUPPRESS_ERROR_TOAST, true);
     return this.http
-      .post<void>(`${this.base}/auth/reset-password`, { email })
-      .pipe(catchError(() => of(undefined as void)));
+      .post<IPasswordResetSessionResponse>(`${this.base}/auth/password-reset/request`, { email }, { context });
+  }
+
+  resendPasswordReset(resetRequestId: string): Observable<IPasswordResetSessionResponse> {
+    const context = new HttpContext().set(SUPPRESS_ERROR_TOAST, true);
+    return this.http.post<IPasswordResetSessionResponse>(
+      `${this.base}/auth/password-reset/resend`,
+      { resetRequestId },
+      { context },
+    );
+  }
+
+  verifyPasswordResetOtp(resetRequestId: string, otp: string): Observable<void> {
+    const context = new HttpContext().set(SUPPRESS_ERROR_TOAST, true);
+    return this.http.post<void>(
+      `${this.base}/auth/password-reset/verify`,
+      { resetRequestId, otp },
+      { context },
+    );
+  }
+
+  completePasswordReset(resetRequestId: string, newPassword: string, confirmPassword: string): Observable<void> {
+    const context = new HttpContext().set(SUPPRESS_ERROR_TOAST, true);
+    return this.http.post<void>(
+      `${this.base}/auth/password-reset/complete`,
+      { resetRequestId, newPassword, confirmPassword },
+      { context },
+    );
   }
 
   // ── Update Profile ─────────────────────────────────────────────────────────

@@ -32,7 +32,6 @@
   to   { opacity: 1; transform: translateY(0);    }
 }
 
-// ── Header ────────────────────────────────────────────────────────────────
 .ca-modal-header {
   display:        flex;
   align-items:    center;
@@ -85,7 +84,6 @@
   }
 }
 
-// ── Error banner ───────────────────────────────────────────────────────────
 .ca-modal-error {
   margin:        16px 24px 0;
   padding:       10px 14px;
@@ -96,7 +94,6 @@
   font-size:     13px;
 }
 
-// ── Form ────────────────────────────────────────────────────────────────────
 .ca-modal-form {
   display:        flex;
   flex-direction: column;
@@ -144,6 +141,36 @@
   }
 }
 
+.ca-password-field {
+  position: relative;
+
+  input {
+    width: 100%;
+    padding-right: 42px;
+  }
+}
+
+.ca-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255,255,255,0.55);
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+  }
+}
+
 .ca-btn-primary {
   padding:       12px;
   background:    #ea7b32;
@@ -161,5 +188,20 @@
 }
 
 .ca-modal-hint {
-    color: rgb(201,199,199);
+  color: rgb(201,199,199);
+}
+
+.ca-text-link {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #f0a86f;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+
+  &--secondary {
+    color: rgba(255,255,255,0.7);
+  }
 }

@@ -1,8 +1,9 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { EnvironmentService } from './environment.service';
+import { SUPPRESS_ERROR_TOAST } from '../interceptors/error.interceptor';
 import {
   IService,
   IAddon,
@@ -12,6 +13,7 @@ import {
   IUserService,
   IServiceConfig,
   IPricingComponent,
+  IDeveloperReferralOption,
 } from '../interfaces/i-service.interface';
 
 // ─── Field-name normalizers ───────────────────────────────────────────────────
@@ -63,6 +65,15 @@ function normalizePricingComponent(raw: any): IPricingComponent {
   };
 }
 
+function normalizeDeveloperReferralOption(raw: any): IDeveloperReferralOption {
+  return {
+    userId: raw.userId ?? raw.UserId ?? raw.user_id ?? 0,
+    firstName: raw.firstName ?? raw.FirstName ?? '',
+    surname: raw.surname ?? raw.Surname ?? '',
+    referral: raw.referral ?? raw.Referral ?? '',
+  };
+}
+
 function normalizeUserService(raw: any): IUserService {
   return {
     userServiceId: raw.userServiceId ?? raw.UserServiceId ?? raw.id ?? raw.Id,
@@ -81,6 +92,8 @@ function normalizeUserService(raw: any): IUserService {
     paymentDate: raw.paymentDate ?? raw.PaymentDate,
     dueDate: raw.dueDate ?? raw.DueDate,
     createdAt: raw.createdAt ?? raw.CreatedAt,
+    integrationStatus: raw.integrationStatus ?? raw.IntegrationStatus ?? null,
+    integrationWorkflowName: raw.integrationWorkflowName ?? raw.IntegrationWorkflowName ?? null,
   };
 }
 
@@ -133,6 +146,19 @@ export class ApiService {
       .get<any[]>(`${this.base}/services/pricing-components/required`, { headers: this.authHeaders(), withCredentials: true })
       .pipe(
         map(arr => arr.map(normalizePricingComponent)),
+        catchError(err => throwError(() => err))
+      );
+  }
+
+  getDeveloperReferrals(): Observable<IDeveloperReferralOption[]> {
+    return this.http
+      .get<any[]>(`${this.base}/services/developer-referrals`, {
+        headers: this.authHeaders(),
+        withCredentials: true,
+        context: new HttpContext().set(SUPPRESS_ERROR_TOAST, true)
+      })
+      .pipe(
+        map(arr => arr.map(normalizeDeveloperReferralOption)),
         catchError(err => throwError(() => err))
       );
   }

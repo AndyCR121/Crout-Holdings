@@ -173,7 +173,7 @@ export const routes: Routes = [
       import('./pages/dev/dashboard/dev-dashboard.component').then(m => m.DevDashboardComponent),
   },
   {
-    path: 'dev/services/guide',
+    path: 'dev/dev-services/guide',
     canActivate: [authGuard, devGuard],
     loadComponent: () =>
       import('./pages/dev/service-guide/dev-service-guide.component').then(m => m.DevServiceGuideComponent),
@@ -183,6 +183,16 @@ export const routes: Routes = [
     canActivate: [authGuard, devGuard],
     loadComponent: () =>
       import('./pages/dev/services/dev-services.component').then(m => m.DevServicesComponent),
+  },
+  {
+    path: 'dev/services',
+    redirectTo: 'dev/dev-services',
+    pathMatch: 'full',
+  },
+  {
+    path: 'dev/services/guide',
+    redirectTo: 'dev/dev-services/guide',
+    pathMatch: 'full',
   },
   // ── Admin Portal (auth + admin guard) ───────────────────────────────────────
   { path: '', redirectTo: 'users', pathMatch: 'full' },

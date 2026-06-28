@@ -26,6 +26,11 @@ public class DevPortalServiceDto
     public DateTime CreatedAt { get; set; }
     public DateTime? DueDate { get; set; }
     public DateTime? PaymentDate { get; set; }
+    public string? IntegrationStatus { get; set; }
+    public string? IntegrationWorkflowName { get; set; }
+    public string? IntegrationLastError { get; set; }
+    public DateTime? IntegrationPublishedDate { get; set; }
+    public DateTime? IntegrationPausedDate { get; set; }
 }
 
 public record DevGuideStepUpdateDto(int Step);

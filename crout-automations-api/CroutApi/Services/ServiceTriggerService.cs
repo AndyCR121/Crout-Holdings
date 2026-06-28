@@ -4,10 +4,11 @@ using System.Text.Json;
 using CroutApi.DTOs.ServiceTriggers;
 using CroutApi.Models;
 using CroutApi.Repositories;
+using Microsoft.Extensions.Options;
 
 namespace CroutApi.Services;
 
-public class ServiceTriggerService(IServiceTriggerRepository repo, IHttpClientFactory httpFactory) : IServiceTriggerService
+public class ServiceTriggerService(IServiceTriggerRepository repo, IHttpClientFactory httpFactory, IOptions<N8nOptions> n8nOptions) : IServiceTriggerService
 {
     public async Task<IEnumerable<ServiceTriggerConfigDto>> GetConfigsAsync(int userId, int companyId, int serviceId)
     {
@@ -21,8 +22,8 @@ public class ServiceTriggerService(IServiceTriggerRepository repo, IHttpClientFa
             ?? throw new UnauthorizedAccessException("Trigger config is not available for this service.");
 
         var requestPayload = BuildRequestPayload(config, payloadJson, fileNames);
-        var baseUrl = Environment.GetEnvironmentVariable("N8N_BASE_URL");
-        var apiKey = Environment.GetEnvironmentVariable("N8N_API_KEY");
+        var baseUrl = n8nOptions.Value.BaseUrl;
+        var apiKey = n8nOptions.Value.ApiKey;
         var liveReady = !string.IsNullOrWhiteSpace(baseUrl) && !string.IsNullOrWhiteSpace(apiKey) && !string.IsNullOrWhiteSpace(config.EndpointPath);
 
         var status = "queued";
