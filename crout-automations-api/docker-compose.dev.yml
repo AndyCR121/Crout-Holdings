@@ -1,0 +1,5 @@
+services:
+  api:
+    image: crout-api:dev
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development

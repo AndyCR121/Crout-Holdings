@@ -27,13 +27,13 @@ services:
     build:
       context: ./CroutApi
       dockerfile: Dockerfile
+    image: crout-api:base
     container_name: crout_api
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS:        http://+:8080
       DB_HOST:                db
       DB_PORT:                '3306'
@@ -43,10 +43,17 @@ services:
       JWT_SECRET:             ${JWT_SECRET}
       JWT_ISSUER:             ${JWT_ISSUER}
       JWT_AUDIENCE:           ${JWT_AUDIENCE}
-      JWT_EXPIRY_HOURS:       '8'
+      JWT_EXPIRY_HOURS:       ${JWT_EXPIRY_HOURS}
       HMAC_SECRET:            ${HMAC_SECRET}
       PAYSTACK_SECRET_KEY:    ${PAYSTACK_SECRET_KEY}
       ALLOWED_ORIGINS:        ${ALLOWED_ORIGINS}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_ENABLE_SSL: ${SMTP_ENABLE_SSL}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      CONTACT_TO_EMAIL: ${CONTACT_TO_EMAIL}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL}
     ports:
       - '5000:8080'   # exposed to host only — host Nginx proxies this
 
