@@ -205,3 +205,11 @@
     color: rgba(255,255,255,0.7);
   }
 }
+
+mat-error {
+  display: block;
+  color: #ff8c8c;
+  font-size: 12px;
+  line-height: 1.35;
+  margin-top: 2px;
+}

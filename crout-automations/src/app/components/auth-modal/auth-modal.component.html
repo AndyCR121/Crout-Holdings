@@ -152,6 +152,11 @@
               }
             </button>
           </div>
+          @if (shouldShowResetPasswordErrors()) {
+            @for (passwordError of resetPasswordValidationErrors(); track passwordError) {
+              <mat-error>{{ passwordError }}</mat-error>
+            }
+          }
         </div>
         <div class="ca-field">
           <label>Confirm Password</label>
@@ -165,6 +170,9 @@
               }
             </button>
           </div>
+          @if (resetPasswordsMismatch()) {
+            <mat-error>Passwords do not match.</mat-error>
+          }
         </div>
         <p class="ca-modal-hint">Password must be at least 7 characters and include an uppercase letter, a number, and a special character.</p>
         <button type="submit" class="ca-btn-primary" [disabled]="loading()">
