@@ -1,7 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormsModule, FormGroupDirective } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { ApiService } from '../../services/api.service';
 import { FormValidatorService } from '../../services/form-validator.service';
 import { ContactConfig, WebhookService } from '../../services/webhook.service';
 
@@ -14,26 +15,20 @@ type FormState = 'idle' | 'loading' | 'success' | 'error';
   templateUrl: './contact.component.html',
   styleUrl: './contact.component.scss'
 })
-export class ContactComponent {
+export class ContactComponent implements OnInit {
   private readonly fb       = inject(FormBuilder);
+  private readonly api      = inject(ApiService);
   private readonly validator = inject(FormValidatorService);
   private readonly webhook   = inject(WebhookService);
   private readonly route     = inject(ActivatedRoute);
+  private readonly staticServices = ['Support', 'Info'];
 
   formState = signal<FormState>('idle');
   errorMessage = signal('');
   selectedConfig = signal<ContactConfig | null>(null);
   referral = signal('');
 
-  readonly services = [
-    'WhatsApp AI Agent',
-    'Quote System',
-    'Project Management System',
-    'Marketing Systems',
-    'Custom Automation Workflow',
-    'Not sure yet — I need advice'
-  ];
-
+  readonly services = signal<string[]>([...this.staticServices]);
   public form = this.fb.group({
     name:     ['', [Validators.required, Validators.minLength(2), Validators.maxLength(80)]],
     email:    ['', [Validators.required, Validators.email]],
@@ -64,6 +59,19 @@ export class ContactComponent {
         this.selectedConfig.set(null);
       }
     }
+  }
+
+  ngOnInit(): void {
+    this.api.getServices().subscribe({
+      next: services => {
+        const dynamicServices = services
+          .map(service => service.serviceName.trim())
+          .filter(Boolean);
+
+        this.setServiceOptions(dynamicServices);
+      },
+      error: () => this.setServiceOptions([])
+    });
   }
 
   err(field: string): string {
@@ -110,6 +118,17 @@ export class ContactComponent {
     this.form.reset();
     this.formState.set('idle');
     this.errorMessage.set('');
+  }
+
+  private setServiceOptions(dynamicServices: string[]): void {
+    const selectedService = this.form.get('service')?.value?.trim() ?? '';
+    const options = new Set<string>([
+      ...this.staticServices,
+      ...dynamicServices,
+      ...(selectedService ? [selectedService] : [])
+    ]);
+
+    this.services.set(Array.from(options));
   }
 
   private buildConfigMessage(config: ContactConfig): string {

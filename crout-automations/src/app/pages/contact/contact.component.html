@@ -146,7 +146,7 @@
                   aria-required="true"
                   [attr.aria-describedby]="err('service') ? 'service-error' : null">
                   <option value="" disabled>Select a service&hellip;</option>
-                  @for (svc of services; track svc) {
+                  @for (svc of services(); track svc) {
                     <option [value]="svc">{{ svc }}</option>
                   }
                 </select>
