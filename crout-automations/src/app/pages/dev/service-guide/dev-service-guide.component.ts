@@ -39,7 +39,6 @@ export class DevServiceGuideComponent implements OnInit {
   readonly savingStep = signal<number | null>(null);
   readonly savingIntegrations = signal(false);
   readonly savingMaintenance = signal(false);
-  readonly publishing = signal(false);
   readonly integrationEditorOpen = signal(true);
   readonly userServiceId = signal<number | null>(null);
 
@@ -206,23 +205,6 @@ export class DevServiceGuideComponent implements OnInit {
 
   isComplete(step: GuideStep): boolean {
     return (this.guide()?.guideStep ?? 0) >= step.step;
-  }
-
-  publishIntegration(): void {
-    const userServiceId = this.userServiceId();
-    if (userServiceId === null) return;
-    this.publishing.set(true);
-    this.dev.publishIntegration(userServiceId).subscribe({
-      next: guide => {
-        this.guide.set(guide);
-        this.publishing.set(false);
-        this.toast.success('Integration published.');
-      },
-      error: err => {
-        this.publishing.set(false);
-        this.toast.error(err?.error?.error ?? 'Could not publish integration.');
-      }
-    });
   }
 
   isAutomaticStep(step: GuideStep): boolean {

@@ -73,15 +73,6 @@ public class DevController(IUserRepository users, IDevPortalRepository devPortal
         return guide is null ? NotFound(new { error = "Assigned service was not found." }) : Ok(guide);
     }
 
-    [HttpPost("services/{userServiceId:int}/integration/publish")]
-    public async Task<IActionResult> PublishIntegration(int userServiceId)
-    {
-        if (!await IsDeveloperAsync()) return Forbid();
-        await integrationService.PublishAsync(userServiceId, CallerId);
-        var guide = await devPortal.GetGuideAsync(CallerId, userServiceId);
-        return guide is null ? NotFound(new { error = "Assigned service was not found." }) : Ok(guide);
-    }
-
     [HttpPost("services/{userServiceId:int}/maintenance")]
     public async Task<IActionResult> UpdateMaintenance(int userServiceId, [FromBody] DevMaintenanceUpdateDto dto)
     {

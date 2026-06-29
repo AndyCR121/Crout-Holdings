@@ -15,9 +15,6 @@
             <button type="button" class="dguide-maintenance" (click)="toggleMaintenance()" [disabled]="savingMaintenance()">
               {{ guide()?.isMaintenance ? 'Disable Maintenance' : 'Enable Maintenance' }}
             </button>
-            <button type="button" class="dguide-maintenance" (click)="publishIntegration()" [disabled]="publishing()">
-              {{ publishing() ? 'Publishing...' : 'Publish' }}
-            </button>
           </div>
         }
       </div>
