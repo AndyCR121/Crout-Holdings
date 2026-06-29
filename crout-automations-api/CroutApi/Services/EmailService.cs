@@ -7,6 +7,8 @@ namespace CroutApi.Services;
 
 public class EmailService(ILogger<EmailService> logger, IWebHostEnvironment env, IConfiguration config) : IEmailService
 {
+    private static readonly TimeSpan MailSendTimeout = TimeSpan.FromSeconds(8);
+
     public async Task<bool> SendContactRequestAsync(ContactRequest request)
     {
         var host = GetSetting("SMTP_HOST", "Mail:Smtp:Host");
@@ -44,8 +46,13 @@ public class EmailService(ILogger<EmailService> logger, IWebHostEnvironment env,
 
         try
         {
-            await client.SendMailAsync(message);
+            await client.SendMailAsync(message).WaitAsync(MailSendTimeout);
             return true;
+        }
+        catch (TimeoutException ex)
+        {
+            logger.LogError(ex, "Contact email timed out for {Email}", request.Email);
+            return false;
         }
         catch (Exception ex)
         {
@@ -83,8 +90,13 @@ public class EmailService(ILogger<EmailService> logger, IWebHostEnvironment env,
 
         try
         {
-            await client.SendMailAsync(message);
+            await client.SendMailAsync(message).WaitAsync(MailSendTimeout);
             return true;
+        }
+        catch (TimeoutException ex)
+        {
+            logger.LogError(ex, "Password reset email timed out for {Email}", email);
+            return false;
         }
         catch (Exception ex)
         {

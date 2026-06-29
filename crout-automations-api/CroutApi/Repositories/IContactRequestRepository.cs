@@ -5,4 +5,5 @@ namespace CroutApi.Repositories;
 public interface IContactRequestRepository
 {
     Task<int> CreateAsync(ContactRequest request);
+    Task MarkEmailSentAsync(int contactRequestId);
 }

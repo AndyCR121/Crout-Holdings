@@ -19,4 +19,16 @@ public class ContactRequestRepository(DbHelper db) : IContactRequestRepository
             """,
             request);
     }
+
+    public async Task MarkEmailSentAsync(int contactRequestId)
+    {
+        using var conn = db.GetConnection();
+        await conn.ExecuteAsync(
+            """
+            UPDATE ContactRequests
+            SET EmailSent = 1
+            WHERE ContactRequestId = @ContactRequestId;
+            """,
+            new { ContactRequestId = contactRequestId });
+    }
 }

@@ -35,17 +35,19 @@ public class ContactRequestService(
             Referral = string.IsNullOrWhiteSpace(dto.Referral) ? null : dto.Referral.Trim(),
             ConfigJson = dto.Config is null ? null : JsonSerializer.Serialize(dto.Config, JsonOptions),
             Source = string.IsNullOrWhiteSpace(dto.Source) ? "Crout Automations website" : dto.Source.Trim(),
+            EmailSent = false,
         };
 
-        var emailSent = await emailer.SendContactRequestAsync(request);
-        request.EmailSent = emailSent;
         var id = await repo.CreateAsync(request);
+        var emailSent = await emailer.SendContactRequestAsync(request);
+        if (emailSent)
+            await repo.MarkEmailSentAsync(id);
 
         return new ContactRequestResponseDto(
             id,
             emailSent,
             emailSent
                 ? "Message sent successfully."
-                : "Message saved. Email delivery is not configured on the API container.");
+                : "Message saved, but email delivery could not be completed.");
     }
 }
