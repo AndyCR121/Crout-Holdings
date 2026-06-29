@@ -3,7 +3,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatError } from '@angular/material/form-field';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { getPasswordValidationErrors, isValidEmail } from '../../utils/auth-validation';
@@ -15,7 +15,7 @@ type PasswordField = 'login' | 'signup' | 'signupConfirm' | 'reset' | 'resetConf
 @Component({
   selector: 'ca-auth-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatFormFieldModule],
+  imports: [CommonModule, FormsModule, MatError],
   templateUrl: './auth-modal.component.html',
   styleUrls: ['./auth-modal.component.scss'],
 })
