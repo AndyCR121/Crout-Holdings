@@ -33,7 +33,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS:        http://+:8080
       DB_HOST:                db
       DB_PORT:                '3306'

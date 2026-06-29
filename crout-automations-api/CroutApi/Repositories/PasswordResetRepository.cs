@@ -22,7 +22,7 @@ public class PasswordResetRepository(DbHelper db) : IPasswordResetRepository
     public async Task<PasswordResetOtp?> GetLatestByRequestIdAsync(string resetRequestId)
     {
         using var conn = db.GetConnection();
-        return await conn.QuerySingleOrDefaultAsync<PasswordResetOtp>(
+        var row = await conn.QuerySingleOrDefaultAsync(
             """
             SELECT
               password_reset_otp_id AS PasswordResetOtpId,
@@ -42,6 +42,23 @@ public class PasswordResetRepository(DbHelper db) : IPasswordResetRepository
             LIMIT 1
             """,
             new { resetRequestId });
+
+        if (row is null) return null;
+
+        return new PasswordResetOtp
+        {
+            PasswordResetOtpId = Convert.ToInt32(row.PasswordResetOtpId),
+            ResetRequestId = row.ResetRequestId?.ToString() ?? string.Empty,
+            UserId = Convert.ToInt32(row.UserId),
+            OtpHash = row.OtpHash?.ToString() ?? string.Empty,
+            AttemptCount = Convert.ToInt32(row.AttemptCount),
+            ExpiresAt = Convert.ToDateTime(row.ExpiresAt),
+            VerifiedAt = row.VerifiedAt is null ? null : Convert.ToDateTime(row.VerifiedAt),
+            ConsumedAt = row.ConsumedAt is null ? null : Convert.ToDateTime(row.ConsumedAt),
+            InvalidatedAt = row.InvalidatedAt is null ? null : Convert.ToDateTime(row.InvalidatedAt),
+            CreatedAt = Convert.ToDateTime(row.CreatedAt),
+            UpdatedAt = Convert.ToDateTime(row.UpdatedAt),
+        };
     }
 
     public async Task InvalidateActiveByUserAsync(int userId)

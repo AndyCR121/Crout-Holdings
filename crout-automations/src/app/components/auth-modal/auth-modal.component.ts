@@ -1,8 +1,9 @@
 import {
-  Component, HostListener, inject, output, signal
+  Component, inject, output, signal
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { getPasswordValidationErrors, isValidEmail } from '../../utils/auth-validation';
@@ -14,7 +15,7 @@ type PasswordField = 'login' | 'signup' | 'signupConfirm' | 'reset' | 'resetConf
 @Component({
   selector: 'ca-auth-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatFormFieldModule],
   templateUrl: './auth-modal.component.html',
   styleUrls: ['./auth-modal.component.scss'],
 })
@@ -28,6 +29,7 @@ export class AuthModalComponent {
   view = signal<AuthView>('auth');
   loading = signal(false);
   error = signal<string | null>(null);
+  resetSubmitAttempted = signal(false);
   readonly passwordVisibility = signal<Record<PasswordField, boolean>>({
     login: false,
     signup: false,
@@ -193,6 +195,7 @@ export class AuthModalComponent {
         this.view.set('forgot-reset');
         this.resetPassword = '';
         this.resetConfirmPassword = '';
+        this.resetSubmitAttempted.set(false);
       },
       error: (e: any) => {
         this.loading.set(false);
@@ -202,6 +205,7 @@ export class AuthModalComponent {
   }
 
   submitPasswordReset(): void {
+    this.resetSubmitAttempted.set(true);
     const passwordErrors = getPasswordValidationErrors(this.resetPassword);
     if (passwordErrors.length) {
       this.error.set(passwordErrors[0]);
@@ -274,6 +278,19 @@ export class AuthModalComponent {
     return this.passwordVisibility()[field];
   }
 
+  resetPasswordValidationErrors(): string[] {
+    return getPasswordValidationErrors(this.resetPassword);
+  }
+
+  shouldShowResetPasswordErrors(): boolean {
+    return this.resetSubmitAttempted() || this.resetPassword.length > 0;
+  }
+
+  resetPasswordsMismatch(): boolean {
+    return this.resetConfirmPassword.length > 0
+      && this.resetPassword !== this.resetConfirmPassword;
+  }
+
   togglePasswordVisibility(field: PasswordField): void {
     this.passwordVisibility.update(state => ({ ...state, [field]: !state[field] }));
   }
@@ -283,12 +300,7 @@ export class AuthModalComponent {
     this.resetOtp = '';
     this.resetPassword = '';
     this.resetConfirmPassword = '';
+    this.resetSubmitAttempted.set(false);
   }
 
-  @HostListener('click', ['$event'])
-  onBackdropClick(e: MouseEvent): void {
-    if ((e.target as HTMLElement).classList.contains('ca-modal-backdrop')) {
-      this.close.emit();
-    }
-  }
 }
