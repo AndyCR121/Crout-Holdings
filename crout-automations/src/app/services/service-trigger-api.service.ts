@@ -10,9 +10,10 @@ export class ServiceTriggerApiService {
   private readonly env = inject(EnvironmentService);
   private get base(): string { return this.env.apiUrl; }
 
-  getConfigs(companyId: number, serviceId: number): Observable<ServiceTriggerConfig[]> {
+  getConfigs(companyId: number, serviceId: number, userServiceId?: number | null): Observable<ServiceTriggerConfig[]> {
+    const suffix = userServiceId != null ? `?userServiceId=${userServiceId}` : '';
     return this.http.get<ServiceTriggerConfig[]>(
-      `${this.base}/companies/${companyId}/services/${serviceId}/triggers`,
+      `${this.base}/companies/${companyId}/services/${serviceId}/triggers${suffix}`,
       { headers: this.authHeaders(), withCredentials: true }
     );
   }

@@ -12,6 +12,9 @@
         @if (guide()) {
           <div class="dguide-header-actions">
             <ca-integration-status-badge [integrationStatus]="guide()?.integrationStatus" [legacyStatus]="guide()?.status" />
+            @if (canBuildCustomForm() && formBuilderHref(); as href) {
+              <a class="dguide-maintenance" [href]="href">Build Custom Form</a>
+            }
             <button type="button" class="dguide-maintenance" (click)="toggleMaintenance()" [disabled]="savingMaintenance()">
               {{ guide()?.isMaintenance ? 'Disable Maintenance' : 'Enable Maintenance' }}
             </button>

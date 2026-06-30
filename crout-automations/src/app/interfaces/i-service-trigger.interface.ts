@@ -3,16 +3,22 @@ export type ServiceTriggerResponseMode = 'toast' | 'modal' | 'inline' | 'downloa
 export type DynamicFieldType =
   | 'text'
   | 'textarea'
+  | 'richText'
   | 'number'
   | 'date'
+  | 'time'
   | 'datetime'
+  | 'dateRange'
   | 'select'
   | 'multi-select'
+  | 'multiSelect'
   | 'checkbox'
   | 'toggle'
   | 'email'
   | 'json'
   | 'hidden';
+
+export type DynamicFieldFormatter = 'decimal' | 'currency' | 'phone' | 'email';
 
 export interface DynamicFieldOption {
   label: string;
@@ -21,17 +27,21 @@ export interface DynamicFieldOption {
 
 export interface DynamicFieldConfig {
   key: string;
+  name?: string;
   label: string;
   type: DynamicFieldType;
   required?: boolean;
+  hidden?: boolean;
   defaultValue?: unknown;
   placeholder?: string;
+  formatter?: DynamicFieldFormatter;
   options?: DynamicFieldOption[];
   validation?: {
     min?: number;
     max?: number;
     regex?: string;
     maxLength?: number;
+    preventEndBeforeStart?: boolean;
   };
 }
 

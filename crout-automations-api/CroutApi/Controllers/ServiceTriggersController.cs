@@ -12,8 +12,8 @@ public class ServiceTriggersController(IServiceTriggerService triggers) : Contro
     private int UserId => JwtHelper.GetUserId(User);
 
     [HttpGet("api/companies/{companyId:int}/services/{serviceId:int}/triggers")]
-    public async Task<IActionResult> GetConfigs(int companyId, int serviceId) =>
-        Ok(await triggers.GetConfigsAsync(UserId, companyId, serviceId));
+    public async Task<IActionResult> GetConfigs(int companyId, int serviceId, [FromQuery] int? userServiceId = null) =>
+        Ok(await triggers.GetConfigsAsync(UserId, companyId, serviceId, userServiceId));
 
     [HttpPost("api/service-triggers/{triggerId:int}/execute")]
     [RequestSizeLimit(60_000_000)]

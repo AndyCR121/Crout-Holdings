@@ -10,9 +10,9 @@ namespace CroutApi.Services;
 
 public class ServiceTriggerService(IServiceTriggerRepository repo, IHttpClientFactory httpFactory, IOptions<N8nOptions> n8nOptions) : IServiceTriggerService
 {
-    public async Task<IEnumerable<ServiceTriggerConfigDto>> GetConfigsAsync(int userId, int companyId, int serviceId)
+    public async Task<IEnumerable<ServiceTriggerConfigDto>> GetConfigsAsync(int userId, int companyId, int serviceId, int? userServiceId = null)
     {
-        var configs = await repo.GetConfigsAsync(userId, companyId, serviceId);
+        var configs = await repo.GetConfigsAsync(userId, companyId, serviceId, userServiceId);
         return configs.Select(ToDto);
     }
 

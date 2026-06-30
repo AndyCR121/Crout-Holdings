@@ -17,6 +17,7 @@ export class ServiceTriggerRendererComponent implements OnChanges {
   @Input({ required: true }) configs: ServiceTriggerConfig[] = [];
   @Input({ required: true }) companyId!: number;
   @Input() userServiceId: number | null = null;
+  @Input() previewOnly = false;
   @Output() executed = new EventEmitter<ExecuteTriggerResponse>();
 
   readonly values = signal<Record<number, Record<string, any>>>({});
@@ -59,6 +60,15 @@ export class ServiceTriggerRendererComponent implements OnChanges {
     if (checked && idx === -1) current.push(value);
     if (!checked && idx > -1) current.splice(idx, 1);
     this.setField(configId, key, current);
+  }
+
+  setDateRangePart(configId: number, key: string, part: 'start' | 'end', value: string): void {
+    const current = this.fieldValue(configId, key);
+    this.setField(configId, key, {
+      start: current?.start ?? '',
+      end: current?.end ?? '',
+      [part]: value,
+    });
   }
 
   onFiles(config: ServiceTriggerConfig, event: Event): void {
@@ -118,9 +128,11 @@ export class ServiceTriggerRendererComponent implements OnChanges {
     }
 
     return (config.fields ?? []).reduce<Record<string, any>>((acc, field) => {
+      const type = this.normalizeFieldType(field.type);
       if (field.defaultValue !== undefined) acc[field.key] = field.defaultValue;
-      else if (field.type === 'checkbox' || field.type === 'toggle') acc[field.key] = false;
-      else if (field.type === 'multi-select') acc[field.key] = [];
+      else if (type === 'checkbox' || type === 'toggle') acc[field.key] = false;
+      else if (type === 'multi-select') acc[field.key] = [];
+      else if (type === 'dateRange') acc[field.key] = { start: '', end: '' };
       else acc[field.key] = '';
       return acc;
     }, {});
@@ -142,8 +154,10 @@ export class ServiceTriggerRendererComponent implements OnChanges {
     }
 
     for (const field of config.fields ?? []) {
+      const type = this.normalizeFieldType(field.type);
       const value = this.fieldValue(config.id, field.key);
-      if (field.required && (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0))) {
+      const isEmptyDateRange = type === 'dateRange' && (!value?.start || !value?.end);
+      if (field.required && (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0) || isEmptyDateRange)) {
         return `${field.label} is required.`;
       }
       const validation = this.validateField(field, value);
@@ -158,15 +172,46 @@ export class ServiceTriggerRendererComponent implements OnChanges {
 
   private validateField(field: DynamicFieldConfig, value: any): string | null {
     if (value === null || value === undefined || value === '') return null;
+    const type = this.normalizeFieldType(field.type);
+    if (type === 'dateRange') {
+      if (!value?.start || !value?.end) return null;
+      const preventEndBeforeStart = field.validation?.preventEndBeforeStart ?? true;
+      if (preventEndBeforeStart && value.end < value.start) return `${field.label} end date cannot be earlier than the start date.`;
+      return null;
+    }
     const rules = field.validation;
     if (!rules) return null;
     if (rules.maxLength && String(value).length > rules.maxLength) return `${field.label} is too long.`;
     if (rules.regex && !new RegExp(rules.regex).test(String(value))) return `${field.label} is invalid.`;
-    if (typeof value === 'number') {
-      if (rules.min !== undefined && value < rules.min) return `${field.label} is below the minimum.`;
-      if (rules.max !== undefined && value > rules.max) return `${field.label} is above the maximum.`;
+    const numericValue = typeof value === 'number' ? value : (type === 'number' && value !== '' ? Number(value) : null);
+    if (numericValue !== null && !Number.isNaN(numericValue)) {
+      if (rules.min !== undefined && numericValue < rules.min) return `${field.label} is below the minimum.`;
+      if (rules.max !== undefined && numericValue > rules.max) return `${field.label} is above the maximum.`;
     }
     return null;
+  }
+
+  isHiddenField(field: DynamicFieldConfig): boolean {
+    return field.hidden === true || this.normalizeFieldType(field.type) === 'hidden';
+  }
+
+  isChoiceField(field: DynamicFieldConfig): boolean {
+    const type = this.normalizeFieldType(field.type);
+    return type === 'select' || type === 'multi-select';
+  }
+
+  isDateRangeField(field: DynamicFieldConfig): boolean {
+    return this.normalizeFieldType(field.type) === 'dateRange';
+  }
+
+  inputType(field: DynamicFieldConfig): string {
+    const type = this.normalizeFieldType(field.type);
+    if (type === 'datetime') return 'datetime-local';
+    return type;
+  }
+
+  normalizeFieldType(type: DynamicFieldConfig['type']): string {
+    return type === 'multiSelect' ? 'multi-select' : type;
   }
 
   private validateFiles(config: ServiceTriggerConfig, selected: File[]): string | null {

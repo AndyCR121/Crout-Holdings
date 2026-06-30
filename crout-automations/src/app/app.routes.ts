@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { devGuard } from './guards/dev.guard';
+import { pendingChangesGuard } from './guards/pending-changes.guard';
 
 export const routes: Routes = [
   {
@@ -179,6 +180,13 @@ export const routes: Routes = [
       import('./pages/dev/service-guide/dev-service-guide.component').then(m => m.DevServiceGuideComponent),
   },
   {
+    path: 'dev/dev-services/guide/form-builder',
+    canActivate: [authGuard, devGuard],
+    canDeactivate: [pendingChangesGuard],
+    loadComponent: () =>
+      import('./pages/dev/service-guide/form-builder/dev-service-form-builder.component').then(m => m.DevServiceFormBuilderComponent),
+  },
+  {
     path: 'dev/dev-services',
     canActivate: [authGuard, devGuard],
     loadComponent: () =>
@@ -192,6 +200,11 @@ export const routes: Routes = [
   {
     path: 'dev/services/guide',
     redirectTo: 'dev/dev-services/guide',
+    pathMatch: 'full',
+  },
+  {
+    path: 'dev/services/guide/form-builder',
+    redirectTo: 'dev/dev-services/guide/form-builder',
     pathMatch: 'full',
   },
   // ── Admin Portal (auth + admin guard) ───────────────────────────────────────

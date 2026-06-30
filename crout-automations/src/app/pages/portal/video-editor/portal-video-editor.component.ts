@@ -173,7 +173,7 @@ export class PortalVideoEditorComponent implements OnInit {
     const companyId = this.selectedCompanyId();
     const serviceId = this.selectedServiceId();
     if (!companyId || !serviceId) return;
-    this.triggersApi.getConfigs(companyId, serviceId).subscribe({
+    this.triggersApi.getConfigs(companyId, serviceId, this.selectedUserServiceId()).subscribe({
       next: configs => this.triggers.set(configs),
       error: () => this.triggers.set([])
     });

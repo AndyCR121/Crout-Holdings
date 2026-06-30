@@ -385,7 +385,7 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
     if (!companyId || !row.service.serviceId || row.triggersLoading || row.triggerConfigs.length) return;
 
     row.triggersLoading = true;
-    this.triggersApi.getConfigs(companyId, row.service.serviceId).subscribe({
+    this.triggersApi.getConfigs(companyId, row.service.serviceId, row.userService.userServiceId).subscribe({
       next: configs => {
         row.triggerConfigs = configs;
         row.triggersLoading = false;

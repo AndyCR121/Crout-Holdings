@@ -1,0 +1,222 @@
+<div class="portal-layout">
+  <ca-portal-sidebar />
+
+  <main class="portal-main">
+    <section class="dfb-wrap">
+      <div class="dfb-header">
+        <div>
+          <button type="button" class="dfb-back" (click)="goBackToGuide()">Back to Guide</button>
+          <h1>{{ guide()?.serviceName ?? 'Custom Form Builder' }}</h1>
+          <p>{{ guide()?.companyName ?? 'Assigned developer service' }}</p>
+        </div>
+        <div class="dfb-actions">
+          <button type="button" class="dfb-danger" (click)="deleteForm()" [disabled]="deleting() || formId() === null">
+            {{ deleting() ? 'Deleting...' : 'Delete Form' }}
+          </button>
+          <button type="button" class="dfb-primary" (click)="save()" [disabled]="saving()">
+            {{ saving() ? 'Saving...' : (formId() === null ? 'Create Form' : 'Save Form') }}
+          </button>
+        </div>
+      </div>
+
+      @if (loading()) {
+        <div class="dfb-empty">Loading custom form builder...</div>
+      } @else if (!guide()) {
+        <div class="dfb-empty">Assigned service was not found.</div>
+      } @else {
+        <div class="dfb-grid">
+          <section class="dfb-panel">
+            <div class="dfb-panel-head">
+              <h2>Form Setup</h2>
+              <span>One custom form is stored per assigned user service.</span>
+            </div>
+
+            @if (formId() === null && fields().length === 0) {
+              <div class="dfb-empty dfb-empty--inline">
+                No custom form built yet. Add fields to start the definition.
+              </div>
+            }
+
+            <div class="dfb-meta">
+              <label>
+                <span>Form Label</span>
+                <input [(ngModel)]="formLabel" (ngModelChange)="touch()" placeholder="Client intake form" />
+              </label>
+
+              <label>
+                <span>Description</span>
+                <textarea rows="3" [(ngModel)]="formDescription" (ngModelChange)="touch()" placeholder="Explain what this form collects."></textarea>
+              </label>
+
+              <label>
+                <span>Response Mode</span>
+                <select [ngModel]="responseMode()" (ngModelChange)="responseMode.set($event); touch()">
+                  <option value="inline">Inline</option>
+                  <option value="toast">Toast</option>
+                  <option value="modal">Modal</option>
+                  <option value="download">Download</option>
+                </select>
+              </label>
+
+              <label>
+                <span>Payload Template JSON</span>
+                <textarea rows="7" [ngModel]="payloadTemplateText()" (ngModelChange)="payloadTemplateText.set($event); touch()" spellcheck="false"></textarea>
+              </label>
+            </div>
+
+            @if (validationError()) {
+              <p class="dfb-error">{{ validationError() }}</p>
+            }
+
+            <div class="dfb-field-toolbar">
+              <span>Fields</span>
+              <div>
+                <button type="button" (click)="addField('text')">Add Text Field</button>
+                <button type="button" (click)="addField('select')">Add Select Field</button>
+                <button type="button" (click)="addField('hidden')">Add Hidden Field</button>
+              </div>
+            </div>
+
+            <div class="dfb-fields">
+              @for (field of fields(); track field.id; let index = $index) {
+                <article class="dfb-field-card">
+                  <div class="dfb-field-head">
+                    <strong>{{ field.label || field.key || ('Field ' + (index + 1)) }}</strong>
+                    <div class="dfb-field-controls">
+                      <button type="button" (click)="moveField(index, -1)" [disabled]="index === 0">Up</button>
+                      <button type="button" (click)="moveField(index, 1)" [disabled]="index === fields().length - 1">Down</button>
+                      <button type="button" class="dfb-danger" (click)="removeField(field.id)">Remove</button>
+                    </div>
+                  </div>
+
+                  <div class="dfb-field-grid">
+                    <label>
+                      <span>Type</span>
+                      <select [ngModel]="field.type" (ngModelChange)="onFieldTypeChange(field.id, $event)">
+                        @for (typeOption of fieldTypeOptions; track typeOption.value) {
+                          <option [value]="typeOption.value">{{ typeOption.label }}</option>
+                        }
+                      </select>
+                    </label>
+
+                    <label>
+                      <span>Key</span>
+                      <input [ngModel]="field.key" (ngModelChange)="setFieldKey(field.id, $event)" placeholder="clientName" />
+                    </label>
+
+                    <label>
+                      <span>Name</span>
+                      <input [ngModel]="field.name" (ngModelChange)="setFieldName(field.id, $event)" placeholder="Optional payload alias" />
+                    </label>
+
+                    <label>
+                      <span>Label</span>
+                      <input [ngModel]="field.label" (ngModelChange)="setFieldLabel(field.id, $event)" placeholder="Client Name" />
+                    </label>
+
+                    <label>
+                      <span>Placeholder</span>
+                      <input [ngModel]="field.placeholder" (ngModelChange)="setFieldPlaceholder(field.id, $event)" placeholder="What the client sees" />
+                    </label>
+
+                    <label>
+                      <span>Default Value</span>
+                      <input [ngModel]="field.defaultValueText" (ngModelChange)="setFieldDefaultValue(field.id, $event)" placeholder="Static hidden value or JSON literal" />
+                    </label>
+
+                    <label>
+                      <span>Formatter</span>
+                      <select [ngModel]="field.formatter || ''" (ngModelChange)="setFieldFormatter(field.id, $event)">
+                        @for (formatter of formatterOptions; track formatter.value) {
+                          <option [value]="formatter.value">{{ formatter.label }}</option>
+                        }
+                      </select>
+                    </label>
+
+                    <label>
+                      <span>Min</span>
+                      <input type="number" [ngModel]="field.validation?.min" (ngModelChange)="setFieldMin(field.id, $event)" />
+                    </label>
+
+                    <label>
+                      <span>Max</span>
+                      <input type="number" [ngModel]="field.validation?.max" (ngModelChange)="setFieldMax(field.id, $event)" />
+                    </label>
+
+                    <label>
+                      <span>Regex</span>
+                      <input [ngModel]="field.validation?.regex" (ngModelChange)="setFieldRegex(field.id, $event)" placeholder="^[A-Z0-9]+$" />
+                    </label>
+
+                    <label>
+                      <span>Max Length</span>
+                      <input type="number" [ngModel]="field.validation?.maxLength" (ngModelChange)="setFieldMaxLength(field.id, $event)" />
+                    </label>
+                  </div>
+
+                  <div class="dfb-switches">
+                    <mat-checkbox [checked]="field.required" (change)="setFieldRequired(field.id, $event.checked)">Required</mat-checkbox>
+                    <mat-checkbox [checked]="field.hidden" (change)="setFieldHidden(field.id, $event.checked)">Hidden</mat-checkbox>
+                    @if (field.type === 'dateRange') {
+                      <mat-checkbox [checked]="field.validation?.preventEndBeforeStart ?? true" disabled>Prevent end before start</mat-checkbox>
+                    }
+                  </div>
+
+                  @if (isChoiceField(field)) {
+                    <div class="dfb-options">
+                      <div class="dfb-options-head">
+                        <strong>Options</strong>
+                        <button type="button" (click)="addOption(field.id)">Add Option</button>
+                      </div>
+
+                      @for (option of field.options; track option.id; let optionIndex = $index) {
+                        <div class="dfb-option-row">
+                          <input [ngModel]="option.label" (ngModelChange)="setOptionLabel(field.id, option.id, $event)" placeholder="Label" />
+                          <input [ngModel]="option.value" (ngModelChange)="setOptionValue(field.id, option.id, $event)" placeholder="Value" />
+                          <button type="button" (click)="moveOption(field.id, optionIndex, -1)" [disabled]="optionIndex === 0">Up</button>
+                          <button type="button" (click)="moveOption(field.id, optionIndex, 1)" [disabled]="optionIndex === field.options.length - 1">Down</button>
+                          <button type="button" class="dfb-danger" (click)="removeOption(field.id, option.id)">Remove</button>
+                        </div>
+                      }
+                    </div>
+                  }
+                </article>
+              }
+            </div>
+          </section>
+
+          <aside class="dfb-side">
+            <section class="dfb-panel">
+              <div class="dfb-panel-head">
+                <h2>Assigned Service</h2>
+              </div>
+              <dl class="dfb-details">
+                <div><dt>Company</dt><dd>{{ guide()!.companyName }}</dd></div>
+                <div><dt>Service</dt><dd>{{ guide()!.serviceName }}</dd></div>
+                <div><dt>User Service ID</dt><dd>{{ guide()!.userServiceId }}</dd></div>
+                <div><dt>Workflow</dt><dd>{{ guide()!.integrationWorkflowName || 'Provisioning' }}</dd></div>
+                <div><dt>Status</dt><dd>{{ guide()!.integrationStatus || 'Development' }}</dd></div>
+              </dl>
+            </section>
+
+            <section class="dfb-panel">
+              <div class="dfb-panel-head">
+                <h2>Preview</h2>
+                <span>Uses the existing trigger renderer contract.</span>
+              </div>
+              @if (previewConfigs().length) {
+                <ca-service-trigger-renderer
+                  [configs]="previewConfigs()"
+                  [companyId]="guide()!.companyId"
+                  [userServiceId]="guide()!.userServiceId"
+                  [previewOnly]="true" />
+              } @else {
+                <div class="dfb-empty dfb-empty--inline">Add a form label to preview the current definition.</div>
+              }
+            </section>
+          </aside>
+        </div>
+      }
+    </section>
+  </main>
+</div>

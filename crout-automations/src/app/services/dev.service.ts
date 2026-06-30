@@ -2,6 +2,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { IDevDashboard, IDevPortalService, IPagedResult } from '../interfaces/i-service.interface';
+import { DevUserServiceForm } from '../interfaces/i-custom-form-builder.interface';
 import { EnvironmentService } from './environment.service';
 
 @Injectable({ providedIn: 'root' })
@@ -56,5 +57,33 @@ export class DevService {
 
   updateMaintenance(userServiceId: number, isMaintenance: boolean): Observable<IDevPortalService> {
     return this.http.post<IDevPortalService>(`${this.base}/services/${userServiceId}/maintenance`, { isMaintenance }, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  getForm(userServiceId: number): Observable<DevUserServiceForm> {
+    return this.http.get<DevUserServiceForm>(`${this.base}/user-services/${userServiceId}/form`, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  createForm(userServiceId: number, payload: {
+    label: string;
+    description?: string;
+    schema: Record<string, unknown>;
+    payloadTemplate?: Record<string, unknown> | null;
+    responseMode?: string;
+  }): Observable<DevUserServiceForm> {
+    return this.http.post<DevUserServiceForm>(`${this.base}/user-services/${userServiceId}/form`, payload, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  updateForm(userServiceId: number, payload: {
+    label: string;
+    description?: string;
+    schema: Record<string, unknown>;
+    payloadTemplate?: Record<string, unknown> | null;
+    responseMode?: string;
+  }): Observable<DevUserServiceForm> {
+    return this.http.put<DevUserServiceForm>(`${this.base}/user-services/${userServiceId}/form`, payload, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  deleteForm(userServiceId: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/user-services/${userServiceId}/form`, { headers: this.authHeaders(), withCredentials: true });
   }
 }

@@ -82,6 +82,11 @@ export class DevServiceGuideComponent implements OnInit {
       output: this.mergeUnique([...this.baseIntegrationOptions.output, ...display.output]),
     };
   });
+  readonly canBuildCustomForm = computed(() =>
+    this.displayChips().trigger.some(trigger => {
+      const value = trigger.toLowerCase();
+      return value.includes('website form') || value.includes('custom form');
+    }));
 
   ngOnInit(): void {
     this.route.queryParamMap
@@ -229,6 +234,11 @@ export class DevServiceGuideComponent implements OnInit {
 
   statusClass(status?: number): string {
     return this.integrationStatus.cssClass(this.guide()?.integrationStatus, status ?? 0);
+  }
+
+  formBuilderHref(): string | null {
+    const userServiceId = this.userServiceId();
+    return userServiceId ? `/dev/dev-services/guide/form-builder/?userServiceId=${userServiceId}` : null;
   }
 
   private extractChips(raw?: string | null): Record<'trigger' | 'action' | 'output', string[]> {

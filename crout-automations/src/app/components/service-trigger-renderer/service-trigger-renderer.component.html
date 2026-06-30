@@ -16,30 +16,48 @@
 
       <div class="trigger-fields" *ngSwitchCase="'form'">
         <ng-container *ngFor="let field of config.fields || []">
-          <label class="trigger-field" *ngIf="field.type !== 'hidden'">
+          <label class="trigger-field" *ngIf="!isHiddenField(field)">
             <span>{{ field.label }} <strong *ngIf="field.required">*</strong></span>
             <input
-              *ngIf="['text','email','number','date','datetime'].includes(field.type)"
-              [type]="field.type === 'datetime' ? 'datetime-local' : field.type"
+              *ngIf="['text','email','number','date','time','datetime'].includes(normalizeFieldType(field.type))"
+              [type]="inputType(field)"
               [placeholder]="field.placeholder || ''"
               [ngModel]="fieldValue(config.id, field.key)"
               (ngModelChange)="setField(config.id, field.key, $event)"
             />
             <textarea
-              *ngIf="field.type === 'textarea' || field.type === 'json'"
+              *ngIf="normalizeFieldType(field.type) === 'textarea' || normalizeFieldType(field.type) === 'json' || normalizeFieldType(field.type) === 'richText'"
               rows="4"
               [placeholder]="field.placeholder || ''"
               [ngModel]="fieldValue(config.id, field.key)"
               (ngModelChange)="setField(config.id, field.key, $event)"
             ></textarea>
+            <div class="trigger-checks" *ngIf="isDateRangeField(field)">
+              <label>
+                <span>Start</span>
+                <input
+                  type="date"
+                  [ngModel]="fieldValue(config.id, field.key)?.start"
+                  (ngModelChange)="setDateRangePart(config.id, field.key, 'start', $event)"
+                />
+              </label>
+              <label>
+                <span>End</span>
+                <input
+                  type="date"
+                  [ngModel]="fieldValue(config.id, field.key)?.end"
+                  (ngModelChange)="setDateRangePart(config.id, field.key, 'end', $event)"
+                />
+              </label>
+            </div>
             <select
-              *ngIf="field.type === 'select'"
+              *ngIf="normalizeFieldType(field.type) === 'select'"
               [ngModel]="fieldValue(config.id, field.key)"
               (ngModelChange)="setField(config.id, field.key, $event)"
             >
               <option *ngFor="let opt of field.options || []" [ngValue]="opt.value">{{ opt.label }}</option>
             </select>
-            <div class="trigger-checks" *ngIf="field.type === 'multi-select'">
+            <div class="trigger-checks" *ngIf="normalizeFieldType(field.type) === 'multi-select'">
               <label *ngFor="let opt of field.options || []">
                 <input
                   type="checkbox"
@@ -49,7 +67,7 @@
                 {{ opt.label }}
               </label>
             </div>
-            <label class="trigger-toggle" *ngIf="field.type === 'checkbox' || field.type === 'toggle'">
+            <label class="trigger-toggle" *ngIf="normalizeFieldType(field.type) === 'checkbox' || normalizeFieldType(field.type) === 'toggle'">
               <input
                 type="checkbox"
                 [checked]="fieldValue(config.id, field.key)"
@@ -103,13 +121,13 @@
       </div>
     </div>
 
-    <p class="trigger-error" *ngIf="error(config.id)">{{ error(config.id) }}</p>
-    <p class="trigger-response" *ngIf="response(config.id)">
+    <p class="trigger-error" *ngIf="!previewOnly && error(config.id)">{{ error(config.id) }}</p>
+    <p class="trigger-response" *ngIf="!previewOnly && response(config.id)">
       {{ response(config.id)?.message }}
       <strong>{{ response(config.id)?.mode }}</strong>
     </p>
 
-    <button class="trigger-action" type="button" [disabled]="busy() === config.id" (click)="execute(config)">
+    <button *ngIf="!previewOnly" class="trigger-action" type="button" [disabled]="busy() === config.id" (click)="execute(config)">
       <span *ngIf="busy() !== config.id">Run Trigger</span>
       <span *ngIf="busy() === config.id">Running...</span>
     </button>

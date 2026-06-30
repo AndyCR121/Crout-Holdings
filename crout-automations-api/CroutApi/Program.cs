@@ -51,6 +51,7 @@ builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IServiceCatalogService, ServiceCatalogService>();
 builder.Services.AddScoped<IServiceRequestService, ServiceRequestService>();
 builder.Services.AddScoped<IServiceTriggerService, ServiceTriggerService>();
+builder.Services.AddScoped<IDevUserServiceFormService, DevUserServiceFormService>();
 builder.Services.AddScoped<IVideoProjectService, VideoProjectService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IContactRequestService, ContactRequestService>();

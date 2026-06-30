@@ -12,7 +12,11 @@ namespace CroutApi.Controllers;
 [ApiController]
 [Route("api/dev")]
 [Authorize]
-public class DevController(IUserRepository users, IDevPortalRepository devPortal, IIntegrationService integrationService) : ControllerBase
+public class DevController(
+    IUserRepository users,
+    IDevPortalRepository devPortal,
+    IIntegrationService integrationService,
+    IDevUserServiceFormService forms) : ControllerBase
 {
     private int CallerId =>
         JwtHelper.GetUserId(User);
@@ -95,6 +99,36 @@ public class DevController(IUserRepository users, IDevPortalRepository devPortal
         {
             return Conflict(new { error = "This service is no longer available." });
         }
+    }
+
+    [HttpGet("user-services/{userServiceId:int}/form")]
+    public async Task<IActionResult> GetForm(int userServiceId)
+    {
+        if (!await IsDeveloperAsync()) return Forbid();
+        var form = await forms.GetAsync(CallerId, userServiceId);
+        return form is null ? NotFound(new { error = "No custom form has been created for this service yet." }) : Ok(form);
+    }
+
+    [HttpPost("user-services/{userServiceId:int}/form")]
+    public async Task<IActionResult> CreateForm(int userServiceId, [FromBody] UpsertDevUserServiceFormDto dto)
+    {
+        if (!await IsDeveloperAsync()) return Forbid();
+        return Ok(await forms.CreateAsync(CallerId, userServiceId, dto));
+    }
+
+    [HttpPut("user-services/{userServiceId:int}/form")]
+    public async Task<IActionResult> UpdateForm(int userServiceId, [FromBody] UpsertDevUserServiceFormDto dto)
+    {
+        if (!await IsDeveloperAsync()) return Forbid();
+        return Ok(await forms.UpdateAsync(CallerId, userServiceId, dto));
+    }
+
+    [HttpDelete("user-services/{userServiceId:int}/form")]
+    public async Task<IActionResult> DeleteForm(int userServiceId)
+    {
+        if (!await IsDeveloperAsync()) return Forbid();
+        await forms.DeleteAsync(CallerId, userServiceId);
+        return NoContent();
     }
 
     private async Task<bool> IsDeveloperAsync()
