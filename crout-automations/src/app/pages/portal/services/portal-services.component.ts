@@ -40,6 +40,7 @@ interface ServiceRow {
   credentialFields: { key: string; value: string }[];
   triggerConfigs: ServiceTriggerConfig[];
   triggersLoading: boolean;
+  workspaceView: 'marketing' | 'manual';
 }
 
 interface CompanyGroup {
@@ -125,6 +126,7 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
               credentialFields: this.defaultCredentialFields(),
               triggerConfigs: [],
               triggersLoading: false,
+              workspaceView: svc.serviceName.toLowerCase() === 'marketing systems' ? 'marketing' : 'manual',
             };
           });
           return { company, rows, expanded: true };
@@ -340,6 +342,11 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
 
   isMarketingSystem(row: ServiceRow): boolean {
     return row.service.serviceName.toLowerCase() === 'marketing systems';
+  }
+
+  setWorkspaceView(row: ServiceRow, view: 'marketing' | 'manual'): void {
+    row.workspaceView = view;
+    this.groups.update(g => [...g]);
   }
 
   statusLabel(s: number): string {

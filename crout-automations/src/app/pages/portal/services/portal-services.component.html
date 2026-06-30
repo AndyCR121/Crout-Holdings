@@ -199,19 +199,26 @@
                 </section>
 
                 <section class="pservices__workspace">
-                  <ng-container *ngIf="isMarketingSystem(row); else triggerWorkspace">
-                    <ca-marketing-workspace
-                      [service]="row.service"
-                      [userService]="row.userService"
-                      [company]="group.company"
-                      [integrations]="row.activeAddons"
-                      [triggers]="row.triggerConfigs"
-                      [triggersLoading]="row.triggersLoading"
-                      (updateCredentials)="openCredentials(row)"
-                      (triggerExecuted)="onTriggerExecuted()"
-                    ></ca-marketing-workspace>
-                  </ng-container>
-                  <ng-template #triggerWorkspace>
+                  <div class="pservices__workspace-tabs" *ngIf="isMarketingSystem(row)">
+                    <button
+                      class="pservices__workspace-tab"
+                      [class.pservices__workspace-tab--active]="row.workspaceView === 'marketing'"
+                      type="button"
+                      (click)="setWorkspaceView(row, 'marketing')"
+                    >
+                      Marketing Workspace
+                    </button>
+                    <button
+                      class="pservices__workspace-tab"
+                      [class.pservices__workspace-tab--active]="row.workspaceView === 'manual'"
+                      type="button"
+                      (click)="setWorkspaceView(row, 'manual')"
+                    >
+                      Manual Service Control
+                    </button>
+                  </div>
+
+                  <ng-container *ngIf="!isMarketingSystem(row) || row.workspaceView === 'manual'; else marketingWorkspace">
                     <div class="pservices__workspace-head">
                       <h3>Manual Service Controls</h3>
                       <p>Run available service triggers through the backend workflow gateway.</p>
@@ -227,6 +234,18 @@
                     <p class="pservices__workspace-empty" *ngIf="!row.triggersLoading && !row.triggerConfigs.length">
                       No manual controls are configured for this service yet.
                     </p>
+                  </ng-container>
+                  <ng-template #marketingWorkspace>
+                    <ca-marketing-workspace
+                      [service]="row.service"
+                      [userService]="row.userService"
+                      [company]="group.company"
+                      [integrations]="row.activeAddons"
+                      [triggers]="row.triggerConfigs"
+                      [triggersLoading]="row.triggersLoading"
+                      (updateCredentials)="openCredentials(row)"
+                      (triggerExecuted)="onTriggerExecuted()"
+                    ></ca-marketing-workspace>
                   </ng-template>
                 </section>
               </div>

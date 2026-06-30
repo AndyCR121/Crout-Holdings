@@ -12,10 +12,15 @@ public class DevUserServiceFormService(
 {
     private static readonly HashSet<string> AllowedElementTypes = new(StringComparer.OrdinalIgnoreCase)
     {
-        "input", "select", "datetime", "checkbox", "header", "paragraph", "divider", "tabs"
+        "input", "select", "datetime", "checkbox", "list", "header", "paragraph", "divider", "tabs"
     };
 
     private static readonly HashSet<string> FieldElementTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "input", "select", "datetime", "checkbox", "list"
+    };
+
+    private static readonly HashSet<string> AllowedListFieldTypes = new(StringComparer.OrdinalIgnoreCase)
     {
         "input", "select", "datetime", "checkbox"
     };
@@ -159,10 +164,33 @@ public class DevUserServiceFormService(
                 if (!fieldKeys.Add(key))
                     throw new ArgumentException($"Field key '{key}' must be unique within the form.");
 
-                var isHidden = GetOptionalBoolean(element, "hidden");
                 var label = GetOptionalString(element, "label");
-                if (!isHidden && string.IsNullOrWhiteSpace(label))
+                if (string.IsNullOrWhiteSpace(label))
                     throw new ArgumentException($"Field '{key}' requires a label.");
+
+                if (elementType.Equals("input", StringComparison.OrdinalIgnoreCase))
+                {
+                    var isHidden = GetOptionalBoolean(element, "hidden") || GetOptionalString(element, "inputMode")?.Equals("hidden", StringComparison.OrdinalIgnoreCase) == true;
+                    if (isHidden && string.IsNullOrWhiteSpace(GetOptionalString(element, "defaultValueText")))
+                        throw new ArgumentException($"Hidden field '{key}' requires a default value.");
+                }
+
+                if (elementType.Equals("checkbox", StringComparison.OrdinalIgnoreCase))
+                {
+                    var isHidden = GetOptionalBoolean(element, "hidden");
+                    if (!isHidden && string.IsNullOrWhiteSpace(label))
+                        throw new ArgumentException($"Field '{key}' requires a label.");
+                }
+
+                if (elementType.Equals("select", StringComparison.OrdinalIgnoreCase))
+                    ValidateChoiceOptions(element, $"Select field '{key}'");
+
+                if (elementType.Equals("checkbox", StringComparison.OrdinalIgnoreCase)
+                    && GetOptionalString(element, "checkboxMode")?.Equals("radio", StringComparison.OrdinalIgnoreCase) == true)
+                    ValidateChoiceOptions(element, $"Checkbox field '{key}'");
+
+                if (elementType.Equals("list", StringComparison.OrdinalIgnoreCase))
+                    ValidateListElement(element, key);
             }
 
             if (elementType.Equals("tabs", StringComparison.OrdinalIgnoreCase))
@@ -200,6 +228,71 @@ public class DevUserServiceFormService(
         {
             if (!knownTabIds.Contains(tabId))
                 throw new ArgumentException($"Element references unknown tab '{tabId}'.");
+        }
+    }
+
+    private static void ValidateListElement(JsonElement element, string key)
+    {
+        if (!element.TryGetProperty("fields", out var fields) || fields.ValueKind != JsonValueKind.Array || fields.GetArrayLength() == 0)
+            throw new ArgumentException($"List field '{key}' must include at least one list item field.");
+
+        var listFieldKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var listFieldCount = 0;
+
+        foreach (var field in fields.EnumerateArray())
+        {
+            listFieldCount++;
+            if (listFieldCount > 25)
+                throw new ArgumentException($"List field '{key}' can contain a maximum of 25 child fields.");
+
+            if (field.ValueKind != JsonValueKind.Object)
+                throw new ArgumentException($"List field '{key}' contains an invalid child field.");
+
+            var childType = GetRequiredString(field, "type", $"List field '{key}' child fields require a type.");
+            if (!AllowedListFieldTypes.Contains(childType))
+                throw new ArgumentException($"List field '{key}' does not support child field type '{childType}'.");
+
+            _ = GetRequiredString(field, "id", $"List field '{key}' child fields require an id.");
+
+            var childKey = GetRequiredString(field, "key", $"List field '{key}' child fields require a key.");
+            if (!listFieldKeys.Add(childKey))
+                throw new ArgumentException($"List field '{key}' contains duplicate child key '{childKey}'.");
+
+            var childLabel = GetOptionalString(field, "label");
+            if (string.IsNullOrWhiteSpace(childLabel))
+                throw new ArgumentException($"List field '{key}' child field '{childKey}' requires a label.");
+
+            if (field.TryGetProperty("tabId", out _))
+                throw new ArgumentException($"List field '{key}' child field '{childKey}' cannot be assigned to tabs.");
+
+            if (childType.Equals("input", StringComparison.OrdinalIgnoreCase))
+            {
+                var isHidden = GetOptionalBoolean(field, "hidden") || GetOptionalString(field, "inputMode")?.Equals("hidden", StringComparison.OrdinalIgnoreCase) == true;
+                if (isHidden && string.IsNullOrWhiteSpace(GetOptionalString(field, "defaultValueText")))
+                    throw new ArgumentException($"List field '{key}' hidden child field '{childKey}' requires a default value.");
+            }
+
+            if (childType.Equals("select", StringComparison.OrdinalIgnoreCase))
+                ValidateChoiceOptions(field, $"List field '{key}' child field '{childKey}'");
+
+            if (childType.Equals("checkbox", StringComparison.OrdinalIgnoreCase)
+                && GetOptionalString(field, "checkboxMode")?.Equals("radio", StringComparison.OrdinalIgnoreCase) == true)
+                ValidateChoiceOptions(field, $"List field '{key}' child field '{childKey}'");
+        }
+    }
+
+    private static void ValidateChoiceOptions(JsonElement element, string contextLabel)
+    {
+        if (!element.TryGetProperty("options", out var options) || options.ValueKind != JsonValueKind.Array || options.GetArrayLength() == 0)
+            throw new ArgumentException($"{contextLabel} must include at least one option.");
+
+        foreach (var option in options.EnumerateArray())
+        {
+            if (option.ValueKind != JsonValueKind.Object)
+                throw new ArgumentException($"{contextLabel} contains an invalid option.");
+
+            _ = GetRequiredString(option, "id", $"{contextLabel} options require an id.");
+            _ = GetRequiredString(option, "label", $"{contextLabel} contains an option without a label.");
         }
     }
 

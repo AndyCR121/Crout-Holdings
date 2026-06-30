@@ -1,5 +1,6 @@
 export type CustomFormResponseMode = 'inline' | 'toast' | 'modal' | 'download';
-export type CustomFormElementType = 'input' | 'select' | 'datetime' | 'checkbox' | 'header' | 'paragraph' | 'divider' | 'tabs';
+export type CustomFormElementType = 'input' | 'select' | 'datetime' | 'checkbox' | 'list' | 'header' | 'paragraph' | 'divider' | 'tabs';
+export type CustomFormFieldFamily = 'input' | 'select' | 'datetime' | 'checkbox';
 
 export interface CustomFormOption {
   id: string;
@@ -74,6 +75,75 @@ export interface CustomFormCheckboxElement extends CustomFormBaseElement {
   parentKey?: string;
 }
 
+export interface CustomFormListItemBaseField {
+  id: string;
+  type: CustomFormFieldFamily;
+  key: string;
+  name?: string;
+  label: string;
+}
+
+export interface CustomFormListItemInputField extends CustomFormListItemBaseField {
+  type: 'input';
+  inputMode: 'text' | 'textarea' | 'number' | 'email' | 'hidden';
+  placeholder?: string;
+  defaultValueText?: string;
+  required?: boolean;
+  hidden?: boolean;
+  formatter?: '' | 'decimal' | 'currency' | 'phone' | 'email';
+  validation?: CustomFormValidation;
+}
+
+export interface CustomFormListItemSelectField extends CustomFormListItemBaseField {
+  type: 'select';
+  selectMode: 'dropdown' | 'multiSelect' | 'cascading';
+  placeholder?: string;
+  defaultValueText?: string;
+  required?: boolean;
+  searchable?: boolean;
+  options: CustomFormOption[];
+}
+
+export interface CustomFormListItemDateTimeField extends CustomFormListItemBaseField {
+  type: 'datetime';
+  dateTimeMode: 'date' | 'time' | 'dateTime' | 'dateRange';
+  placeholder?: string;
+  defaultValueText?: string;
+  required?: boolean;
+  minValue?: string;
+  maxValue?: string;
+  relativeMin?: string;
+  relativeMax?: string;
+}
+
+export interface CustomFormListItemCheckboxField extends CustomFormListItemBaseField {
+  type: 'checkbox';
+  checkboxMode: 'checkbox' | 'radio';
+  required?: boolean;
+  hidden?: boolean;
+  options: CustomFormOption[];
+  parentKey?: string;
+}
+
+export type CustomFormListItemField =
+  | CustomFormListItemInputField
+  | CustomFormListItemSelectField
+  | CustomFormListItemDateTimeField
+  | CustomFormListItemCheckboxField;
+
+export interface CustomFormListElement extends CustomFormBaseElement {
+  type: 'list';
+  key: string;
+  name?: string;
+  label: string;
+  addButtonLabel?: string;
+  emptyStateText?: string;
+  itemLabel?: string;
+  minItems?: number | null;
+  maxItems?: number | null;
+  fields: CustomFormListItemField[];
+}
+
 export interface CustomFormHeaderElement extends CustomFormBaseElement {
   type: 'header';
   text: string;
@@ -106,6 +176,7 @@ export type CustomFormElement =
   | CustomFormSelectElement
   | CustomFormDateTimeElement
   | CustomFormCheckboxElement
+  | CustomFormListElement
   | CustomFormHeaderElement
   | CustomFormParagraphElement
   | CustomFormDividerElement

@@ -1,135 +1,149 @@
 <section class="trigger-panel" *ngIf="configs.length">
-  <article class="trigger-card" *ngFor="let config of configs">
-    <div class="trigger-card__head">
-      <div>
-        <span class="trigger-card__type">{{ config.triggerType.replace('_', ' ') }}</span>
-        <h3>{{ config.label }}</h3>
-        <p *ngIf="config.description">{{ config.description }}</p>
+  <div class="trigger-tabs" *ngIf="configs.length > 1">
+    <button
+      *ngFor="let config of configs"
+      class="trigger-tab"
+      [class.trigger-tab--active]="activeConfig()?.id === config.id"
+      type="button"
+      (click)="selectConfig(config.id)"
+    >
+      {{ config.label }}
+    </button>
+  </div>
+
+  <ng-container *ngIf="activeConfig() as config">
+    <article class="trigger-card">
+      <div class="trigger-card__head">
+        <div>
+          <span class="trigger-card__type">{{ config.triggerType.replace('_', ' ') }}</span>
+          <h3>{{ config.label }}</h3>
+          <p *ngIf="config.description">{{ config.description }}</p>
+        </div>
+        <span class="trigger-card__method">{{ config.method }}</span>
       </div>
-      <span class="trigger-card__method">{{ config.method }}</span>
-    </div>
 
-    <div class="trigger-card__body" [ngSwitch]="config.triggerType">
-      <p class="trigger-card__hint" *ngSwitchCase="'webhook'">
-        Sends the configured default payload through the backend workflow gateway.
-      </p>
+      <div class="trigger-card__body" [ngSwitch]="config.triggerType">
+        <p class="trigger-card__hint" *ngSwitchCase="'webhook'">
+          Sends the configured default payload through the backend workflow gateway.
+        </p>
 
-      <div class="trigger-fields" *ngSwitchCase="'form'">
-        <ng-container *ngFor="let field of config.fields || []">
-          <label class="trigger-field" *ngIf="!isHiddenField(field)">
-            <span>{{ field.label }} <strong *ngIf="field.required">*</strong></span>
-            <input
-              *ngIf="['text','email','number','date','time','datetime'].includes(normalizeFieldType(field.type))"
-              [type]="inputType(field)"
-              [placeholder]="field.placeholder || ''"
-              [ngModel]="fieldValue(config.id, field.key)"
-              (ngModelChange)="setField(config.id, field.key, $event)"
-            />
-            <textarea
-              *ngIf="normalizeFieldType(field.type) === 'textarea' || normalizeFieldType(field.type) === 'json' || normalizeFieldType(field.type) === 'richText'"
-              rows="4"
-              [placeholder]="field.placeholder || ''"
-              [ngModel]="fieldValue(config.id, field.key)"
-              (ngModelChange)="setField(config.id, field.key, $event)"
-            ></textarea>
-            <div class="trigger-checks" *ngIf="isDateRangeField(field)">
-              <label>
-                <span>Start</span>
-                <input
-                  type="date"
-                  [ngModel]="fieldValue(config.id, field.key)?.start"
-                  (ngModelChange)="setDateRangePart(config.id, field.key, 'start', $event)"
-                />
-              </label>
-              <label>
-                <span>End</span>
-                <input
-                  type="date"
-                  [ngModel]="fieldValue(config.id, field.key)?.end"
-                  (ngModelChange)="setDateRangePart(config.id, field.key, 'end', $event)"
-                />
-              </label>
-            </div>
-            <select
-              *ngIf="normalizeFieldType(field.type) === 'select'"
-              [ngModel]="fieldValue(config.id, field.key)"
-              (ngModelChange)="setField(config.id, field.key, $event)"
-            >
-              <option *ngFor="let opt of field.options || []" [ngValue]="opt.value">{{ opt.label }}</option>
-            </select>
-            <div class="trigger-checks" *ngIf="normalizeFieldType(field.type) === 'multi-select'">
-              <label *ngFor="let opt of field.options || []">
+        <div class="trigger-fields" *ngSwitchCase="'form'">
+          <ng-container *ngFor="let field of config.fields || []">
+            <label class="trigger-field" *ngIf="!isHiddenField(field)">
+              <span>{{ field.label }} <strong *ngIf="field.required">*</strong></span>
+              <input
+                *ngIf="['text','email','number','date','time','datetime'].includes(normalizeFieldType(field.type))"
+                [type]="inputType(field)"
+                [placeholder]="field.placeholder || ''"
+                [ngModel]="fieldValue(config.id, field.key)"
+                (ngModelChange)="setField(config.id, field.key, $event)"
+              />
+              <textarea
+                *ngIf="normalizeFieldType(field.type) === 'textarea' || normalizeFieldType(field.type) === 'json' || normalizeFieldType(field.type) === 'richText'"
+                rows="4"
+                [placeholder]="field.placeholder || ''"
+                [ngModel]="fieldValue(config.id, field.key)"
+                (ngModelChange)="setField(config.id, field.key, $event)"
+              ></textarea>
+              <div class="trigger-checks" *ngIf="isDateRangeField(field)">
+                <label>
+                  <span>Start</span>
+                  <input
+                    type="date"
+                    [ngModel]="fieldValue(config.id, field.key)?.start"
+                    (ngModelChange)="setDateRangePart(config.id, field.key, 'start', $event)"
+                  />
+                </label>
+                <label>
+                  <span>End</span>
+                  <input
+                    type="date"
+                    [ngModel]="fieldValue(config.id, field.key)?.end"
+                    (ngModelChange)="setDateRangePart(config.id, field.key, 'end', $event)"
+                  />
+                </label>
+              </div>
+              <select
+                *ngIf="normalizeFieldType(field.type) === 'select'"
+                [ngModel]="fieldValue(config.id, field.key)"
+                (ngModelChange)="setField(config.id, field.key, $event)"
+              >
+                <option *ngFor="let opt of field.options || []" [ngValue]="opt.value">{{ opt.label }}</option>
+              </select>
+              <div class="trigger-checks" *ngIf="normalizeFieldType(field.type) === 'multi-select'">
+                <label *ngFor="let opt of field.options || []">
+                  <input
+                    type="checkbox"
+                    [checked]="fieldValue(config.id, field.key)?.includes(opt.value)"
+                    (change)="setMulti(config.id, field.key, opt.value, $any($event.target).checked)"
+                  />
+                  {{ opt.label }}
+                </label>
+              </div>
+              <label class="trigger-toggle" *ngIf="normalizeFieldType(field.type) === 'checkbox' || normalizeFieldType(field.type) === 'toggle'">
                 <input
                   type="checkbox"
-                  [checked]="fieldValue(config.id, field.key)?.includes(opt.value)"
-                  (change)="setMulti(config.id, field.key, opt.value, $any($event.target).checked)"
+                  [checked]="fieldValue(config.id, field.key)"
+                  (change)="setCheckbox(config.id, field.key, $any($event.target).checked)"
                 />
-                {{ opt.label }}
+                <span>{{ field.placeholder || 'Enabled' }}</span>
               </label>
-            </div>
-            <label class="trigger-toggle" *ngIf="normalizeFieldType(field.type) === 'checkbox' || normalizeFieldType(field.type) === 'toggle'">
-              <input
-                type="checkbox"
-                [checked]="fieldValue(config.id, field.key)"
-                (change)="setCheckbox(config.id, field.key, $any($event.target).checked)"
-              />
-              <span>{{ field.placeholder || 'Enabled' }}</span>
             </label>
+          </ng-container>
+        </div>
+
+        <div class="trigger-fields trigger-fields--email" *ngSwitchCase="'email_mockup'">
+          <label class="trigger-field">
+            <span>To *</span>
+            <input type="email" [ngModel]="fieldValue(config.id, 'to')" (ngModelChange)="setField(config.id, 'to', $event)" />
           </label>
-        </ng-container>
+          <label class="trigger-field">
+            <span>CC</span>
+            <input type="text" [ngModel]="fieldValue(config.id, 'cc')" (ngModelChange)="setField(config.id, 'cc', $event)" />
+          </label>
+          <label class="trigger-field">
+            <span>BCC</span>
+            <input type="text" [ngModel]="fieldValue(config.id, 'bcc')" (ngModelChange)="setField(config.id, 'bcc', $event)" />
+          </label>
+          <label class="trigger-field">
+            <span>Subject *</span>
+            <input type="text" [ngModel]="fieldValue(config.id, 'subject')" (ngModelChange)="setField(config.id, 'subject', $event)" />
+          </label>
+          <label class="trigger-field trigger-field--wide">
+            <span>Body</span>
+            <textarea rows="5" [ngModel]="fieldValue(config.id, 'body')" (ngModelChange)="setField(config.id, 'body', $event)"></textarea>
+          </label>
+          <label class="trigger-toggle">
+            <input type="checkbox" [checked]="fieldValue(config.id, 'previewMode')" (change)="setCheckbox(config.id, 'previewMode', $any($event.target).checked)" />
+            <span>Preview mode</span>
+          </label>
+        </div>
+
+        <div class="trigger-upload" *ngSwitchCase="'file_upload'">
+          <input type="file" multiple (change)="onFiles(config, $event)" />
+          <p>
+            <span *ngIf="config.fileUpload?.allowedExtensions?.length">
+              {{ config.fileUpload?.allowedExtensions?.join(', ') }}
+            </span>
+            <span *ngIf="config.fileUpload?.maxSizeMb"> · {{ config.fileUpload?.maxSizeMb }}MB max</span>
+            <span *ngIf="config.fileUpload?.maxCount"> · {{ config.fileUpload?.maxCount }} files max</span>
+          </p>
+          <ul *ngIf="selectedFiles(config.id).length">
+            <li *ngFor="let file of selectedFiles(config.id)">{{ file.name }}</li>
+          </ul>
+        </div>
       </div>
 
-      <div class="trigger-fields trigger-fields--email" *ngSwitchCase="'email_mockup'">
-        <label class="trigger-field">
-          <span>To *</span>
-          <input type="email" [ngModel]="fieldValue(config.id, 'to')" (ngModelChange)="setField(config.id, 'to', $event)" />
-        </label>
-        <label class="trigger-field">
-          <span>CC</span>
-          <input type="text" [ngModel]="fieldValue(config.id, 'cc')" (ngModelChange)="setField(config.id, 'cc', $event)" />
-        </label>
-        <label class="trigger-field">
-          <span>BCC</span>
-          <input type="text" [ngModel]="fieldValue(config.id, 'bcc')" (ngModelChange)="setField(config.id, 'bcc', $event)" />
-        </label>
-        <label class="trigger-field">
-          <span>Subject *</span>
-          <input type="text" [ngModel]="fieldValue(config.id, 'subject')" (ngModelChange)="setField(config.id, 'subject', $event)" />
-        </label>
-        <label class="trigger-field trigger-field--wide">
-          <span>Body</span>
-          <textarea rows="5" [ngModel]="fieldValue(config.id, 'body')" (ngModelChange)="setField(config.id, 'body', $event)"></textarea>
-        </label>
-        <label class="trigger-toggle">
-          <input type="checkbox" [checked]="fieldValue(config.id, 'previewMode')" (change)="setCheckbox(config.id, 'previewMode', $any($event.target).checked)" />
-          <span>Preview mode</span>
-        </label>
-      </div>
+      <p class="trigger-error" *ngIf="!previewOnly && error(config.id)">{{ error(config.id) }}</p>
+      <p class="trigger-response" *ngIf="!previewOnly && response(config.id)">
+        {{ response(config.id)?.message }}
+        <strong>{{ response(config.id)?.mode }}</strong>
+      </p>
 
-      <div class="trigger-upload" *ngSwitchCase="'file_upload'">
-        <input type="file" multiple (change)="onFiles(config, $event)" />
-        <p>
-          <span *ngIf="config.fileUpload?.allowedExtensions?.length">
-            {{ config.fileUpload?.allowedExtensions?.join(', ') }}
-          </span>
-          <span *ngIf="config.fileUpload?.maxSizeMb"> · {{ config.fileUpload?.maxSizeMb }}MB max</span>
-          <span *ngIf="config.fileUpload?.maxCount"> · {{ config.fileUpload?.maxCount }} files max</span>
-        </p>
-        <ul *ngIf="selectedFiles(config.id).length">
-          <li *ngFor="let file of selectedFiles(config.id)">{{ file.name }}</li>
-        </ul>
-      </div>
-    </div>
-
-    <p class="trigger-error" *ngIf="!previewOnly && error(config.id)">{{ error(config.id) }}</p>
-    <p class="trigger-response" *ngIf="!previewOnly && response(config.id)">
-      {{ response(config.id)?.message }}
-      <strong>{{ response(config.id)?.mode }}</strong>
-    </p>
-
-    <button *ngIf="!previewOnly" class="trigger-action" type="button" [disabled]="busy() === config.id" (click)="execute(config)">
-      <span *ngIf="busy() !== config.id">Run Trigger</span>
-      <span *ngIf="busy() === config.id">Running...</span>
-    </button>
-  </article>
+      <button *ngIf="!previewOnly" class="trigger-action" type="button" [disabled]="busy() === config.id" (click)="execute(config)">
+        <span *ngIf="busy() !== config.id">Run Trigger</span>
+        <span *ngIf="busy() === config.id">Running...</span>
+      </button>
+    </article>
+  </ng-container>
 </section>

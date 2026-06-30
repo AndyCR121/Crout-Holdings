@@ -2,8 +2,41 @@
   height: calc(800px - 70px);
   overflow-y: auto;
   display: grid;
+  align-content: start;
   gap: 1rem;
   border-radius: 8px;
+}
+
+.trigger-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.trigger-tab {
+  min-height: 40px;
+  border: 1px solid rgba(95, 126, 168, 0.34);
+  border-radius: 999px;
+  background: rgba(22, 50, 88, 0.62);
+  color: #dbe7f8;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 800;
+  padding: 0.65rem 1rem;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+
+  &:hover {
+    border-color: rgba(255, 176, 32, 0.52);
+    color: #fff3d8;
+    transform: translateY(-1px);
+  }
+}
+
+.trigger-tab--active {
+  border-color: rgba(255, 176, 32, 0.7);
+  background: linear-gradient(135deg, rgba(245, 124, 31, 0.24), rgba(255, 176, 32, 0.14));
+  color: #fff4dd;
 }
 
 .trigger-card {

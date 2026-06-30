@@ -25,6 +25,7 @@ export class ServiceTriggerRendererComponent implements OnChanges {
   readonly busy = signal<number | null>(null);
   readonly errors = signal<Record<number, string>>({});
   readonly responses = signal<Record<number, ExecuteTriggerResponse>>({});
+  readonly selectedConfigId = signal<number | null>(null);
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['configs']) {
@@ -33,7 +34,20 @@ export class ServiceTriggerRendererComponent implements OnChanges {
         next[config.id] = this.defaultValues(config);
       }
       this.values.set(next);
+      const currentSelected = this.selectedConfigId();
+      const stillExists = currentSelected !== null && this.configs.some(config => config.id === currentSelected);
+      this.selectedConfigId.set(stillExists ? currentSelected : (this.configs[0]?.id ?? null));
     }
+  }
+
+  selectConfig(configId: number): void {
+    this.selectedConfigId.set(configId);
+  }
+
+  activeConfig(): ServiceTriggerConfig | null {
+    const selectedId = this.selectedConfigId();
+    if (selectedId === null) return this.configs[0] ?? null;
+    return this.configs.find(config => config.id === selectedId) ?? this.configs[0] ?? null;
   }
 
   fieldValue(configId: number, key: string): any {

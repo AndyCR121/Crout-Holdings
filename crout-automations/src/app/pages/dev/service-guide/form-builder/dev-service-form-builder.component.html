@@ -25,170 +25,585 @@
         <div class="dfb-empty">Assigned service was not found.</div>
       } @else {
         <div class="dfb-grid">
-          <section class="dfb-panel">
+          <section class="dfb-panel dfb-canvas-panel">
             <div class="dfb-panel-head">
-              <h2>Form Setup</h2>
-              <span>One custom form is stored per assigned user service.</span>
-            </div>
-
-            @if (formId() === null && fields().length === 0) {
-              <div class="dfb-empty dfb-empty--inline">
-                No custom form built yet. Add fields to start the definition.
+              <div>
+                <h2>Builder Canvas</h2>
+                <span>Elements added to the form appear here. Select one to edit its properties.</span>
               </div>
-            }
-
-            <div class="dfb-meta">
-              <label>
-                <span>Form Label</span>
-                <input [(ngModel)]="formLabel" (ngModelChange)="touch()" placeholder="Client intake form" />
-              </label>
-
-              <label>
-                <span>Description</span>
-                <textarea rows="3" [(ngModel)]="formDescription" (ngModelChange)="touch()" placeholder="Explain what this form collects."></textarea>
-              </label>
-
-              <label>
-                <span>Response Mode</span>
-                <select [ngModel]="responseMode()" (ngModelChange)="responseMode.set($event); touch()">
-                  <option value="inline">Inline</option>
-                  <option value="toast">Toast</option>
-                  <option value="modal">Modal</option>
-                  <option value="download">Download</option>
-                </select>
-              </label>
-
-              <label>
-                <span>Payload Template JSON</span>
-                <textarea rows="7" [ngModel]="payloadTemplateText()" (ngModelChange)="payloadTemplateText.set($event); touch()" spellcheck="false"></textarea>
-              </label>
             </div>
 
             @if (validationError()) {
               <p class="dfb-error">{{ validationError() }}</p>
             }
 
-            <div class="dfb-field-toolbar">
-              <span>Fields</span>
-              <div>
-                <button type="button" (click)="addField('text')">Add Text Field</button>
-                <button type="button" (click)="addField('select')">Add Select Field</button>
-                <button type="button" (click)="addField('hidden')">Add Hidden Field</button>
+            <article
+              class="dfb-canvas-card dfb-canvas-card--form"
+              [class.is-selected]="isSelected('form')"
+              (click)="selectCanvasElement('form')">
+              <div class="dfb-canvas-card__head">
+                <div>
+                  <span class="dfb-canvas-card__eyebrow">Form</span>
+                  <h3>{{ formLabel || 'Untitled Form' }}</h3>
+                </div>
+                <span class="dfb-canvas-card__meta">{{ responseMode | uppercase }}</span>
               </div>
-            </div>
+              <p class="dfb-canvas-card__body">
+                {{ formDescription || 'Select this card to edit form label, description, response mode, and payload template.' }}
+              </p>
+            </article>
 
-            <div class="dfb-fields">
-              @for (field of fields(); track field.id; let index = $index) {
-                <article class="dfb-field-card">
-                  <div class="dfb-field-head">
-                    <strong>{{ field.label || field.key || ('Field ' + (index + 1)) }}</strong>
-                    <div class="dfb-field-controls">
-                      <button type="button" (click)="moveField(index, -1)" [disabled]="index === 0">Up</button>
-                      <button type="button" (click)="moveField(index, 1)" [disabled]="index === fields().length - 1">Down</button>
-                      <button type="button" class="dfb-danger" (click)="removeField(field.id)">Remove</button>
-                    </div>
-                  </div>
-
-                  <div class="dfb-field-grid">
-                    <label>
-                      <span>Type</span>
-                      <select [ngModel]="field.type" (ngModelChange)="onFieldTypeChange(field.id, $event)">
-                        @for (typeOption of fieldTypeOptions; track typeOption.value) {
-                          <option [value]="typeOption.value">{{ typeOption.label }}</option>
-                        }
-                      </select>
-                    </label>
-
-                    <label>
-                      <span>Key</span>
-                      <input [ngModel]="field.key" (ngModelChange)="setFieldKey(field.id, $event)" placeholder="clientName" />
-                    </label>
-
-                    <label>
-                      <span>Name</span>
-                      <input [ngModel]="field.name" (ngModelChange)="setFieldName(field.id, $event)" placeholder="Optional payload alias" />
-                    </label>
-
-                    <label>
-                      <span>Label</span>
-                      <input [ngModel]="field.label" (ngModelChange)="setFieldLabel(field.id, $event)" placeholder="Client Name" />
-                    </label>
-
-                    <label>
-                      <span>Placeholder</span>
-                      <input [ngModel]="field.placeholder" (ngModelChange)="setFieldPlaceholder(field.id, $event)" placeholder="What the client sees" />
-                    </label>
-
-                    <label>
-                      <span>Default Value</span>
-                      <input [ngModel]="field.defaultValueText" (ngModelChange)="setFieldDefaultValue(field.id, $event)" placeholder="Static hidden value or JSON literal" />
-                    </label>
-
-                    <label>
-                      <span>Formatter</span>
-                      <select [ngModel]="field.formatter || ''" (ngModelChange)="setFieldFormatter(field.id, $event)">
-                        @for (formatter of formatterOptions; track formatter.value) {
-                          <option [value]="formatter.value">{{ formatter.label }}</option>
-                        }
-                      </select>
-                    </label>
-
-                    <label>
-                      <span>Min</span>
-                      <input type="number" [ngModel]="field.validation?.min" (ngModelChange)="setFieldMin(field.id, $event)" />
-                    </label>
-
-                    <label>
-                      <span>Max</span>
-                      <input type="number" [ngModel]="field.validation?.max" (ngModelChange)="setFieldMax(field.id, $event)" />
-                    </label>
-
-                    <label>
-                      <span>Regex</span>
-                      <input [ngModel]="field.validation?.regex" (ngModelChange)="setFieldRegex(field.id, $event)" placeholder="^[A-Z0-9]+$" />
-                    </label>
-
-                    <label>
-                      <span>Max Length</span>
-                      <input type="number" [ngModel]="field.validation?.maxLength" (ngModelChange)="setFieldMaxLength(field.id, $event)" />
-                    </label>
-                  </div>
-
-                  <div class="dfb-switches">
-                    <mat-checkbox [checked]="field.required" (change)="setFieldRequired(field.id, $event.checked)">Required</mat-checkbox>
-                    <mat-checkbox [checked]="field.hidden" (change)="setFieldHidden(field.id, $event.checked)">Hidden</mat-checkbox>
-                    @if (field.type === 'dateRange') {
-                      <mat-checkbox [checked]="field.validation?.preventEndBeforeStart ?? true" disabled>Prevent end before start</mat-checkbox>
-                    }
-                  </div>
-
-                  @if (isChoiceField(field)) {
-                    <div class="dfb-options">
-                      <div class="dfb-options-head">
-                        <strong>Options</strong>
-                        <button type="button" (click)="addOption(field.id)">Add Option</button>
+            @if (elements().length === 0) {
+              <div class="dfb-empty dfb-empty--inline">
+                No custom form built yet. Use the Fields or Design cards to add the first canvas element.
+              </div>
+            } @else {
+              <div class="dfb-canvas-list">
+                @for (element of elements(); track element.id; let index = $index) {
+                  <article class="dfb-canvas-card" [class.is-selected]="isSelected(element.id)" (click)="selectCanvasElement(element.id)">
+                    <div class="dfb-canvas-card__head">
+                      <div>
+                        <span class="dfb-canvas-card__eyebrow">{{ elementTypeLabel(element.type) }}</span>
+                        <h3>{{ elementTitle(element, index) }}</h3>
                       </div>
-
-                      @for (option of field.options; track option.id; let optionIndex = $index) {
-                        <div class="dfb-option-row">
-                          <input [ngModel]="option.label" (ngModelChange)="setOptionLabel(field.id, option.id, $event)" placeholder="Label" />
-                          <input [ngModel]="option.value" (ngModelChange)="setOptionValue(field.id, option.id, $event)" placeholder="Value" />
-                          <button type="button" (click)="moveOption(field.id, optionIndex, -1)" [disabled]="optionIndex === 0">Up</button>
-                          <button type="button" (click)="moveOption(field.id, optionIndex, 1)" [disabled]="optionIndex === field.options.length - 1">Down</button>
-                          <button type="button" class="dfb-danger" (click)="removeOption(field.id, option.id)">Remove</button>
-                        </div>
-                      }
+                      <div class="dfb-canvas-card__actions">
+                        <button type="button" (click)="$event.stopPropagation(); moveElement(index, -1)" [disabled]="index === 0">Up</button>
+                        <button type="button" (click)="$event.stopPropagation(); moveElement(index, 1)" [disabled]="index === elements().length - 1">Down</button>
+                        <button type="button" class="dfb-danger" (click)="$event.stopPropagation(); removeElement(element.id)">Remove</button>
+                      </div>
                     </div>
-                  }
-                </article>
-              }
-            </div>
+
+                    <p class="dfb-canvas-card__body">{{ elementSummary(element) }}</p>
+
+                    @if (element.tabId && tabsElement()) {
+                      <span class="dfb-canvas-card__tab">
+                        Tab: {{ tabLabelFor(element.tabId) }}
+                      </span>
+                    }
+
+                    @if (element.type === 'tabs') {
+                      <div class="dfb-tab-preview">
+                        @for (tab of element.tabs; track tab.id) {
+                          <button
+                            type="button"
+                            [class.is-active]="tab.id === element.activeTabId"
+                            (click)="$event.stopPropagation(); setActiveTab(element.id, tab.id)">
+                            {{ tab.label || 'Untitled tab' }}
+                          </button>
+                        }
+                      </div>
+                    }
+
+                    @if (element.type === 'list') {
+                      <div class="dfb-list-preview">
+                        @for (field of element.fields; track field.id) {
+                          <span>{{ elementTypeLabel(field.type) }}: {{ field.label || field.key || 'Untitled field' }}</span>
+                        }
+                      </div>
+                    }
+                  </article>
+                }
+              </div>
+            }
           </section>
 
           <aside class="dfb-side">
             <section class="dfb-panel">
               <div class="dfb-panel-head">
-                <h2>Assigned Service</h2>
+                <div>
+                  <h2>Fields</h2>
+                  <span>Core input families. Major field type is fixed after creation.</span>
+                </div>
+              </div>
+              <div class="dfb-library">
+                <button type="button" (click)="addElement('input')">Input Field</button>
+                <button type="button" (click)="addElement('select')">Select Field</button>
+                <button type="button" (click)="addElement('datetime')">DateTime Field</button>
+                <button type="button" (click)="addElement('checkbox')">Checkbox Field</button>
+                <button type="button" (click)="addElement('list')">List Field</button>
+              </div>
+            </section>
+
+            <section class="dfb-panel">
+              <div class="dfb-panel-head">
+                <div>
+                  <h2>Design</h2>
+                  <span>Section content and page-level navigation.</span>
+                </div>
+              </div>
+              <div class="dfb-library">
+                <button type="button" (click)="addElement('header')">Header</button>
+                <button type="button" (click)="addElement('paragraph')">Paragraph</button>
+                <button type="button" (click)="addElement('divider')">Divider</button>
+                <button type="button" (click)="addElement('tabs')" [disabled]="!!tabsElement()">Tabs</button>
+              </div>
+            </section>
+
+            <section class="dfb-panel">
+              <div class="dfb-panel-head">
+                <div>
+                  <h2>Properties</h2>
+                  <span>{{ propertiesTitle() }}</span>
+                </div>
+              </div>
+
+              @if (!selectedElement()) {
+                <div class="dfb-properties">
+                  <label>
+                    <span>Form Label</span>
+                    <input [ngModel]="formLabel" (ngModelChange)="updateFormLabel($event)" placeholder="Client intake form" />
+                  </label>
+
+                  <label>
+                    <span>Description</span>
+                    <textarea rows="4" [ngModel]="formDescription" (ngModelChange)="updateFormDescription($event)" placeholder="Explain what this form collects."></textarea>
+                  </label>
+
+                  <label>
+                    <span>Response Mode</span>
+                    <select [ngModel]="responseMode" (ngModelChange)="updateResponseMode($event)">
+                      <option value="inline">Inline</option>
+                      <option value="toast">Toast</option>
+                      <option value="modal">Modal</option>
+                      <option value="download">Download</option>
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>Payload Template JSON</span>
+                    <textarea rows="8" [ngModel]="payloadTemplateText" (ngModelChange)="updatePayloadTemplateText($event)" spellcheck="false"></textarea>
+                  </label>
+                </div>
+              } @else if (selectedInputElement(); as inputElement) {
+                <div class="dfb-properties">
+                  <div class="dfb-readonly-type">Input Field</div>
+
+                  <label>
+                    <span>Input Mode</span>
+                    <select [ngModel]="inputElement.inputMode" (ngModelChange)="updateSelectedInputMode($event)">
+                      <option value="text">Text</option>
+                      <option value="textarea">Textarea</option>
+                      <option value="richText">Rich Text</option>
+                      <option value="number">Number</option>
+                      <option value="email">Email</option>
+                      <option value="hidden">Hidden</option>
+                    </select>
+                  </label>
+
+                  <label><span>Key</span><input [ngModel]="inputElement.key" (ngModelChange)="updateSelectedInputText('key', $event)" /></label>
+                  <label><span>Name</span><input [ngModel]="inputElement.name" (ngModelChange)="updateSelectedInputText('name', $event)" /></label>
+                  <label><span>Label</span><input [ngModel]="inputElement.label" (ngModelChange)="updateSelectedInputText('label', $event)" /></label>
+                  <label><span>Placeholder</span><input [ngModel]="inputElement.placeholder" (ngModelChange)="updateSelectedInputText('placeholder', $event)" /></label>
+                  <label><span>Default Value</span><input [ngModel]="inputElement.defaultValueText" (ngModelChange)="updateSelectedInputText('defaultValueText', $event)" /></label>
+
+                  <label>
+                    <span>Formatter</span>
+                    <select [ngModel]="inputElement.formatter || ''" (ngModelChange)="updateSelectedInputFormatter($event)">
+                      <option value="">None</option>
+                      <option value="decimal">Decimal</option>
+                      <option value="currency">Currency</option>
+                      <option value="phone">Phone</option>
+                      <option value="email">Email</option>
+                    </select>
+                  </label>
+
+                  <label><span>Max Length</span><input type="number" [ngModel]="inputElement.validation?.maxLength ?? ''" (ngModelChange)="updateSelectedInputMaxLength($event)" /></label>
+                  <label><span>Regex</span><input [ngModel]="inputElement.validation?.regex ?? ''" (ngModelChange)="updateSelectedInputRegex($event)" /></label>
+
+                  <label>
+                    <span>Tab Assignment</span>
+                    <select [ngModel]="inputElement.tabId || ''" (ngModelChange)="updateSelectedInputTab($event)" [disabled]="availableTabs().length === 0">
+                      <option value="">No tab</option>
+                      @for (tab of availableTabs(); track tab.id) {
+                        <option [value]="tab.id">{{ tab.label || 'Untitled tab' }}</option>
+                      }
+                    </select>
+                  </label>
+
+                  <div class="dfb-properties__checks">
+                    <mat-checkbox [checked]="inputElement.required" (change)="updateSelectedInputRequired($event)">Required</mat-checkbox>
+                    <mat-checkbox [checked]="inputElement.hidden" (change)="updateSelectedInputHidden($event)">Hidden</mat-checkbox>
+                  </div>
+                </div>
+              } @else if (selectedSelectElement(); as selectElement) {
+                <div class="dfb-properties">
+                  <div class="dfb-readonly-type">Select Field</div>
+
+                  <label>
+                    <span>Select Mode</span>
+                    <select [ngModel]="selectElement.selectMode" (ngModelChange)="updateSelectedSelectMode($event)">
+                      <option value="dropdown">Dropdown</option>
+                      <option value="multiSelect">Multi Select</option>
+                      <option value="cascading">Cascading Select</option>
+                    </select>
+                  </label>
+
+                  <label><span>Key</span><input [ngModel]="selectElement.key" (ngModelChange)="updateSelectedSelectText('key', $event)" /></label>
+                  <label><span>Name</span><input [ngModel]="selectElement.name" (ngModelChange)="updateSelectedSelectText('name', $event)" /></label>
+                  <label><span>Label</span><input [ngModel]="selectElement.label" (ngModelChange)="updateSelectedSelectText('label', $event)" /></label>
+                  <label><span>Placeholder</span><input [ngModel]="selectElement.placeholder" (ngModelChange)="updateSelectedSelectText('placeholder', $event)" /></label>
+
+                  <label>
+                    <span>Tab Assignment</span>
+                    <select [ngModel]="selectElement.tabId || ''" (ngModelChange)="updateSelectedSelectTab($event)" [disabled]="availableTabs().length === 0">
+                      <option value="">No tab</option>
+                      @for (tab of availableTabs(); track tab.id) {
+                        <option [value]="tab.id">{{ tab.label || 'Untitled tab' }}</option>
+                      }
+                    </select>
+                  </label>
+
+                  <div class="dfb-properties__checks">
+                    <mat-checkbox [checked]="selectElement.required" (change)="updateSelectedSelectRequired($event)">Required</mat-checkbox>
+                    <mat-checkbox [checked]="selectElement.searchable" (change)="updateSelectedSelectSearchable($event)">Searchable</mat-checkbox>
+                  </div>
+
+                  <div class="dfb-options-editor">
+                    <div class="dfb-options-editor__head">
+                      <strong>Options</strong>
+                      <button type="button" (click)="addOption(selectElement.id)">Add Option</button>
+                    </div>
+                    @for (option of selectElement.options; track option.id) {
+                      <div class="dfb-options-editor__row">
+                        <input [ngModel]="option.label" (ngModelChange)="setOptionLabel(selectElement.id, option.id, $event)" placeholder="Label" />
+                        <input [ngModel]="option.value" (ngModelChange)="setOptionValue(selectElement.id, option.id, $event)" placeholder="Value" />
+                        <button type="button" class="dfb-danger" (click)="removeOption(selectElement.id, option.id)">Remove</button>
+                      </div>
+                    }
+                  </div>
+                </div>
+              } @else if (selectedDateTimeElement(); as dateTimeElement) {
+                <div class="dfb-properties">
+                  <div class="dfb-readonly-type">DateTime Field</div>
+
+                  <label>
+                    <span>DateTime Mode</span>
+                    <select [ngModel]="dateTimeElement.dateTimeMode" (ngModelChange)="updateSelectedDateTimeMode($event)">
+                      <option value="date">Date</option>
+                      <option value="time">Time</option>
+                      <option value="dateTime">DateTime</option>
+                      <option value="dateRange">DateRange</option>
+                    </select>
+                  </label>
+
+                  <label><span>Key</span><input [ngModel]="dateTimeElement.key" (ngModelChange)="updateSelectedDateTimeText('key', $event)" /></label>
+                  <label><span>Name</span><input [ngModel]="dateTimeElement.name" (ngModelChange)="updateSelectedDateTimeText('name', $event)" /></label>
+                  <label><span>Label</span><input [ngModel]="dateTimeElement.label" (ngModelChange)="updateSelectedDateTimeText('label', $event)" /></label>
+                  <label><span>Min</span><input [ngModel]="dateTimeElement.minValue" (ngModelChange)="updateSelectedDateTimeText('minValue', $event)" placeholder="2026-07-01" /></label>
+                  <label><span>Max</span><input [ngModel]="dateTimeElement.maxValue" (ngModelChange)="updateSelectedDateTimeText('maxValue', $event)" placeholder="2026-07-30" /></label>
+                  <label><span>Relative Min</span><input [ngModel]="dateTimeElement.relativeMin" (ngModelChange)="updateSelectedDateTimeText('relativeMin', $event)" placeholder="today - 30 days" /></label>
+                  <label><span>Relative Max</span><input [ngModel]="dateTimeElement.relativeMax" (ngModelChange)="updateSelectedDateTimeText('relativeMax', $event)" placeholder="today + 7 days" /></label>
+
+                  <label>
+                    <span>Tab Assignment</span>
+                    <select [ngModel]="dateTimeElement.tabId || ''" (ngModelChange)="updateSelectedDateTimeTab($event)" [disabled]="availableTabs().length === 0">
+                      <option value="">No tab</option>
+                      @for (tab of availableTabs(); track tab.id) {
+                        <option [value]="tab.id">{{ tab.label || 'Untitled tab' }}</option>
+                      }
+                    </select>
+                  </label>
+
+                  <div class="dfb-properties__checks">
+                    <mat-checkbox [checked]="dateTimeElement.required" (change)="updateSelectedDateTimeRequired($event)">Required</mat-checkbox>
+                  </div>
+                </div>
+              } @else if (selectedCheckboxElement(); as checkboxElement) {
+                <div class="dfb-properties">
+                  <div class="dfb-readonly-type">Checkbox Field</div>
+
+                  <label>
+                    <span>Checkbox Mode</span>
+                    <select [ngModel]="checkboxElement.checkboxMode" (ngModelChange)="updateSelectedCheckboxMode($event)">
+                      <option value="checkbox">Checkbox</option>
+                      <option value="radio">Radio Button</option>
+                    </select>
+                  </label>
+
+                  <label><span>Key</span><input [ngModel]="checkboxElement.key" (ngModelChange)="updateSelectedCheckboxText('key', $event)" /></label>
+                  <label><span>Name</span><input [ngModel]="checkboxElement.name" (ngModelChange)="updateSelectedCheckboxText('name', $event)" /></label>
+                  <label><span>Label</span><input [ngModel]="checkboxElement.label" (ngModelChange)="updateSelectedCheckboxText('label', $event)" /></label>
+                  <label><span>Parent Key</span><input [ngModel]="checkboxElement.parentKey" (ngModelChange)="updateSelectedCheckboxText('parentKey', $event)" placeholder="Optional parent checkbox key" /></label>
+
+                  <label>
+                    <span>Tab Assignment</span>
+                    <select [ngModel]="checkboxElement.tabId || ''" (ngModelChange)="updateSelectedCheckboxTab($event)" [disabled]="availableTabs().length === 0">
+                      <option value="">No tab</option>
+                      @for (tab of availableTabs(); track tab.id) {
+                        <option [value]="tab.id">{{ tab.label || 'Untitled tab' }}</option>
+                      }
+                    </select>
+                  </label>
+
+                  <div class="dfb-properties__checks">
+                    <mat-checkbox [checked]="checkboxElement.required" (change)="updateSelectedCheckboxRequired($event)">Required</mat-checkbox>
+                    <mat-checkbox [checked]="checkboxElement.hidden" (change)="updateSelectedCheckboxHidden($event)">Hidden</mat-checkbox>
+                  </div>
+
+                  @if (checkboxElement.checkboxMode === 'radio') {
+                    <div class="dfb-options-editor">
+                      <div class="dfb-options-editor__head">
+                        <strong>Options</strong>
+                        <button type="button" (click)="addOption(checkboxElement.id)">Add Option</button>
+                      </div>
+                      @for (option of checkboxElement.options; track option.id) {
+                        <div class="dfb-options-editor__row">
+                          <input [ngModel]="option.label" (ngModelChange)="setOptionLabel(checkboxElement.id, option.id, $event)" placeholder="Label" />
+                          <input [ngModel]="option.value" (ngModelChange)="setOptionValue(checkboxElement.id, option.id, $event)" placeholder="Value" />
+                          <button type="button" class="dfb-danger" (click)="removeOption(checkboxElement.id, option.id)">Remove</button>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              } @else if (selectedListElement(); as listElement) {
+                <div class="dfb-properties">
+                  <div class="dfb-readonly-type">List Field</div>
+
+                  <label><span>Key</span><input [ngModel]="listElement.key" (ngModelChange)="updateSelectedListText('key', $event)" /></label>
+                  <label><span>Name</span><input [ngModel]="listElement.name" (ngModelChange)="updateSelectedListText('name', $event)" /></label>
+                  <label><span>Label</span><input [ngModel]="listElement.label" (ngModelChange)="updateSelectedListText('label', $event)" /></label>
+                  <label><span>Item Label</span><input [ngModel]="listElement.itemLabel" (ngModelChange)="updateSelectedListText('itemLabel', $event)" placeholder="Item" /></label>
+                  <label><span>Add Button Label</span><input [ngModel]="listElement.addButtonLabel" (ngModelChange)="updateSelectedListText('addButtonLabel', $event)" placeholder="Add item" /></label>
+                  <label><span>Empty State Text</span><input [ngModel]="listElement.emptyStateText" (ngModelChange)="updateSelectedListText('emptyStateText', $event)" placeholder="No items added yet." /></label>
+                  <label><span>Minimum Items</span><input type="number" [ngModel]="listElement.minItems ?? ''" (ngModelChange)="updateSelectedListMinItems($event)" /></label>
+                  <label><span>Maximum Items</span><input type="number" [ngModel]="listElement.maxItems ?? ''" (ngModelChange)="updateSelectedListMaxItems($event)" /></label>
+
+                  <label>
+                    <span>Tab Assignment</span>
+                    <select [ngModel]="listElement.tabId || ''" (ngModelChange)="updateSelectedListTab($event)" [disabled]="availableTabs().length === 0">
+                      <option value="">No tab</option>
+                      @for (tab of availableTabs(); track tab.id) {
+                        <option [value]="tab.id">{{ tab.label || 'Untitled tab' }}</option>
+                      }
+                    </select>
+                  </label>
+
+                  <div class="dfb-options-editor">
+                    <div class="dfb-options-editor__head">
+                      <strong>List Item Fields</strong>
+                    </div>
+                    <div class="dfb-sub-library">
+                      <button type="button" (click)="addListField(listElement.id, 'input')">Input</button>
+                      <button type="button" (click)="addListField(listElement.id, 'select')">Select</button>
+                      <button type="button" (click)="addListField(listElement.id, 'datetime')">DateTime</button>
+                      <button type="button" (click)="addListField(listElement.id, 'checkbox')">Checkbox</button>
+                    </div>
+
+                    @for (field of listElement.fields; track field.id; let fieldIndex = $index) {
+                      <article class="dfb-nested-card">
+                        <div class="dfb-canvas-card__head">
+                          <div>
+                            <span class="dfb-canvas-card__eyebrow">{{ elementTypeLabel(field.type) }}</span>
+                            <h3>{{ field.label || field.key || ('Field ' + (fieldIndex + 1)) }}</h3>
+                          </div>
+                          <div class="dfb-canvas-card__actions">
+                            <button type="button" (click)="moveListField(listElement.id, fieldIndex, -1)" [disabled]="fieldIndex === 0">Up</button>
+                            <button type="button" (click)="moveListField(listElement.id, fieldIndex, 1)" [disabled]="fieldIndex === listElement.fields.length - 1">Down</button>
+                            <button type="button" class="dfb-danger" (click)="removeListField(listElement.id, field.id)" [disabled]="listElement.fields.length === 1">Remove</button>
+                          </div>
+                        </div>
+
+                        <p class="dfb-canvas-card__body">{{ listFieldSummary(field) }}</p>
+
+                        <div class="dfb-properties">
+                          @if (field.type === 'input') {
+                            <label>
+                              <span>Input Mode</span>
+                              <select [ngModel]="field.inputMode" (ngModelChange)="updateListInputFieldMode(listElement.id, field.id, $event)">
+                                <option value="text">Text</option>
+                                <option value="textarea">Textarea</option>
+                                <option value="number">Number</option>
+                                <option value="email">Email</option>
+                                <option value="hidden">Hidden</option>
+                              </select>
+                            </label>
+                          } @else if (field.type === 'select') {
+                            <label>
+                              <span>Select Mode</span>
+                              <select [ngModel]="field.selectMode" (ngModelChange)="updateListSelectFieldMode(listElement.id, field.id, $event)">
+                                <option value="dropdown">Dropdown</option>
+                                <option value="multiSelect">Multi Select</option>
+                                <option value="cascading">Cascading Select</option>
+                              </select>
+                            </label>
+                          } @else if (field.type === 'datetime') {
+                            <label>
+                              <span>DateTime Mode</span>
+                              <select [ngModel]="field.dateTimeMode" (ngModelChange)="updateListDateTimeFieldMode(listElement.id, field.id, $event)">
+                                <option value="date">Date</option>
+                                <option value="time">Time</option>
+                                <option value="dateTime">DateTime</option>
+                                <option value="dateRange">DateRange</option>
+                              </select>
+                            </label>
+                          } @else if (field.type === 'checkbox') {
+                            <label>
+                              <span>Checkbox Mode</span>
+                              <select [ngModel]="field.checkboxMode" (ngModelChange)="updateListCheckboxFieldMode(listElement.id, field.id, $event)">
+                                <option value="checkbox">Checkbox</option>
+                                <option value="radio">Radio Button</option>
+                              </select>
+                            </label>
+                          }
+
+                          <label><span>Key</span><input [ngModel]="field.key" (ngModelChange)="updateListFieldText(listElement.id, field.id, 'key', $event)" /></label>
+                          <label><span>Name</span><input [ngModel]="field.name" (ngModelChange)="updateListFieldText(listElement.id, field.id, 'name', $event)" /></label>
+                          <label><span>Label</span><input [ngModel]="field.label" (ngModelChange)="updateListFieldText(listElement.id, field.id, 'label', $event)" /></label>
+
+                          @if (field.type === 'input' || field.type === 'select' || field.type === 'datetime') {
+                            <label><span>Placeholder</span><input [ngModel]="field.placeholder" (ngModelChange)="updateListFieldText(listElement.id, field.id, 'placeholder', $event)" /></label>
+                          }
+
+                          @if (field.type === 'input' || field.type === 'datetime') {
+                            <label><span>Default Value</span><input [ngModel]="field.defaultValueText" (ngModelChange)="updateListFieldText(listElement.id, field.id, 'defaultValueText', $event)" /></label>
+                          }
+
+                          @if (field.type === 'input') {
+                            <label>
+                              <span>Formatter</span>
+                              <select [ngModel]="field.formatter || ''" (ngModelChange)="updateListInputFieldFormatter(listElement.id, field.id, $event)">
+                                <option value="">None</option>
+                                <option value="decimal">Decimal</option>
+                                <option value="currency">Currency</option>
+                                <option value="phone">Phone</option>
+                                <option value="email">Email</option>
+                              </select>
+                            </label>
+                            <label><span>Max Length</span><input type="number" [ngModel]="field.validation?.maxLength ?? ''" (ngModelChange)="updateListInputFieldMaxLength(listElement.id, field.id, $event)" /></label>
+                            <label><span>Regex</span><input [ngModel]="field.validation?.regex ?? ''" (ngModelChange)="updateListInputFieldRegex(listElement.id, field.id, $event)" /></label>
+                          }
+
+                          @if (field.type === 'datetime') {
+                            <label><span>Min</span><input [ngModel]="field.minValue" (ngModelChange)="updateListFieldText(listElement.id, field.id, 'minValue', $event)" /></label>
+                            <label><span>Max</span><input [ngModel]="field.maxValue" (ngModelChange)="updateListFieldText(listElement.id, field.id, 'maxValue', $event)" /></label>
+                            <label><span>Relative Min</span><input [ngModel]="field.relativeMin" (ngModelChange)="updateListFieldText(listElement.id, field.id, 'relativeMin', $event)" /></label>
+                            <label><span>Relative Max</span><input [ngModel]="field.relativeMax" (ngModelChange)="updateListFieldText(listElement.id, field.id, 'relativeMax', $event)" /></label>
+                          }
+
+                          @if (field.type === 'checkbox') {
+                            <label><span>Parent Key</span><input [ngModel]="field.parentKey" (ngModelChange)="updateListFieldText(listElement.id, field.id, 'parentKey', $event)" /></label>
+                          }
+
+                          <div class="dfb-properties__checks">
+                            <mat-checkbox [checked]="field.required" (change)="updateListFieldRequired(listElement.id, field.id, $event)">Required</mat-checkbox>
+                            @if (field.type === 'input' || field.type === 'checkbox') {
+                              <mat-checkbox [checked]="field.hidden" (change)="updateListFieldHidden(listElement.id, field.id, $event)">Hidden</mat-checkbox>
+                            }
+                            @if (field.type === 'select') {
+                              <mat-checkbox [checked]="field.searchable" (change)="updateListSelectFieldSearchable(listElement.id, field.id, $event)">Searchable</mat-checkbox>
+                            }
+                          </div>
+
+                          @if (field.type === 'select' || (field.type === 'checkbox' && field.checkboxMode === 'radio')) {
+                            <div class="dfb-options-editor">
+                              <div class="dfb-options-editor__head">
+                                <strong>Options</strong>
+                                <button type="button" (click)="addListFieldOption(listElement.id, field.id)">Add Option</button>
+                              </div>
+                              @for (option of field.options; track option.id) {
+                                <div class="dfb-options-editor__row">
+                                  <input [ngModel]="option.label" (ngModelChange)="setListFieldOptionLabel(listElement.id, field.id, option.id, $event)" placeholder="Label" />
+                                  <input [ngModel]="option.value" (ngModelChange)="setListFieldOptionValue(listElement.id, field.id, option.id, $event)" placeholder="Value" />
+                                  <button type="button" class="dfb-danger" (click)="removeListFieldOption(listElement.id, field.id, option.id)">Remove</button>
+                                </div>
+                              }
+                            </div>
+                          }
+                        </div>
+                      </article>
+                    }
+                  </div>
+                </div>
+              } @else if (selectedHeaderElement(); as headerElement) {
+                <div class="dfb-properties">
+                  <div class="dfb-readonly-type">Header</div>
+
+                  <label>
+                    <span>Heading Level</span>
+                    <select [ngModel]="headerElement.level" (ngModelChange)="updateSelectedHeaderLevel($event)">
+                      <option value="h1">H1</option>
+                      <option value="h2">H2</option>
+                      <option value="h3">H3</option>
+                    </select>
+                  </label>
+
+                  <label><span>Text</span><input [ngModel]="headerElement.text" (ngModelChange)="updateSelectedHeaderText($event)" /></label>
+
+                  <label>
+                    <span>Tab Assignment</span>
+                    <select [ngModel]="headerElement.tabId || ''" (ngModelChange)="updateSelectedHeaderTab($event)" [disabled]="availableTabs().length === 0">
+                      <option value="">No tab</option>
+                      @for (tab of availableTabs(); track tab.id) {
+                        <option [value]="tab.id">{{ tab.label || 'Untitled tab' }}</option>
+                      }
+                    </select>
+                  </label>
+                </div>
+              } @else if (selectedParagraphElement(); as paragraphElement) {
+                <div class="dfb-properties">
+                  <div class="dfb-readonly-type">Paragraph</div>
+
+                  <label><span>Text</span><textarea rows="5" [ngModel]="paragraphElement.text" (ngModelChange)="updateSelectedParagraphText($event)"></textarea></label>
+
+                  <label>
+                    <span>Tab Assignment</span>
+                    <select [ngModel]="paragraphElement.tabId || ''" (ngModelChange)="updateSelectedParagraphTab($event)" [disabled]="availableTabs().length === 0">
+                      <option value="">No tab</option>
+                      @for (tab of availableTabs(); track tab.id) {
+                        <option [value]="tab.id">{{ tab.label || 'Untitled tab' }}</option>
+                      }
+                    </select>
+                  </label>
+                </div>
+              } @else if (selectedDividerElement(); as dividerElement) {
+                <div class="dfb-properties">
+                  <div class="dfb-readonly-type">Divider</div>
+
+                  <label>
+                    <span>Style</span>
+                    <select [ngModel]="dividerElement.dividerStyle" (ngModelChange)="updateSelectedDividerStyle($event)">
+                      <option value="solid">Solid</option>
+                      <option value="dashed">Dashed</option>
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>Tab Assignment</span>
+                    <select [ngModel]="dividerElement.tabId || ''" (ngModelChange)="updateSelectedDividerTab($event)" [disabled]="availableTabs().length === 0">
+                      <option value="">No tab</option>
+                      @for (tab of availableTabs(); track tab.id) {
+                        <option [value]="tab.id">{{ tab.label || 'Untitled tab' }}</option>
+                      }
+                    </select>
+                  </label>
+                </div>
+              } @else if (selectedTabsElement(); as tabsElementValue) {
+                <div class="dfb-properties">
+                  <div class="dfb-readonly-type">Tabs</div>
+
+                  <div class="dfb-options-editor">
+                    <div class="dfb-options-editor__head">
+                      <strong>Tabs</strong>
+                      <button type="button" (click)="addTab(tabsElementValue.id)">Add Tab</button>
+                    </div>
+                    @for (tab of tabsElementValue.tabs; track tab.id) {
+                      <div class="dfb-options-editor__row">
+                        <input [ngModel]="tab.label" (ngModelChange)="setTabLabel(tabsElementValue.id, tab.id, $event)" placeholder="Tab label" />
+                        <button type="button" (click)="setActiveTab(tabsElementValue.id, tab.id)">Make Active</button>
+                        <button type="button" class="dfb-danger" (click)="removeTab(tabsElementValue.id, tab.id)" [disabled]="tabsElementValue.tabs.length === 1">Remove</button>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </section>
+
+            <section class="dfb-panel">
+              <div class="dfb-panel-head">
+                <div>
+                  <h2>Assigned Service</h2>
+                </div>
               </div>
               <dl class="dfb-details">
                 <div><dt>Company</dt><dd>{{ guide()!.companyName }}</dd></div>
@@ -197,22 +612,6 @@
                 <div><dt>Workflow</dt><dd>{{ guide()!.integrationWorkflowName || 'Provisioning' }}</dd></div>
                 <div><dt>Status</dt><dd>{{ guide()!.integrationStatus || 'Development' }}</dd></div>
               </dl>
-            </section>
-
-            <section class="dfb-panel">
-              <div class="dfb-panel-head">
-                <h2>Preview</h2>
-                <span>Uses the existing trigger renderer contract.</span>
-              </div>
-              @if (previewConfigs().length) {
-                <ca-service-trigger-renderer
-                  [configs]="previewConfigs()"
-                  [companyId]="guide()!.companyId"
-                  [userServiceId]="guide()!.userServiceId"
-                  [previewOnly]="true" />
-              } @else {
-                <div class="dfb-empty dfb-empty--inline">Add a form label to preview the current definition.</div>
-              }
             </section>
           </aside>
         </div>

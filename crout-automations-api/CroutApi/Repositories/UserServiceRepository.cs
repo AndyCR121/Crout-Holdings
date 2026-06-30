@@ -49,18 +49,18 @@ public class UserServiceRepository(DbHelper db) : IUserServiceRepository
         return await conn.QuerySingleOrDefaultAsync<UserService>(
             """
             SELECT
-              id AS Id,
-              company_id AS CompanyId,
-              service_id AS ServiceId,
-              package_id AS PackageId,
-              subscription_id AS SubscriptionId,
+              us.id AS Id,
+              us.company_id AS CompanyId,
+              us.service_id AS ServiceId,
+              us.package_id AS PackageId,
+              us.subscription_id AS SubscriptionId,
               us.Config,
               us.Active,
               us.Status,
-              COALESCE(subscriptionAmount, 0.00) AS SubscriptionAmount,
-              pricingSnapshot AS PricingSnapshot,
-              paymentDate AS PaymentDate,
-              dueDate AS DueDate,
+              COALESCE(us.subscriptionAmount, 0.00) AS SubscriptionAmount,
+              us.pricingSnapshot AS PricingSnapshot,
+              us.paymentDate AS PaymentDate,
+              us.dueDate AS DueDate,
               us.CreatedAt AS CreatedAt,
               i.status AS IntegrationStatus,
               i.workflow_name AS IntegrationWorkflowName
