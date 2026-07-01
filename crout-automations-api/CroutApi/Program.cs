@@ -10,6 +10,9 @@ using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
+if (await SchemaUpdater.TryRunAsync(args))
+    return;
+
 // -- Config from environment --------------------------------------------------
 var jwtSecret   = Environment.GetEnvironmentVariable("JWT_SECRET")   ?? throw new InvalidOperationException("JWT_SECRET not set");
 var jwtIssuer   = Environment.GetEnvironmentVariable("JWT_ISSUER")   ?? "crout-automations-api";
@@ -27,6 +30,7 @@ var allowedOrigins = rawOrigins
 builder.Services.AddSingleton(new DbHelper());
 builder.Services.AddSingleton(new JwtHelper(jwtSecret, jwtIssuer, jwtAudience, jwtExpiry));
 builder.Services.AddSingleton(new EncryptionHelper(hmacSecret));
+builder.Services.AddSingleton(new SensitiveDataProtector(hmacSecret));
 
 // -- Repositories -------------------------------------------------------------
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -44,6 +48,7 @@ builder.Services.AddScoped<IVideoProjectRepository, VideoProjectRepository>();
 builder.Services.AddScoped<IDevServiceRepository, DevServiceRepository>();
 builder.Services.AddScoped<IDevPortalRepository, DevPortalRepository>();
 builder.Services.AddScoped<IIntegrationRepository, IntegrationRepository>();
+builder.Services.AddScoped<IWorkflowCapabilityRepository, WorkflowCapabilityRepository>();
 
 // -- Application Services -----------------------------------------------------
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -52,6 +57,7 @@ builder.Services.AddScoped<IServiceCatalogService, ServiceCatalogService>();
 builder.Services.AddScoped<IServiceRequestService, ServiceRequestService>();
 builder.Services.AddScoped<IServiceTriggerService, ServiceTriggerService>();
 builder.Services.AddScoped<IDevUserServiceFormService, DevUserServiceFormService>();
+builder.Services.AddScoped<IWorkflowCapabilityService, WorkflowCapabilityService>();
 builder.Services.AddScoped<IVideoProjectService, VideoProjectService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IContactRequestService, ContactRequestService>();

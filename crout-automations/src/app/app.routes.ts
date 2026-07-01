@@ -264,6 +264,12 @@ export const routes: Routes = [
       import('./pages/admin/service-features/admin-service-features.component').then(m => m.AdminServiceFeaturesComponent),
   },
   {
+    path: 'admin/workflow-capabilities',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./pages/admin/workflow-capabilities/admin-workflow-capabilities.component').then(m => m.AdminWorkflowCapabilitiesComponent),
+  },
+  {
     path: '**',
     loadComponent: () =>
       import('./pages/not-found/not-found.component').then(m => m.NotFoundComponent),

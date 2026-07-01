@@ -1,0 +1,104 @@
+<div class="admin-layout">
+  <ca-admin-sidebar />
+  <main class="admin-main">
+    <div class="admin-page">
+      <div class="admin-page-header">
+        <h1 class="admin-page-title">Workflow Capabilities</h1>
+      </div>
+
+      <div *ngIf="error()" class="admin-error">{{ error() }}</div>
+
+      <label>
+        Service
+        <select class="admin-input" [ngModel]="selectedServiceId()" (ngModelChange)="selectedServiceId.set($event); reload()">
+          <option *ngFor="let service of services()" [ngValue]="service.serviceId">{{ service.serviceName }}</option>
+        </select>
+      </label>
+
+      <div *ngIf="loading()" class="admin-loading">
+        <div class="skeleton-row" *ngFor="let i of [1,2,3]"></div>
+      </div>
+
+      <div *ngIf="!loading()" class="admin-table-wrap">
+        <h2>Integration Definitions</h2>
+        <table class="admin-table">
+          <thead><tr><th>Name</th><th>Type</th><th>Credentials</th><th>Active</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let integration of integrations()">
+              <td>{{ integration.name }}</td>
+              <td>{{ integration.integrationType }}</td>
+              <td>{{ integration.hasCredentials ? 'Yes' : 'No' }}</td>
+              <td>{{ integration.isActive ? 'Yes' : 'No' }}</td>
+              <td class="admin-actions">
+                <button class="btn-edit" (click)="startEditIntegration(integration)">Edit</button>
+                <button class="btn-delete" (click)="deleteIntegration(integration.id)">Delete</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="admin-modal" style="margin: 1rem 0;">
+          <h3>{{ editingIntegrationId() ? 'Edit Integration Definition' : 'New Integration Definition' }}</h3>
+          <label>Name<input class="admin-input" [(ngModel)]="integrationDraft.name" /></label>
+          <label>Type<input class="admin-input" [(ngModel)]="integrationDraft.integrationType" /></label>
+          <label>Description<input class="admin-input" [(ngModel)]="integrationDraft.description" /></label>
+          <label><input type="checkbox" [(ngModel)]="integrationDraft.hasCredentials" /> Requires Credentials</label>
+          <label><input type="checkbox" [(ngModel)]="integrationDraft.isActive" /> Active</label>
+          <label>Credential Schema JSON<textarea class="admin-input" rows="6" [ngModel]="integrationDraft.credentialFormSchema ? (integrationDraft.credentialFormSchema | json) : ''" (ngModelChange)="updateIntegrationSchema($event)"></textarea></label>
+          <div class="admin-modal-actions">
+            <button class="btn-save" [disabled]="saving()" (click)="saveIntegration()">{{ saving() ? 'Saving...' : 'Save' }}</button>
+            <button class="btn-cancel" (click)="cancelIntegrationEdit()">Cancel</button>
+          </div>
+        </div>
+
+        <h2>Capabilities</h2>
+        <table class="admin-table">
+          <thead><tr><th>Role</th><th>Name</th><th>Type</th><th>Price</th><th>Integration</th><th>Active</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let capability of capabilities()">
+              <td>{{ capability.role }}</td>
+              <td>{{ capability.name }}</td>
+              <td>{{ capability.capabilityType }}</td>
+              <td>R{{ capability.price | number:'1.2-2' }}</td>
+              <td>{{ capability.integrationName || '—' }}</td>
+              <td>{{ capability.isActive ? 'Yes' : 'No' }}</td>
+              <td class="admin-actions">
+                <button class="btn-edit" (click)="startEditCapability(capability)">Edit</button>
+                <button class="btn-delete" (click)="deleteCapability(capability.id)">Delete</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="admin-modal" style="margin: 1rem 0;">
+          <h3>{{ editingCapabilityId() ? 'Edit Capability' : 'New Capability' }}</h3>
+          <label>Role
+            <select class="admin-input" [(ngModel)]="capabilityDraft.role">
+              <option value="Trigger">Trigger</option>
+              <option value="Action">Action</option>
+              <option value="Output">Output</option>
+            </select>
+          </label>
+          <label>Name<input class="admin-input" [(ngModel)]="capabilityDraft.name" /></label>
+          <label>Capability Type<input class="admin-input" [(ngModel)]="capabilityDraft.capabilityType" /></label>
+          <label>Description<input class="admin-input" [(ngModel)]="capabilityDraft.description" /></label>
+          <label>Price<input class="admin-input" type="number" [(ngModel)]="capabilityDraft.price" /></label>
+          <label>Display Order<input class="admin-input" type="number" [(ngModel)]="capabilityDraft.displayOrder" /></label>
+          <label>Integration
+            <select class="admin-input" [(ngModel)]="capabilityDraft.integrationId">
+              <option [ngValue]="null">None</option>
+              <option *ngFor="let integration of integrations()" [ngValue]="integration.id">{{ integration.name }}</option>
+            </select>
+          </label>
+          <label><input type="checkbox" [(ngModel)]="capabilityDraft.requiresCredentials" /> Requires Credentials</label>
+          <label><input type="checkbox" [(ngModel)]="capabilityDraft.isActive" /> Active</label>
+          <label>Configuration Schema JSON<textarea class="admin-input" rows="8" [ngModel]="capabilityDraft.configurationSchema ? (capabilityDraft.configurationSchema | json) : ''" (ngModelChange)="updateCapabilitySchema($event)"></textarea></label>
+          <div class="admin-modal-actions">
+            <button class="btn-save" [disabled]="saving()" (click)="saveCapability()">{{ saving() ? 'Saving...' : 'Save' }}</button>
+            <button class="btn-cancel" (click)="cancelCapabilityEdit()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

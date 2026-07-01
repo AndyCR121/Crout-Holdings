@@ -192,6 +192,7 @@ export interface DevUserServiceForm {
   label: string;
   description?: string | null;
   responseMode: CustomFormResponseMode;
+  productionWebhookUrl?: string | null;
   payloadTemplate: Record<string, unknown>;
   schema: CustomFormSchema;
   schemaVersion: number;

@@ -10,10 +10,12 @@ import { IUserService, IService, IAddon, ICompany } from '../../../interfaces/i-
 import { PortalSidebarComponent } from '../../../components/portal-sidebar/portal-sidebar.component';
 import { ServiceTriggerRendererComponent } from '../../../components/service-trigger-renderer/service-trigger-renderer.component';
 import { MarketingWorkspaceComponent } from '../../../components/marketing-workspace/marketing-workspace.component';
-import { ServiceTriggerConfig } from '../../../interfaces/i-service-trigger.interface';
+import { DynamicFieldConfig, ServiceTriggerConfig } from '../../../interfaces/i-service-trigger.interface';
 import { ServiceTriggerApiService } from '../../../services/service-trigger-api.service';
 import { IntegrationStatusBadgeComponent } from '../../../components/integration-status-badge/integration-status-badge.component';
 import { IntegrationStatusService } from '../../../services/integration-status.service';
+import { IServiceWorkflowCapability, IUserServiceWorkflowStep } from '../../../interfaces/i-workflow-capability.interface';
+import { WorkflowCapabilityApiService } from '../../../services/workflow-capability-api.service';
 
 interface IntegrationItem {
   name: string;
@@ -27,17 +29,15 @@ interface ServiceRow {
   addons:        IAddon[];
   activeAddons:  IntegrationItem[];
   editing:       boolean;
-  editAddonIds:  number[];
-  editTrigger:   string[];
-  editAction:    string[];
-  editOutput:    string[];
-  triggerNotes:  string;
-  actionNotes:   string;
-  outputNotes:   string;
+  availableCapabilities: IServiceWorkflowCapability[];
+  selectedCapabilityIds: number[];
+  capabilitiesLoading: boolean;
   sidePanelOpen: boolean;
   credentialsOpen: boolean;
-  credentialIntegration: string;
-  credentialFields: { key: string; value: string }[];
+  credentialStepId: number | null;
+  credentialValues: Record<string, string>;
+  workflowSteps: IUserServiceWorkflowStep[];
+  workflowStepsLoading: boolean;
   triggerConfigs: ServiceTriggerConfig[];
   triggersLoading: boolean;
   workspaceView: 'marketing' | 'manual';
@@ -62,18 +62,13 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
   private readonly toast = inject(ToastService);
   private readonly triggersApi = inject(ServiceTriggerApiService);
   private readonly integrationStatus = inject(IntegrationStatusService);
+  private readonly workflowApi = inject(WorkflowCapabilityApiService);
 
   readonly user    = computed(() => this.auth.currentUser());
   readonly groups  = signal<CompanyGroup[]>([]);
   readonly loading = signal(true);
   readonly saving  = signal<number | null>(null);
   readonly savingCredentials = signal<number | null>(null);
-
-  readonly integrationOptions = {
-    trigger: ['Webhook', 'Email / IMAP', 'WhatsApp Message', 'Website Form', 'Scheduled Trigger'],
-    action: ['Xero', 'Google Sheets', 'Trello', 'CRM Update', 'AI Agent', 'Custom Setup'],
-    output: ['Email Response', 'WhatsApp Reply', 'Dashboard', 'Report', 'Invoice / Quote']
-  };
 
   ngOnInit(): void {
     const uid = this.user()?.userId;
@@ -113,17 +108,15 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
               addons:        rowAddons,
               activeAddons:  active,
               editing:       false,
-              editAddonIds:  selectedAddonIds,
-              editTrigger:   active.filter(i => i.category === 'trigger').map(i => i.name),
-              editAction:    active.filter(i => i.category === 'action').map(i => i.name),
-              editOutput:    active.filter(i => i.category === 'output').map(i => i.name),
-              triggerNotes:  '',
-              actionNotes:   '',
-              outputNotes:   '',
+              availableCapabilities: [],
+              selectedCapabilityIds: selectedAddonIds,
+              capabilitiesLoading: false,
               sidePanelOpen: false,
               credentialsOpen: false,
-              credentialIntegration: active[0]?.name ?? rowAddons[0]?.addonName ?? svc.serviceName,
-              credentialFields: this.defaultCredentialFields(),
+              credentialStepId: null,
+              credentialValues: {},
+              workflowSteps: [],
+              workflowStepsLoading: false,
               triggerConfigs: [],
               triggersLoading: false,
               workspaceView: svc.serviceName.toLowerCase() === 'marketing systems' ? 'marketing' : 'manual',
@@ -203,10 +196,7 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
 
   startEdit(row: ServiceRow): void {
     row.editing = true;
-    row.editAddonIds = this._parseAddonIds(row.userService.config, row.activeAddons, row.addons);
-    row.editTrigger = row.activeAddons.filter(i => i.category === 'trigger').map(i => i.name);
-    row.editAction = row.activeAddons.filter(i => i.category === 'action').map(i => i.name);
-    row.editOutput = row.activeAddons.filter(i => i.category === 'output').map(i => i.name);
+    this.loadCapabilitiesForRow(row);
     this.groups.update(g => [...g]);
   }
 
@@ -215,26 +205,10 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
     this.groups.update(g => [...g]);
   }
 
-  toggleAddon(row: ServiceRow, addon: IAddon): void {
-    const idx = row.editAddonIds.indexOf(addon.addonId);
-    if (idx > -1) {
-      row.editAddonIds.splice(idx, 1);
-    } else {
-      row.editAddonIds.push(addon.addonId);
-      this.addIntegration(row, this.classifyIntegration(addon.addonName), addon.addonName);
-    }
-    this.groups.update(g => [...g]);
-  }
-
-  isSelected(row: ServiceRow, addon: IAddon): boolean {
-    return row.editAddonIds.includes(addon.addonId);
-  }
-
-  toggleIntegration(row: ServiceRow, category: 'trigger' | 'action' | 'output', name: string): void {
-    const list = this.integrationList(row, category);
-    const idx = list.indexOf(name);
-    if (idx > -1) list.splice(idx, 1);
-    else list.push(name);
+  toggleCapability(row: ServiceRow, capabilityId: number): void {
+    const idx = row.selectedCapabilityIds.indexOf(capabilityId);
+    if (idx > -1) row.selectedCapabilityIds.splice(idx, 1);
+    else row.selectedCapabilityIds.push(capabilityId);
     this.groups.update(g => [...g]);
   }
 
@@ -246,18 +220,16 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
     }
 
     this.saving.set(userServiceId);
-    this.api.requestServiceConfigChange(userServiceId, {
-      addonIds: row.editAddonIds,
-      trigger: row.editTrigger,
-      action: row.editAction,
-      output: row.editOutput,
-      triggerNotes: row.triggerNotes,
-      actionNotes: row.actionNotes,
-      outputNotes: row.outputNotes
-    }).subscribe({
-      next: updated => {
-        row.userService = updated;
-        row.activeAddons = this._parseConfig(updated.config, row.addons);
+    this.workflowApi.saveRequestedSelection(userServiceId, row.selectedCapabilityIds).subscribe({
+      next: steps => {
+        row.workflowSteps = steps;
+        row.activeAddons = steps
+          .filter(step => step.status !== 'Disabled')
+          .map(step => ({
+            name: step.capabilityName,
+            confirmed: step.status === 'Confirmed',
+            category: step.role === 'Trigger' ? 'trigger' : step.role === 'Output' ? 'output' : 'action'
+          }));
         row.editing = false;
         this.saving.set(null);
         this.groups.update(g => [...g]);
@@ -274,6 +246,7 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
     row.sidePanelOpen = true;
     this.lockDrawerScroll();
     this.loadTriggers(row, company);
+    this.loadWorkflowSteps(row);
     this.groups.update(g => [...g]);
   }
 
@@ -287,8 +260,7 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
     row.sidePanelOpen = true;
     row.credentialsOpen = true;
     this.lockDrawerScroll();
-    row.credentialIntegration = row.credentialIntegration || row.activeAddons[0]?.name || row.service.serviceName;
-    if (!row.credentialFields.length) row.credentialFields = this.defaultCredentialFields();
+    this.loadWorkflowSteps(row);
     this.groups.update(g => [...g]);
   }
 
@@ -298,7 +270,7 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
 
   cancelCredentials(row: ServiceRow): void {
     row.credentialsOpen = false;
-    row.credentialFields = this.defaultCredentialFields();
+    row.credentialValues = {};
     this.groups.update(g => [...g]);
   }
 
@@ -309,29 +281,26 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const fields = row.credentialFields.reduce((acc, field) => {
-      const key = field.key.trim();
-      if (key && field.value.trim()) acc[key] = field.value;
-      return acc;
-    }, {} as Record<string, string>);
-
-    if (!row.credentialIntegration.trim() || Object.keys(fields).length === 0) {
-      this.toast.error('Select an integration and enter at least one credential field.');
+    const step = row.workflowSteps.find(item => item.id === row.credentialStepId);
+    if (!step) {
+      this.toast.error('Select a workflow credential form first.');
       return;
     }
+    const fields = Object.entries(row.credentialValues)
+      .reduce((acc, [key, value]) => {
+        if (key.trim() && value.trim()) acc[key] = value.trim();
+        return acc;
+      }, {} as Record<string, string>);
 
     this.savingCredentials.set(userServiceId);
-    this.api.updateServiceCredentials(userServiceId, {
-      integrationName: row.credentialIntegration,
-      fields,
-    }).subscribe({
-      next: updated => {
-        row.userService = updated;
+    this.workflowApi.updateStepCredentials(userServiceId, step.id, fields).subscribe({
+      next: updatedStep => {
+        row.workflowSteps = row.workflowSteps.map(item => item.id === updatedStep.id ? updatedStep : item);
         row.credentialsOpen = false;
-        row.credentialFields = this.defaultCredentialFields();
+        row.credentialValues = {};
         this.savingCredentials.set(null);
         this.groups.update(g => [...g]);
-        this.toast.success('Credentials sent securely for n8n setup.');
+        this.toast.success('Credentials saved.');
       },
       error: err => {
         this.savingCredentials.set(null);
@@ -361,19 +330,20 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
     return this.groups().some(g => g.rows.length > 0);
   }
 
-  integrationList(row: ServiceRow, category: 'trigger' | 'action' | 'output'): string[] {
-    if (category === 'trigger') return row.editTrigger;
-    if (category === 'action') return row.editAction;
-    return row.editOutput;
+  groupedCapabilities(row: ServiceRow, role: 'Trigger' | 'Action' | 'Output'): IServiceWorkflowCapability[] {
+    return row.availableCapabilities.filter(capability => capability.role === role);
   }
 
-  isIntegrationSelected(row: ServiceRow, category: 'trigger' | 'action' | 'output', name: string): boolean {
-    return this.integrationList(row, category).includes(name);
+  isCapabilitySelected(row: ServiceRow, capabilityId: number): boolean {
+    return row.selectedCapabilityIds.includes(capabilityId);
   }
 
-  private addIntegration(row: ServiceRow, category: 'trigger' | 'action' | 'output', name: string): void {
-    const list = this.integrationList(row, category);
-    if (!list.includes(name)) list.push(name);
+  activeWorkflowItems(row: ServiceRow, category: 'trigger' | 'action' | 'output'): IntegrationItem[] {
+    return row.activeAddons.filter(item => item.category === category);
+  }
+
+  workflowCategoryLabel(category: 'trigger' | 'action' | 'output'): string {
+    return category === 'trigger' ? 'Trigger' : category === 'output' ? 'Output' : 'Action';
   }
 
   private classifyIntegration(name: string): 'trigger' | 'action' | 'output' {
@@ -406,12 +376,71 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
     });
   }
 
-  private defaultCredentialFields(): { key: string; value: string }[] {
-    return [
-      { key: 'Username / Email', value: '' },
-      { key: 'Password / API Key', value: '' },
-      { key: 'Tenant / Account ID', value: '' },
-    ];
+  private loadWorkflowSteps(row: ServiceRow): void {
+    const userServiceId = row.userService.userServiceId;
+    if (userServiceId == null || row.workflowStepsLoading) return;
+
+    row.workflowStepsLoading = true;
+    this.workflowApi.getWorkflowSteps(userServiceId).subscribe({
+      next: steps => {
+        row.workflowSteps = steps;
+        row.workflowStepsLoading = false;
+        row.credentialStepId = row.credentialStepId ?? steps.find(step => step.requiresCredentials && step.status !== 'Disabled')?.id ?? null;
+        this.groups.update(g => [...g]);
+      },
+      error: () => {
+        row.workflowStepsLoading = false;
+        row.workflowSteps = [];
+        this.groups.update(g => [...g]);
+      }
+    });
+  }
+
+  private loadCapabilitiesForRow(row: ServiceRow): void {
+    if (row.capabilitiesLoading || row.availableCapabilities.length) return;
+    row.capabilitiesLoading = true;
+    const userServiceId = row.userService.userServiceId;
+
+    forkJoin({
+      capabilities: this.workflowApi.getServiceCapabilities(row.service.serviceId, true),
+      steps: userServiceId ? this.workflowApi.getWorkflowSteps(userServiceId) : of([] as IUserServiceWorkflowStep[])
+    }).subscribe({
+      next: ({ capabilities, steps }) => {
+        row.availableCapabilities = capabilities;
+        row.workflowSteps = steps;
+        row.selectedCapabilityIds = steps
+          .filter(step => step.status === 'Pending' || step.status === 'Confirmed')
+          .map(step => step.serviceWorkflowCapabilityId);
+        row.capabilitiesLoading = false;
+        this.groups.update(g => [...g]);
+      },
+      error: () => {
+        row.capabilitiesLoading = false;
+        this.groups.update(g => [...g]);
+      }
+    });
+  }
+
+  credentialSteps(row: ServiceRow): IUserServiceWorkflowStep[] {
+    return row.workflowSteps.filter(step => step.requiresCredentials && step.status !== 'Disabled');
+  }
+
+  credentialSchema(row: ServiceRow): DynamicFieldConfig[] {
+    return row.workflowSteps.find(step => step.id === row.credentialStepId)?.credentialSchema?.fields ?? [];
+  }
+
+  credentialPlaceholder(row: ServiceRow, field: DynamicFieldConfig): string {
+    const step = row.workflowSteps.find(item => item.id === row.credentialStepId);
+    const state = step?.credentialFieldStates?.[field.key];
+    return state?.hasStoredValue ? state.displayValue ?? 'Saved' : field.placeholder ?? '';
+  }
+
+  credentialInputType(field: DynamicFieldConfig): string {
+    if (field.type === 'password') return 'password';
+    if (field.type === 'email') return 'email';
+    if (field.type === 'number') return 'number';
+    if (field.type === 'url') return 'url';
+    return 'text';
   }
 
   private hasOpenSidePanel(): boolean {

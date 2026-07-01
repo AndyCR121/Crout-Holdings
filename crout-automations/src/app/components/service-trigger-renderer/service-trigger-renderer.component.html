@@ -28,68 +28,303 @@
         </p>
 
         <div class="trigger-fields" *ngSwitchCase="'form'">
-          <ng-container *ngFor="let field of config.fields || []">
-            <label class="trigger-field" *ngIf="!isHiddenField(field)">
-              <span>{{ field.label }} <strong *ngIf="field.required">*</strong></span>
-              <input
-                *ngIf="['text','email','number','date','time','datetime'].includes(normalizeFieldType(field.type))"
-                [type]="inputType(field)"
-                [placeholder]="field.placeholder || ''"
-                [ngModel]="fieldValue(config.id, field.key)"
-                (ngModelChange)="setField(config.id, field.key, $event)"
-              />
-              <textarea
-                *ngIf="normalizeFieldType(field.type) === 'textarea' || normalizeFieldType(field.type) === 'json' || normalizeFieldType(field.type) === 'richText'"
-                rows="4"
-                [placeholder]="field.placeholder || ''"
-                [ngModel]="fieldValue(config.id, field.key)"
-                (ngModelChange)="setField(config.id, field.key, $event)"
-              ></textarea>
-              <div class="trigger-checks" *ngIf="isDateRangeField(field)">
-                <label>
-                  <span>Start</span>
-                  <input
-                    type="date"
-                    [ngModel]="fieldValue(config.id, field.key)?.start"
-                    (ngModelChange)="setDateRangePart(config.id, field.key, 'start', $event)"
-                  />
-                </label>
-                <label>
-                  <span>End</span>
-                  <input
-                    type="date"
-                    [ngModel]="fieldValue(config.id, field.key)?.end"
-                    (ngModelChange)="setDateRangePart(config.id, field.key, 'end', $event)"
-                  />
-                </label>
-              </div>
-              <select
-                *ngIf="normalizeFieldType(field.type) === 'select'"
-                [ngModel]="fieldValue(config.id, field.key)"
-                (ngModelChange)="setField(config.id, field.key, $event)"
+          <ng-container *ngIf="usesCustomFormLayout(config); else flatFields">
+            <div class="trigger-form-tabs" *ngIf="formTabs(config).length">
+              <button
+                *ngFor="let tab of formTabs(config)"
+                type="button"
+                class="trigger-form-tab"
+                [class.trigger-form-tab--active]="activeTabId(config.id) === tab.id"
+                (click)="selectTab(config.id, tab.id)"
               >
-                <option *ngFor="let opt of field.options || []" [ngValue]="opt.value">{{ opt.label }}</option>
-              </select>
-              <div class="trigger-checks" *ngIf="normalizeFieldType(field.type) === 'multi-select'">
-                <label *ngFor="let opt of field.options || []">
+                {{ tab.label }}
+              </button>
+            </div>
+
+            <ng-container *ngFor="let element of visibleElements(config)">
+              <h4 class="trigger-content-heading" *ngIf="element.type === 'header'">{{ element.text }}</h4>
+              <p class="trigger-content-copy" *ngIf="element.type === 'paragraph'">{{ element.text }}</p>
+              <hr class="trigger-content-divider" *ngIf="element.type === 'divider'" />
+
+              <label class="trigger-field" *ngIf="isInputElement(element) && normalizeCustomInputMode(element.inputMode) !== 'hidden'">
+                <span>{{ element.label }} <strong *ngIf="element.required">*</strong></span>
+                <input
+                  *ngIf="['text','email','number'].includes(normalizeCustomInputMode(element.inputMode))"
+                  [type]="customInputType(element)"
+                  [placeholder]="element.placeholder || ''"
+                  [ngModel]="customFieldValue(config.id, element.key)"
+                  (ngModelChange)="setCustomFieldValue(config.id, element.key, $event)"
+                />
+                <textarea
+                  *ngIf="normalizeCustomInputMode(element.inputMode) === 'textarea' || normalizeCustomInputMode(element.inputMode) === 'richText'"
+                  rows="4"
+                  [placeholder]="element.placeholder || ''"
+                  [ngModel]="customFieldValue(config.id, element.key)"
+                  (ngModelChange)="setCustomFieldValue(config.id, element.key, $event)"
+                ></textarea>
+              </label>
+
+              <label class="trigger-field" *ngIf="isSelectElement(element)">
+                <span>{{ element.label }} <strong *ngIf="element.required">*</strong></span>
+                <select
+                  *ngIf="element.selectMode !== 'multiSelect'"
+                  [ngModel]="customFieldValue(config.id, element.key)"
+                  (ngModelChange)="setCustomFieldValue(config.id, element.key, $event)"
+                >
+                  <option *ngFor="let opt of element.options" [ngValue]="opt.value">{{ opt.label }}</option>
+                </select>
+                <div class="trigger-checks" *ngIf="element.selectMode === 'multiSelect'">
+                  <label *ngFor="let opt of element.options">
+                    <input
+                      type="checkbox"
+                      [checked]="customFieldValue(config.id, element.key)?.includes(opt.value)"
+                      (change)="setMulti(config.id, element.key, opt.value, $any($event.target).checked)"
+                    />
+                    {{ opt.label }}
+                  </label>
+                </div>
+              </label>
+
+              <label class="trigger-field" *ngIf="isDateTimeElement(element)">
+                <span>{{ element.label }} <strong *ngIf="element.required">*</strong></span>
+                <input
+                  *ngIf="element.dateTimeMode !== 'dateRange'"
+                  [type]="customDateTimeInputType(element)"
+                  [ngModel]="customFieldValue(config.id, element.key)"
+                  (ngModelChange)="setCustomFieldValue(config.id, element.key, $event)"
+                />
+                <div class="trigger-checks" *ngIf="element.dateTimeMode === 'dateRange'">
+                  <label>
+                    <span>Start</span>
+                    <input
+                      type="date"
+                      [ngModel]="customFieldValue(config.id, element.key)?.start"
+                      (ngModelChange)="setCustomDateRangePart(config.id, element.key, 'start', $event)"
+                    />
+                  </label>
+                  <label>
+                    <span>End</span>
+                    <input
+                      type="date"
+                      [ngModel]="customFieldValue(config.id, element.key)?.end"
+                      (ngModelChange)="setCustomDateRangePart(config.id, element.key, 'end', $event)"
+                    />
+                  </label>
+                </div>
+              </label>
+
+              <label class="trigger-field" *ngIf="isCheckboxElement(element)">
+                <span>{{ element.label }} <strong *ngIf="element.required">*</strong></span>
+                <label class="trigger-toggle" *ngIf="element.options.length <= 1 && element.checkboxMode !== 'radio'">
                   <input
                     type="checkbox"
-                    [checked]="fieldValue(config.id, field.key)?.includes(opt.value)"
-                    (change)="setMulti(config.id, field.key, opt.value, $any($event.target).checked)"
+                    [checked]="customFieldValue(config.id, element.key)"
+                    (change)="setCheckbox(config.id, element.key, $any($event.target).checked)"
                   />
-                  {{ opt.label }}
+                  <span>{{ element.options[0]?.label || 'Enabled' }}</span>
                 </label>
-              </div>
-              <label class="trigger-toggle" *ngIf="normalizeFieldType(field.type) === 'checkbox' || normalizeFieldType(field.type) === 'toggle'">
-                <input
-                  type="checkbox"
-                  [checked]="fieldValue(config.id, field.key)"
-                  (change)="setCheckbox(config.id, field.key, $any($event.target).checked)"
-                />
-                <span>{{ field.placeholder || 'Enabled' }}</span>
+                <div class="trigger-checks" *ngIf="element.options.length > 1 || element.checkboxMode === 'radio'">
+                  <label *ngFor="let opt of element.options">
+                    <input
+                      [type]="element.checkboxMode === 'radio' ? 'radio' : 'checkbox'"
+                      [name]="config.id + '-' + element.key"
+                      [checked]="element.checkboxMode === 'radio' ? customFieldValue(config.id, element.key) === opt.value : customFieldValue(config.id, element.key)?.includes(opt.value)"
+                      (change)="element.checkboxMode === 'radio'
+                        ? setCustomFieldValue(config.id, element.key, opt.value)
+                        : setMulti(config.id, element.key, opt.value, $any($event.target).checked)"
+                    />
+                    {{ opt.label }}
+                  </label>
+                </div>
               </label>
-            </label>
+
+              <div class="trigger-list" *ngIf="isListElement(element)">
+                <div class="trigger-list__head">
+                  <div>
+                    <span class="trigger-list__label">{{ element.label }}</span>
+                    <p class="trigger-list__copy">{{ element.emptyStateText || ('Add one or more ' + (element.itemLabel || 'items') + '.') }}</p>
+                  </div>
+                  <button type="button" class="trigger-list__add" (click)="addListItem(config.id, element)">
+                    {{ element.addButtonLabel || ('Add ' + (element.itemLabel || 'Item')) }}
+                  </button>
+                </div>
+
+                <p class="trigger-list__empty" *ngIf="listItems(config.id, element).length === 0">
+                  {{ element.emptyStateText || 'No items added yet.' }}
+                </p>
+
+                <div class="trigger-list__items" *ngIf="listItems(config.id, element).length > 0">
+                  <article class="trigger-list__item" *ngFor="let item of listItems(config.id, element); let itemIndex = index; trackBy: trackListItem">
+                    <div class="trigger-list__item-head">
+                      <strong>{{ element.itemLabel || 'Item' }} {{ itemIndex + 1 }}</strong>
+                      <button type="button" class="trigger-list__remove" (click)="removeListItem(config.id, element, itemIndex)">Remove</button>
+                    </div>
+
+                    <div class="trigger-list__fields">
+                      <ng-container *ngFor="let field of element.fields; trackBy: trackListField">
+                        <label class="trigger-field" *ngIf="field.type === 'input' && normalizeCustomInputMode(field.inputMode) !== 'hidden'">
+                          <span>{{ field.label }} <strong *ngIf="field.required">*</strong></span>
+                          <input
+                            *ngIf="['text','email','number'].includes(normalizeCustomInputMode(field.inputMode))"
+                            [type]="field.inputMode === 'number' ? 'number' : field.inputMode === 'email' ? 'email' : 'text'"
+                            [placeholder]="field.placeholder || ''"
+                            [ngModel]="listFieldValue(config.id, element.key, itemIndex, field.key)"
+                            (ngModelChange)="setListFieldValue(config.id, element.key, itemIndex, field.key, $event)"
+                          />
+                          <textarea
+                            *ngIf="normalizeCustomInputMode(field.inputMode) === 'textarea' || normalizeCustomInputMode(field.inputMode) === 'richText'"
+                            rows="3"
+                            [placeholder]="field.placeholder || ''"
+                            [ngModel]="listFieldValue(config.id, element.key, itemIndex, field.key)"
+                            (ngModelChange)="setListFieldValue(config.id, element.key, itemIndex, field.key, $event)"
+                          ></textarea>
+                        </label>
+
+                        <label class="trigger-field" *ngIf="field.type === 'select'">
+                          <span>{{ field.label }} <strong *ngIf="field.required">*</strong></span>
+                          <select
+                            *ngIf="field.selectMode !== 'multiSelect'"
+                            [ngModel]="listFieldValue(config.id, element.key, itemIndex, field.key)"
+                            (ngModelChange)="setListFieldValue(config.id, element.key, itemIndex, field.key, $event)"
+                          >
+                            <option *ngFor="let opt of field.options" [ngValue]="opt.value">{{ opt.label }}</option>
+                          </select>
+                          <div class="trigger-checks" *ngIf="field.selectMode === 'multiSelect'">
+                            <label *ngFor="let opt of field.options">
+                              <input
+                                type="checkbox"
+                                [checked]="listFieldValue(config.id, element.key, itemIndex, field.key)?.includes(opt.value)"
+                                (change)="toggleListMulti(config.id, element.key, itemIndex, field.key, opt.value, $any($event.target).checked)"
+                              />
+                              {{ opt.label }}
+                            </label>
+                          </div>
+                        </label>
+
+                        <label class="trigger-field" *ngIf="field.type === 'datetime'">
+                          <span>{{ field.label }} <strong *ngIf="field.required">*</strong></span>
+                          <input
+                            *ngIf="field.dateTimeMode !== 'dateRange'"
+                            [type]="field.dateTimeMode === 'date' ? 'date' : field.dateTimeMode === 'time' ? 'time' : 'datetime-local'"
+                            [ngModel]="listFieldValue(config.id, element.key, itemIndex, field.key)"
+                            (ngModelChange)="setListFieldValue(config.id, element.key, itemIndex, field.key, $event)"
+                          />
+                          <div class="trigger-checks" *ngIf="field.dateTimeMode === 'dateRange'">
+                            <label>
+                              <span>Start</span>
+                              <input
+                                type="date"
+                                [ngModel]="listFieldValue(config.id, element.key, itemIndex, field.key)?.start"
+                                (ngModelChange)="setListDateRangePart(config.id, element.key, itemIndex, field.key, 'start', $event)"
+                              />
+                            </label>
+                            <label>
+                              <span>End</span>
+                              <input
+                                type="date"
+                                [ngModel]="listFieldValue(config.id, element.key, itemIndex, field.key)?.end"
+                                (ngModelChange)="setListDateRangePart(config.id, element.key, itemIndex, field.key, 'end', $event)"
+                              />
+                            </label>
+                          </div>
+                        </label>
+
+                        <label class="trigger-field" *ngIf="field.type === 'checkbox'">
+                          <span>{{ field.label }} <strong *ngIf="field.required">*</strong></span>
+                          <label class="trigger-toggle" *ngIf="field.options.length <= 1 && field.checkboxMode !== 'radio'">
+                            <input
+                              type="checkbox"
+                              [checked]="listFieldValue(config.id, element.key, itemIndex, field.key)"
+                              (change)="setListFieldValue(config.id, element.key, itemIndex, field.key, $any($event.target).checked)"
+                            />
+                            <span>{{ field.options[0]?.label || 'Enabled' }}</span>
+                          </label>
+                          <div class="trigger-checks" *ngIf="field.options.length > 1 || field.checkboxMode === 'radio'">
+                            <label *ngFor="let opt of field.options">
+                              <input
+                                [type]="field.checkboxMode === 'radio' ? 'radio' : 'checkbox'"
+                                [name]="config.id + '-' + element.key + '-' + itemIndex + '-' + field.key"
+                                [checked]="field.checkboxMode === 'radio' ? listFieldValue(config.id, element.key, itemIndex, field.key) === opt.value : listFieldValue(config.id, element.key, itemIndex, field.key)?.includes(opt.value)"
+                                (change)="field.checkboxMode === 'radio'
+                                  ? setListFieldValue(config.id, element.key, itemIndex, field.key, opt.value)
+                                  : toggleListMulti(config.id, element.key, itemIndex, field.key, opt.value, $any($event.target).checked)"
+                              />
+                              {{ opt.label }}
+                            </label>
+                          </div>
+                        </label>
+                      </ng-container>
+                    </div>
+                  </article>
+                </div>
+              </div>
+            </ng-container>
           </ng-container>
+
+          <ng-template #flatFields>
+            <ng-container *ngFor="let field of config.fields || []">
+              <label class="trigger-field" *ngIf="!isHiddenField(field)">
+                <span>{{ field.label }} <strong *ngIf="field.required">*</strong></span>
+                <input
+                  *ngIf="['text','email','number','date','time','datetime'].includes(normalizeFieldType(field.type))"
+                  [type]="inputType(field)"
+                  [placeholder]="field.placeholder || ''"
+                  [ngModel]="fieldValue(config.id, field.key)"
+                  (ngModelChange)="setField(config.id, field.key, $event)"
+                />
+                <textarea
+                  *ngIf="normalizeFieldType(field.type) === 'textarea' || normalizeFieldType(field.type) === 'json' || normalizeFieldType(field.type) === 'richText'"
+                  rows="4"
+                  [placeholder]="field.placeholder || ''"
+                  [ngModel]="fieldValue(config.id, field.key)"
+                  (ngModelChange)="setField(config.id, field.key, $event)"
+                ></textarea>
+                <div class="trigger-checks" *ngIf="isDateRangeField(field)">
+                  <label>
+                    <span>Start</span>
+                    <input
+                      type="date"
+                      [ngModel]="fieldValue(config.id, field.key)?.start"
+                      (ngModelChange)="setDateRangePart(config.id, field.key, 'start', $event)"
+                    />
+                  </label>
+                  <label>
+                    <span>End</span>
+                    <input
+                      type="date"
+                      [ngModel]="fieldValue(config.id, field.key)?.end"
+                      (ngModelChange)="setDateRangePart(config.id, field.key, 'end', $event)"
+                    />
+                  </label>
+                </div>
+                <select
+                  *ngIf="normalizeFieldType(field.type) === 'select'"
+                  [ngModel]="fieldValue(config.id, field.key)"
+                  (ngModelChange)="setField(config.id, field.key, $event)"
+                >
+                  <option *ngFor="let opt of field.options || []" [ngValue]="opt.value">{{ opt.label }}</option>
+                </select>
+                <div class="trigger-checks" *ngIf="normalizeFieldType(field.type) === 'multi-select'">
+                  <label *ngFor="let opt of field.options || []">
+                    <input
+                      type="checkbox"
+                      [checked]="fieldValue(config.id, field.key)?.includes(opt.value)"
+                      (change)="setMulti(config.id, field.key, opt.value, $any($event.target).checked)"
+                    />
+                    {{ opt.label }}
+                  </label>
+                </div>
+                <label class="trigger-toggle" *ngIf="normalizeFieldType(field.type) === 'checkbox' || normalizeFieldType(field.type) === 'toggle'">
+                  <input
+                    type="checkbox"
+                    [checked]="fieldValue(config.id, field.key)"
+                    (change)="setCheckbox(config.id, field.key, $any($event.target).checked)"
+                  />
+                  <span>{{ field.placeholder || 'Enabled' }}</span>
+                </label>
+              </label>
+            </ng-container>
+          </ng-template>
         </div>
 
         <div class="trigger-fields trigger-fields--email" *ngSwitchCase="'email_mockup'">

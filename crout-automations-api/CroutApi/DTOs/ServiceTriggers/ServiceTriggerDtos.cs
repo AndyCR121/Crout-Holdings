@@ -15,7 +15,9 @@ public record ServiceTriggerConfigDto(
     JsonElement? PayloadTemplate,
     JsonElement? Fields,
     JsonElement? FileUpload,
-    string ResponseMode);
+    string ResponseMode,
+    JsonElement? FormSchema = null,
+    string? ActiveTabId = null);
 
 public record ExecuteTriggerResponseDto(
     int ExecutionId,

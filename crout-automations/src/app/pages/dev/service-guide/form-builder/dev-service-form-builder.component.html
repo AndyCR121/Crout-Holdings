@@ -170,6 +170,11 @@
                   </label>
 
                   <label>
+                    <span>Production Webhook URL</span>
+                    <input [ngModel]="productionWebhookUrl" (ngModelChange)="productionWebhookUrl = $event; touch()" placeholder="https://example.com/webhook" />
+                  </label>
+
+                  <label>
                     <span>Payload Template JSON</span>
                     <textarea rows="8" [ngModel]="payloadTemplateText" (ngModelChange)="updatePayloadTemplateText($event)" spellcheck="false"></textarea>
                   </label>

@@ -3,6 +3,16 @@ import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, injec
 import { FormsModule } from '@angular/forms';
 import { ServiceTriggerApiService } from '../../services/service-trigger-api.service';
 import { DynamicFieldConfig, ExecuteTriggerResponse, ServiceTriggerConfig } from '../../interfaces/i-service-trigger.interface';
+import {
+  CustomFormCheckboxElement,
+  CustomFormDateTimeElement,
+  CustomFormElement,
+  CustomFormInputElement,
+  CustomFormListElement,
+  CustomFormListItemField,
+  CustomFormSelectElement,
+  CustomFormTab,
+} from '../../interfaces/i-custom-form-builder.interface';
 
 @Component({
   selector: 'ca-service-trigger-renderer',
@@ -26,14 +36,18 @@ export class ServiceTriggerRendererComponent implements OnChanges {
   readonly errors = signal<Record<number, string>>({});
   readonly responses = signal<Record<number, ExecuteTriggerResponse>>({});
   readonly selectedConfigId = signal<number | null>(null);
+  readonly activeTabs = signal<Record<number, string | null>>({});
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['configs']) {
       const next: Record<number, Record<string, any>> = {};
+      const nextTabs: Record<number, string | null> = {};
       for (const config of this.configs) {
         next[config.id] = this.defaultValues(config);
+        nextTabs[config.id] = config.activeTabId ?? this.formTabs(config)[0]?.id ?? null;
       }
       this.values.set(next);
+      this.activeTabs.set(nextTabs);
       const currentSelected = this.selectedConfigId();
       const stillExists = currentSelected !== null && this.configs.some(config => config.id === currentSelected);
       this.selectedConfigId.set(stillExists ? currentSelected : (this.configs[0]?.id ?? null));
@@ -136,9 +150,181 @@ export class ServiceTriggerRendererComponent implements OnChanges {
     return this.errors()[configId];
   }
 
+  usesCustomFormLayout(config: ServiceTriggerConfig): boolean {
+    return config.triggerType === 'form' && !!config.formSchema?.elements?.length;
+  }
+
+  formTabs(config: ServiceTriggerConfig): CustomFormTab[] {
+    const tabsElement = config.formSchema?.elements.find((element): element is Extract<CustomFormElement, { type: 'tabs' }> => element.type === 'tabs');
+    return tabsElement?.tabs ?? [];
+  }
+
+  activeTabId(configId: number): string | null {
+    return this.activeTabs()[configId] ?? null;
+  }
+
+  selectTab(configId: number, tabId: string): void {
+    this.activeTabs.update(current => ({ ...current, [configId]: tabId }));
+  }
+
+  visibleElements(config: ServiceTriggerConfig): CustomFormElement[] {
+    const activeTabId = this.activeTabId(config.id);
+    return (config.formSchema?.elements ?? []).filter(element => {
+      if (element.type === 'tabs') return false;
+      if (!element.tabId) return true;
+      return element.tabId === activeTabId;
+    });
+  }
+
+  isInputElement(element: CustomFormElement): element is CustomFormInputElement {
+    return element.type === 'input';
+  }
+
+  isSelectElement(element: CustomFormElement): element is CustomFormSelectElement {
+    return element.type === 'select';
+  }
+
+  isDateTimeElement(element: CustomFormElement): element is CustomFormDateTimeElement {
+    return element.type === 'datetime';
+  }
+
+  isCheckboxElement(element: CustomFormElement): element is CustomFormCheckboxElement {
+    return element.type === 'checkbox';
+  }
+
+  isListElement(element: CustomFormElement): element is CustomFormListElement {
+    return element.type === 'list';
+  }
+
+  customInputType(element: CustomFormInputElement): string {
+    if (element.inputMode === 'number') return 'number';
+    if (element.inputMode === 'email') return 'email';
+    return 'text';
+  }
+
+  customDateTimeInputType(element: CustomFormDateTimeElement): string {
+    if (element.dateTimeMode === 'date') return 'date';
+    if (element.dateTimeMode === 'time') return 'time';
+    return 'datetime-local';
+  }
+
+  customFieldValue(configId: number, key: string): any {
+    return this.fieldValue(configId, key);
+  }
+
+  setCustomFieldValue(configId: number, key: string, value: any): void {
+    this.setField(configId, key, value);
+  }
+
+  setCustomDateRangePart(configId: number, key: string, part: 'start' | 'end', value: string): void {
+    this.setDateRangePart(configId, key, part, value);
+  }
+
+  listItems(configId: number, element: CustomFormListElement): Record<string, any>[] {
+    const current = this.fieldValue(configId, element.key);
+    return Array.isArray(current) ? current : [];
+  }
+
+  addListItem(configId: number, element: CustomFormListElement): void {
+    const current = this.listItems(configId, element);
+    this.setField(configId, element.key, [...current, this.defaultListItem(element)]);
+  }
+
+  removeListItem(configId: number, element: CustomFormListElement, index: number): void {
+    const current = [...this.listItems(configId, element)];
+    current.splice(index, 1);
+    this.setField(configId, element.key, current);
+  }
+
+  listFieldValue(configId: number, listKey: string, index: number, fieldKey: string): any {
+    return this.listValuesByKey(configId, listKey)[index]?.[fieldKey];
+  }
+
+  setListFieldValue(configId: number, listKey: string, index: number, fieldKey: string, value: any): void {
+    const current = [...this.listValuesByKey(configId, listKey)];
+    current[index] = { ...(current[index] ?? {}), [fieldKey]: value };
+    this.setField(configId, listKey, current);
+  }
+
+  setListDateRangePart(configId: number, listKey: string, index: number, fieldKey: string, part: 'start' | 'end', value: string): void {
+    const current = this.listFieldValue(configId, listKey, index, fieldKey);
+    this.setListFieldValue(configId, listKey, index, fieldKey, {
+      start: current?.start ?? '',
+      end: current?.end ?? '',
+      [part]: value
+    });
+  }
+
+  toggleListMulti(configId: number, listKey: string, index: number, fieldKey: string, optionValue: unknown, checked: boolean): void {
+    const current = Array.isArray(this.listFieldValue(configId, listKey, index, fieldKey))
+      ? [...this.listFieldValue(configId, listKey, index, fieldKey)]
+      : [];
+    const existingIndex = current.findIndex(item => item === optionValue);
+    if (checked && existingIndex === -1) current.push(optionValue);
+    if (!checked && existingIndex > -1) current.splice(existingIndex, 1);
+    this.setListFieldValue(configId, listKey, index, fieldKey, current);
+  }
+
+  trackListItem(index: number): number {
+    return index;
+  }
+
+  trackListField(_index: number, field: CustomFormListItemField): string {
+    return field.key;
+  }
+
+  normalizeCustomInputMode(mode: CustomFormInputElement['inputMode']): DynamicFieldConfig['type'] {
+    if (mode === 'textarea') return 'textarea';
+    if (mode === 'richText') return 'richText';
+    if (mode === 'number') return 'number';
+    if (mode === 'email') return 'email';
+    if (mode === 'hidden') return 'hidden';
+    return 'text';
+  }
+
+  normalizeCustomDateMode(mode: CustomFormDateTimeElement['dateTimeMode']): DynamicFieldConfig['type'] {
+    if (mode === 'date') return 'date';
+    if (mode === 'time') return 'time';
+    if (mode === 'dateRange') return 'dateRange';
+    return 'datetime';
+  }
+
   private defaultValues(config: ServiceTriggerConfig): Record<string, any> {
     if (config.triggerType === 'email_mockup') {
       return { to: '', cc: '', bcc: '', subject: '', body: '', previewMode: true };
+    }
+
+    if (this.usesCustomFormLayout(config)) {
+      return (config.formSchema?.elements ?? []).reduce<Record<string, any>>((acc, element) => {
+        if (element.type === 'tabs' || element.type === 'header' || element.type === 'paragraph' || element.type === 'divider') {
+          return acc;
+        }
+        if (element.type === 'list') {
+          acc[element.key] = [];
+          return acc;
+        }
+        if (element.type === 'input') {
+          acc[element.key] = element.defaultValueText ?? '';
+          return acc;
+        }
+        if (element.type === 'select') {
+          acc[element.key] = element.selectMode === 'multiSelect' ? [] : (element.defaultValueText ?? '');
+          return acc;
+        }
+        if (element.type === 'datetime') {
+          acc[element.key] = element.dateTimeMode === 'dateRange'
+            ? { start: '', end: '' }
+            : (element.defaultValueText ?? '');
+          return acc;
+        }
+        if (element.type === 'checkbox') {
+          acc[element.key] = element.checkboxMode === 'radio'
+            ? ''
+            : element.options.length > 1 ? [] : false;
+          return acc;
+        }
+        return acc;
+      }, {});
     }
 
     return (config.fields ?? []).reduce<Record<string, any>>((acc, field) => {
@@ -153,9 +339,20 @@ export class ServiceTriggerRendererComponent implements OnChanges {
   }
 
   private buildPayload(config: ServiceTriggerConfig): Record<string, unknown> {
+    const fieldMap = new Map((config.fields ?? []).map(field => [field.key, field]));
+    const values = Object.entries(this.values()[config.id] ?? {}).reduce<Record<string, unknown>>((acc, [key, value]) => {
+      const field = fieldMap.get(key);
+      if (field && this.normalizeFieldType(field.type) === 'json' && typeof value === 'string' && value.trim()) {
+        acc[key] = JSON.parse(value);
+      } else {
+        acc[key] = value;
+      }
+      return acc;
+    }, {});
+
     return {
       ...(config.payloadTemplate ?? {}),
-      ...(this.values()[config.id] ?? {}),
+      ...values,
       triggerLabel: config.label
     };
   }
@@ -165,6 +362,10 @@ export class ServiceTriggerRendererComponent implements OnChanges {
       const value = this.values()[config.id] ?? {};
       if (!value['to'] || !value['subject']) return 'To and subject are required.';
       return null;
+    }
+
+    if (this.usesCustomFormLayout(config)) {
+      return this.validateCustomForm(config);
     }
 
     for (const field of config.fields ?? []) {
@@ -193,6 +394,14 @@ export class ServiceTriggerRendererComponent implements OnChanges {
       if (preventEndBeforeStart && value.end < value.start) return `${field.label} end date cannot be earlier than the start date.`;
       return null;
     }
+    if (type === 'json') {
+      try {
+        JSON.parse(String(value));
+        return null;
+      } catch {
+        return `${field.label} must be valid JSON.`;
+      }
+    }
     const rules = field.validation;
     if (!rules) return null;
     if (rules.maxLength && String(value).length > rules.maxLength) return `${field.label} is too long.`;
@@ -203,6 +412,112 @@ export class ServiceTriggerRendererComponent implements OnChanges {
       if (rules.max !== undefined && numericValue > rules.max) return `${field.label} is above the maximum.`;
     }
     return null;
+  }
+
+  private validateCustomForm(config: ServiceTriggerConfig): string | null {
+    for (const element of config.formSchema?.elements ?? []) {
+      if (element.type === 'tabs' || element.type === 'header' || element.type === 'paragraph' || element.type === 'divider') {
+        continue;
+      }
+
+      if (element.type === 'list') {
+        const items = this.listItems(config.id, element);
+        for (let itemIndex = 0; itemIndex < items.length; itemIndex += 1) {
+          for (const field of element.fields) {
+            const value = items[itemIndex]?.[field.key];
+            const dynamicField = this.asDynamicField(field);
+            if (dynamicField.required && (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0))) {
+              return `${field.label} is required for ${element.itemLabel || 'item'} ${itemIndex + 1}.`;
+            }
+            const validation = this.validateField(dynamicField, value);
+            if (validation) return validation;
+          }
+        }
+        continue;
+      }
+
+      const value = this.fieldValue(config.id, element.key);
+      const dynamicField = this.asDynamicField(element);
+      const isEmptyDateRange = dynamicField.type === 'dateRange' && (!value?.start || !value?.end);
+      if (dynamicField.required && (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0) || isEmptyDateRange)) {
+        return `${element.label} is required.`;
+      }
+      const validation = this.validateField(dynamicField, value);
+      if (validation) return validation;
+    }
+
+    return null;
+  }
+
+  private asDynamicField(field: CustomFormInputElement | CustomFormSelectElement | CustomFormDateTimeElement | CustomFormCheckboxElement | CustomFormListItemField): DynamicFieldConfig {
+    if (field.type === 'input') {
+      return {
+        key: field.key,
+        label: field.label,
+        type: this.normalizeCustomInputMode(field.inputMode),
+        required: field.required,
+        hidden: field.hidden,
+        placeholder: field.placeholder,
+        validation: this.normalizeValidation(field.validation)
+      };
+    }
+    if (field.type === 'select') {
+      return {
+        key: field.key,
+        label: field.label,
+        type: field.selectMode === 'multiSelect' ? 'multi-select' : 'select',
+        required: field.required,
+        placeholder: field.placeholder,
+        options: field.options.map(option => ({ label: option.label, value: option.value }))
+      };
+    }
+    if (field.type === 'datetime') {
+      return {
+        key: field.key,
+        label: field.label,
+        type: this.normalizeCustomDateMode(field.dateTimeMode),
+        required: field.required,
+        placeholder: field.placeholder
+      };
+    }
+    return {
+      key: field.key,
+      label: field.label,
+      type: field.options.length > 1 ? 'multi-select' : 'checkbox',
+      required: field.required,
+      hidden: field.hidden,
+      options: field.options.map(option => ({ label: option.label, value: option.value }))
+    };
+  }
+
+  private listValuesByKey(configId: number, listKey: string): Record<string, any>[] {
+    const current = this.fieldValue(configId, listKey);
+    return Array.isArray(current) ? current : [];
+  }
+
+  private normalizeValidation(validation: { min?: number | null; max?: number | null; regex?: string; maxLength?: number | null } | undefined): DynamicFieldConfig['validation'] {
+    if (!validation) return undefined;
+    return {
+      min: validation.min ?? undefined,
+      max: validation.max ?? undefined,
+      regex: validation.regex,
+      maxLength: validation.maxLength ?? undefined
+    };
+  }
+
+  private defaultListItem(element: CustomFormListElement): Record<string, any> {
+    return element.fields.reduce<Record<string, any>>((acc, field) => {
+      if (field.type === 'input') {
+        acc[field.key] = field.defaultValueText ?? '';
+      } else if (field.type === 'select') {
+        acc[field.key] = field.selectMode === 'multiSelect' ? [] : (field.defaultValueText ?? '');
+      } else if (field.type === 'datetime') {
+        acc[field.key] = field.dateTimeMode === 'dateRange' ? { start: '', end: '' } : (field.defaultValueText ?? '');
+      } else {
+        acc[field.key] = field.options.length > 1 ? [] : false;
+      }
+      return acc;
+    }, {});
   }
 
   isHiddenField(field: DynamicFieldConfig): boolean {

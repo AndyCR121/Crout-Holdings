@@ -3,19 +3,26 @@ import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angula
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { distinctUntilChanged, map } from 'rxjs';
+import { distinctUntilChanged, forkJoin, map } from 'rxjs';
 import { PortalSidebarComponent } from '../../../components/portal-sidebar/portal-sidebar.component';
 import { IDevPortalService } from '../../../interfaces/i-service.interface';
 import { DevService } from '../../../services/dev.service';
 import { ToastService } from '../../../services/toast.service';
 import { IntegrationStatusBadgeComponent } from '../../../components/integration-status-badge/integration-status-badge.component';
 import { IntegrationStatusService } from '../../../services/integration-status.service';
+import { IServiceWorkflowCapability, IUserServiceWorkflowStep } from '../../../interfaces/i-workflow-capability.interface';
+import { WorkflowCapabilityApiService } from '../../../services/workflow-capability-api.service';
 
 interface GuideStep {
   step: number;
   title: string;
   statusHint: string;
   detail: string;
+}
+
+interface LegacyWorkflowSummaryItem {
+  name: string;
+  status: 'Confirmed' | 'Pending';
 }
 
 @Component({
@@ -30,30 +37,21 @@ export class DevServiceGuideComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly dev = inject(DevService);
+  private readonly workflowApi = inject(WorkflowCapabilityApiService);
   private readonly toast = inject(ToastService);
   private readonly integrationStatus = inject(IntegrationStatusService);
   private redirectingToServices = false;
 
   readonly guide = signal<IDevPortalService | null>(null);
+  readonly capabilities = signal<IServiceWorkflowCapability[]>([]);
+  readonly workflowSteps = signal<IUserServiceWorkflowStep[]>([]);
   readonly loading = signal(true);
   readonly savingStep = signal<number | null>(null);
   readonly savingIntegrations = signal(false);
   readonly savingMaintenance = signal(false);
   readonly integrationEditorOpen = signal(true);
   readonly userServiceId = signal<number | null>(null);
-
-  readonly baseIntegrationOptions = {
-    trigger: ['Webhook', 'Email / IMAP', 'WhatsApp Message', 'Website Form', 'Scheduled Trigger'],
-    action: ['Xero', 'Google Sheets', 'Trello', 'CRM Update', 'AI Agent', 'Custom Setup', 'Marketing Messaging'],
-    output: ['Email Response', 'WhatsApp Reply', 'Dashboard', 'Report', 'Invoice / Quote']
-  };
-
-  editTrigger: string[] = [];
-  editAction: string[] = [];
-  editOutput: string[] = [];
-  triggerNotes = '';
-  actionNotes = '';
-  outputNotes = '';
+  selectedCapabilityIds: number[] = [];
 
   readonly steps: GuideStep[] = [
     { step: 1, title: 'Contact client and confirm meeting', statusHint: 'Pending', detail: 'Confirm meeting date/time using the company email and phone shown on this page.' },
@@ -63,30 +61,20 @@ export class DevServiceGuideComponent implements OnInit {
     { step: 5, title: 'Workflow published and service live', statusHint: 'Live', detail: 'Automatic after the developer publishes the workflow in n8n and the dashboard check confirms the live workflow state.' },
   ];
 
-  readonly configChips = computed(() => this.extractChips(this.guide()?.config));
-  readonly pricingChips = computed(() => this.extractChips(this.guide()?.pricingSnapshot));
-  readonly displayChips = computed(() => {
-    const config = this.configChips();
-    const pricing = this.pricingChips();
-    return {
-      trigger: config.trigger.length ? config.trigger : this.mergeUnique([...config.trigger, ...pricing.trigger]),
-      action: config.action.length ? config.action : this.mergeUnique([...config.action, ...pricing.action]),
-      output: config.output.length ? config.output : this.mergeUnique([...config.output, ...pricing.output]),
-    };
-  });
-  readonly integrationOptions = computed(() => {
-    const display = this.displayChips();
-    return {
-      trigger: this.mergeUnique([...this.baseIntegrationOptions.trigger, ...display.trigger]),
-      action: this.mergeUnique([...this.baseIntegrationOptions.action, ...display.action]),
-      output: this.mergeUnique([...this.baseIntegrationOptions.output, ...display.output]),
-    };
-  });
+  readonly groupedCapabilities = computed(() => ({
+    trigger: this.capabilities().filter(capability => capability.role === 'Trigger'),
+    action: this.capabilities().filter(capability => capability.role === 'Action'),
+    output: this.capabilities().filter(capability => capability.role === 'Output'),
+  }));
+  readonly groupedSteps = computed(() => ({
+    trigger: this.workflowSteps().filter(step => step.role === 'Trigger' && step.status !== 'Disabled'),
+    action: this.workflowSteps().filter(step => step.role === 'Action' && step.status !== 'Disabled'),
+    output: this.workflowSteps().filter(step => step.role === 'Output' && step.status !== 'Disabled'),
+  }));
+  readonly groupedLegacySteps = computed(() => this.parseLegacyWorkflowSummary(this.guide()?.config));
   readonly canBuildCustomForm = computed(() =>
-    this.displayChips().trigger.some(trigger => {
-      const value = trigger.toLowerCase();
-      return value.includes('website form') || value.includes('custom form');
-    }));
+    this.effectiveSummary('trigger').some(step =>
+      step.status === 'Confirmed' && this.isCustomFormTrigger(step.name)));
 
   ngOnInit(): void {
     this.route.queryParamMap
@@ -121,13 +109,21 @@ export class DevServiceGuideComponent implements OnInit {
           return;
         }
 
-        this.guide.set(guide);
-        this.hydrateIntegrationEditor(guide);
-        this.loading.set(false);
+        forkJoin({
+          capabilities: this.workflowApi.getServiceCapabilities(guide.serviceId, true),
+          steps: this.workflowApi.getWorkflowSteps(userServiceId),
+        }).subscribe({
+          next: ({ capabilities, steps }) => {
+            this.guide.set(guide);
+            this.capabilities.set(capabilities);
+            this.workflowSteps.set(steps);
+            this.selectedCapabilityIds = this.resolveSelectedCapabilityIds(capabilities, steps, guide.config);
+            this.loading.set(false);
+          },
+          error: () => this.handleGuideLoadFailure(),
+        });
       },
-      error: () => {
-        this.handleGuideLoadFailure();
-      },
+      error: () => this.handleGuideLoadFailure(),
     });
   }
 
@@ -152,15 +148,14 @@ export class DevServiceGuideComponent implements OnInit {
     this.integrationEditorOpen.update(open => !open);
   }
 
-  toggleIntegration(category: 'trigger' | 'action' | 'output', name: string): void {
-    const list = this.integrationList(category);
-    const index = list.indexOf(name);
-    if (index >= 0) list.splice(index, 1);
-    else list.push(name);
+  toggleIntegration(capabilityId: number): void {
+    const index = this.selectedCapabilityIds.indexOf(capabilityId);
+    if (index >= 0) this.selectedCapabilityIds.splice(index, 1);
+    else this.selectedCapabilityIds.push(capabilityId);
   }
 
-  isIntegrationSelected(category: 'trigger' | 'action' | 'output', name: string): boolean {
-    return this.integrationList(category).includes(name);
+  isIntegrationSelected(capabilityId: number): boolean {
+    return this.selectedCapabilityIds.includes(capabilityId);
   }
 
   saveIntegrationConfirmation(): void {
@@ -168,17 +163,9 @@ export class DevServiceGuideComponent implements OnInit {
     if (userServiceId === null) return;
 
     this.savingIntegrations.set(true);
-    this.dev.updateGuideIntegrations(userServiceId, {
-      trigger: this.editTrigger,
-      action: this.editAction,
-      output: this.editOutput,
-      triggerNotes: this.triggerNotes,
-      actionNotes: this.actionNotes,
-      outputNotes: this.outputNotes,
-    }).subscribe({
-      next: guide => {
-        this.guide.set(guide);
-        this.hydrateIntegrationEditor(guide);
+    this.workflowApi.confirmSelection(userServiceId, this.selectedCapabilityIds).subscribe({
+      next: steps => {
+        this.workflowSteps.set(steps);
         this.savingIntegrations.set(false);
         this.integrationEditorOpen.set(false);
         this.toast.success('Workflow integrations confirmed.');
@@ -241,92 +228,17 @@ export class DevServiceGuideComponent implements OnInit {
     return userServiceId ? `/dev/dev-services/guide/form-builder/?userServiceId=${userServiceId}` : null;
   }
 
-  private extractChips(raw?: string | null): Record<'trigger' | 'action' | 'output', string[]> {
-    const parsed = this.parseJson(raw);
-    return {
-      trigger: this.pickValues(parsed, ['trigger', 'triggers']),
-      action: this.pickValues(parsed, ['action', 'actions', 'addons', 'integrations', 'services', 'selectedAddons', 'requiredComponents', 'selectedService']),
-      output: this.pickValues(parsed, ['output', 'outputs', 'deliverables']),
-    };
+  formatCapabilityMeta(capability: IServiceWorkflowCapability): string {
+    return `${capability.role} · R${capability.price.toFixed(2)}`;
   }
 
-  private parseJson(raw?: string | null): unknown {
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return null;
+  effectiveSummary(role: 'trigger' | 'action' | 'output'): Array<{ name: string; status: string }> {
+    const canonical = this.groupedSteps()[role];
+    if (canonical.length) {
+      return canonical.map(step => ({ name: step.capabilityName, status: step.status }));
     }
-  }
 
-  private pickValues(source: unknown, keys: string[]): string[] {
-    if (!source || typeof source !== 'object') return [];
-    const obj = source as Record<string, unknown>;
-    const values = keys.flatMap(key => this.stringifyValue(obj[key]));
-    return [...new Set(values)].slice(0, 12);
-  }
-
-  private stringifyValue(value: unknown): string[] {
-    if (value == null) return [];
-    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return [String(value)];
-    if (Array.isArray(value)) return value.flatMap(item => this.stringifyValue(item));
-    if (typeof value === 'object') {
-      const obj = value as Record<string, unknown>;
-      const label = obj['addonName'] ?? obj['serviceName'] ?? obj['componentName'] ?? obj['name'] ?? obj['title'];
-      return label ? [String(label)] : [];
-    }
-    return [];
-  }
-
-  private integrationList(category: 'trigger' | 'action' | 'output'): string[] {
-    if (category === 'trigger') return this.editTrigger;
-    if (category === 'action') return this.editAction;
-    return this.editOutput;
-  }
-
-  private hydrateIntegrationEditor(guide: IDevPortalService): void {
-    const config = this.parseJson(guide.config);
-    const pricing = this.parseJson(guide.pricingSnapshot);
-    this.editTrigger = this.mergeUnique([
-      ...this.pickValues(config, ['trigger', 'triggers']),
-      ...this.pickIntegrationCategory(config, 'trigger'),
-      ...this.pickValues(pricing, ['trigger', 'triggers'])
-    ]);
-    this.editAction = this.mergeUnique([
-      ...this.pickValues(config, ['action', 'actions', 'addons']),
-      ...this.pickIntegrationCategory(config, 'action'),
-      ...this.pickValues(pricing, ['action', 'actions', 'addons', 'integrations', 'services', 'selectedAddons', 'requiredComponents', 'selectedService'])
-    ]);
-    this.editOutput = this.mergeUnique([
-      ...this.pickValues(config, ['output', 'outputs']),
-      ...this.pickIntegrationCategory(config, 'output'),
-      ...this.pickValues(pricing, ['output', 'outputs', 'deliverables'])
-    ]);
-
-    const notes = config && typeof config === 'object'
-      ? (config as Record<string, any>)['notes']
-      : null;
-    this.triggerNotes = notes?.trigger ?? '';
-    this.actionNotes = notes?.action ?? '';
-    this.outputNotes = notes?.output ?? '';
-  }
-
-  private pickIntegrationCategory(source: unknown, category: 'trigger' | 'action' | 'output'): string[] {
-    if (!source || typeof source !== 'object') return [];
-    const raw = (source as Record<string, unknown>)['integrations'];
-    if (!Array.isArray(raw)) return [];
-    return raw.flatMap(item => {
-      if (typeof item === 'string') return category === 'action' ? [item] : [];
-      if (!item || typeof item !== 'object') return [];
-      const record = item as Record<string, unknown>;
-      const itemCategory = record['category'];
-      const name = record['name'] ?? record['label'] ?? record['addonName'];
-      return itemCategory === category && name ? [String(name)] : [];
-    });
-  }
-
-  private mergeUnique(values: string[]): string[] {
-    return [...new Set(values.filter(v => !!v?.trim()).map(v => v.trim()))];
+    return this.groupedLegacySteps()[role].map(step => ({ name: step.name, status: step.status }));
   }
 
   private parseUserServiceId(value: string | null): number | null {
@@ -346,5 +258,62 @@ export class DevServiceGuideComponent implements OnInit {
     this.redirectingToServices = true;
     this.toast.error('Unable to load the selected guide. Please select a service again.');
     void this.router.navigate(['/dev/dev-services'], { replaceUrl: true });
+  }
+
+  private isCustomFormTrigger(name: string): boolean {
+    const normalized = name.toLowerCase().replace(/[\s_-]+/g, '');
+    return normalized === 'websiteform' || normalized === 'customform';
+  }
+
+  private resolveSelectedCapabilityIds(
+    capabilities: IServiceWorkflowCapability[],
+    steps: IUserServiceWorkflowStep[],
+    config?: string,
+  ): number[] {
+    const canonicalIds = steps
+      .filter(step => step.status === 'Pending' || step.status === 'Confirmed')
+      .map(step => step.serviceWorkflowCapabilityId);
+    if (canonicalIds.length) return canonicalIds;
+
+    const legacy = this.parseLegacyWorkflowSummary(config);
+    const selectedNames = new Set(
+      [...legacy.trigger, ...legacy.action, ...legacy.output].map(item => item.name.toLowerCase())
+    );
+
+    return capabilities
+      .filter(capability => selectedNames.has(capability.name.toLowerCase()))
+      .map(capability => capability.id);
+  }
+
+  private parseLegacyWorkflowSummary(config?: string | null): Record<'trigger' | 'action' | 'output', LegacyWorkflowSummaryItem[]> {
+    const empty = { trigger: [] as LegacyWorkflowSummaryItem[], action: [] as LegacyWorkflowSummaryItem[], output: [] as LegacyWorkflowSummaryItem[] };
+    if (!config?.trim()) return empty;
+
+    try {
+      const parsed = JSON.parse(config) as Record<string, unknown>;
+      const integrations = Array.isArray(parsed['integrations']) ? parsed['integrations'] as Array<Record<string, unknown>> : [];
+      if (integrations.length) {
+        for (const entry of integrations) {
+          const name = typeof entry['name'] === 'string' ? entry['name'].trim() : '';
+          const category = typeof entry['category'] === 'string' ? entry['category'].toLowerCase() : '';
+          if (!name || (category !== 'trigger' && category !== 'action' && category !== 'output')) continue;
+          empty[category].push({
+            name,
+            status: entry['confirmed'] === true ? 'Confirmed' : 'Pending'
+          });
+        }
+        return empty;
+      }
+
+      for (const category of ['trigger', 'action', 'output'] as const) {
+        const values = Array.isArray(parsed[category]) ? parsed[category] : [];
+        empty[category] = values
+          .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+          .map(name => ({ name: name.trim(), status: 'Confirmed' }));
+      }
+      return empty;
+    } catch {
+      return empty;
+    }
   }
 }

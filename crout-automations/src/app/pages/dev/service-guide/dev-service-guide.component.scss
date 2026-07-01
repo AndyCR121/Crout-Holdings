@@ -226,6 +226,18 @@
   color: #bbf7d0;
 }
 
+.dguide-chip-static {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  border-radius: 999px;
+  color: rgba(220, 252, 231, 0.86);
+  font-size: 0.78rem;
+  font-weight: 800;
+  min-height: 30px;
+  padding: 0.3rem 0.7rem;
+  white-space: nowrap;
+}
+
 .dguide-integration-editor textarea {
   background: rgba(8, 19, 36, 0.74);
   border: 1px solid rgba(255, 255, 255, 0.1);

@@ -1,3 +1,5 @@
+import { CustomFormSchema, CustomFormListItemField } from './i-custom-form-builder.interface';
+
 export type ServiceTriggerType = 'webhook' | 'form' | 'email_mockup' | 'file_upload' | 'custom';
 export type ServiceTriggerResponseMode = 'toast' | 'modal' | 'inline' | 'download';
 export type DynamicFieldType =
@@ -5,6 +7,8 @@ export type DynamicFieldType =
   | 'textarea'
   | 'richText'
   | 'number'
+  | 'password'
+  | 'url'
   | 'date'
   | 'time'
   | 'datetime'
@@ -16,6 +20,7 @@ export type DynamicFieldType =
   | 'toggle'
   | 'email'
   | 'json'
+  | 'list'
   | 'hidden';
 
 export type DynamicFieldFormatter = 'decimal' | 'currency' | 'phone' | 'email';
@@ -36,6 +41,11 @@ export interface DynamicFieldConfig {
   placeholder?: string;
   formatter?: DynamicFieldFormatter;
   options?: DynamicFieldOption[];
+  tabId?: string | null;
+  listItemLabel?: string;
+  addButtonLabel?: string;
+  emptyStateText?: string;
+  listFields?: CustomFormListItemField[];
   validation?: {
     min?: number;
     max?: number;
@@ -65,6 +75,8 @@ export interface ServiceTriggerConfig {
   fields?: DynamicFieldConfig[];
   fileUpload?: FileUploadConfig;
   responseMode?: ServiceTriggerResponseMode;
+  formSchema?: CustomFormSchema | null;
+  activeTabId?: string | null;
 }
 
 export interface ExecuteTriggerResponse {

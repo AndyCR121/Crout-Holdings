@@ -1,3 +1,4 @@
+-- Active: 1781367621525@@localhost@3306@crout_automations
 SET @schema_name := DATABASE();
 
 SET @service_trigger_configs_exists := (

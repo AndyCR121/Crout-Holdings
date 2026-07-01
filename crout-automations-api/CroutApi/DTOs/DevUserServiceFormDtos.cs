@@ -7,6 +7,7 @@ public class UpsertDevUserServiceFormDto
     public string? Label { get; set; }
     public string? Description { get; set; }
     public string? ResponseMode { get; set; }
+    public string? ProductionWebhookUrl { get; set; }
     public JsonElement? PayloadTemplate { get; set; }
     public JsonElement Schema { get; set; }
 }
@@ -21,5 +22,6 @@ public class DevUserServiceFormDto
     public JsonElement PayloadTemplate { get; set; }
     public JsonElement Schema { get; set; }
     public int SchemaVersion { get; set; } = 2;
+    public string? ProductionWebhookUrl { get; set; }
     public DateTime? UpdatedAtUtc { get; set; }
 }

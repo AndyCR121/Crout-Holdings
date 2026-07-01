@@ -62,6 +62,7 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
   formLabel = '';
   formDescription = '';
   responseMode: CustomFormResponseMode = 'inline';
+  productionWebhookUrl = '';
   payloadTemplateText = '{\n  "source": "custom-form"\n}';
 
   private userServiceId: number | null = null;
@@ -560,6 +561,7 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
       label: this.formLabel.trim(),
       description: this.formDescription.trim() || undefined,
       responseMode: this.responseMode,
+      productionWebhookUrl: this.productionWebhookUrl.trim(),
       payloadTemplate,
       schema: {
         elements: this.elements().map(element => structuredClone(element))
@@ -753,6 +755,7 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
     this.formLabel = form.label;
     this.formDescription = form.description ?? '';
     this.responseMode = form.responseMode;
+    this.productionWebhookUrl = form.productionWebhookUrl ?? '';
     this.payloadTemplateText = JSON.stringify(form.payloadTemplate ?? { source: 'custom-form' }, null, 2);
     this.elements.set(elements);
     this.syncCounters(elements);
@@ -766,6 +769,7 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
     this.formLabel = `${serviceName} Form`;
     this.formDescription = '';
     this.responseMode = 'inline';
+    this.productionWebhookUrl = '';
     this.payloadTemplateText = '{\n  "source": "custom-form"\n}';
     this.elements.set([]);
     this.syncCounters([]);
@@ -776,6 +780,12 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
 
   private validate(): string | null {
     if (!this.formLabel.trim()) return 'Form label is required.';
+    if (!this.productionWebhookUrl.trim()) return 'Production webhook URL is required.';
+    try {
+      new URL(this.productionWebhookUrl.trim());
+    } catch {
+      return 'Production webhook URL must be absolute.';
+    }
 
     const fieldKeys = new Set<string>();
     const tabsElements = this.elements().filter((element): element is CustomFormTabsElement => element.type === 'tabs');
@@ -1343,6 +1353,7 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
       label: this.formLabel.trim(),
       description: this.formDescription.trim(),
       responseMode: this.responseMode,
+      productionWebhookUrl: this.productionWebhookUrl.trim(),
       payloadTemplateText: this.payloadTemplateText,
       elements: this.elements()
     });
