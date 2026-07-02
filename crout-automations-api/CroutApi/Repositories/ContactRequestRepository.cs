@@ -27,7 +27,7 @@ public class ContactRequestRepository(DbHelper db) : IContactRequestRepository
             """
             UPDATE ContactRequests
             SET EmailSent = 1
-            WHERE ContactRequestId = @ContactRequestId;
+            WHERE contact_request_id = @ContactRequestId;
             """,
             new { ContactRequestId = contactRequestId });
     }
