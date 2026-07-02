@@ -7,7 +7,8 @@ namespace CroutApi.Services;
 
 public class ContactRequestService(
     IContactRequestRepository repo,
-    IEmailService emailer) : IContactRequestService
+    IEmailService emailer,
+    ILogger<ContactRequestService> logger) : IContactRequestService
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -24,6 +25,11 @@ public class ContactRequestService(
             throw new ArgumentException("Name, email, service and message are required.");
         }
 
+        logger.LogInformation(
+            "Persisting contact request for service {Service} from source {Source}.",
+            dto.Service.Trim(),
+            string.IsNullOrWhiteSpace(dto.Source) ? "Crout Automations website" : dto.Source.Trim());
+
         var request = new ContactRequest
         {
             Name = dto.Name.Trim(),
@@ -39,9 +45,18 @@ public class ContactRequestService(
         };
 
         var id = await repo.CreateAsync(request);
+        logger.LogInformation("Stored contact request {RequestId}.", id);
+
         var emailSent = await emailer.SendContactRequestAsync(request);
         if (emailSent)
+        {
             await repo.MarkEmailSentAsync(id);
+            logger.LogInformation("Marked contact request {RequestId} as emailed.", id);
+        }
+        else
+        {
+            logger.LogWarning("Contact request {RequestId} email delivery failed.", id);
+        }
 
         return new ContactRequestResponseDto(
             id,

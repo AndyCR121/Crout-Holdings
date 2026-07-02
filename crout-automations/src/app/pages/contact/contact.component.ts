@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { FormValidatorService } from '../../services/form-validator.service';
 import { ContactConfig, WebhookService } from '../../services/webhook.service';
+import { ToastService } from '../../services/toast.service';
 
 type FormState = 'idle' | 'loading' | 'success' | 'error';
 
@@ -20,6 +21,7 @@ export class ContactComponent implements OnInit {
   private readonly api      = inject(ApiService);
   private readonly validator = inject(FormValidatorService);
   private readonly webhook   = inject(WebhookService);
+  private readonly toast     = inject(ToastService);
   private readonly route     = inject(ActivatedRoute);
   private readonly staticServices = ['Support', 'Info'];
 
@@ -92,6 +94,8 @@ export class ContactComponent implements OnInit {
       this.form.markAllAsTouched();
       return;
     }
+
+    this.errorMessage.set('');
     this.formState.set('loading');
     const v = this.form.getRawValue();
     this.webhook.submitContact({
@@ -106,9 +110,13 @@ export class ContactComponent implements OnInit {
       source:    'Crout Automations website',
       timestamp: new Date().toISOString()
     }).subscribe({
-      next:  () => this.formState.set('success'),
+      next:  () => {
+        this.toast.success('Your message was sent. We will get back to you within one business day.');
+        this.formState.set('success');
+      },
       error: (err: Error) => {
         this.errorMessage.set(err.message);
+        this.toast.error(err.message);
         this.formState.set('error');
       }
     });

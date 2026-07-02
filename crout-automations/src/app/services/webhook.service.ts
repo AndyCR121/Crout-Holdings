@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, timeout } from 'rxjs/operators';
+import { TimeoutError } from 'rxjs';
 import { EnvironmentService } from './environment.service';
 
 export interface ContactConfigAddon {
@@ -57,11 +58,13 @@ export class WebhookService {
   submitContact(payload: ContactPayload): Observable<WebhookResponse> {
     return this.http.post<WebhookResponse>(`${this.env.apiUrl}/contact-requests`, payload).pipe(
       timeout(15_000),
-      catchError((err: HttpErrorResponse) => {
-        const message = err.status === 0
+      catchError((err: HttpErrorResponse | TimeoutError) => {
+        const message = err instanceof TimeoutError
+          ? 'The server took too long to respond. Please try again in a moment or email us directly.'
+          : err.status === 0
           ? 'Network error - please check your connection and try again.'
           : err.status >= 500
-            ? 'Server error - please try again in a moment.'
+            ? 'We saved your request, but could not complete email delivery. Please try again in a moment or email us directly.'
             : 'Submission failed - please try again or email us directly.';
         return throwError(() => new Error(message));
       })

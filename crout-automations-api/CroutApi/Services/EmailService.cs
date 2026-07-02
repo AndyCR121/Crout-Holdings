@@ -28,7 +28,11 @@ public class EmailService(ILogger<EmailService> logger, IWebHostEnvironment env,
         var username = GetSetting("SMTP_USERNAME", "Mail:Smtp:Username");
         var password = GetSetting("SMTP_PASSWORD", "Mail:Smtp:Password");
 
-        using var client = new SmtpClient(host, port) { EnableSsl = enableSsl };
+        using var client = new SmtpClient(host, port)
+        {
+            EnableSsl = enableSsl,
+            Timeout = (int)MailSendTimeout.TotalMilliseconds
+        };
         if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
         {
             client.Credentials = new NetworkCredential(username, password);
@@ -42,21 +46,28 @@ public class EmailService(ILogger<EmailService> logger, IWebHostEnvironment env,
             IsBodyHtml = false,
         };
         message.To.Add(to);
-        message.ReplyToList.Add(new MailAddress(request.Email, request.Name));
 
         try
         {
-            await client.SendMailAsync(message).WaitAsync(MailSendTimeout);
+            logger.LogInformation(
+                "Attempting contact email send for service {Service} from source {Source}.",
+                request.Service,
+                request.Source ?? "Website");
+
+            await SendWithTimeoutAsync(client, message);
+            logger.LogInformation(
+                "Contact email delivered for service {Service}.",
+                request.Service);
             return true;
         }
         catch (TimeoutException ex)
         {
-            logger.LogError(ex, "Contact email timed out for {Email}", request.Email);
+            logger.LogError(ex, "Contact email timed out for service {Service}", request.Service);
             return false;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Contact email failed for {Email}", request.Email);
+            logger.LogError(ex, "Contact email failed for service {Service}", request.Service);
             return false;
         }
     }
@@ -90,7 +101,7 @@ public class EmailService(ILogger<EmailService> logger, IWebHostEnvironment env,
 
         try
         {
-            await client.SendMailAsync(message).WaitAsync(MailSendTimeout);
+            await SendWithTimeoutAsync(client, message);
             return true;
         }
         catch (TimeoutException ex)
@@ -142,13 +153,22 @@ public class EmailService(ILogger<EmailService> logger, IWebHostEnvironment env,
         var username = GetSetting("SMTP_USERNAME", "Mail:Smtp:Username");
         var password = GetSetting("SMTP_PASSWORD", "Mail:Smtp:Password");
 
-        var client = new SmtpClient(host, port) { EnableSsl = enableSsl };
+        var client = new SmtpClient(host, port)
+        {
+            EnableSsl = enableSsl,
+            Timeout = (int)MailSendTimeout.TotalMilliseconds
+        };
         if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
         {
             client.Credentials = new NetworkCredential(username, password);
         }
 
         return client;
+    }
+
+    private static Task SendWithTimeoutAsync(SmtpClient client, MailMessage message)
+    {
+        return Task.Run(() => client.Send(message));
     }
 
     private string BuildPasswordResetBody(string displayName, string otp)

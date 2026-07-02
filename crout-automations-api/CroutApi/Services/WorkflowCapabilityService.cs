@@ -9,6 +9,7 @@ namespace CroutApi.Services;
 
 public class WorkflowCapabilityService(
     IWorkflowCapabilityRepository workflowRepo,
+    IIntegrationRepository integrations,
     IUserServiceRepository userServices,
     IServiceRepository services,
     SensitiveDataProtector protector) : IWorkflowCapabilityService
@@ -206,8 +207,10 @@ public class WorkflowCapabilityService(
     {
         _ = await RequireAccessAsync(callerUserId, isAdmin, isDeveloper, userServiceId, allowClient: false, allowDeveloper: true);
         var form = await workflowRepo.GetCustomFormByUserServiceIdAsync(userServiceId);
-        if (form is null || !form.IsActive) return null;
-        return ToCustomFormDto(form);
+        if (form is not null && form.IsActive) return ToCustomFormDto(form);
+
+        var legacyContext = await integrations.GetCustomFormContextByUserServiceIdAsync(userServiceId);
+        return ToLegacyCustomFormDto(legacyContext);
     }
 
     public async Task<UserServiceCustomFormRecordDto> UpsertCustomFormAsync(int callerUserId, bool isAdmin, bool isDeveloper, int userServiceId, UpsertDevUserServiceFormDto dto)
@@ -404,6 +407,42 @@ public class WorkflowCapabilityService(
             ProductionWebhookUrl = form.ProductionWebhookUrl,
             IsActive = form.IsActive,
             UpdatedAt = form.UpdatedAt
+        };
+    }
+
+    private UserServiceCustomFormRecordDto? ToLegacyCustomFormDto(CustomFormAccessContextDto? context)
+    {
+        if (context is null) return null;
+
+        var schemaJson = !string.IsNullOrWhiteSpace(context.PublishedSchemaJson)
+            ? context.PublishedSchemaJson
+            : context.DraftSchemaJson;
+        if (string.IsNullOrWhiteSpace(schemaJson)) return null;
+
+        using var document = JsonDocument.Parse(schemaJson);
+        var root = document.RootElement;
+        return new UserServiceCustomFormRecordDto
+        {
+            Id = 0,
+            UserServiceId = context.UserServiceId,
+            WorkflowStepId = 0,
+            Label = root.TryGetProperty("label", out var label)
+                ? label.GetString() ?? context.Title ?? string.Empty
+                : context.Title ?? string.Empty,
+            Description = root.TryGetProperty("description", out var description) ? description.GetString() : null,
+            ResponseMode = root.TryGetProperty("responseMode", out var responseMode)
+                ? NormalizeResponseMode(responseMode.GetString())
+                : "inline",
+            PayloadTemplate = root.TryGetProperty("payloadTemplate", out var payload)
+                ? payload.Clone()
+                : JsonDocument.Parse("{\"source\":\"custom-form\"}").RootElement.Clone(),
+            Schema = root.TryGetProperty("schema", out var schema)
+                ? schema.Clone()
+                : JsonDocument.Parse("{\"elements\":[]}").RootElement.Clone(),
+            SchemaVersion = root.TryGetProperty("schemaVersion", out var version) && version.TryGetInt32(out var parsedVersion) ? parsedVersion : 2,
+            ProductionWebhookUrl = context.WebhookUrl,
+            IsActive = true,
+            UpdatedAt = context.PublishedAtUtc ?? DateTime.UtcNow
         };
     }
 
