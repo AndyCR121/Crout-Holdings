@@ -75,6 +75,9 @@ export class DevServiceGuideComponent implements OnInit {
   readonly canBuildCustomForm = computed(() =>
     this.effectiveSummary('trigger').some(step =>
       step.status === 'Confirmed' && this.isCustomFormTrigger(step.name)));
+  readonly hasAnyCapabilityOptions = computed(() =>
+    this.capabilities().some(capability => capability.role === 'Trigger' || capability.role === 'Action' || capability.role === 'Output'));
+  readonly hasAnyIntegrationSelection = computed(() => this.selectedCapabilityIds.length > 0);
 
   ngOnInit(): void {
     this.route.queryParamMap
@@ -161,6 +164,10 @@ export class DevServiceGuideComponent implements OnInit {
   saveIntegrationConfirmation(): void {
     const userServiceId = this.userServiceId();
     if (userServiceId === null) return;
+    if (!this.hasAnyIntegrationSelection()) {
+      this.toast.error('Select at least one workflow integration before confirming.');
+      return;
+    }
 
     this.savingIntegrations.set(true);
     this.workflowApi.confirmSelection(userServiceId, this.selectedCapabilityIds).subscribe({

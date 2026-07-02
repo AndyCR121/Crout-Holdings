@@ -110,8 +110,12 @@
                         </div>
                       </section>
 
+                      @if (!hasAnyCapabilityOptions() && !effectiveSummary('trigger').length && !effectiveSummary('action').length && !effectiveSummary('output').length) {
+                        <p class="dguide-empty">No workflow capabilities have been configured for this service yet.</p>
+                      }
+
                       <div class="dguide-integration-actions">
-                        <button type="button" class="dguide-confirm" [disabled]="savingIntegrations()" (click)="saveIntegrationConfirmation()">
+                        <button type="button" class="dguide-confirm" [disabled]="savingIntegrations() || !hasAnyIntegrationSelection()" (click)="saveIntegrationConfirmation()">
                           {{ savingIntegrations() ? 'Saving...' : 'Confirm Integrations' }}
                         </button>
                       </div>

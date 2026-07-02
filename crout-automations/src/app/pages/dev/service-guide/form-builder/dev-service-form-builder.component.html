@@ -3,21 +3,24 @@
 
   <main class="portal-main">
     <section class="dfb-wrap">
-      <div class="dfb-header">
-        <div>
-          <button type="button" class="dfb-back" (click)="goBackToGuide()">Back to Guide</button>
-          <h1>{{ guide()?.serviceName ?? 'Custom Form Builder' }}</h1>
-          <p>{{ guide()?.companyName ?? 'Assigned developer service' }}</p>
+        <div class="dfb-header">
+          <div>
+            <button type="button" class="dfb-back" (click)="goBackToGuide()">Back to Guide</button>
+            <h1>{{ guide()?.serviceName ?? 'Custom Form Builder' }}</h1>
+            <p>{{ guide()?.companyName ?? 'Assigned developer service' }}</p>
+            @if (!hasConfirmedFormTrigger()) {
+              <p class="dfb-error">Confirm a WebsiteForm or CustomForm trigger in the guide before saving this custom form.</p>
+            }
+          </div>
+          <div class="dfb-actions">
+            <button type="button" class="dfb-danger" (click)="deleteForm()" [disabled]="deleting() || formId() === null">
+              {{ deleting() ? 'Deleting...' : 'Delete Form' }}
+            </button>
+            <button type="button" class="dfb-primary" (click)="save()" [disabled]="saving() || !hasConfirmedFormTrigger()">
+              {{ saving() ? 'Saving...' : (formId() === null ? 'Create Form' : 'Save Form') }}
+            </button>
+          </div>
         </div>
-        <div class="dfb-actions">
-          <button type="button" class="dfb-danger" (click)="deleteForm()" [disabled]="deleting() || formId() === null">
-            {{ deleting() ? 'Deleting...' : 'Delete Form' }}
-          </button>
-          <button type="button" class="dfb-primary" (click)="save()" [disabled]="saving()">
-            {{ saving() ? 'Saving...' : (formId() === null ? 'Create Form' : 'Save Form') }}
-          </button>
-        </div>
-      </div>
 
       @if (loading()) {
         <div class="dfb-empty">Loading custom form builder...</div>

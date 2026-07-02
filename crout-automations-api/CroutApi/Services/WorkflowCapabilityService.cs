@@ -134,6 +134,9 @@ public class WorkflowCapabilityService(
     public async Task<IEnumerable<UserServiceWorkflowStepDto>> SaveRequestedSelectionAsync(int callerUserId, bool isAdmin, int userServiceId, WorkflowStepSelectionDto dto)
     {
         var access = await RequireAccessAsync(callerUserId, isAdmin, false, userServiceId, allowClient: true, allowDeveloper: false);
+        if (dto.CapabilityIds is null || dto.CapabilityIds.Length == 0)
+            throw new ArgumentException("Select at least one workflow integration before saving.");
+
         var capabilities = await LoadCapabilitiesForSelectionAsync(access.ServiceId, dto.CapabilityIds, activeOnly: true);
 
         foreach (var capability in capabilities)
@@ -158,6 +161,9 @@ public class WorkflowCapabilityService(
     public async Task<IEnumerable<UserServiceWorkflowStepDto>> ConfirmSelectionAsync(int callerUserId, bool isAdmin, bool isDeveloper, int userServiceId, WorkflowStepSelectionDto dto)
     {
         var access = await RequireAccessAsync(callerUserId, isAdmin, isDeveloper, userServiceId, allowClient: false, allowDeveloper: true);
+        if (dto.CapabilityIds is null || dto.CapabilityIds.Length == 0)
+            throw new ArgumentException("Select at least one workflow integration before confirming.");
+
         var capabilities = await LoadCapabilitiesForSelectionAsync(access.ServiceId, dto.CapabilityIds, activeOnly: true);
         var confirmedAt = DateTime.UtcNow;
 
