@@ -77,6 +77,42 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
         return svc;
     }
 
+    public async Task<int> CreateAsync(Service service)
+    {
+        using var conn = db.GetConnection();
+        return await conn.ExecuteScalarAsync<int>(
+            """
+            INSERT INTO Services (ServiceName, BaseCost, TokensCost, TotalTokens, HasAddons, Conditional, ServiceDescription)
+            VALUES (@ServiceName, @BaseCost, @TokensCost, @TotalTokens, @HasAddons, @Conditional, @ServiceDescription);
+            SELECT LAST_INSERT_ID();
+            """,
+            service);
+    }
+
+    public async Task UpdateAsync(Service service)
+    {
+        using var conn = db.GetConnection();
+        await conn.ExecuteAsync(
+            """
+            UPDATE Services
+            SET ServiceName = @ServiceName,
+                BaseCost = @BaseCost,
+                TokensCost = @TokensCost,
+                TotalTokens = @TotalTokens,
+                HasAddons = @HasAddons,
+                Conditional = @Conditional,
+                ServiceDescription = @ServiceDescription
+            WHERE service_id = @ServiceId
+            """,
+            service);
+    }
+
+    public async Task DeleteAsync(int serviceId)
+    {
+        using var conn = db.GetConnection();
+        await conn.ExecuteAsync("DELETE FROM Services WHERE service_id = @serviceId", new { serviceId });
+    }
+
     public async Task<IEnumerable<Addon>> GetAddonsByServiceAsync(int serviceId)
     {
         using var conn = db.GetConnection();

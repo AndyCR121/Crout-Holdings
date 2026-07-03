@@ -3,15 +3,13 @@ import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angula
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { distinctUntilChanged, forkJoin, map } from 'rxjs';
+import { distinctUntilChanged, map } from 'rxjs';
 import { PortalSidebarComponent } from '../../../components/portal-sidebar/portal-sidebar.component';
 import { IDevPortalService } from '../../../interfaces/i-service.interface';
 import { DevService } from '../../../services/dev.service';
 import { ToastService } from '../../../services/toast.service';
 import { IntegrationStatusBadgeComponent } from '../../../components/integration-status-badge/integration-status-badge.component';
 import { IntegrationStatusService } from '../../../services/integration-status.service';
-import { IServiceWorkflowCapability, IUserServiceWorkflowStep } from '../../../interfaces/i-workflow-capability.interface';
-import { WorkflowCapabilityApiService } from '../../../services/workflow-capability-api.service';
 
 interface GuideStep {
   step: number;
@@ -20,9 +18,12 @@ interface GuideStep {
   detail: string;
 }
 
-interface LegacyWorkflowSummaryItem {
+interface WorkflowAddonSelection {
+  addonId: number;
   name: string;
-  status: 'Confirmed' | 'Pending';
+  type: 'Trigger' | 'Action' | 'Output';
+  confirmed: boolean;
+  isActive: boolean;
 }
 
 @Component({
@@ -37,21 +38,19 @@ export class DevServiceGuideComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly dev = inject(DevService);
-  private readonly workflowApi = inject(WorkflowCapabilityApiService);
   private readonly toast = inject(ToastService);
   private readonly integrationStatus = inject(IntegrationStatusService);
   private redirectingToServices = false;
 
   readonly guide = signal<IDevPortalService | null>(null);
-  readonly capabilities = signal<IServiceWorkflowCapability[]>([]);
-  readonly workflowSteps = signal<IUserServiceWorkflowStep[]>([]);
   readonly loading = signal(true);
   readonly savingStep = signal<number | null>(null);
   readonly savingIntegrations = signal(false);
   readonly savingMaintenance = signal(false);
   readonly integrationEditorOpen = signal(true);
   readonly userServiceId = signal<number | null>(null);
-  selectedCapabilityIds: number[] = [];
+  readonly availableSelections = signal<WorkflowAddonSelection[]>([]);
+  selectedAddonIds: number[] = [];
 
   readonly steps: GuideStep[] = [
     { step: 1, title: 'Contact client and confirm meeting', statusHint: 'Pending', detail: 'Confirm meeting date/time using the company email and phone shown on this page.' },
@@ -61,23 +60,20 @@ export class DevServiceGuideComponent implements OnInit {
     { step: 5, title: 'Workflow published and service live', statusHint: 'Live', detail: 'Automatic after the developer publishes the workflow in n8n and the dashboard check confirms the live workflow state.' },
   ];
 
-  readonly groupedCapabilities = computed(() => ({
-    trigger: this.capabilities().filter(capability => capability.role === 'Trigger'),
-    action: this.capabilities().filter(capability => capability.role === 'Action'),
-    output: this.capabilities().filter(capability => capability.role === 'Output'),
+  readonly groupedSelections = computed(() => ({
+    trigger: this.availableSelections().filter(item => item.type === 'Trigger'),
+    action: this.availableSelections().filter(item => item.type === 'Action'),
+    output: this.availableSelections().filter(item => item.type === 'Output'),
   }));
-  readonly groupedSteps = computed(() => ({
-    trigger: this.workflowSteps().filter(step => step.role === 'Trigger' && step.status !== 'Disabled'),
-    action: this.workflowSteps().filter(step => step.role === 'Action' && step.status !== 'Disabled'),
-    output: this.workflowSteps().filter(step => step.role === 'Output' && step.status !== 'Disabled'),
+  readonly confirmedSummary = computed(() => ({
+    trigger: this.availableSelections().filter(item => item.type === 'Trigger' && item.confirmed),
+    action: this.availableSelections().filter(item => item.type === 'Action' && item.confirmed),
+    output: this.availableSelections().filter(item => item.type === 'Output' && item.confirmed),
   }));
-  readonly groupedLegacySteps = computed(() => this.parseLegacyWorkflowSummary(this.guide()?.config));
   readonly canBuildCustomForm = computed(() =>
-    this.effectiveSummary('trigger').some(step =>
-      step.status === 'Confirmed' && this.isCustomFormTrigger(step.name)));
-  readonly hasAnyCapabilityOptions = computed(() =>
-    this.capabilities().some(capability => capability.role === 'Trigger' || capability.role === 'Action' || capability.role === 'Output'));
-  readonly hasAnyIntegrationSelection = computed(() => this.selectedCapabilityIds.length > 0);
+    this.confirmedSummary().trigger.some(item => this.isCustomFormTrigger(item.name)));
+  readonly hasAnyCapabilityOptions = computed(() => this.availableSelections().length > 0);
+  readonly hasAnyIntegrationSelection = computed(() => this.selectedAddonIds.length > 0);
 
   ngOnInit(): void {
     this.route.queryParamMap
@@ -112,19 +108,14 @@ export class DevServiceGuideComponent implements OnInit {
           return;
         }
 
-        forkJoin({
-          capabilities: this.workflowApi.getServiceCapabilities(guide.serviceId, true),
-          steps: this.workflowApi.getWorkflowSteps(userServiceId),
-        }).subscribe({
-          next: ({ capabilities, steps }) => {
-            this.guide.set(guide);
-            this.capabilities.set(capabilities);
-            this.workflowSteps.set(steps);
-            this.selectedCapabilityIds = this.resolveSelectedCapabilityIds(capabilities, steps, guide.config);
-            this.loading.set(false);
-          },
-          error: () => this.handleGuideLoadFailure(),
-        });
+        this.guide.set(guide);
+        const selections = this.parseSelections(guide.config);
+        this.availableSelections.set(selections);
+        this.selectedAddonIds = selections.filter(item => item.confirmed).map(item => item.addonId);
+        if (!this.selectedAddonIds.length) {
+          this.selectedAddonIds = selections.filter(item => item.isActive).map(item => item.addonId);
+        }
+        this.loading.set(false);
       },
       error: () => this.handleGuideLoadFailure(),
     });
@@ -151,14 +142,14 @@ export class DevServiceGuideComponent implements OnInit {
     this.integrationEditorOpen.update(open => !open);
   }
 
-  toggleIntegration(capabilityId: number): void {
-    const index = this.selectedCapabilityIds.indexOf(capabilityId);
-    if (index >= 0) this.selectedCapabilityIds.splice(index, 1);
-    else this.selectedCapabilityIds.push(capabilityId);
+  toggleIntegration(addonId: number): void {
+    const index = this.selectedAddonIds.indexOf(addonId);
+    if (index >= 0) this.selectedAddonIds.splice(index, 1);
+    else this.selectedAddonIds.push(addonId);
   }
 
-  isIntegrationSelected(capabilityId: number): boolean {
-    return this.selectedCapabilityIds.includes(capabilityId);
+  isIntegrationSelected(addonId: number): boolean {
+    return this.selectedAddonIds.includes(addonId);
   }
 
   saveIntegrationConfirmation(): void {
@@ -169,10 +160,18 @@ export class DevServiceGuideComponent implements OnInit {
       return;
     }
 
+    const selected = this.availableSelections().filter(item => this.selectedAddonIds.includes(item.addonId));
     this.savingIntegrations.set(true);
-    this.workflowApi.confirmSelection(userServiceId, this.selectedCapabilityIds).subscribe({
-      next: steps => {
-        this.workflowSteps.set(steps);
+    this.dev.updateGuideIntegrations(userServiceId, {
+      trigger: selected.filter(item => item.type === 'Trigger').map(item => item.name),
+      action: selected.filter(item => item.type === 'Action').map(item => item.name),
+      output: selected.filter(item => item.type === 'Output').map(item => item.name),
+    }).subscribe({
+      next: guide => {
+        this.guide.set(guide);
+        const selections = this.parseSelections(guide.config);
+        this.availableSelections.set(selections);
+        this.selectedAddonIds = selections.filter(item => item.confirmed).map(item => item.addonId);
         this.savingIntegrations.set(false);
         this.integrationEditorOpen.set(false);
         this.toast.success('Workflow integrations confirmed.');
@@ -235,19 +234,6 @@ export class DevServiceGuideComponent implements OnInit {
     return userServiceId ? `/dev/dev-services/guide/form-builder/?userServiceId=${userServiceId}` : null;
   }
 
-  formatCapabilityMeta(capability: IServiceWorkflowCapability): string {
-    return `${capability.role} · R${capability.price.toFixed(2)}`;
-  }
-
-  effectiveSummary(role: 'trigger' | 'action' | 'output'): Array<{ name: string; status: string }> {
-    const canonical = this.groupedSteps()[role];
-    if (canonical.length) {
-      return canonical.map(step => ({ name: step.capabilityName, status: step.status }));
-    }
-
-    return this.groupedLegacySteps()[role].map(step => ({ name: step.name, status: step.status }));
-  }
-
   private parseUserServiceId(value: string | null): number | null {
     if (!value?.trim()) return null;
     if (!/^\d+$/.test(value)) return null;
@@ -272,55 +258,36 @@ export class DevServiceGuideComponent implements OnInit {
     return normalized === 'websiteform' || normalized === 'customform';
   }
 
-  private resolveSelectedCapabilityIds(
-    capabilities: IServiceWorkflowCapability[],
-    steps: IUserServiceWorkflowStep[],
-    config?: string,
-  ): number[] {
-    const canonicalIds = steps
-      .filter(step => step.status === 'Pending' || step.status === 'Confirmed')
-      .map(step => step.serviceWorkflowCapabilityId);
-    if (canonicalIds.length) return canonicalIds;
-
-    const legacy = this.parseLegacyWorkflowSummary(config);
-    const selectedNames = new Set(
-      [...legacy.trigger, ...legacy.action, ...legacy.output].map(item => item.name.toLowerCase())
-    );
-
-    return capabilities
-      .filter(capability => selectedNames.has(capability.name.toLowerCase()))
-      .map(capability => capability.id);
-  }
-
-  private parseLegacyWorkflowSummary(config?: string | null): Record<'trigger' | 'action' | 'output', LegacyWorkflowSummaryItem[]> {
-    const empty = { trigger: [] as LegacyWorkflowSummaryItem[], action: [] as LegacyWorkflowSummaryItem[], output: [] as LegacyWorkflowSummaryItem[] };
-    if (!config?.trim()) return empty;
+  private parseSelections(config?: string | null): WorkflowAddonSelection[] {
+    if (!config?.trim()) return [];
 
     try {
       const parsed = JSON.parse(config) as Record<string, unknown>;
-      const integrations = Array.isArray(parsed['integrations']) ? parsed['integrations'] as Array<Record<string, unknown>> : [];
-      if (integrations.length) {
-        for (const entry of integrations) {
-          const name = typeof entry['name'] === 'string' ? entry['name'].trim() : '';
-          const category = typeof entry['category'] === 'string' ? entry['category'].toLowerCase() : '';
-          if (!name || (category !== 'trigger' && category !== 'action' && category !== 'output')) continue;
-          empty[category].push({
-            name,
-            status: entry['confirmed'] === true ? 'Confirmed' : 'Pending'
-          });
-        }
-        return empty;
-      }
+      const requested = Array.isArray(parsed['requestedAddons']) ? parsed['requestedAddons'] as Array<Record<string, unknown>> : [];
+      const confirmedIds = new Set(
+        (Array.isArray(parsed['confirmedAddons']) ? parsed['confirmedAddons'] as Array<Record<string, unknown>> : [])
+          .map(item => Number(item['addonId']))
+          .filter(id => Number.isFinite(id) && id > 0)
+      );
 
-      for (const category of ['trigger', 'action', 'output'] as const) {
-        const values = Array.isArray(parsed[category]) ? parsed[category] : [];
-        empty[category] = values
-          .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
-          .map(name => ({ name: name.trim(), status: 'Confirmed' }));
-      }
-      return empty;
+      return requested
+        .map(item => ({
+          addonId: Number(item['addonId'] ?? 0),
+          name: typeof item['name'] === 'string' ? item['name'].trim() : '',
+          type: this.normalizeType(item['type']),
+          confirmed: confirmedIds.has(Number(item['addonId'])) || item['confirmed'] === true,
+          isActive: item['isActive'] !== false,
+        }))
+        .filter(item => item.addonId > 0 && item.name.length > 0 && item.isActive);
     } catch {
-      return empty;
+      return [];
     }
+  }
+
+  private normalizeType(value: unknown): 'Trigger' | 'Action' | 'Output' {
+    const normalized = typeof value === 'string' ? value.toLowerCase() : 'action';
+    if (normalized === 'trigger') return 'Trigger';
+    if (normalized === 'output') return 'Output';
+    return 'Action';
   }
 }

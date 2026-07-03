@@ -252,6 +252,12 @@ export const routes: Routes = [
       import('./pages/admin/paystack-management/admin-paystack-management.component').then(m => m.AdminPaystackManagementComponent),
   },
   {
+    path: 'admin/integrations',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./pages/admin/integrations/admin-integrations.component').then(m => m.AdminIntegrationsComponent),
+  },
+  {
     path: 'admin/addons',
     canActivate: [authGuard, adminGuard],
     loadComponent: () =>

@@ -18,6 +18,42 @@ import {
   IAdminPaystackMapping,
 } from '../interfaces/i-service.interface';
 
+function normalizeService(raw: any): IService {
+  const baseCost = raw.baseCost ?? raw.BaseCost ?? raw.price ?? raw.Price ?? 0;
+  const tokensCost = raw.tokensCost ?? raw.TokensCost ?? 0;
+  return {
+    serviceId: raw.serviceId ?? raw.ServiceId ?? raw.id ?? 0,
+    serviceName: raw.serviceName ?? raw.ServiceName ?? raw.name ?? '',
+    baseCost,
+    tokensCost,
+    totalTokens: raw.totalTokens ?? raw.TotalTokens ?? 0,
+    price: raw.price ?? raw.Price ?? (baseCost + tokensCost),
+    hasAddons: raw.hasAddons ?? raw.HasAddons ?? false,
+    conditional: raw.conditional ?? raw.Conditional ?? false,
+    serviceDescription: raw.serviceDescription ?? raw.ServiceDescription ?? raw.description ?? '',
+    features: raw.features ?? [],
+    addons: Array.isArray(raw.addons) ? raw.addons.map(normalizeAddon) : [],
+  };
+}
+
+function normalizeAddon(raw: any): IAddon {
+  const serviceIds = raw.serviceIds ?? raw.ServiceIds ?? (raw.serviceId != null ? [raw.serviceId] : []);
+  const monthlyPrice = raw.monthlyPrice ?? raw.MonthlyPrice ?? raw.price ?? raw.Price ?? 0;
+  return {
+    addonId: raw.addonId ?? raw.AddonId ?? raw.id ?? 0,
+    serviceId: raw.serviceId ?? raw.ServiceId ?? serviceIds[0] ?? null,
+    serviceIds,
+    addonName: raw.addonName ?? raw.AddonName ?? raw.name ?? '',
+    addonDescription: raw.addonDescription ?? raw.AddonDescription ?? raw.description ?? '',
+    type: raw.type ?? raw.Type ?? 'Action',
+    monthlyPrice,
+    price: raw.price ?? raw.Price ?? monthlyPrice,
+    isActive: raw.isActive ?? raw.IsActive ?? true,
+    displayOrder: raw.displayOrder ?? raw.DisplayOrder ?? 0,
+    integrations: Array.isArray(raw.integrations) ? raw.integrations : [],
+  };
+}
+
 export interface PagedResult<T> { items: T[]; total: number; page: number; pageSize: number; }
 
 @Injectable({ providedIn: 'root' })
@@ -80,17 +116,18 @@ export class AdminService {
   getServices(page = 1, pageSize = 100): Observable<IService[]> {
     const params = new HttpParams().set('page', page).set('pageSize', pageSize);
     return this.http.get<PagedResult<IService>>(`${this.base}/services`, { params, headers: this.authHeaders(), withCredentials: true })
-      .pipe(map(r => r.items));
+      .pipe(map(r => r.items.map(normalizeService)));
   }
   getServicesPaged(page = 1, pageSize = 20): Observable<PagedResult<IService>> {
     const params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    return this.http.get<PagedResult<IService>>(`${this.base}/services`, { params, headers: this.authHeaders(), withCredentials: true });
+    return this.http.get<PagedResult<any>>(`${this.base}/services`, { params, headers: this.authHeaders(), withCredentials: true })
+      .pipe(map(r => ({ ...r, items: r.items.map(normalizeService) })));
   }
   createService(body: Partial<IService>): Observable<IService> {
-    return this.http.post<IService>(`${this.base}/services`, body, { headers: this.authHeaders(), withCredentials: true });
+    return this.http.post<any>(`${this.base}/services`, body, { headers: this.authHeaders(), withCredentials: true }).pipe(map(normalizeService));
   }
   updateService(id: number, body: Partial<IService>): Observable<IService> {
-    return this.http.put<IService>(`${this.base}/services/${id}`, body, { headers: this.authHeaders(), withCredentials: true });
+    return this.http.put<any>(`${this.base}/services/${id}`, body, { headers: this.authHeaders(), withCredentials: true }).pipe(map(normalizeService));
   }
   deleteService(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/services/${id}`, { headers: this.authHeaders(), withCredentials: true });
@@ -120,19 +157,28 @@ export class AdminService {
   // ── Addons ─────────────────────────────────────────────────────────────────
   getAddons(page = 1, pageSize = 20): Observable<PagedResult<IAddon>> {
     const params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    return this.http.get<PagedResult<IAddon>>(`${this.base}/addons`, { params, headers: this.authHeaders(), withCredentials: true });
+    return this.http.get<PagedResult<any>>(`${this.base}/addons`, { params, headers: this.authHeaders(), withCredentials: true })
+      .pipe(map(r => ({ ...r, items: r.items.map(normalizeAddon) })));
   }
   getAddon(id: number): Observable<IAddon> {
-    return this.http.get<IAddon>(`${this.base}/addons/${id}`, { headers: this.authHeaders(), withCredentials: true });
+    return this.http.get<any>(`${this.base}/addons/${id}`, { headers: this.authHeaders(), withCredentials: true }).pipe(map(normalizeAddon));
   }
-  createAddon(dto: Partial<IAddon>): Observable<IAddon> {
-    return this.http.post<IAddon>(`${this.base}/addons`, dto, { headers: this.authHeaders(), withCredentials: true });
+  createAddon(dto: Partial<IAddon> & { integrationIds?: number[] }): Observable<IAddon> {
+    return this.http.post<any>(`${this.base}/addons`, dto, { headers: this.authHeaders(), withCredentials: true }).pipe(map(normalizeAddon));
   }
-  updateAddon(id: number, dto: Partial<IAddon>): Observable<IAddon> {
-    return this.http.put<IAddon>(`${this.base}/addons/${id}`, dto, { headers: this.authHeaders(), withCredentials: true });
+  updateAddon(id: number, dto: Partial<IAddon> & { integrationIds?: number[] }): Observable<IAddon> {
+    return this.http.put<any>(`${this.base}/addons/${id}`, dto, { headers: this.authHeaders(), withCredentials: true }).pipe(map(normalizeAddon));
   }
   deleteAddon(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/addons/${id}`, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  linkServicesToAddon(addonId: number, serviceIds: number[]): Observable<{ addonId: number; serviceIds: number[] }> {
+    return this.http.put<{ addonId: number; serviceIds: number[] }>(`${this.base}/addons/${addonId}/services`, { serviceIds }, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  linkIntegrationsToAddon(addonId: number, integrationIds: number[]): Observable<{ addonId: number; integrationIds: number[] }> {
+    return this.http.put<{ addonId: number; integrationIds: number[] }>(`${this.base}/addons/${addonId}/integrations`, { integrationIds }, { headers: this.authHeaders(), withCredentials: true });
   }
 
   // ── Service Features ───────────────────────────────────────────────────────

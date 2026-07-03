@@ -8,10 +8,14 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json;
 
-var builder = WebApplication.CreateBuilder(args);
-
-if (await SchemaUpdater.TryRunAsync(args))
+var migrationExitCode = await SchemaUpdater.TryRunAsync(args);
+if (migrationExitCode.HasValue)
+{
+    Environment.ExitCode = migrationExitCode.Value;
     return;
+}
+
+var builder = WebApplication.CreateBuilder(args);
 
 // -- Config from environment --------------------------------------------------
 var jwtSecret   = Environment.GetEnvironmentVariable("JWT_SECRET")   ?? throw new InvalidOperationException("JWT_SECRET not set");

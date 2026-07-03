@@ -1,0 +1,50 @@
+<div class="admin-layout">
+  <ca-admin-sidebar />
+  <main class="admin-main">
+    <div class="admin-page">
+      <div class="admin-page-header">
+        <h1 class="admin-page-title">Integrations</h1>
+      </div>
+
+      <div *ngIf="error()" class="admin-error">{{ error() }}</div>
+
+      <div *ngIf="loading()" class="admin-loading">
+        <div class="skeleton-row" *ngFor="let i of [1,2,3]"></div>
+      </div>
+
+      <div *ngIf="!loading()" class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Name</th><th>Type</th><th>Credentials</th><th>Active</th><th>Linked Add-ons</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let integration of integrations()">
+              <td>{{ integration.name }}</td>
+              <td>{{ integration.integrationType }}</td>
+              <td>{{ integration.hasCredentials ? 'Yes' : 'No' }}</td>
+              <td>{{ integration.isActive ? 'Yes' : 'No' }}</td>
+              <td class="td-desc">{{ addonNames(integration.id) }}</td>
+              <td class="admin-actions">
+                <button class="btn-edit" (click)="startEditIntegration(integration)">Edit</button>
+                <button class="btn-delete" (click)="deleteIntegration(integration.id)">Delete</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="admin-modal" style="margin: 1rem 0;">
+          <h3>{{ editingIntegrationId() ? 'Edit Integration Definition' : 'New Integration Definition' }}</h3>
+          <label>Name<input class="admin-input" [(ngModel)]="integrationDraft.name" /></label>
+          <label>Type<input class="admin-input" [(ngModel)]="integrationDraft.integrationType" /></label>
+          <label>Description<input class="admin-input" [(ngModel)]="integrationDraft.description" /></label>
+          <label><input type="checkbox" [(ngModel)]="integrationDraft.hasCredentials" /> Requires Credentials</label>
+          <label><input type="checkbox" [(ngModel)]="integrationDraft.isActive" /> Active</label>
+          <label>Credential Schema JSON<textarea class="admin-input" rows="6" [ngModel]="integrationDraft.credentialFormSchema ? (integrationDraft.credentialFormSchema | json) : ''" (ngModelChange)="updateIntegrationSchema($event)"></textarea></label>
+          <p class="admin-modal-hint">Assign integrations to add-ons from the Addons page.</p>
+          <div class="admin-modal-actions">
+            <button class="btn-save" [disabled]="saving()" (click)="saveIntegration()">{{ saving() ? 'Saving...' : 'Save' }}</button>
+            <button class="btn-cancel" (click)="cancelIntegrationEdit()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

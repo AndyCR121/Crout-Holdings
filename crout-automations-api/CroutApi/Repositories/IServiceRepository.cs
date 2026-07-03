@@ -6,6 +6,9 @@ public interface IServiceRepository
 {
     Task<IEnumerable<Service>> GetAllAsync();
     Task<Service?> GetByIdAsync(int serviceId);
+    Task<int> CreateAsync(Service service);
+    Task UpdateAsync(Service service);
+    Task DeleteAsync(int serviceId);
     Task<IEnumerable<Addon>> GetAddonsByServiceAsync(int serviceId);
     Task<IEnumerable<Addon>> GetAddonsByIdsAsync(IEnumerable<int> addonIds);
     Task<IEnumerable<Addon>> GetAddonsByNamesAsync(IEnumerable<string> addonNames, int? serviceId = null);

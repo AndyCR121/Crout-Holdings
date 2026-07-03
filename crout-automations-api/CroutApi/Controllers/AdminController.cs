@@ -227,6 +227,55 @@ public class AdminController(
         return svc is null ? NotFound() : Ok(svc);
     }
 
+    [HttpPost("services")]
+    public async Task<IActionResult> CreateService([FromBody] CreateAdminServiceDto dto)
+    {
+        if (!CallerIsAdmin) return Forbid();
+
+        var service = new Service
+        {
+            ServiceName = RequireName(dto.ServiceName, "Service name is required."),
+            ServiceDescription = TrimOrNull(dto.ServiceDescription),
+            BaseCost = RequireNonNegative(dto.BaseCost ?? 5000m, "BaseCost"),
+            TokensCost = RequireNonNegative(dto.TokensCost ?? 1000m, "TokensCost"),
+            TotalTokens = RequireNonNegative(dto.TotalTokens ?? 6_000_000, "TotalTokens"),
+            HasAddons = dto.HasAddons,
+            Conditional = dto.Conditional
+        };
+
+        var newId = await services.CreateAsync(service);
+        return CreatedAtAction(nameof(GetService), new { id = newId }, await services.GetByIdAsync(newId));
+    }
+
+    [HttpPut("services/{id:int}")]
+    public async Task<IActionResult> UpdateService(int id, [FromBody] UpdateAdminServiceDto dto)
+    {
+        if (!CallerIsAdmin) return Forbid();
+
+        var current = await services.GetByIdAsync(id);
+        if (current is null) return NotFound();
+
+        current.ServiceName = RequireName(dto.ServiceName ?? current.ServiceName, "Service name is required.");
+        current.ServiceDescription = dto.ServiceDescription is null ? current.ServiceDescription : TrimOrNull(dto.ServiceDescription);
+        current.BaseCost = RequireNonNegative(dto.BaseCost ?? current.BaseCost, "BaseCost");
+        current.TokensCost = RequireNonNegative(dto.TokensCost ?? current.TokensCost, "TokensCost");
+        current.TotalTokens = RequireNonNegative(dto.TotalTokens ?? current.TotalTokens, "TotalTokens");
+        current.HasAddons = dto.HasAddons ?? current.HasAddons;
+        current.Conditional = dto.Conditional ?? current.Conditional;
+
+        await services.UpdateAsync(current);
+        return Ok(await services.GetByIdAsync(id));
+    }
+
+    [HttpDelete("services/{id:int}")]
+    public async Task<IActionResult> DeleteService(int id)
+    {
+        if (!CallerIsAdmin) return Forbid();
+        if (await services.GetByIdAsync(id) is null) return NotFound();
+        await services.DeleteAsync(id);
+        return NoContent();
+    }
+
     // ── Packages ──────────────────────────────────────────────────────────────
 
     [HttpGet("packages")]
@@ -253,6 +302,10 @@ public class AdminController(
         if (!CallerIsAdmin) return Forbid();
         if (string.IsNullOrWhiteSpace(body.PackageName))
             return BadRequest(new { error = "Package name is required." });
+        if (body.Discount < 0)
+            return BadRequest(new { error = "Discount cannot be negative." });
+        if (body.MinimumRequiredAddons < 0)
+            return BadRequest(new { error = "MinimumRequiredAddons cannot be negative." });
         var newId   = await packages.CreateAsync(body);
         var created = await packages.GetByIdAsync(newId);
         return CreatedAtAction(nameof(GetPackage), new { id = newId }, created);
@@ -262,6 +315,10 @@ public class AdminController(
     public async Task<IActionResult> UpdatePackage(int id, [FromBody] Package body)
     {
         if (!CallerIsAdmin) return Forbid();
+        if (body.Discount < 0)
+            return BadRequest(new { error = "Discount cannot be negative." });
+        if (body.MinimumRequiredAddons < 0)
+            return BadRequest(new { error = "MinimumRequiredAddons cannot be negative." });
         body.PackageId = id;
         await packages.UpdateAsync(body);
         return Ok(await packages.GetByIdAsync(id));
@@ -305,22 +362,23 @@ public class AdminController(
     }
 
     [HttpPost("addons")]
-    public async Task<IActionResult> CreateAddon([FromBody] Addon body)
+    public async Task<IActionResult> CreateAddon([FromBody] CreateAddonDto dto)
     {
         if (!CallerIsAdmin) return Forbid();
-        if (string.IsNullOrWhiteSpace(body.AddonName))
-            return BadRequest(new { error = "Addon name is required." });
-        var newId   = await addons.CreateAsync(body);
+        var addon = MapAddon(dto);
+        var newId   = await addons.CreateAsync(addon);
         var created = await addons.GetByIdAsync(newId);
         return CreatedAtAction(nameof(GetAddon), new { id = newId }, created);
     }
 
     [HttpPut("addons/{id:int}")]
-    public async Task<IActionResult> UpdateAddon(int id, [FromBody] Addon body)
+    public async Task<IActionResult> UpdateAddon(int id, [FromBody] UpdateAddonDto dto)
     {
         if (!CallerIsAdmin) return Forbid();
-        body.AddonId = id;
-        await addons.UpdateAsync(body);
+        if (await addons.GetByIdAsync(id) is null) return NotFound();
+        var addon = MapAddon(dto);
+        addon.AddonId = id;
+        await addons.UpdateAsync(addon);
         return Ok(await addons.GetByIdAsync(id));
     }
 
@@ -609,5 +667,55 @@ public class AdminController(
         if (!user.Active) return BadRequest(new { error = "Developer user must be active." });
         if (!user.IsDev) return BadRequest(new { error = "Selected user is not marked as a Developer." });
         return null;
+    }
+
+    private static Addon MapAddon(CreateAddonDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.AddonName))
+            throw new ArgumentException("Addon name is required.");
+
+        return new Addon
+        {
+            AddonName = dto.AddonName.Trim(),
+            AddonDescription = TrimOrNull(dto.AddonDescription),
+            Type = string.IsNullOrWhiteSpace(dto.Type) ? WorkflowRoles.Action : dto.Type.Trim(),
+            MonthlyPrice = RequireNonNegative(dto.MonthlyPrice, "MonthlyPrice"),
+            IsActive = dto.IsActive,
+            DisplayOrder = dto.DisplayOrder < 0 ? 0 : dto.DisplayOrder,
+            ServiceIds = NormalizeIds(dto.ServiceIds),
+            ServiceId = NormalizeIds(dto.ServiceIds).FirstOrDefault() is var first && first > 0 ? first : null,
+            Integrations = NormalizeIds(dto.IntegrationIds).Select(id => new WorkflowIntegrationDefinition { Id = id }).ToList()
+        };
+    }
+
+    private static Addon MapAddon(UpdateAddonDto dto) => MapAddon(new CreateAddonDto(
+        dto.AddonName,
+        dto.AddonDescription,
+        dto.Type,
+        dto.MonthlyPrice,
+        dto.IsActive,
+        dto.DisplayOrder,
+        dto.ServiceIds,
+        dto.IntegrationIds));
+
+    private static List<int> NormalizeIds(List<int>? ids) =>
+        (ids ?? []).Where(id => id > 0).Distinct().ToList();
+
+    private static string RequireName(string? value, string message) =>
+        string.IsNullOrWhiteSpace(value) ? throw new ArgumentException(message) : value.Trim();
+
+    private static string? TrimOrNull(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static decimal RequireNonNegative(decimal value, string fieldName)
+    {
+        if (value < 0) throw new ArgumentException($"{fieldName} cannot be negative.");
+        return value;
+    }
+
+    private static long RequireNonNegative(long value, string fieldName)
+    {
+        if (value < 0) throw new ArgumentException($"{fieldName} cannot be negative.");
+        return value;
     }
 }

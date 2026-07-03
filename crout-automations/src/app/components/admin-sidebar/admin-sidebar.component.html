@@ -69,6 +69,14 @@
       </svg>
       Addons
     </a>
+    <a href="/admin/integrations" class="admin-nav-item" (click)="closeSidebar()"
+       [class.active]="isActive('/admin/integrations')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="4" width="18" height="6" rx="2"/>
+        <rect x="3" y="14" width="18" height="6" rx="2"/>
+      </svg>
+      Integrations
+    </a>
     <a href="/admin/service-features" class="admin-nav-item" (click)="closeSidebar()"
        [class.active]="isActive('/admin/service-features')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

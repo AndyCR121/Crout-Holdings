@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
 import { AuthService } from '../../../services/auth.service';
 import { AdminService, PagedResult } from '../../../services/admin.service';
 import { IService, IAddon } from '../../../interfaces/i-service.interface';
@@ -44,8 +45,10 @@ export class AdminServicesComponent implements OnInit {
 
   showLinkModal = signal(false);
   linkTarget    = signal<IService | null>(null);
-  linkedAddons  = signal<IAddon[]>([]);
+  allAddons     = signal<IAddon[]>([]);
+  linkSelected  = signal<Set<number>>(new Set());
   linkLoading   = signal(false);
+  linkSaving    = signal(false);
 
   ngOnInit(): void {
     const user = this.auth.currentUser();
@@ -124,10 +127,65 @@ export class AdminServicesComponent implements OnInit {
     this.showLinkModal.set(true);
     this.admin.getAddons(1, 100).subscribe({
       next: (result: PagedResult<IAddon>) => {
-        this.linkedAddons.set(result.items.filter(a => a.serviceId === s.serviceId));
+        this.allAddons.set(result.items);
+        this.linkSelected.set(new Set(result.items.filter(a => a.serviceIds.includes(s.serviceId) || a.serviceId === s.serviceId).map(a => a.addonId)));
         this.linkLoading.set(false);
       },
       error: () => this.linkLoading.set(false)
     });
+  }
+
+  toggleLink(addonId: number): void {
+    const selected = new Set(this.linkSelected());
+    selected.has(addonId) ? selected.delete(addonId) : selected.add(addonId);
+    this.linkSelected.set(selected);
+  }
+
+  isLinked(addonId: number): boolean {
+    return this.linkSelected().has(addonId);
+  }
+
+  saveLinks(): void {
+    const service = this.linkTarget();
+    if (!service) return;
+
+    const requests = this.allAddons()
+      .map(addon => {
+        const currentlyLinked = addon.serviceIds.includes(service.serviceId) || addon.serviceId === service.serviceId;
+        const shouldBeLinked = this.linkSelected().has(addon.addonId);
+        if (currentlyLinked === shouldBeLinked) return null;
+
+        const nextServiceIds = shouldBeLinked
+          ? [...new Set([...addon.serviceIds, service.serviceId])]
+          : addon.serviceIds.filter(id => id !== service.serviceId);
+
+        return this.admin.linkServicesToAddon(addon.addonId, nextServiceIds);
+      })
+      .filter(request => request !== null);
+
+    this.linkSaving.set(true);
+    (requests.length ? forkJoin(requests) : of([])).subscribe({
+      next: () => {
+        this.linkSaving.set(false);
+        this.showLinkModal.set(false);
+        this.load();
+      },
+      error: () => {
+        this.error.set('Failed to save add-on links.');
+        this.linkSaving.set(false);
+      }
+    });
+  }
+
+  linkedAddonList(): IAddon[] {
+    const serviceId = this.linkTarget()?.serviceId;
+    if (!serviceId) return [];
+
+    return this.allAddons()
+      .filter(addon => addon.serviceIds.includes(serviceId) || addon.serviceId === serviceId)
+      .sort((left, right) =>
+        left.displayOrder - right.displayOrder
+        || left.type.localeCompare(right.type)
+        || left.addonName.localeCompare(right.addonName));
   }
 }
