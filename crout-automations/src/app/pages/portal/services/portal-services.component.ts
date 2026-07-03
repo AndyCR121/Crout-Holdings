@@ -99,7 +99,7 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
           const us: IUserService[] = (companyServices as IUserService[][])[ci] ?? [];
           const rows: ServiceRow[] = us.map((u: IUserService) => {
             const svc       = (svcs as IService[]).find((s: IService) => s.serviceId === u.serviceId)!;
-            const rowAddons = allAddons.filter((a: IAddon) => a.serviceId === u.serviceId);
+            const rowAddons = allAddons.filter((a: IAddon) => (a.serviceIds?.length ? a.serviceIds.includes(u.serviceId) : a.serviceId === u.serviceId));
             const active    = this._parseConfig(u.config, allAddons);
             const selectedAddonIds = this._parseAddonIds(u.config, active, rowAddons);
             return {
@@ -141,6 +141,28 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
     if (!cfg) return [];
     try {
       const parsed = JSON.parse(cfg);
+      const confirmedAddons = Array.isArray(parsed.confirmedAddons) ? parsed.confirmedAddons : [];
+      if (confirmedAddons.length > 0) {
+        return confirmedAddons
+          .map((item: any) => ({
+            name: String(item.name ?? ''),
+            confirmed: item.confirmed !== false,
+            category: this.asCategory(String(item.type ?? item.category ?? 'action').toLowerCase())
+          }))
+          .filter((item: IntegrationItem) => item.name);
+      }
+
+      const requestedAddons = Array.isArray(parsed.requestedAddons) ? parsed.requestedAddons : [];
+      if (requestedAddons.length > 0) {
+        return requestedAddons
+          .map((item: any) => ({
+            name: String(item.name ?? ''),
+            confirmed: item.confirmed === true,
+            category: this.asCategory(String(item.type ?? item.category ?? 'action').toLowerCase())
+          }))
+          .filter((item: IntegrationItem) => item.name);
+      }
+
       const raw = parsed.integrations ?? [];
       if (Array.isArray(raw) && raw.length > 0) {
         return raw

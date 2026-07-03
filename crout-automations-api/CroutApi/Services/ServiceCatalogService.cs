@@ -57,8 +57,10 @@ public class ServiceCatalogService(
         var selectedAddons = (await services.GetAddonsByIdsAsync(addonIds)).ToList();
         if (selectedAddons.Count != addonIds.Length)
             throw new ArgumentException("One or more add-ons could not be found.");
+        if (selectedAddons.Any(addon => !addon.IsActive))
+            throw new ArgumentException("Inactive add-ons cannot be newly selected.");
 
-        var invalidAddon = selectedAddons.FirstOrDefault(a => !activeServiceIds.Contains(a.ServiceId));
+        var invalidAddon = selectedAddons.FirstOrDefault(addon => !addon.ServiceIds.Any(activeServiceIds.Contains));
         if (invalidAddon is not null)
             throw new ArgumentException($"Add-on '{invalidAddon.AddonName}' does not belong to the selected service package.");
 
@@ -68,8 +70,8 @@ public class ServiceCatalogService(
             .ToList();
 
         var requiredComponents = (await services.GetRequiredPricingComponentsAsync()).ToList();
-        var basePrice = packageServices.Count > 0 ? packageServices.Sum(s => s.Price) : service.Price;
-        var addonTotal = selectedAddons.Sum(a => a.Price);
+        var basePrice = packageServices.Count > 0 ? packageServices.Sum(GetServiceMonthlyPrice) : GetServiceMonthlyPrice(service);
+        var addonTotal = selectedAddons.Sum(addon => addon.MonthlyPrice);
         var requiredTotal = requiredComponents.Sum(c => c.Amount);
         var fullTotal = basePrice + addonTotal + requiredTotal;
 
@@ -88,6 +90,13 @@ public class ServiceCatalogService(
                 throw new ArgumentException("Selected developer referral is no longer valid.");
         }
 
+        var requestedAddonSnapshots = selectedAddons
+            .OrderBy(addon => addon.Type)
+            .ThenBy(addon => addon.DisplayOrder)
+            .ThenBy(addon => addon.AddonName)
+            .Select(addon => BuildAddonSnapshot(addon, confirmed: false))
+            .ToList();
+
         var config = new
         {
             serviceId = service.ServiceId,
@@ -95,17 +104,30 @@ public class ServiceCatalogService(
             packageId = package?.PackageId,
             packageName = package?.PackageName,
             addonIds,
-            integrations = selectedAddons.Select(a => new { name = a.AddonName, confirmed = false, category = ClassifyIntegration(a.AddonName) }),
+            requestedAddons = requestedAddonSnapshots,
+            confirmedAddons = Array.Empty<object>(),
+            integrations = requestedAddonSnapshots.Select(addon => new { name = addon.name, confirmed = false, category = addon.type.ToLowerInvariant() }),
+            trigger = Array.Empty<string>(),
+            action = Array.Empty<string>(),
+            output = Array.Empty<string>(),
             referral,
             requestNote = string.IsNullOrWhiteSpace(dto.RequestNote) ? null : dto.RequestNote.Trim()
         };
 
         var pricingSnapshot = new
         {
-            selectedServices = packageServices.Select(s => new { s.ServiceId, s.ServiceName, amount = s.Price }),
+            selectedServices = packageServices.Select(s => new
+            {
+                s.ServiceId,
+                s.ServiceName,
+                s.BaseCost,
+                s.TokensCost,
+                s.TotalTokens,
+                amount = GetServiceMonthlyPrice(s)
+            }),
             selectedPackage = package is null ? null : new { package.PackageId, package.PackageName, discount, minimumAddons, discountUnlocked },
             requiredComponents = requiredComponents.Select(c => new { c.ComponentKey, c.ComponentName, amount = c.Amount }),
-            selectedAddons = selectedAddons.Select(a => new { a.AddonId, a.AddonName, amount = a.Price }),
+            selectedAddons = requestedAddonSnapshots,
             basePrice,
             addonTotal,
             requiredTotal,
@@ -163,34 +185,41 @@ public class ServiceCatalogService(
         var selectedAddons = (await services.GetAddonsByIdsAsync(addonIds)).ToList();
         if (selectedAddons.Count != addonIds.Length)
             throw new ArgumentException("One or more add-ons could not be found.");
+        if (selectedAddons.Any(addon => !addon.IsActive))
+            throw new ArgumentException("Inactive add-ons cannot be newly selected.");
 
-        var invalidAddon = selectedAddons.FirstOrDefault(a => !validServiceIds.Contains(a.ServiceId));
+        var invalidAddon = selectedAddons.FirstOrDefault(addon => !addon.ServiceIds.Any(validServiceIds.Contains));
         if (invalidAddon is not null)
             throw new ArgumentException($"Add-on '{invalidAddon.AddonName}' does not belong to the selected service package.");
 
-        var trigger = Normalize(dto.Trigger);
-        var action = Normalize(dto.Action);
-        var output = Normalize(dto.Output);
-        var selectedNames = selectedAddons.Select(a => a.AddonName).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var selectedIntegrationNames = trigger.Concat(action).Concat(output).Concat(selectedNames).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        var existingConfig = ParseConfig(userService.Config);
+        var existingConfirmedAddons = ParseAddonSnapshots(existingConfig["confirmedAddons"]);
+        var requestedAddonSnapshots = selectedAddons
+            .OrderBy(addon => addon.Type)
+            .ThenBy(addon => addon.DisplayOrder)
+            .ThenBy(addon => addon.AddonName)
+            .Select(addon => BuildAddonSnapshot(
+                addon,
+                existingConfirmedAddons.Any(existing => existing.addonId == addon.AddonId && existing.confirmed)))
+            .ToList();
+        var confirmedSnapshots = requestedAddonSnapshots.Where(snapshot => snapshot.confirmed).ToList();
 
         var config = new
         {
             userService.ServiceId,
             userService.PackageId,
             addonIds,
-            integrations = selectedIntegrationNames.Select(name => new
+            requestedAddons = requestedAddonSnapshots,
+            confirmedAddons = confirmedSnapshots,
+            integrations = requestedAddonSnapshots.Select(addon => new
             {
-                name,
-                confirmed = false,
-                category = trigger.Contains(name, StringComparer.OrdinalIgnoreCase) ? "trigger"
-                    : action.Contains(name, StringComparer.OrdinalIgnoreCase) ? "action"
-                    : output.Contains(name, StringComparer.OrdinalIgnoreCase) ? "output"
-                    : ClassifyIntegration(name)
+                name = addon.name,
+                confirmed = addon.confirmed,
+                category = addon.type.ToLowerInvariant()
             }),
-            trigger,
-            action,
-            output,
+            trigger = confirmedSnapshots.Where(addon => addon.type.Equals(WorkflowRoles.Trigger, StringComparison.OrdinalIgnoreCase)).Select(addon => addon.name).ToArray(),
+            action = confirmedSnapshots.Where(addon => addon.type.Equals(WorkflowRoles.Action, StringComparison.OrdinalIgnoreCase)).Select(addon => addon.name).ToArray(),
+            output = confirmedSnapshots.Where(addon => addon.type.Equals(WorkflowRoles.Output, StringComparison.OrdinalIgnoreCase)).Select(addon => addon.name).ToArray(),
             notes = new
             {
                 trigger = dto.TriggerNotes,
@@ -213,9 +242,6 @@ public class ServiceCatalogService(
         if (company.UserId != userId)
             throw new UnauthorizedAccessException("Company does not belong to this user.");
 
-        var service = await services.GetByIdAsync(userService.ServiceId)
-            ?? throw new KeyNotFoundException("Service not found.");
-
         var integrationName = string.IsNullOrWhiteSpace(dto.IntegrationName)
             ? throw new ArgumentException("Integration is required.")
             : dto.IntegrationName.Trim();
@@ -226,8 +252,20 @@ public class ServiceCatalogService(
             throw new ArgumentException("At least one credential field is required.");
 
         var config = ParseConfig(userService.Config);
+        var confirmedIntegrationNames = (config["confirmedAddons"] as JsonArray ?? [])
+            .OfType<JsonObject>()
+            .SelectMany(addon => (addon["integrations"] as JsonArray ?? [])
+                .OfType<JsonObject>()
+                .Select(integration => integration["integrationName"]?.GetValue<string>()))
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Select(name => name!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (confirmedIntegrationNames.Count > 0 && !confirmedIntegrationNames.Contains(integrationName))
+            throw new ArgumentException("Credentials can only be submitted for confirmed add-on integrations.");
+
         var existingCredentials = config["credentialReferences"] as JsonArray ?? [];
-        var credentialName = $"{company.CompanyName} | {service.ServiceName} | {integrationName}";
+        var credentialName = $"{company.CompanyName} | {integrationName}";
         var credentialReference = new JsonObject
         {
             ["integrationName"] = integrationName,
@@ -236,7 +274,7 @@ public class ServiceCatalogService(
             ["status"] = "queued",
             ["fieldNames"] = new JsonArray(fields.Keys.Select(k => JsonValue.Create(k)).ToArray<JsonNode?>()),
             ["submittedAt"] = DateTime.UtcNow,
-            ["message"] = "Credential values were sent through the backend gateway. Local mode stores only metadata and queues n8n credential capture."
+            ["message"] = "Credential values were sent through the backend gateway. Only metadata is stored locally while n8n credential provisioning is processed."
         };
 
         var updatedCredentials = new JsonArray(
@@ -260,6 +298,8 @@ public class ServiceCatalogService(
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .ToArray();
 
+    private static decimal GetServiceMonthlyPrice(Service service) => service.BaseCost + service.TokensCost;
+
     private static JsonObject ParseConfig(string? raw)
     {
         if (string.IsNullOrWhiteSpace(raw)) return [];
@@ -271,6 +311,21 @@ public class ServiceCatalogService(
         {
             return [];
         }
+    }
+
+    private static List<(int addonId, string name, string type, bool confirmed)> ParseAddonSnapshots(JsonNode? node)
+    {
+        if (node is not JsonArray array) return [];
+
+        return array
+            .OfType<JsonObject>()
+            .Select(item => (
+                addonId: item["addonId"]?.GetValue<int>() ?? 0,
+                name: item["name"]?.GetValue<string>() ?? string.Empty,
+                type: item["type"]?.GetValue<string>() ?? WorkflowRoles.Action,
+                confirmed: item["confirmed"]?.GetValue<bool>() == true))
+            .Where(item => item.addonId > 0 || !string.IsNullOrWhiteSpace(item.name))
+            .ToList();
     }
 
     private async Task<HashSet<int>> ResolvePackageServiceIdsAsync(Package? package, int fallbackServiceId)
@@ -307,4 +362,24 @@ public class ServiceCatalogService(
             return "output";
         return "action";
     }
+
+    private static dynamic BuildAddonSnapshot(Addon addon, bool confirmed) => new
+    {
+        addonId = addon.AddonId,
+        name = addon.AddonName,
+        description = addon.AddonDescription,
+        type = string.IsNullOrWhiteSpace(addon.Type) ? WorkflowRoles.Action : addon.Type,
+        monthlyPrice = addon.MonthlyPrice,
+        isActive = addon.IsActive,
+        displayOrder = addon.DisplayOrder,
+        confirmed,
+        integrations = addon.Integrations.Select(integration => new
+        {
+            integrationId = integration.Id,
+            integrationName = integration.Name,
+            integrationType = integration.IntegrationType,
+            hasCredentials = integration.HasCredentials,
+            isActive = integration.IsActive
+        }).ToArray()
+    };
 }

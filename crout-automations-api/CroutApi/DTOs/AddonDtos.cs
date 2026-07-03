@@ -1,15 +1,23 @@
 namespace CroutApi.DTOs;
 
 public record CreateAddonDto(
-    int ServiceId,
     string AddonName,
     string? AddonDescription,
-    decimal Price
+    string Type,
+    decimal MonthlyPrice,
+    bool IsActive,
+    int DisplayOrder,
+    List<int>? ServiceIds,
+    List<int>? IntegrationIds
 );
 
 public record UpdateAddonDto(
-    int ServiceId,
     string AddonName,
     string? AddonDescription,
-    decimal Price
+    string Type,
+    decimal MonthlyPrice,
+    bool IsActive,
+    int DisplayOrder,
+    List<int>? ServiceIds,
+    List<int>? IntegrationIds
 );

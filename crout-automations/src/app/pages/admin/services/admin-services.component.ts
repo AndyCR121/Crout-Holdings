@@ -31,7 +31,16 @@ export class AdminServicesComponent implements OnInit {
   saving          = signal(false);
   deleteConfirmId = signal<number | null>(null);
   showCreate      = signal(false);
-  createBuffer    = signal<Partial<IService>>({ serviceName: '', serviceDescription: '', price: 0, hasAddons: false, conditional: false });
+  createBuffer    = signal<Partial<IService>>({
+    serviceName: '',
+    serviceDescription: '',
+    baseCost: 5000,
+    tokensCost: 1000,
+    totalTokens: 6000000,
+    price: 6000,
+    hasAddons: false,
+    conditional: false
+  });
 
   showLinkModal = signal(false);
   linkTarget    = signal<IService | null>(null);
@@ -57,7 +66,16 @@ export class AdminServicesComponent implements OnInit {
 
   startEdit(s: IService): void {
     this.editingId.set(s.serviceId);
-    this.editBuffer.set({ serviceName: s.serviceName, serviceDescription: s.serviceDescription, price: s.price, hasAddons: s.hasAddons, conditional: s.conditional });
+    this.editBuffer.set({
+      serviceName: s.serviceName,
+      serviceDescription: s.serviceDescription,
+      baseCost: s.baseCost,
+      tokensCost: s.tokensCost,
+      totalTokens: s.totalTokens,
+      price: s.price,
+      hasAddons: s.hasAddons,
+      conditional: s.conditional
+    });
   }
   cancelEdit(): void { this.editingId.set(null); }
 
@@ -81,7 +99,21 @@ export class AdminServicesComponent implements OnInit {
   submitCreate(): void {
     this.saving.set(true);
     this.admin.createService(this.createBuffer()).subscribe({
-      next: (created: IService) => { this.items.update(list => [created, ...list]); this.showCreate.set(false); this.saving.set(false); this.createBuffer.set({ serviceName: '', serviceDescription: '', price: 0, hasAddons: false, conditional: false }); },
+      next: (created: IService) => {
+        this.items.update(list => [created, ...list]);
+        this.showCreate.set(false);
+        this.saving.set(false);
+        this.createBuffer.set({
+          serviceName: '',
+          serviceDescription: '',
+          baseCost: 5000,
+          tokensCost: 1000,
+          totalTokens: 6000000,
+          price: 6000,
+          hasAddons: false,
+          conditional: false
+        });
+      },
       error: () => { this.error.set('Failed to create.'); this.saving.set(false); }
     });
   }

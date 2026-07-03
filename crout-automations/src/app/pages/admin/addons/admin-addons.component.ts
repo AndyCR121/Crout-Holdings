@@ -33,7 +33,17 @@ export class AdminAddonsComponent implements OnInit {
   saving          = signal(false);
   deleteConfirmId = signal<number | null>(null);
   showCreate      = signal(false);
-  createBuffer    = signal<Partial<IAddon>>({ addonName: '', addonDescription: '', price: 0, serviceId: null });
+  createBuffer    = signal<Partial<IAddon>>({
+    addonName: '',
+    addonDescription: '',
+    type: 'Action',
+    monthlyPrice: 0,
+    price: 0,
+    serviceId: null,
+    serviceIds: [],
+    isActive: true,
+    displayOrder: 0
+  });
 
   showLinkModal = signal(false);
   linkTarget    = signal<IAddon | null>(null);
@@ -62,7 +72,17 @@ export class AdminAddonsComponent implements OnInit {
 
   startEdit(a: IAddon): void {
     this.editingId.set(a.addonId);
-    this.editBuffer.set({ addonName: a.addonName, addonDescription: a.addonDescription, price: a.price, serviceId: a.serviceId });
+    this.editBuffer.set({
+      addonName: a.addonName,
+      addonDescription: a.addonDescription,
+      type: a.type,
+      monthlyPrice: a.monthlyPrice,
+      price: a.price,
+      serviceId: a.serviceId,
+      serviceIds: a.serviceIds,
+      isActive: a.isActive,
+      displayOrder: a.displayOrder
+    });
   }
   cancelEdit(): void { this.editingId.set(null); }
 
@@ -86,7 +106,22 @@ export class AdminAddonsComponent implements OnInit {
   submitCreate(): void {
     this.saving.set(true);
     this.admin.createAddon(this.createBuffer()).subscribe({
-      next: created => { this.items.update(list => [created, ...list]); this.showCreate.set(false); this.saving.set(false); this.createBuffer.set({ addonName: '', addonDescription: '', price: 0, serviceId: null }); },
+      next: created => {
+        this.items.update(list => [created, ...list]);
+        this.showCreate.set(false);
+        this.saving.set(false);
+        this.createBuffer.set({
+          addonName: '',
+          addonDescription: '',
+          type: 'Action',
+          monthlyPrice: 0,
+          price: 0,
+          serviceId: null,
+          serviceIds: [],
+          isActive: true,
+          displayOrder: 0
+        });
+      },
       error: () => { this.error.set('Failed to create.'); this.saving.set(false); }
     });
   }

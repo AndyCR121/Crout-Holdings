@@ -1,3 +1,5 @@
+import { IWorkflowIntegrationDefinition } from './i-workflow-capability.interface';
+
 export interface IUser {
   userId: number;
   username: string;
@@ -31,19 +33,29 @@ export interface ICompany {
 export interface IService {
   serviceId: number;
   serviceName: string;
+  baseCost: number;
+  tokensCost: number;
+  totalTokens: number;
   price: number;
   hasAddons: boolean;
   conditional: boolean;
   serviceDescription?: string;
   features?: string[];
+  addons?: IAddon[];
 }
 
 export interface IAddon {
   addonId: number;
   serviceId: number | null;
+  serviceIds: number[];
   addonName: string;
   addonDescription?: string;
+  type: 'Trigger' | 'Action' | 'Output';
+  monthlyPrice: number;
   price: number;
+  isActive: boolean;
+  displayOrder: number;
+  integrations?: IWorkflowIntegrationDefinition[];
 }
 
 export interface IPricingComponent {

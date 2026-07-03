@@ -5,7 +5,6 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
 import { ApiService } from '../../services/api.service';
 import { IService, IAddon, IPackage, IPricingComponent } from '../../interfaces/i-service.interface';
 import { IAddonState, IPackageView } from '../../interfaces/i-service-display.interface';
-import { FilterByServiceIdPipe } from '../../pipes/filter-by-service-id.pipe';
 import { forkJoin, of } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
 
@@ -15,7 +14,7 @@ const MAX_VISIBLE_SERVICES = 6;
 @Component({
   selector: 'ca-pricing',
   standalone: true,
-  imports: [CommonModule, RouterModule, ScrollRevealDirective, FilterByServiceIdPipe],
+  imports: [CommonModule, RouterModule, ScrollRevealDirective],
   templateUrl: './pricing.component.html',
   styleUrl: './pricing.component.scss'
 })
@@ -114,7 +113,7 @@ export class PricingComponent implements OnInit {
 
       const rootAddonStates: IAddonState[] = serviceIds.flatMap(svcId =>
         this.addons
-          .filter(a => a.serviceId === svcId)
+          .filter(a => (a.serviceIds?.length ? a.serviceIds.includes(svcId) : a.serviceId === svcId))
           .map(a => ({ addon: a, enabled: false }))
       );
 
@@ -140,7 +139,7 @@ export class PricingComponent implements OnInit {
     if (view.conditionalEnabled && view.childPkg && view.childAddonStates.length === 0) {
       view.childAddonStates = (view.childPkg.serviceIds ?? []).flatMap(svcId =>
         this.addons
-          .filter(a => a.serviceId === svcId)
+          .filter(a => (a.serviceIds?.length ? a.serviceIds.includes(svcId) : a.serviceId === svcId))
           .map(a => ({ addon: a, enabled: false, isConditionalChild: true }))
       );
     }
@@ -232,6 +231,18 @@ export class PricingComponent implements OnInit {
 
   formatPrice(n: number | null | undefined): string {
     return Number(n ?? 0).toLocaleString('en-ZA');
+  }
+
+  serviceMonthlyPrice(service: IService): number {
+    return (service.baseCost ?? 0) + (service.tokensCost ?? 0);
+  }
+
+  serviceAddonsByType(serviceId: number, type: IAddon['type']): IAddon[] {
+    return this.addons.filter(addon => addon.serviceIds?.includes(serviceId) && addon.type === type);
+  }
+
+  addonTypeLabel(type: IAddon['type']): string {
+    return type;
   }
 
   serviceUrl(service: IService | null | undefined): string {

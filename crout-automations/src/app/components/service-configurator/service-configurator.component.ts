@@ -139,7 +139,7 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
 
       const rootAddonStates: IAddonState[] = serviceIds.flatMap(svcId =>
         this.addons
-          .filter(a => a.serviceId === svcId)
+          .filter(a => (a.serviceIds?.length ? a.serviceIds.includes(svcId) : a.serviceId === svcId))
           .map(a => ({ addon: a, enabled: false }))
       );
 
@@ -163,7 +163,7 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
     if (view.conditionalEnabled && view.childPkg && view.childAddonStates.length === 0) {
       view.childAddonStates = (view.childPkg.serviceIds ?? []).flatMap(svcId =>
         this.addons
-          .filter(a => a.serviceId === svcId)
+          .filter(a => (a.serviceIds?.length ? a.serviceIds.includes(svcId) : a.serviceId === svcId))
           .map(a => ({ addon: a, enabled: false, isConditionalChild: true }))
       );
     }

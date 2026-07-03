@@ -332,6 +332,22 @@ public class AdminController(
         return NoContent();
     }
 
+    [HttpPut("addons/{id:int}/services")]
+    public async Task<IActionResult> LinkServicesToAddon(int id, [FromBody] LinkServicesToAddonDto dto)
+    {
+        if (!CallerIsAdmin) return Forbid();
+        await addons.SetServiceLinksAsync(id, dto.ServiceIds);
+        return Ok(new { addonId = id, serviceIds = dto.ServiceIds });
+    }
+
+    [HttpPut("addons/{id:int}/integrations")]
+    public async Task<IActionResult> LinkIntegrationsToAddon(int id, [FromBody] LinkIntegrationsToAddonDto dto)
+    {
+        if (!CallerIsAdmin) return Forbid();
+        await addons.SetIntegrationLinksAsync(id, dto.IntegrationIds);
+        return Ok(new { addonId = id, integrationIds = dto.IntegrationIds });
+    }
+
     // ── Service Features ──────────────────────────────────────────────────────
 
     [HttpGet("service-features")]

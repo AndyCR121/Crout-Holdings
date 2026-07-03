@@ -10,7 +10,19 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
     {
         using var conn = db.GetConnection();
         var services = (await conn.QueryAsync<Service>(
-            "SELECT service_id AS ServiceId, ServiceName, Price, HasAddons, Conditional, ServiceDescription FROM Services")).ToList();
+            """
+            SELECT
+              service_id AS ServiceId,
+              ServiceName,
+              BaseCost,
+              TokensCost,
+              TotalTokens,
+              HasAddons,
+              Conditional,
+              ServiceDescription
+            FROM Services
+            ORDER BY ServiceName
+            """)).ToList();
 
         var features = await conn.QueryAsync<(int ServiceId, string Feature)>(
             "SELECT service_id, Feature FROM ServiceFeatures ORDER BY SortOrder");
@@ -20,6 +32,19 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
             var svc = services.FirstOrDefault(s => s.ServiceId == f.ServiceId);
             svc?.Features.Add(f.Feature);
         }
+
+        var addons = (await GetAddonsAsync(conn, null, null, activeOnly: true)).ToList();
+        foreach (var service in services)
+        {
+            service.Addons = addons
+                .Where(addon => addon.ServiceIds.Contains(service.ServiceId))
+                .OrderBy(addon => addon.Type)
+                .ThenBy(addon => addon.DisplayOrder)
+                .ThenBy(addon => addon.AddonName)
+                .ToList();
+            service.HasAddons = service.Addons.Count > 0;
+        }
+
         return services;
     }
 
@@ -27,7 +52,19 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
     {
         using var conn = db.GetConnection();
         var svc = await conn.QuerySingleOrDefaultAsync<Service>(
-            "SELECT service_id AS ServiceId, ServiceName, Price, HasAddons, Conditional, ServiceDescription FROM Services WHERE service_id=@serviceId",
+            """
+            SELECT
+              service_id AS ServiceId,
+              ServiceName,
+              BaseCost,
+              TokensCost,
+              TotalTokens,
+              HasAddons,
+              Conditional,
+              ServiceDescription
+            FROM Services
+            WHERE service_id=@serviceId
+            """,
             new { serviceId });
         if (svc is null) return null;
 
@@ -35,15 +72,15 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
             "SELECT Feature FROM ServiceFeatures WHERE service_id=@serviceId ORDER BY SortOrder",
             new { serviceId });
         svc.Features.AddRange(features);
+        svc.Addons = (await GetAddonsAsync(conn, serviceId, null, activeOnly: true)).ToList();
+        svc.HasAddons = svc.Addons.Count > 0;
         return svc;
     }
 
     public async Task<IEnumerable<Addon>> GetAddonsByServiceAsync(int serviceId)
     {
         using var conn = db.GetConnection();
-        return await conn.QueryAsync<Addon>(
-            "SELECT addon_id AS AddonId, service_id AS ServiceId, AddonName, AddonDescription, Price FROM Addons WHERE service_id=@serviceId",
-            new { serviceId });
+        return await GetAddonsAsync(conn, serviceId, null, activeOnly: true);
     }
 
     public async Task<IEnumerable<Addon>> GetAddonsByIdsAsync(IEnumerable<int> addonIds)
@@ -52,9 +89,20 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
         if (ids.Length == 0) return [];
 
         using var conn = db.GetConnection();
-        return await conn.QueryAsync<Addon>(
-            "SELECT addon_id AS AddonId, service_id AS ServiceId, AddonName, AddonDescription, Price FROM Addons WHERE addon_id IN @ids",
-            new { ids });
+        return await GetAddonsAsync(conn, null, ids, activeOnly: false);
+    }
+
+    public async Task<IEnumerable<Addon>> GetAddonsByNamesAsync(IEnumerable<string> addonNames, int? serviceId = null)
+    {
+        var names = addonNames
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Select(name => name.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        if (names.Length == 0) return [];
+
+        using var conn = db.GetConnection();
+        return await GetAddonsAsync(conn, serviceId, null, activeOnly: false, addonNames: names);
     }
 
     public async Task<IEnumerable<Package>> GetPackagesByServiceAsync(int serviceId)
@@ -81,7 +129,12 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
     {
         using var conn = db.GetConnection();
         var packages = (await conn.QueryAsync<Package>(
-            "SELECT package_id AS PackageId, parent_package_id AS ParentPackageId, PackageName, PackageDescription, Discount, minimumRequiredAddons AS MinimumRequiredAddons FROM Packages")).ToList();
+            """
+            SELECT package_id AS PackageId, parent_package_id AS ParentPackageId, PackageName, PackageDescription, Discount, minimumRequiredAddons AS MinimumRequiredAddons
+            FROM Packages
+            WHERE EXISTS (SELECT 1 FROM PackageServices ps WHERE ps.package_id = Packages.package_id)
+            """
+        )).ToList();
         await EnrichPackageServiceIds(conn, packages);
         return packages;
     }
@@ -126,5 +179,103 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
             new { ids });
         foreach (var r in rows)
             packages.FirstOrDefault(p => p.PackageId == r.PackageId)?.ServiceIds.Add(r.ServiceId);
+    }
+
+    private static async Task<IEnumerable<Addon>> GetAddonsAsync(
+        System.Data.IDbConnection conn,
+        int? serviceId,
+        int[]? addonIds,
+        bool activeOnly,
+        string[]? addonNames = null)
+    {
+        var filters = new List<string>();
+        var parameters = new DynamicParameters();
+        parameters.Add("activeOnly", activeOnly);
+
+        if (serviceId is not null)
+        {
+            filters.Add("sa.service_id = @serviceId");
+            parameters.Add("serviceId", serviceId.Value);
+        }
+
+        if (addonIds is { Length: > 0 })
+        {
+            filters.Add("a.addon_id IN @addonIds");
+            parameters.Add("addonIds", addonIds);
+        }
+
+        if (addonNames is { Length: > 0 })
+        {
+            filters.Add("a.AddonName IN @addonNames");
+            parameters.Add("addonNames", addonNames);
+        }
+
+        if (activeOnly)
+            filters.Add("a.IsActive = 1");
+
+        var where = filters.Count == 0 ? string.Empty : $"WHERE {string.Join(" AND ", filters)}";
+        var addons = (await conn.QueryAsync<Addon>(
+            $"""
+            SELECT DISTINCT
+              a.addon_id AS AddonId,
+              a.AddonName,
+              a.AddonDescription,
+              a.Type,
+              a.MonthlyPrice,
+              a.IsActive,
+              a.DisplayOrder
+            FROM Addons a
+            LEFT JOIN ServiceAddons sa ON sa.addon_id = a.addon_id
+            {where}
+            ORDER BY FIELD(a.Type, 'Trigger', 'Action', 'Output'), a.DisplayOrder, a.AddonName
+            """,
+            parameters)).ToList();
+
+        if (addons.Count == 0) return addons;
+
+        var addonIdList = addons.Select(addon => addon.AddonId).ToArray();
+        var serviceLinks = await conn.QueryAsync<(int AddonId, int ServiceId)>(
+            "SELECT addon_id AS AddonId, service_id AS ServiceId FROM ServiceAddons WHERE addon_id IN @addonIds",
+            new { addonIds = addonIdList });
+        foreach (var link in serviceLinks)
+            addons.First(addon => addon.AddonId == link.AddonId).ServiceIds.Add(link.ServiceId);
+
+        var integrationLinks = await conn.QueryAsync<(int AddonId, int Id, string Name, string? Description, string IntegrationType, bool HasCredentials, string? CredentialFormSchemaJson, bool IsActive, DateTime CreatedAt, DateTime UpdatedAt)>(
+            """
+            SELECT
+              ai.addon_id AS AddonId,
+              idef.id AS Id,
+              idef.name AS Name,
+              idef.description AS Description,
+              idef.integration_type AS IntegrationType,
+              idef.has_credentials AS HasCredentials,
+              idef.credential_form_schema_json AS CredentialFormSchemaJson,
+              idef.is_active AS IsActive,
+              idef.created_at AS CreatedAt,
+              idef.updated_at AS UpdatedAt
+            FROM AddonIntegrations ai
+            JOIN IntegrationDefinitions idef ON idef.id = ai.integration_definition_id
+            WHERE ai.addon_id IN @addonIds
+            ORDER BY idef.name, idef.id
+            """,
+            new { addonIds = addonIdList });
+
+        foreach (var link in integrationLinks)
+        {
+            addons.First(addon => addon.AddonId == link.AddonId).Integrations.Add(new WorkflowIntegrationDefinition
+            {
+                Id = link.Id,
+                Name = link.Name,
+                Description = link.Description,
+                IntegrationType = link.IntegrationType,
+                HasCredentials = link.HasCredentials,
+                CredentialFormSchemaJson = link.CredentialFormSchemaJson,
+                IsActive = link.IsActive,
+                CreatedAt = link.CreatedAt,
+                UpdatedAt = link.UpdatedAt
+            });
+        }
+
+        return addons;
     }
 }

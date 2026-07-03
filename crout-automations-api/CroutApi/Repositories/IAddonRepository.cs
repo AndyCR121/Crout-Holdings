@@ -10,4 +10,6 @@ public interface IAddonRepository
     Task<int> CreateAsync(Addon addon);
     Task UpdateAsync(Addon addon);
     Task DeleteAsync(int addonId);
+    Task SetServiceLinksAsync(int addonId, List<int> serviceIds);
+    Task SetIntegrationLinksAsync(int addonId, List<int> integrationIds);
 }

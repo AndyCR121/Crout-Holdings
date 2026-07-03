@@ -19,24 +19,38 @@ import {
 // ─── Field-name normalizers ───────────────────────────────────────────────────
 
 function normalizeService(raw: any): IService {
+  const baseCost = raw.BaseCost ?? raw.baseCost ?? raw.Price ?? raw.price ?? 0;
+  const tokensCost = raw.TokensCost ?? raw.tokensCost ?? 0;
   return {
     serviceId:         raw.serviceId          ?? raw.id,
     serviceName:        raw.ServiceName         ?? raw.serviceName        ?? raw.name        ?? '',
-    price:              raw.Price               ?? raw.price              ?? 0,
+    baseCost,
+    tokensCost,
+    totalTokens:        raw.TotalTokens         ?? raw.totalTokens        ?? 0,
+    price:              raw.Price               ?? raw.price              ?? (baseCost + tokensCost),
     hasAddons:          raw.HasAddons           ?? raw.hasAddons          ?? false,
     serviceDescription: raw.ServiceDescription  ?? raw.serviceDescription ?? raw.description ?? '',
     conditional:        raw.Conditional         ?? raw.conditional        ?? false,
     features:           raw.features            ?? [],
+    addons:             Array.isArray(raw.addons) ? raw.addons.map(normalizeAddon) : [],
   };
 }
 
 function normalizeAddon(raw: any): IAddon {
+  const serviceIds = raw.serviceIds ?? raw.ServiceIds ?? (raw.serviceId != null ? [raw.serviceId] : []);
+  const monthlyPrice = raw.MonthlyPrice ?? raw.monthlyPrice ?? raw.Price ?? raw.price ?? 0;
   return {
     addonId:          raw.addonId          ?? raw.id,
-    serviceId:        raw.serviceId        ?? null,
+    serviceId:        raw.serviceId        ?? raw.ServiceId ?? serviceIds[0] ?? null,
+    serviceIds,
     addonName:        raw.AddonName        ?? raw.addonName        ?? raw.name        ?? '',
     addonDescription: raw.AddonDescription ?? raw.addonDescription ?? raw.description ?? '',
-    price:            raw.Price            ?? raw.price            ?? 0,
+    type:             raw.Type             ?? raw.type             ?? 'Action',
+    monthlyPrice,
+    price:            raw.Price            ?? raw.price            ?? monthlyPrice,
+    isActive:         raw.IsActive         ?? raw.isActive         ?? true,
+    displayOrder:     raw.DisplayOrder     ?? raw.displayOrder     ?? 0,
+    integrations:     Array.isArray(raw.integrations) ? raw.integrations : [],
   };
 }
 
