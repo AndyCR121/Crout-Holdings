@@ -1,74 +1,186 @@
-# Crout Automations — Angular v20
+# Crout Automations
 
-Frontend rebuild of the Crout Automations WordPress/Elementor site using **Angular v20 standalone components** and **Angular Elements** for WordPress drop-in support.
+Angular 20 frontend for the Crout Automations public site plus the client, developer, and admin portals.
 
 ## Stack
 
-- **Angular 20** — standalone components, signals, `@for`/`@if`/`@switch` control flow
-- **SCSS** — BEM naming, design token system, fluid `clamp()` type scale
-- **Fonts** — Cabinet Grotesk (display) + General Sans (body) via Fontshare
-- **Angular Elements** — exports all components as native Web Components
+- Angular 20 standalone components
+- SCSS
+- Angular Router with nested shell routes
+- Optional Angular Elements build for legacy WordPress embeds
+- Docker Compose + Nginx for standalone SPA hosting
 
-## Brand Tokens
-
-| Token | Value | Usage |
-|---|---|---|
-| `--color-orange` | `#D4703A` | Primary CTA, accents, icons |
-| `--color-blue` | `#4A7BAF` | Secondary accent, services section |
-| `--color-navy` | `#2C3E6B` | Dark sections (hero, why-crout, footer) |
-
-## Getting Started
+## Local development
 
 ```bash
 npm install
 npm start
 ```
 
-## Build for Production (SPA)
+The default local API target is `http://localhost:5000/api`.
+
+## Production SPA build
 
 ```bash
 npm run build
-# Output: dist/crout-automations/
 ```
 
-## Build for WordPress (Angular Elements)
+The production app is built to `dist/crout-automations/browser/`.
+
+## Legacy Elements build
 
 ```bash
 npm run build:elements
-# Output: dist/crout-elements/
-# Enqueue crout-elements/main.js in your WordPress theme, then use:
-# <ca-hero></ca-hero>, <ca-pricing></ca-pricing> etc. in any page/template
 ```
 
-## Component Structure
+That build remains available for legacy WordPress/custom-element usage in [WORDPRESS-DEPLOY.md](C:\Users\User\Documents\GitHub\FinanceManager\Crout-Holdings\crout-automations\WORDPRESS-DEPLOY.md), but the main application routing now runs as a normal Angular SPA.
 
-```
-src/app/
-├── components/
-│   ├── nav/               # Sticky header, mobile hamburger, scroll state
-│   ├── hero/              # Full-screen dark hero, orb BG, trust bar
-│   ├── pain-point/        # Two-column problem/solution section
-│   ├── services-overview/ # 4-card 2×2 service grid
-│   ├── how-it-works/      # 4-step process with connector lines
-│   ├── why-crout/         # 6-feature grid on navy background
-│   ├── pricing/           # 3-tier pricing cards
-│   ├── cta-banner/        # Final CTA section
-│   └── footer/            # 4-column footer, dark navy
-├── interfaces/            # TypeScript interfaces for all data models
-├── pages/
-│   └── home/              # Assembles all components in order
-styles/
-├── _tokens.scss           # All CSS custom properties
-├── _base.scss             # Reset + scroll reveal animations
-└── styles.scss            # Entry point
-src/elements/
-└── main.ts                # Angular Elements registry (createCustomElement)
+## Docker Compose hosting
+
+### Files
+
+- `Dockerfile`: multi-stage Angular build plus Nginx runtime
+- `docker-compose.yml`: standalone SPA service
+- `nginx.conf`: static hosting plus Angular deep-link fallback
+- `docker/entrypoint.sh`: generates `env.js` from runtime variables
+- `public/env.template.js`: runtime API URL template
+
+### Environment configuration
+
+Create a `.env` file next to `docker-compose.yml`:
+
+```env
+API_URL=https://api.example.com/api
+SPA_PORT=8080
 ```
 
-## Scroll Reveal Animations
+`API_URL` is injected into `/env.js` at container startup, so the same image can be reused across environments.
 
-Section entries use CSS `animation-timeline: view()` with a graceful fallback for browsers that don't support scroll-driven animations. Add the `reveal` class to any element and it will fade in as it enters the viewport. Use `stagger-children` on a parent to stagger child animations with 60ms delay increments.
+### Build and start
 
-## Selector Prefix
+```bash
+docker compose build
+docker compose up -d
+```
 
-All components use the `ca-` prefix (Crout Automations). Custom Elements registered with the same prefix for drop-in WordPress use.
+### Inspect status and logs
+
+```bash
+docker compose ps
+docker compose logs -f
+```
+
+### Restart, stop, and redeploy
+
+```bash
+docker compose restart
+docker compose down
+git pull
+docker compose build
+docker compose up -d
+```
+
+## VPS deployment guide
+
+### 1. Prepare the VPS
+
+Install:
+
+- Git
+- Docker Engine
+- Docker Compose plugin
+- A public reverse proxy / TLS layer for HTTPS
+
+Open firewall ports:
+
+- `80/tcp`
+- `443/tcp`
+
+Do not expose a production SPA over plain HTTP only.
+
+### 2. Clone and configure
+
+```bash
+git clone <YOUR_REPOSITORY_URL>
+cd crout-automations
+```
+
+Create `.env`:
+
+```env
+API_URL=https://api.example.com/api
+SPA_PORT=8080
+```
+
+### 3. Run the SPA container
+
+```bash
+docker compose build
+docker compose up -d
+```
+
+Nginx inside the container serves the Angular build and falls back to `index.html` for deep links such as:
+
+- `/client/dashboard`
+- `/dev/dev-services/guide/?userServiceId=123`
+- `/admin/users`
+- `/services/quote-system`
+
+### 4. Put HTTPS in front of it
+
+Recommended production setup:
+
+- terminate TLS at a reverse proxy on the VPS
+- forward requests to `http://127.0.0.1:8080` or your chosen `SPA_PORT`
+- keep SPA fallback behavior intact by forwarding all unmatched paths to the SPA container
+
+If you already use Nginx Proxy Manager, Caddy, Traefik, or another reverse proxy on the VPS, point the selected site/domain there and proxy to the SPA container.
+
+### 5. DNS through cPanel
+
+The cPanel/WordPress filesystem and the VPS filesystem are unrelated. DNS only decides which server the domain resolves to.
+
+Example:
+
+```text
+app.example.com -> VPS_PUBLIC_IP
+```
+
+In cPanel DNS Zone Editor:
+
+1. Create or update an `A` record for the SPA domain or subdomain to the VPS public IPv4 address.
+2. Add optional `www` handling if needed:
+   `www.app.example.com -> app.example.com` as a `CNAME`, or a matching `A` record.
+3. Remove or replace conflicting `A`, `CNAME`, forwarding, or parked-domain records for that same host.
+
+Use placeholders only:
+
+```text
+Type: A
+Name: app
+Value: VPS_PUBLIC_IP
+TTL: default
+```
+
+### 6. DNS verification
+
+Browser check:
+
+- open `https://app.example.com`
+
+Command-line checks:
+
+```bash
+nslookup app.example.com
+dig app.example.com
+curl -I https://app.example.com
+curl -I https://app.example.com/dev/dashboard
+```
+
+DNS propagation can take a few minutes to 48 hours depending on upstream caches and TTLs, though changes are often visible much sooner.
+
+## Notes
+
+- The SPA container does not include the API, database, or TLS proxy.
+- The API can remain hosted separately as long as `API_URL` points to the correct public API origin.
+- Deep-link refresh support depends on both the included Nginx fallback and any external reverse proxy passing requests through correctly.

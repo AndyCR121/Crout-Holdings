@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AdminSidebarComponent } from '../../../components/admin-sidebar/admin-sidebar.component';
 import { AuthService } from '../../../services/auth.service';
 import { ToastService } from '../../../services/toast.service';
 import { AdminService } from '../../../services/admin.service';
@@ -18,7 +17,7 @@ import {
 @Component({
   selector: 'ca-admin-database-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, AdminSidebarComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './admin-database-management.component.html',
   styleUrls: ['./admin-database-management.component.scss'],
 })

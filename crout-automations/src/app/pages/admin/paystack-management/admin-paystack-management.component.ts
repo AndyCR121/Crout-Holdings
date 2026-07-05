@@ -4,13 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { AdminService } from '../../../services/admin.service';
-import { AdminSidebarComponent } from '../../../components/admin-sidebar/admin-sidebar.component';
 import { IAdminPaystackMapping } from '../../../interfaces/i-service.interface';
 
 @Component({
   selector: 'ca-admin-paystack-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, AdminSidebarComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './admin-paystack-management.component.html',
   styleUrls: ['./admin-paystack-management.component.scss'],
 })

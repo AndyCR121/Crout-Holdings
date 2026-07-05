@@ -1,8 +1,4 @@
-<div class="portal-layout">
-  <ca-portal-sidebar />
-
-  <main class="portal-main">
-    <section class="dguide-wrap">
+<section class="dguide-wrap">
       <div class="dguide-header">
         <div>
           <a class="dguide-back" routerLink="/dev/dev-services">Back to services</a>
@@ -12,8 +8,14 @@
         @if (guide()) {
           <div class="dguide-header-actions">
             <ca-integration-status-badge [integrationStatus]="guide()?.integrationStatus" [legacyStatus]="guide()?.status" />
-            @if (canBuildCustomForm() && formBuilderHref(); as href) {
-              <a class="dguide-maintenance" [href]="href">Build / Edit Custom Form</a>
+            @if (canBuildCustomForm() && userServiceId()) {
+              <a
+                class="dguide-maintenance"
+                [routerLink]="['/dev/dev-services/guide/form-builder']"
+                [queryParams]="{ userServiceId: userServiceId() }"
+              >
+                Build / Edit Custom Form
+              </a>
             }
             <button type="button" class="dguide-maintenance" (click)="toggleMaintenance()" [disabled]="savingMaintenance()">
               {{ guide()?.isMaintenance ? 'Disable Maintenance' : 'Enable Maintenance' }}
@@ -171,5 +173,3 @@
         </div>
       }
     </section>
-  </main>
-</div>

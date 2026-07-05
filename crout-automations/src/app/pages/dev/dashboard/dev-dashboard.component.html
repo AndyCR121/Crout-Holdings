@@ -1,14 +1,10 @@
-<div class="portal-layout">
-  <ca-portal-sidebar />
-
-  <main class="portal-main">
-    <section class="dev-wrap">
+<section class="dev-wrap">
       <div class="dev-header">
         <div>
           <h1 class="dev-title">Dev Dashboard</h1>
           <p class="dev-sub">Assigned services for <strong>{{ user()?.username }}</strong></p>
         </div>
-        <a class="dev-action" href="/dev/dev-services">Services</a>
+        <a class="dev-action" routerLink="/dev/dev-services">Services</a>
       </div>
 
       @if (loading()) {
@@ -69,5 +65,3 @@
         }
       }
     </section>
-  </main>
-</div>

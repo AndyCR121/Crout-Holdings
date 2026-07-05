@@ -8,7 +8,7 @@
 
       <!-- Col 1: Brand -->
       <div class="ca-footer-brand">
-        <a href="/" class="ca-footer-logo-link" aria-label="Crout Automations Home" style="text-decoration: none;">
+        <a routerLink="/" class="ca-footer-logo-link" aria-label="Crout Automations Home" style="text-decoration: none;">
           <div class="ca-footer-logo-lockup">
             <img
               [src]="assetsBase + 'ShieldOnlyLogo.png'"
@@ -55,7 +55,7 @@
         </h4>
         <ul class="ca-footer-list" role="list">
           <li *ngFor="let link of navLinks">
-            <a [href]="link.route" class="ca-footer-link">
+            <a [routerLink]="link.route" class="ca-footer-link">
               <span class="ca-footer-link-arrow" aria-hidden="true">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
               </span>
@@ -73,7 +73,7 @@
         </h4>
         <ul class="ca-footer-list" role="list">
           <li *ngFor="let svc of services">
-            <a [href]="svc.route" class="ca-footer-link">
+            <a [routerLink]="svc.route" class="ca-footer-link">
               <span class="ca-footer-link-arrow" aria-hidden="true">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
               </span>

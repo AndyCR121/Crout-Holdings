@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { AdminService } from '../../../services/admin.service';
-import { AdminSidebarComponent } from '../../../components/admin-sidebar/admin-sidebar.component';
 import { IAdminClientService, IAdminClientServiceUpsert, ICompany, IService, UserServiceStatus } from '../../../interfaces/i-service.interface';
 import { IntegrationStatusBadgeComponent } from '../../../components/integration-status-badge/integration-status-badge.component';
 import { IntegrationStatusService } from '../../../services/integration-status.service';
@@ -12,7 +11,7 @@ import { IntegrationStatusService } from '../../../services/integration-status.s
 @Component({
   selector: 'ca-admin-client-services',
   standalone: true,
-  imports: [CommonModule, FormsModule, AdminSidebarComponent, IntegrationStatusBadgeComponent],
+  imports: [CommonModule, FormsModule, IntegrationStatusBadgeComponent],
   templateUrl: './admin-client-services.component.html',
   styleUrls: ['./admin-client-services.component.scss'],
 })

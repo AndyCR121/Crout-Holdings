@@ -7,14 +7,13 @@ import { IUserService, IService, ICompany } from '../../../interfaces/i-service.
 import { CompanySvcFilterPipe } from '../../../pipes/company-svc-filter.pipe';
 import { forkJoin, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { PortalSidebarComponent } from '../../../components/portal-sidebar/portal-sidebar.component';
 import { IntegrationStatusBadgeComponent } from '../../../components/integration-status-badge/integration-status-badge.component';
 import { IntegrationStatusService } from '../../../services/integration-status.service';
 
 @Component({
   selector: 'ca-portal-dashboard',
   standalone: true,
-  imports: [CommonModule, CompanySvcFilterPipe, PortalSidebarComponent, IntegrationStatusBadgeComponent],
+  imports: [CommonModule, CompanySvcFilterPipe, IntegrationStatusBadgeComponent],
   templateUrl: './portal-dashboard.component.html',
   styleUrls: ['./portal-dashboard.component.scss'],
 })

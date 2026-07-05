@@ -6,12 +6,11 @@ import { AuthService } from '../../../services/auth.service';
 import { AdminService } from '../../../services/admin.service';
 import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
 import { IUser } from '../../../interfaces/i-service.interface';
-import { AdminSidebarComponent } from '../../../components/admin-sidebar/admin-sidebar.component';
 
 @Component({
   selector: 'ca-admin-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, AdminSidebarComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './admin-users.component.html',
   styleUrls: ['./admin-users.component.scss'],
 })

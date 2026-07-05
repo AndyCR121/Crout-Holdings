@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { PortalSidebarComponent } from '../../../components/portal-sidebar/portal-sidebar.component';
 import { IDevDashboard, IDevPortalService } from '../../../interfaces/i-service.interface';
 import { AuthService } from '../../../services/auth.service';
 import { DevService } from '../../../services/dev.service';
@@ -10,7 +9,7 @@ import { IntegrationStatusService } from '../../../services/integration-status.s
 @Component({
   selector: 'ca-dev-dashboard',
   standalone: true,
-  imports: [CommonModule, PortalSidebarComponent, IntegrationStatusBadgeComponent],
+  imports: [CommonModule, IntegrationStatusBadgeComponent],
   templateUrl: './dev-dashboard.component.html',
   styleUrls: ['./dev-dashboard.component.scss'],
 })

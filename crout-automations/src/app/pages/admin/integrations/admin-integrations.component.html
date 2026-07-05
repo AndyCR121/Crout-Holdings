@@ -1,7 +1,4 @@
-<div class="admin-layout">
-  <ca-admin-sidebar />
-  <main class="admin-main">
-    <div class="admin-page">
+<div class="admin-page">
       <div class="admin-page-header">
         <h1 class="admin-page-title">Integrations</h1>
         <button class="btn-create" (click)="openCreateIntegration()">+ New Integration</button>
@@ -32,8 +29,6 @@
         </table>
       </div>
     </div>
-  </main>
-</div>
 
 <div class="admin-modal-backdrop" *ngIf="showCreate() || editingIntegrationId() !== null" (click)="cancelIntegrationEdit()">
   <div class="admin-modal" (click)="$event.stopPropagation()">

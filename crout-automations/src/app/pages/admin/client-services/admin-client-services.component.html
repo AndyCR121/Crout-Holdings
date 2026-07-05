@@ -1,7 +1,4 @@
-<div class="admin-layout">
-  <ca-admin-sidebar />
-  <main class="admin-main">
-    <div class="admin-page admin-page--wide">
+<div class="admin-page admin-page--wide">
       <div class="admin-page-header">
         <div>
           <h1 class="admin-page-title">Client Services</h1>
@@ -110,10 +107,6 @@
         <span>Page {{ page() }}</span>
         <button class="btn-page" [disabled]="page() * pageSize >= total()" (click)="nextPage()">Next</button>
       </div>
-    </div>
-  </main>
-</div>
-
 <div class="admin-modal-backdrop" *ngIf="showCreate()" (click)="showCreate.set(false)">
   <div class="admin-modal" (click)="$event.stopPropagation()">
     <h3>Add Client Service</h3>
@@ -150,4 +143,5 @@
       <button class="btn-cancel" (click)="showCreate.set(false)">Cancel</button>
     </div>
   </div>
+</div>
 </div>

@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AdminSidebarComponent } from '../../../components/admin-sidebar/admin-sidebar.component';
 import { AuthService } from '../../../services/auth.service';
 import { AdminService } from '../../../services/admin.service';
 import { WorkflowCapabilityApiService } from '../../../services/workflow-capability-api.service';
@@ -12,7 +11,7 @@ import { IServiceWorkflowCapability, IWorkflowIntegrationDefinition } from '../.
 @Component({
   selector: 'ca-admin-workflow-capabilities',
   standalone: true,
-  imports: [CommonModule, FormsModule, AdminSidebarComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './admin-workflow-capabilities.component.html',
   styleUrls: ['../addons/admin-addons.component.scss'],
 })
@@ -31,6 +30,8 @@ export class AdminWorkflowCapabilitiesComponent implements OnInit {
 
   readonly editingCapabilityId = signal<number | null>(null);
   readonly editingIntegrationId = signal<number | null>(null);
+  readonly showCapabilityDialog = signal(false);
+  readonly showIntegrationDialog = signal(false);
   readonly saving = signal(false);
 
   capabilityDraft: Partial<IServiceWorkflowCapability> = { role: 'Trigger', capabilityType: '', name: '', price: 0, displayOrder: 0, isActive: true, requiresCredentials: false };
@@ -86,6 +87,7 @@ export class AdminWorkflowCapabilitiesComponent implements OnInit {
   }
 
   startEditCapability(item: IServiceWorkflowCapability): void {
+    this.showCapabilityDialog.set(true);
     this.editingCapabilityId.set(item.id);
     this.capabilityDraft = {
       serviceId: item.serviceId,
@@ -103,6 +105,7 @@ export class AdminWorkflowCapabilitiesComponent implements OnInit {
   }
 
   startEditIntegration(item: IWorkflowIntegrationDefinition): void {
+    this.showIntegrationDialog.set(true);
     this.editingIntegrationId.set(item.id);
     this.integrationDraft = {
       name: item.name,
@@ -115,13 +118,25 @@ export class AdminWorkflowCapabilitiesComponent implements OnInit {
   }
 
   cancelCapabilityEdit(): void {
+    this.showCapabilityDialog.set(false);
     this.editingCapabilityId.set(null);
     this.capabilityDraft = { role: 'Trigger', capabilityType: '', name: '', price: 0, displayOrder: 0, isActive: true, requiresCredentials: false };
   }
 
   cancelIntegrationEdit(): void {
+    this.showIntegrationDialog.set(false);
     this.editingIntegrationId.set(null);
     this.integrationDraft = { name: '', integrationType: '', hasCredentials: false, isActive: true };
+  }
+
+  openCreateCapability(): void {
+    this.cancelCapabilityEdit();
+    this.showCapabilityDialog.set(true);
+  }
+
+  openCreateIntegration(): void {
+    this.cancelIntegrationEdit();
+    this.showIntegrationDialog.set(true);
   }
 
   saveCapability(): void {

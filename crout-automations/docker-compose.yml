@@ -1,0 +1,11 @@
+services:
+  crout-automations-spa:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crout-automations-spa
+    restart: unless-stopped
+    ports:
+      - "${SPA_PORT:-8080}:80"
+    environment:
+      API_URL: "${API_URL}"

@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { distinctUntilChanged, map } from 'rxjs';
-import { PortalSidebarComponent } from '../../../components/portal-sidebar/portal-sidebar.component';
 import { IAddon, IDevPortalService } from '../../../interfaces/i-service.interface';
 import { ApiService } from '../../../services/api.service';
 import { DevService } from '../../../services/dev.service';
@@ -30,7 +29,7 @@ interface WorkflowAddonSelection {
 @Component({
   selector: 'ca-dev-service-guide',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, PortalSidebarComponent, IntegrationStatusBadgeComponent],
+  imports: [CommonModule, FormsModule, RouterModule, IntegrationStatusBadgeComponent],
   templateUrl: './dev-service-guide.component.html',
   styleUrls: ['./dev-service-guide.component.scss'],
 })

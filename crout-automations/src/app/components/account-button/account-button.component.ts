@@ -2,6 +2,7 @@ import {
   Component, inject, signal, computed, HostListener, OnInit
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { CompanyService } from '../../services/company.service';
 import { AuthModalComponent } from '../auth-modal/auth-modal.component';
@@ -17,6 +18,7 @@ import { ToastComponent } from '../toast/toast.component';
 export class AccountButtonComponent implements OnInit {
   private readonly auth     = inject(AuthService);
   private readonly companySvc = inject(CompanyService);
+  private readonly router = inject(Router);
 
   readonly loggedIn      = computed(() => this.auth.isLoggedIn());
   readonly user          = computed(() => this.auth.currentUser());
@@ -51,9 +53,12 @@ export class AccountButtonComponent implements OnInit {
 
   closeDropdown(): void { this.open.set(false); }
 
-  /** Use window.location — Angular Router is not available in Custom Elements context (WordPress). */
   navigate(path: string): void {
     this.open.set(false);
+    if (document.querySelector('app-root')) {
+      void this.router.navigateByUrl(path);
+      return;
+    }
     window.location.href = path;
   }
 
@@ -61,6 +66,10 @@ export class AccountButtonComponent implements OnInit {
     this.open.set(false);
     this.companySvc.clear();
     this.auth.logout();
+    if (document.querySelector('app-root')) {
+      void this.router.navigateByUrl('/');
+      return;
+    }
     window.location.href = '/';
   }
 

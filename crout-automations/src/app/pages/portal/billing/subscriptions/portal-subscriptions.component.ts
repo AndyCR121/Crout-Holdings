@@ -1,13 +1,13 @@
 import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../../services/auth.service';
 import { PaystackService, ICompanySubscriptions, IPaystackSubscription } from '../../../../services/paystack.service';
-import { PortalSidebarComponent } from '../../../../components/portal-sidebar/portal-sidebar.component';
 
 @Component({
   selector: 'ca-portal-subscriptions',
   standalone: true,
-  imports: [CommonModule, PortalSidebarComponent],
+  imports: [CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './portal-subscriptions.component.html',
   styleUrls: ['./portal-subscriptions.component.scss'],
 })

@@ -4,6 +4,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatError } from '@angular/material/form-field';
+import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { getPasswordValidationErrors, isValidEmail } from '../../utils/auth-validation';
@@ -24,6 +25,7 @@ export class AuthModalComponent {
 
   private readonly auth = inject(AuthService);
   private readonly toastSvc = inject(ToastService);
+  private readonly router = inject(Router);
 
   tab = signal<AuthTab>('login');
   view = signal<AuthView>('auth');
@@ -88,7 +90,7 @@ export class AuthModalComponent {
           this.loading.set(false);
           this.close.emit();
           this.toastSvc.success(`Welcome back, ${user.firstName || user.username}!`);
-          window.location.href = '/client/dashboard';
+          this.redirectToDashboard();
         },
         error: (e: any) => {
           this.loading.set(false);
@@ -130,7 +132,7 @@ export class AuthModalComponent {
         this.loading.set(false);
         this.close.emit();
         this.toastSvc.success(`Account created! Welcome, ${user.firstName || user.username}.`);
-        window.location.href = '/client/dashboard';
+        this.redirectToDashboard();
       },
       error: (e: any) => {
         this.loading.set(false);
@@ -301,6 +303,14 @@ export class AuthModalComponent {
     this.resetPassword = '';
     this.resetConfirmPassword = '';
     this.resetSubmitAttempted.set(false);
+  }
+
+  private redirectToDashboard(): void {
+    if (document.querySelector('app-root')) {
+      void this.router.navigateByUrl('/client/dashboard');
+      return;
+    }
+    window.location.href = '/client/dashboard';
   }
 
 }

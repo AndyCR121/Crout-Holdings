@@ -5,7 +5,6 @@ import { FormsModule } from '@angular/forms';
 import { MatCheckboxChange, MatCheckboxModule } from '@angular/material/checkbox';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { catchError, distinctUntilChanged, forkJoin, map, of, throwError } from 'rxjs';
-import { PortalSidebarComponent } from '../../../../components/portal-sidebar/portal-sidebar.component';
 import {
   CustomFormCheckboxElement,
   CustomFormDateTimeElement,
@@ -41,7 +40,7 @@ type SelectedTarget = 'form' | string;
 @Component({
   selector: 'ca-dev-service-form-builder',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, MatCheckboxModule, PortalSidebarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, MatCheckboxModule],
   templateUrl: './dev-service-form-builder.component.html',
   styleUrl: './dev-service-form-builder.component.scss'
 })

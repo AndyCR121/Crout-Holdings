@@ -9,7 +9,7 @@
   <div class="svc-hub__hero">
     <div class="svc-hub__container">
       <nav class="svc-hub__breadcrumb" aria-label="Breadcrumb">
-        <a href="/">Home</a>
+        <a routerLink="/">Home</a>
         <span aria-hidden="true">/</span>
         <span aria-current="page">Services</span>
       </nav>
@@ -61,7 +61,7 @@
         } @else {
           @for (s of services; track s.serviceId; let i = $index) {
             <a
-              [href]="['/services/' + s.slug]"
+              [routerLink]="['/services', s.slug]"
               class="svc-card"
               [class.svc-card--blue]="s.accent === 'blue'"
               caScrollReveal

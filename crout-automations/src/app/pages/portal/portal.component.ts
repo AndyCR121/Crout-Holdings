@@ -1,5 +1,5 @@
 import { Component, inject, computed, OnInit } from '@angular/core';
-import { RouterOutlet, Router } from '@angular/router';
+import { RouterOutlet, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { CompanyService } from '../../services/company.service';
@@ -7,7 +7,7 @@ import { CompanyService } from '../../services/company.service';
 @Component({
   selector: 'ca-portal',
   standalone: true,
-  imports: [CommonModule, RouterOutlet],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './portal.component.html',
   styleUrls: ['./portal.component.scss'],
 })
@@ -21,6 +21,7 @@ export class PortalComponent implements OnInit {
   /** Read from shared cache — no extra HTTP call. */
   readonly companies      = this.companySvc.companies;
   readonly primaryCompany = this.companySvc.primaryCompany;
+  readonly isDev          = computed(() => !!this.user()?.isDev);
   sidebarOpen = false;
 
   readonly initials = computed(() => {

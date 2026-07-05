@@ -1,14 +1,14 @@
 import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { PaystackService, ICompanyBilling, IPaystackCard } from '../../../../services/paystack.service';
 import { ToastService } from '../../../../services/toast.service';
-import { PortalSidebarComponent } from '../../../../components/portal-sidebar/portal-sidebar.component';
 
 @Component({
   selector: 'ca-portal-payment-methods',
   standalone: true,
-  imports: [CommonModule, PortalSidebarComponent],
+  imports: [CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './portal-payment-methods.component.html',
   styleUrls: ['./portal-payment-methods.component.scss'],
 })

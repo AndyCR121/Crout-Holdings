@@ -85,7 +85,7 @@
             }
           }
 
-          <a [href]="serviceUrl(svc)" class="pricing__card-cta"
+          <a [routerLink]="serviceUrl(svc)" class="pricing__card-cta"
              [class.pricing__card-cta--highlight]="i % 2 === 0">
             Choose Plan
           </a>
@@ -97,7 +97,7 @@
     <!-- View More CTA (shown when there are more than 6 services) -->
     @if (hasMoreServices) {
       <div class="pricing__view-more">
-        <a href="/services" class="pricing__view-more-btn">
+        <a routerLink="/services" class="pricing__view-more-btn">
           View All Services
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
@@ -212,7 +212,7 @@
               }
             </div>
 
-            <a [href]="packageUrl(view)" class="pricing__suite-cta">Get this Package</a>
+            <a [routerLink]="packageUrl(view)" class="pricing__suite-cta">Get this Package</a>
             <p class="pricing__suite-cta-note">Custom scoping call included</p>
           </div>
 
@@ -224,7 +224,7 @@
 
     <p class="pricing__note">
       All prices are ZAR and exclude VAT. Custom services available on request.
-      <a href="/contact-us/">Get in touch</a> for a tailored quote.
+      <a routerLink="/contact-us">Get in touch</a> for a tailored quote.
     </p>
 
   </div>

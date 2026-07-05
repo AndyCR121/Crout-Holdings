@@ -3,7 +3,6 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { PortalSidebarComponent } from '../../../components/portal-sidebar/portal-sidebar.component';
 import { IDevPortalService } from '../../../interfaces/i-service.interface';
 import { DevService } from '../../../services/dev.service';
 import { ToastService } from '../../../services/toast.service';
@@ -13,7 +12,7 @@ import { IntegrationStatusService } from '../../../services/integration-status.s
 @Component({
   selector: 'ca-dev-services',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, PortalSidebarComponent, IntegrationStatusBadgeComponent],
+  imports: [CommonModule, FormsModule, RouterModule, IntegrationStatusBadgeComponent],
   templateUrl: './dev-services.component.html',
   styleUrls: ['./dev-services.component.scss'],
 })

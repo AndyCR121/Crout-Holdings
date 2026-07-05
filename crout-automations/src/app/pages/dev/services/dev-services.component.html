@@ -1,14 +1,10 @@
-<div class="portal-layout">
-  <ca-portal-sidebar />
-
-  <main class="portal-main">
-    <section class="dservices-wrap">
+<section class="dservices-wrap">
       <div class="dservices-header">
         <div>
           <h1 class="dservices-title">Dev Services</h1>
           <p class="dservices-sub">Manage assigned services and claim available work.</p>
         </div>
-        <a class="dservices-action" href="/dev/dashboard">Dashboard</a>
+        <a class="dservices-action" routerLink="/dev/dashboard">Dashboard</a>
       </div>
 
       <div class="dservices-grid">
@@ -41,7 +37,8 @@
               @for (item of assigned(); track item.userServiceId) {
                 <a
                   class="dservices-row dservices-row--link"
-                  [href]="guideHref(item.userServiceId)">
+                  [routerLink]="['/dev/dev-services/guide']"
+                  [queryParams]="{ userServiceId: item.userServiceId }">
                   <span>{{ item.companyName }}</span>
                   <span>{{ item.serviceName }}</span>
                   <span><ca-integration-status-badge [integrationStatus]="item.integrationStatus" [legacyStatus]="item.status" /></span>
@@ -109,5 +106,3 @@
         </aside>
       </div>
     </section>
-  </main>
-</div>

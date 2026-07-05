@@ -1,7 +1,3 @@
-<div class="admin-layout">
-  <ca-admin-sidebar />
-  <main class="admin-main">
-
 <div class="admin-page">
   <div class="admin-page-header">
     <h1 class="admin-page-title">Service Features</h1>
@@ -84,7 +80,6 @@
       <button class="btn-cancel" (click)="showCreate.set(false)">Cancel</button>
     </div>
   </div>
-</div>
 
 <!-- Delete Confirm -->
 <div class="admin-modal-backdrop" *ngIf="deleteConfirmId() !== null" (click)="cancelDelete()">
@@ -97,6 +92,5 @@
     </div>
   </div>
 </div>
-
-  </main>
 </div>
+

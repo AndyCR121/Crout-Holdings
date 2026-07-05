@@ -7,7 +7,6 @@ import { AuthService } from '../../../services/auth.service';
 import { ApiService } from '../../../services/api.service';
 import { ToastService } from '../../../services/toast.service';
 import { IUserService, IService, IAddon, ICompany } from '../../../interfaces/i-service.interface';
-import { PortalSidebarComponent } from '../../../components/portal-sidebar/portal-sidebar.component';
 import { ServiceTriggerRendererComponent } from '../../../components/service-trigger-renderer/service-trigger-renderer.component';
 import { MarketingWorkspaceComponent } from '../../../components/marketing-workspace/marketing-workspace.component';
 import { DynamicFieldConfig, ServiceTriggerConfig } from '../../../interfaces/i-service-trigger.interface';
@@ -61,7 +60,7 @@ interface CredentialFormOption {
 @Component({
   selector: 'ca-portal-services',
   standalone: true,
-  imports: [CommonModule, FormsModule, PortalSidebarComponent, ServiceTriggerRendererComponent, MarketingWorkspaceComponent, IntegrationStatusBadgeComponent],
+  imports: [CommonModule, FormsModule, ServiceTriggerRendererComponent, MarketingWorkspaceComponent, IntegrationStatusBadgeComponent],
   templateUrl: './portal-services.component.html',
   styleUrls: ['./portal-services.component.scss'],
 })

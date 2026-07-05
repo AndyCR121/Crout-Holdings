@@ -7,12 +7,11 @@ import { CompanyService } from '../../../services/company.service';
 import { ToastService } from '../../../services/toast.service';
 import { EnvironmentService } from '../../../services/environment.service';
 import { IUser, ICompany } from '../../../interfaces/i-service.interface';
-import { PortalSidebarComponent } from '../../../components/portal-sidebar/portal-sidebar.component';
 
 @Component({
   selector: 'ca-portal-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, PortalSidebarComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './portal-profile.component.html',
   styleUrls: ['./portal-profile.component.scss'],
 })

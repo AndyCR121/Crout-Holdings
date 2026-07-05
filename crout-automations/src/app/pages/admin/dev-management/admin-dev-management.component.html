@@ -1,8 +1,4 @@
-<div class="admin-layout">
-  <ca-admin-sidebar />
-
-  <main class="admin-main">
-    <div class="admin-page admin-page--wide">
+<div class="admin-page admin-page--wide">
       <div class="admin-page-header">
         <h1 class="admin-page-title">Developer Management</h1>
         <div class="admin-page-header-actions">
@@ -137,10 +133,6 @@
           <button type="button" class="btn-page" [disabled]="!hasMore" (click)="nextPage()">Next</button>
         </div>
       </section>
-    </div>
-  </main>
-</div>
-
 <div class="admin-modal-backdrop" *ngIf="showCreate()" (click)="showCreate.set(false)">
   <div class="admin-modal admin-modal--link" (click)="$event.stopPropagation()">
     <h3>Add Developer Assignment</h3>
@@ -175,4 +167,5 @@
       <button type="button" class="btn-cancel" (click)="showCreate.set(false)">Cancel</button>
     </div>
   </div>
+</div>
 </div>

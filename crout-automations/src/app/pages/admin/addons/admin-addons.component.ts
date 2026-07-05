@@ -8,12 +8,11 @@ import { AdminService } from '../../../services/admin.service';
 import { WorkflowCapabilityApiService } from '../../../services/workflow-capability-api.service';
 import { IAddon, IService } from '../../../interfaces/i-service.interface';
 import { IWorkflowIntegrationDefinition } from '../../../interfaces/i-workflow-capability.interface';
-import { AdminSidebarComponent } from '../../../components/admin-sidebar/admin-sidebar.component';
 
 @Component({
   selector: 'ca-admin-addons',
   standalone: true,
-  imports: [CommonModule, FormsModule, AdminSidebarComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './admin-addons.component.html',
   styleUrls: ['./admin-addons.component.scss'],
 })

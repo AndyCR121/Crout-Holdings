@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AdminSidebarComponent } from '../../../components/admin-sidebar/admin-sidebar.component';
 import { AuthService } from '../../../services/auth.service';
 import { AdminService, PagedResult } from '../../../services/admin.service';
 import { AdminIntegrationDraftService } from '../../../services/admin-integration-draft.service';
@@ -13,7 +12,7 @@ import { IWorkflowIntegrationDefinition } from '../../../interfaces/i-workflow-c
 @Component({
   selector: 'ca-admin-integrations',
   standalone: true,
-  imports: [CommonModule, FormsModule, AdminSidebarComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './admin-integrations.component.html',
   styleUrls: ['../addons/admin-addons.component.scss'],
 })

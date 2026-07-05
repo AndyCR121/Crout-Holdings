@@ -1,8 +1,4 @@
-<div class="portal-layout">
-  <ca-portal-sidebar />
-  <main class="portal-main">
-
-    <div class="pbilling">
+<div class="pbilling">
 
       <header class="pbilling__header">
         <h1 class="pbilling__title">Billing</h1>
@@ -13,13 +9,13 @@
 
         <!-- Left sub-nav -->
         <nav class="pbilling__nav" aria-label="Billing sections">
-          <a href="/client/billing/subscriptions" class="pbilling__nav-item active">
+          <a routerLink="/client/billing/subscriptions" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="pbilling__nav-item">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
             </svg>
             Subscriptions
           </a>
-          <a href="/client/billing/payment-methods" class="pbilling__nav-item">
+          <a routerLink="/client/billing/payment-methods" routerLinkActive="active" class="pbilling__nav-item">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
             </svg>
@@ -123,7 +119,4 @@
         </div>
 
       </div>
-    </div>
-
-  </main>
 </div>
