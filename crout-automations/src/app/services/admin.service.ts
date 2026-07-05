@@ -16,6 +16,12 @@ import {
   IAdminClientService,
   IAdminClientServiceUpsert,
   IAdminPaystackMapping,
+  IDatabaseManagementTarget,
+  IDatabaseMigrationOperation,
+  IDatabaseMigrationValidation,
+  IMigrationSelection,
+  ISqlUpdatePreview,
+  ISqlUpdaterSummary,
 } from '../interfaces/i-service.interface';
 
 function normalizeService(raw: any): IService {
@@ -55,29 +61,6 @@ function normalizeAddon(raw: any): IAddon {
 }
 
 export interface PagedResult<T> { items: T[]; total: number; page: number; pageSize: number; }
-export interface SqlUpdaterScriptResult {
-  fileName: string;
-  status: string;
-  durationMs: number;
-  errorMessage?: string | null;
-}
-
-export interface SqlUpdaterSummary {
-  environmentName: string;
-  databaseTarget: string;
-  dryRun: boolean;
-  success: boolean;
-  durationMs: number;
-  discoveredScripts: string[];
-  ignoredScripts: string[];
-  pendingScripts: string[];
-  executedScripts: string[];
-  skippedScripts: string[];
-  failedScript?: string | null;
-  errorMessage?: string | null;
-  scriptResults: SqlUpdaterScriptResult[];
-}
-
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private readonly http = inject(HttpClient);
@@ -295,10 +278,68 @@ export class AdminService {
     return this.http.post<IAdminClientService>(`${this.base}/client-services/${id}/integration/start`, {}, { headers: this.authHeaders(), withCredentials: true });
   }
 
-  runSqlUpdater(confirmExecution: boolean): Observable<SqlUpdaterSummary> {
-    return this.http.post<SqlUpdaterSummary>(
-      `${this.base}/sql-updater/run`,
-      { confirmExecution },
+  getDatabaseManagementTargets(): Observable<IDatabaseManagementTarget[]> {
+    return this.http.get<IDatabaseManagementTarget[]>(
+      `${this.base}/database-management/targets`,
+      { headers: this.authHeaders(), withCredentials: true }
+    );
+  }
+
+  getSqlUpdatePreview(targetKey: string): Observable<ISqlUpdatePreview> {
+    const params = new HttpParams().set('targetKey', targetKey);
+    return this.http.get<ISqlUpdatePreview>(
+      `${this.base}/database-management/sql-updates/preview`,
+      { params, headers: this.authHeaders(), withCredentials: true }
+    );
+  }
+
+  getLatestSqlUpdateResult(targetKey: string): Observable<ISqlUpdaterSummary> {
+    const params = new HttpParams().set('targetKey', targetKey);
+    return this.http.get<ISqlUpdaterSummary>(
+      `${this.base}/database-management/sql-updates/latest`,
+      { params, headers: this.authHeaders(), withCredentials: true }
+    );
+  }
+
+  runSqlUpdate(targetKey: string, confirmationText: string): Observable<ISqlUpdaterSummary> {
+    return this.http.post<ISqlUpdaterSummary>(
+      `${this.base}/database-management/sql-updates/run`,
+      { targetKey, confirmExecution: true, confirmationText },
+      { headers: this.authHeaders(), withCredentials: true }
+    );
+  }
+
+  validateDatabaseMigration(source: IMigrationSelection, destination: IMigrationSelection): Observable<IDatabaseMigrationValidation> {
+    return this.http.post<IDatabaseMigrationValidation>(
+      `${this.base}/database-management/migrations/validate`,
+      { source, destination },
+      { headers: this.authHeaders(), withCredentials: true }
+    );
+  }
+
+  startDatabaseMigration(
+    source: IMigrationSelection,
+    destination: IMigrationSelection,
+    sourceConfirmationText: string,
+    destinationConfirmationText: string,
+  ): Observable<IDatabaseMigrationOperation> {
+    return this.http.post<IDatabaseMigrationOperation>(
+      `${this.base}/database-management/migrations/start`,
+      {
+        source,
+        destination,
+        confirmExecution: true,
+        acknowledgeDestinationChange: true,
+        sourceConfirmationText,
+        destinationConfirmationText,
+      },
+      { headers: this.authHeaders(), withCredentials: true }
+    );
+  }
+
+  getDatabaseMigrationStatus(operationId: string): Observable<IDatabaseMigrationOperation> {
+    return this.http.get<IDatabaseMigrationOperation>(
+      `${this.base}/database-management/migrations/status/${operationId}`,
       { headers: this.authHeaders(), withCredentials: true }
     );
   }

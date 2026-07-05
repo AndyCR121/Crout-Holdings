@@ -258,6 +258,18 @@ export const routes: Routes = [
       import('./pages/admin/integrations/admin-integrations.component').then(m => m.AdminIntegrationsComponent),
   },
   {
+    path: 'admin/integrations/credentials-builder',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./pages/admin/integrations/credential-builder/admin-integration-credential-builder.component').then(m => m.AdminIntegrationCredentialBuilderComponent),
+  },
+  {
+    path: 'admin/database-management',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./pages/admin/database-management/admin-database-management.component').then(m => m.AdminDatabaseManagementComponent),
+  },
+  {
     path: 'admin/addons',
     canActivate: [authGuard, adminGuard],
     loadComponent: () =>

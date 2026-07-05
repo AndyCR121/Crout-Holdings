@@ -13,7 +13,7 @@
   <!-- Loading -->
   <div class="pservices__empty" *ngIf="loading()">
     <div class="pservices__spinner"></div>
-    <p>Loading your services…</p>
+    <p>Loading your services...</p>
   </div>
 
   <!-- No services at all -->
@@ -118,7 +118,7 @@
               <button class="pservices__btn pservices__btn--ghost" (click)="cancelEdit(row)">Cancel</button>
               <button class="pservices__btn pservices__btn--primary" (click)="submitConfigRequest(row)" [disabled]="saving() === row.userService.serviceId">
                 <span *ngIf="saving() !== row.userService.serviceId">Submit Request</span>
-                <span *ngIf="saving() === row.userService.serviceId">Submitting…</span>
+                <span *ngIf="saving() === row.userService.serviceId">Submitting...</span>
               </button>
             </div>
           </div>
@@ -145,12 +145,12 @@
                     <p *ngIf="row.workflowStepsLoading">Loading credential forms...</p>
                     <label>
                       Workflow Step
-                      <select [(ngModel)]="row.credentialStepId">
-                        <option *ngFor="let step of credentialSteps(row)" [ngValue]="step.id">{{ step.capabilityName }}{{ step.integrationName ? ' · ' + step.integrationName : '' }}</option>
+                      <select [(ngModel)]="row.credentialSelectionKey">
+                        <option *ngFor="let option of credentialOptions(row)" [ngValue]="option.key">{{ option.label }}</option>
                       </select>
                     </label>
-                    <p *ngIf="!row.workflowStepsLoading && credentialSteps(row).length === 0">No credential forms are required yet.</p>
-                    <div class="pservices__credential-fields" *ngIf="credentialSteps(row).length > 0">
+                    <p *ngIf="!row.workflowStepsLoading && credentialOptions(row).length === 0">No credential forms are required yet.</p>
+                    <div class="pservices__credential-fields" *ngIf="credentialOptions(row).length > 0">
                       <label *ngFor="let field of credentialSchema(row)">
                         {{ field.key }}
                         <textarea
@@ -167,7 +167,7 @@
                         />
                       </label>
                     </div>
-                    <div class="pservices__credential-actions" *ngIf="credentialSteps(row).length > 0">
+                    <div class="pservices__credential-actions" *ngIf="credentialOptions(row).length > 0">
                       <button class="pservices__btn pservices__btn--ghost" type="button" (click)="cancelCredentials(row)">Cancel</button>
                       <button class="pservices__btn pservices__btn--primary" type="button" (click)="submitCredentials(row)" [disabled]="savingCredentials() === row.userService.userServiceId">
                         {{ savingCredentials() === row.userService.userServiceId ? 'Sending...' : 'Send Credentials' }}

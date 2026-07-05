@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, computed, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -7,6 +7,12 @@ import { AuthService } from '../../../services/auth.service';
 import { AdminService, PagedResult } from '../../../services/admin.service';
 import { IService, IAddon } from '../../../interfaces/i-service.interface';
 import { AdminSidebarComponent } from '../../../components/admin-sidebar/admin-sidebar.component';
+
+interface AddonLinkGroup {
+  key: string;
+  display: IAddon;
+  members: IAddon[];
+}
 
 @Component({
   selector: 'ca-admin-services',
@@ -46,9 +52,10 @@ export class AdminServicesComponent implements OnInit {
   showLinkModal = signal(false);
   linkTarget    = signal<IService | null>(null);
   allAddons     = signal<IAddon[]>([]);
-  linkSelected  = signal<Set<number>>(new Set());
+  linkSelected  = signal<Set<string>>(new Set());
   linkLoading   = signal(false);
   linkSaving    = signal(false);
+  readonly addonLinkGroups = computed(() => this.buildAddonLinkGroups(this.allAddons()));
 
   ngOnInit(): void {
     const user = this.auth.currentUser();
@@ -128,39 +135,43 @@ export class AdminServicesComponent implements OnInit {
     this.admin.getAddons(1, 100).subscribe({
       next: (result: PagedResult<IAddon>) => {
         this.allAddons.set(result.items);
-        this.linkSelected.set(new Set(result.items.filter(a => a.serviceIds.includes(s.serviceId) || a.serviceId === s.serviceId).map(a => a.addonId)));
+        this.linkSelected.set(new Set(
+          this.buildAddonLinkGroups(result.items)
+            .filter(group => group.members.some(member => member.serviceIds.includes(s.serviceId) || member.serviceId === s.serviceId))
+            .map(group => group.key)));
         this.linkLoading.set(false);
       },
       error: () => this.linkLoading.set(false)
     });
   }
 
-  toggleLink(addonId: number): void {
+  toggleLink(groupKey: string): void {
     const selected = new Set(this.linkSelected());
-    selected.has(addonId) ? selected.delete(addonId) : selected.add(addonId);
+    selected.has(groupKey) ? selected.delete(groupKey) : selected.add(groupKey);
     this.linkSelected.set(selected);
   }
 
-  isLinked(addonId: number): boolean {
-    return this.linkSelected().has(addonId);
+  isLinked(groupKey: string): boolean {
+    return this.linkSelected().has(groupKey);
   }
 
   saveLinks(): void {
     const service = this.linkTarget();
     if (!service) return;
 
-    const requests = this.allAddons()
-      .map(addon => {
-        const currentlyLinked = addon.serviceIds.includes(service.serviceId) || addon.serviceId === service.serviceId;
-        const shouldBeLinked = this.linkSelected().has(addon.addonId);
-        if (currentlyLinked === shouldBeLinked) return null;
+    const requests = this.addonLinkGroups()
+      .flatMap(group => group.members
+        .map(addon => {
+          const currentlyLinked = addon.serviceIds.includes(service.serviceId) || addon.serviceId === service.serviceId;
+          const shouldBeLinked = this.linkSelected().has(group.key);
+          if (currentlyLinked === shouldBeLinked) return null;
 
-        const nextServiceIds = shouldBeLinked
-          ? [...new Set([...addon.serviceIds, service.serviceId])]
-          : addon.serviceIds.filter(id => id !== service.serviceId);
+          const nextServiceIds = shouldBeLinked
+            ? [...new Set([...addon.serviceIds, service.serviceId])]
+            : addon.serviceIds.filter(id => id !== service.serviceId);
 
-        return this.admin.linkServicesToAddon(addon.addonId, nextServiceIds);
-      })
+          return this.admin.linkServicesToAddon(addon.addonId, nextServiceIds);
+        }))
       .filter(request => request !== null);
 
     this.linkSaving.set(true);
@@ -177,15 +188,57 @@ export class AdminServicesComponent implements OnInit {
     });
   }
 
-  linkedAddonList(): IAddon[] {
+  linkedAddonList(): AddonLinkGroup[] {
     const serviceId = this.linkTarget()?.serviceId;
     if (!serviceId) return [];
 
-    return this.allAddons()
-      .filter(addon => addon.serviceIds.includes(serviceId) || addon.serviceId === serviceId)
+    return this.addonLinkGroups()
+      .filter(group => group.members.some(addon => addon.serviceIds.includes(serviceId) || addon.serviceId === serviceId));
+  }
+
+  addonGroupMeta(group: AddonLinkGroup): string {
+    const parts = [`#${group.display.addonId}`];
+    const integrationNames = [...new Set(group.members.flatMap(addon => (addon.integrations ?? []).map(integration => integration.name)).filter(Boolean))];
+    if (integrationNames.length) {
+      parts.push(integrationNames.join(', '));
+    }
+    if (group.members.length > 1) {
+      parts.push(`${group.members.length} matching records`);
+    }
+    return parts.join(' | ');
+  }
+
+  private buildAddonLinkGroups(addons: IAddon[]): AddonLinkGroup[] {
+    const groups = new Map<string, IAddon[]>();
+    for (const addon of addons) {
+      const key = this.addonLinkGroupKey(addon);
+      const members = groups.get(key) ?? [];
+      members.push(addon);
+      groups.set(key, members);
+    }
+
+    return [...groups.entries()]
+      .map(([key, members]) => ({
+        key,
+        display: [...members].sort((left, right) => left.addonId - right.addonId)[0],
+        members,
+      }))
       .sort((left, right) =>
-        left.displayOrder - right.displayOrder
-        || left.type.localeCompare(right.type)
-        || left.addonName.localeCompare(right.addonName));
+        left.display.displayOrder - right.display.displayOrder
+        || left.display.type.localeCompare(right.display.type)
+        || left.display.addonName.localeCompare(right.display.addonName)
+        || left.display.addonId - right.display.addonId);
+  }
+
+  private addonLinkGroupKey(addon: IAddon): string {
+    const normalizedDescription = (addon.addonDescription ?? '').trim().toLowerCase();
+    const integrationIds = [...new Set((addon.integrations ?? []).map(integration => integration.id))].sort((left, right) => left - right);
+    return [
+      addon.addonName.trim().toLowerCase(),
+      addon.type,
+      addon.monthlyPrice.toFixed(2),
+      normalizedDescription,
+      integrationIds.join(','),
+    ].join('|');
   }
 }

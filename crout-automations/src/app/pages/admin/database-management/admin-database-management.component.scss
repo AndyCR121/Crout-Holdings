@@ -1,0 +1,87 @@
+@use '../admin-table.shared.scss' as *;
+
+.admin-page--wide {
+  max-width: 1280px;
+}
+
+.page-copy {
+  margin: 8px 0 0;
+  color: rgba(255,255,255,0.55);
+  font-size: 14px;
+}
+
+.database-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.database-card {
+  max-width: none;
+  min-width: 0;
+}
+
+.selector-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.summary-box,
+.result-panel {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+}
+
+.summary-row,
+.log-row {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.summary-row + .summary-row,
+.log-row + .log-row {
+  margin-top: 10px;
+}
+
+.summary-row span,
+.log-row span {
+  color: rgba(255,255,255,0.58);
+  font-size: 13px;
+}
+
+.summary-row strong,
+.log-row strong {
+  color: rgba(255,255,255,0.92);
+  text-align: right;
+}
+
+.success {
+  color: #2ecc71 !important;
+}
+
+.danger,
+.danger-text {
+  color: #ff7f7f !important;
+}
+
+.warning-copy,
+.warning-text {
+  color: #f6c66b !important;
+}
+
+.log-list {
+  margin-top: 16px;
+}
+
+@media (max-width: 960px) {
+  .database-grid,
+  .selector-grid {
+    grid-template-columns: 1fr;
+  }
+}

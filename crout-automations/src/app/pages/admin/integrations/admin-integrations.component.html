@@ -4,45 +4,10 @@
     <div class="admin-page">
       <div class="admin-page-header">
         <h1 class="admin-page-title">Integrations</h1>
+        <button class="btn-create" (click)="openCreateIntegration()">+ New Integration</button>
       </div>
 
       <div *ngIf="error()" class="admin-error">{{ error() }}</div>
-
-      <section class="admin-modal" style="margin-bottom: 1rem;">
-        <h3>SQL Updater</h3>
-        <p class="admin-modal-hint">
-          This runs the approved SQL updater against the database connected to the current API environment.
-          Development updates the Development database. Production updates the Production database.
-          The updater may reconcile schema and seed required system data.
-        </p>
-
-        <div class="admin-modal-actions" *ngIf="!confirmingUpdater()">
-          <button class="btn-save" [disabled]="runningUpdater()" (click)="openUpdaterConfirmation()">
-            {{ runningUpdater() ? 'Running...' : 'Run SQL Updater' }}
-          </button>
-        </div>
-
-        <div *ngIf="confirmingUpdater()">
-          <p class="admin-modal-hint">
-            Confirm that you want to run the SQL updater against the database connected to this environment.
-          </p>
-          <div class="admin-modal-actions">
-            <button class="btn-save" [disabled]="runningUpdater()" (click)="runSqlUpdater()">Confirm Run</button>
-            <button class="btn-cancel" [disabled]="runningUpdater()" (click)="cancelUpdaterConfirmation()">Cancel</button>
-          </div>
-        </div>
-
-        <div *ngIf="updaterSummary()" class="admin-updater-summary">
-          <p><strong>Target:</strong> {{ updaterSummary()!.databaseTarget }}</p>
-          <p><strong>Status:</strong> {{ updaterSummary()!.success ? 'Success' : 'Failed' }}</p>
-          <p><strong>Duration:</strong> {{ updaterSummary()!.durationMs }} ms</p>
-          <p><strong>Executed:</strong> {{ updaterSummary()!.executedScripts.length ? updaterSummary()!.executedScripts.join(', ') : 'none' }}</p>
-          <p><strong>Skipped:</strong> {{ updaterSummary()!.skippedScripts.length ? updaterSummary()!.skippedScripts.join(', ') : 'none' }}</p>
-          <p><strong>Ignored:</strong> {{ updaterSummary()!.ignoredScripts.length ? updaterSummary()!.ignoredScripts.join(', ') : 'none' }}</p>
-          <p *ngIf="updaterSummary()!.failedScript"><strong>Failed script:</strong> {{ updaterSummary()!.failedScript }}</p>
-          <p *ngIf="updaterSummary()!.errorMessage"><strong>Error:</strong> {{ updaterSummary()!.errorMessage }}</p>
-        </div>
-      </section>
 
       <div *ngIf="loading()" class="admin-loading">
         <div class="skeleton-row" *ngFor="let i of [1,2,3]"></div>
@@ -65,22 +30,37 @@
             </tr>
           </tbody>
         </table>
-
-        <div class="admin-modal" style="margin: 1rem 0;">
-          <h3>{{ editingIntegrationId() ? 'Edit Integration Definition' : 'New Integration Definition' }}</h3>
-          <label>Name<input class="admin-input" [(ngModel)]="integrationDraft.name" /></label>
-          <label>Type<input class="admin-input" [(ngModel)]="integrationDraft.integrationType" /></label>
-          <label>Description<input class="admin-input" [(ngModel)]="integrationDraft.description" /></label>
-          <label><input type="checkbox" [(ngModel)]="integrationDraft.hasCredentials" /> Requires Credentials</label>
-          <label><input type="checkbox" [(ngModel)]="integrationDraft.isActive" /> Active</label>
-          <label>Credential Schema JSON<textarea class="admin-input" rows="6" [ngModel]="integrationDraft.credentialFormSchema ? (integrationDraft.credentialFormSchema | json) : ''" (ngModelChange)="updateIntegrationSchema($event)"></textarea></label>
-          <p class="admin-modal-hint">Assign integrations to add-ons from the Addons page.</p>
-          <div class="admin-modal-actions">
-            <button class="btn-save" [disabled]="saving()" (click)="saveIntegration()">{{ saving() ? 'Saving...' : 'Save' }}</button>
-            <button class="btn-cancel" (click)="cancelIntegrationEdit()">Cancel</button>
-          </div>
-        </div>
       </div>
     </div>
   </main>
+</div>
+
+<div class="admin-modal-backdrop" *ngIf="showCreate() || editingIntegrationId() !== null" (click)="cancelIntegrationEdit()">
+  <div class="admin-modal" (click)="$event.stopPropagation()">
+    <h3>{{ editingIntegrationId() ? 'Edit Integration Definition' : 'New Integration Definition' }}</h3>
+    <label>Name<input class="admin-input" [(ngModel)]="integrationDraft.name" /></label>
+    <label>
+      Type
+      <select class="admin-input" [(ngModel)]="integrationDraft.integrationType">
+        <option *ngFor="let option of integrationTypeOptions" [ngValue]="option">{{ option }}</option>
+      </select>
+    </label>
+    <label>Description<input class="admin-input" [(ngModel)]="integrationDraft.description" /></label>
+    <label><input type="checkbox" [(ngModel)]="integrationDraft.hasCredentials" /> Requires Credentials</label>
+    <label><input type="checkbox" [(ngModel)]="integrationDraft.isActive" /> Active</label>
+    <label>
+      Setup Credentials
+      <div class="admin-modal-actions">
+        <button class="btn-link" type="button" (click)="openCredentialBuilder()">Setup Credentials</button>
+      </div>
+      <span class="admin-modal-hint">
+        {{ credentialFieldCount() ? (credentialFieldCount() + ' credential field' + (credentialFieldCount() === 1 ? '' : 's') + ' configured.') : 'No credential fields configured yet.' }}
+      </span>
+    </label>
+    <p class="admin-modal-hint">Assign integrations to add-ons from the Addons page.</p>
+    <div class="admin-modal-actions">
+      <button class="btn-save" [disabled]="saving()" (click)="saveIntegration()">{{ saving() ? 'Saving...' : (editingIntegrationId() ? 'Save' : 'Create') }}</button>
+      <button class="btn-cancel" (click)="cancelIntegrationEdit()">Cancel</button>
+    </div>
+  </div>
 </div>

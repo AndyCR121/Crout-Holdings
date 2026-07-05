@@ -5,7 +5,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { distinctUntilChanged, map } from 'rxjs';
 import { PortalSidebarComponent } from '../../../components/portal-sidebar/portal-sidebar.component';
-import { IDevPortalService } from '../../../interfaces/i-service.interface';
+import { IAddon, IDevPortalService } from '../../../interfaces/i-service.interface';
+import { ApiService } from '../../../services/api.service';
 import { DevService } from '../../../services/dev.service';
 import { ToastService } from '../../../services/toast.service';
 import { IntegrationStatusBadgeComponent } from '../../../components/integration-status-badge/integration-status-badge.component';
@@ -37,6 +38,7 @@ export class DevServiceGuideComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly api = inject(ApiService);
   private readonly dev = inject(DevService);
   private readonly toast = inject(ToastService);
   private readonly integrationStatus = inject(IntegrationStatusService);
@@ -109,13 +111,7 @@ export class DevServiceGuideComponent implements OnInit {
         }
 
         this.guide.set(guide);
-        const selections = this.parseSelections(guide.config);
-        this.availableSelections.set(selections);
-        this.selectedAddonIds = selections.filter(item => item.confirmed).map(item => item.addonId);
-        if (!this.selectedAddonIds.length) {
-          this.selectedAddonIds = selections.filter(item => item.isActive).map(item => item.addonId);
-        }
-        this.loading.set(false);
+        this.resolveSelections(guide);
       },
       error: () => this.handleGuideLoadFailure(),
     });
@@ -169,11 +165,8 @@ export class DevServiceGuideComponent implements OnInit {
     }).subscribe({
       next: guide => {
         this.guide.set(guide);
-        const selections = this.parseSelections(guide.config);
-        this.availableSelections.set(selections);
-        this.selectedAddonIds = selections.filter(item => item.confirmed).map(item => item.addonId);
+        this.resolveSelections(guide, { closeEditorOnComplete: true });
         this.savingIntegrations.set(false);
-        this.integrationEditorOpen.set(false);
         this.toast.success('Workflow integrations confirmed.');
       },
       error: err => {
@@ -258,11 +251,44 @@ export class DevServiceGuideComponent implements OnInit {
     return normalized === 'websiteform' || normalized === 'customform';
   }
 
+  private resolveSelections(guide: IDevPortalService, options?: { closeEditorOnComplete?: boolean }): void {
+    const snapshotSelections = this.parseSelections(guide.config);
+    if (snapshotSelections.length > 0) {
+      this.applySelections(snapshotSelections, options);
+      return;
+    }
+
+    this.api.getAddonsByService(guide.serviceId).subscribe({
+      next: addons => {
+        this.applySelections(this.mapAddonsToSelections(addons, guide.config), options);
+      },
+      error: () => {
+        this.applySelections([], options);
+        this.toast.error('This service has no stored add-on snapshot and the current add-on links could not be loaded.');
+      }
+    });
+  }
+
+  private applySelections(selections: WorkflowAddonSelection[], options?: { closeEditorOnComplete?: boolean }): void {
+    const uniqueSelections = selections.filter((item, index, all) =>
+      all.findIndex(candidate => candidate.addonId === item.addonId) === index);
+    this.availableSelections.set(uniqueSelections);
+    this.selectedAddonIds = uniqueSelections.filter(item => item.confirmed).map(item => item.addonId);
+    if (!this.selectedAddonIds.length) {
+      this.selectedAddonIds = uniqueSelections.filter(item => item.isActive).map(item => item.addonId);
+    }
+    if (options?.closeEditorOnComplete) {
+      this.integrationEditorOpen.set(false);
+    }
+    this.loading.set(false);
+  }
+
   private parseSelections(config?: string | null): WorkflowAddonSelection[] {
     if (!config?.trim()) return [];
 
     try {
       const parsed = JSON.parse(config) as Record<string, unknown>;
+      const confirmedByRole = this.parseConfirmedNames(parsed);
       const requested = Array.isArray(parsed['requestedAddons']) ? parsed['requestedAddons'] as Array<Record<string, unknown>> : [];
       const confirmedIds = new Set(
         (Array.isArray(parsed['confirmedAddons']) ? parsed['confirmedAddons'] as Array<Record<string, unknown>> : [])
@@ -275,13 +301,75 @@ export class DevServiceGuideComponent implements OnInit {
           addonId: Number(item['addonId'] ?? 0),
           name: typeof item['name'] === 'string' ? item['name'].trim() : '',
           type: this.normalizeType(item['type']),
-          confirmed: confirmedIds.has(Number(item['addonId'])) || item['confirmed'] === true,
+          confirmed: this.isConfirmedSelection(
+            typeof item['name'] === 'string' ? item['name'] : '',
+            this.normalizeType(item['type']),
+            confirmedIds.has(Number(item['addonId'])) || item['confirmed'] === true,
+            confirmedByRole),
           isActive: item['isActive'] !== false,
         }))
         .filter(item => item.addonId > 0 && item.name.length > 0 && item.isActive);
     } catch {
       return [];
     }
+  }
+
+  private mapAddonsToSelections(addons: IAddon[], config?: string | null): WorkflowAddonSelection[] {
+    const confirmedByRole = this.parseConfirmedNamesFromConfig(config);
+    return addons
+      .filter(addon => addon.addonId > 0 && addon.addonName.trim().length > 0 && addon.isActive)
+      .map(addon => {
+        const type = this.normalizeType(addon.type);
+        return {
+          addonId: addon.addonId,
+          name: addon.addonName.trim(),
+          type,
+          confirmed: this.isConfirmedSelection(addon.addonName, type, false, confirmedByRole),
+          isActive: addon.isActive,
+        };
+      });
+  }
+
+  private parseConfirmedNamesFromConfig(config?: string | null): Record<'Trigger' | 'Action' | 'Output', Set<string>> {
+    if (!config?.trim()) {
+      return { Trigger: new Set(), Action: new Set(), Output: new Set() };
+    }
+
+    try {
+      return this.parseConfirmedNames(JSON.parse(config) as Record<string, unknown>);
+    } catch {
+      return { Trigger: new Set(), Action: new Set(), Output: new Set() };
+    }
+  }
+
+  private parseConfirmedNames(parsed: Record<string, unknown>): Record<'Trigger' | 'Action' | 'Output', Set<string>> {
+    return {
+      Trigger: this.toNormalizedNameSet(parsed['trigger']),
+      Action: this.toNormalizedNameSet(parsed['action']),
+      Output: this.toNormalizedNameSet(parsed['output']),
+    };
+  }
+
+  private toNormalizedNameSet(value: unknown): Set<string> {
+    if (!Array.isArray(value)) return new Set();
+    return new Set(
+      value
+        .filter(item => typeof item === 'string')
+        .map(item => this.normalizeName(item))
+        .filter(item => item.length > 0));
+  }
+
+  private isConfirmedSelection(
+    name: string,
+    type: 'Trigger' | 'Action' | 'Output',
+    confirmed: boolean,
+    confirmedByRole: Record<'Trigger' | 'Action' | 'Output', Set<string>>,
+  ): boolean {
+    return confirmed || confirmedByRole[type].has(this.normalizeName(name));
+  }
+
+  private normalizeName(value: string): string {
+    return value.trim().toLowerCase();
   }
 
   private normalizeType(value: unknown): 'Trigger' | 'Action' | 'Output' {

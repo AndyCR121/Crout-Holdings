@@ -67,6 +67,8 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IContactRequestService, ContactRequestService>();
 builder.Services.AddScoped<IIntegrationService, IntegrationService>();
 builder.Services.AddScoped<ISqlUpdaterService, SqlUpdaterService>();
+builder.Services.Configure<DatabaseManagementOptions>(builder.Configuration.GetSection("DatabaseManagement"));
+builder.Services.AddScoped<IDatabaseManagementService, DatabaseManagementService>();
 
 builder.Services.Configure<N8nOptions>(builder.Configuration.GetSection("N8n"));
 builder.Services.AddHttpClient<IN8nWorkflowClient, N8nWorkflowClient>();

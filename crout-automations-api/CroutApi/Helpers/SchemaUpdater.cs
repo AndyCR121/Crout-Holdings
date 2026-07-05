@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Collections.Concurrent;
 using CroutApi.DTOs;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
@@ -12,7 +13,7 @@ public static class SchemaUpdater
     private const string AllowProductionFlag = "--allow-production";
     private const string AllowProductionEnvironmentVariable = "SCHEMA_UPDATER_ALLOW_PRODUCTION";
     private const string HistoryTableName = "SchemaMigrations";
-    private static readonly SemaphoreSlim ExecutionLock = new(1, 1);
+    private static readonly ConcurrentDictionary<string, byte> ActiveTargets = new(StringComparer.OrdinalIgnoreCase);
 
     public static async Task<int?> TryRunAsync(string[] args, CancellationToken cancellationToken = default)
     {
@@ -44,30 +45,40 @@ public static class SchemaUpdater
         ILogger? logger,
         CancellationToken cancellationToken = default)
     {
-        if (!ExecutionLock.Wait(0))
+        var startedAtUtc = DateTimeOffset.UtcNow;
+        var environmentName = ResolveEnvironmentName(options.EnvironmentName);
+        var connectionString = options.ConnectionStringOverride ?? DbHelper.BuildConnectionStringFromEnvironment();
+        var databaseTarget = options.DatabaseTargetOverride ?? DescribeTarget(connectionString, environmentName);
+        var executionKey = BuildExecutionKey(connectionString);
+
+        if (options.UseExecutionLock && !ActiveTargets.TryAdd(executionKey, 0))
         {
             return new SchemaUpdaterExecutionResult
             {
-                EnvironmentName = ResolveEnvironmentName(options.EnvironmentName),
-                DatabaseTarget = DescribeTarget(DbHelper.BuildConnectionStringFromEnvironment(), ResolveEnvironmentName(options.EnvironmentName)),
+                TargetKey = options.TargetKey ?? string.Empty,
+                TargetDisplayName = options.TargetDisplayName ?? string.Empty,
+                EnvironmentName = environmentName,
+                DatabaseTarget = databaseTarget,
                 DryRun = options.DryRun,
                 Success = false,
                 ErrorMessage = "SQL updater is already running.",
-                DurationMs = 0
+                DurationMs = 0,
+                StartedAtUtc = startedAtUtc,
+                EndedAtUtc = startedAtUtc
             };
         }
 
         var stopwatch = Stopwatch.StartNew();
         try
         {
-            var environmentName = ResolveEnvironmentName(options.EnvironmentName);
-            var connectionString = DbHelper.BuildConnectionStringFromEnvironment();
-            var databaseTarget = DescribeTarget(connectionString, environmentName);
             var result = new SchemaUpdaterExecutionResult
             {
+                TargetKey = options.TargetKey ?? string.Empty,
+                TargetDisplayName = options.TargetDisplayName ?? string.Empty,
                 EnvironmentName = environmentName,
                 DatabaseTarget = databaseTarget,
-                DryRun = options.DryRun
+                DryRun = options.DryRun,
+                StartedAtUtc = startedAtUtc
             };
 
             if (string.Equals(environmentName, "Production", StringComparison.OrdinalIgnoreCase) && !options.AllowProduction)
@@ -77,7 +88,7 @@ public static class SchemaUpdater
                 return Complete(result, stopwatch);
             }
 
-            result.SqlRoot = ResolveSqlRoot();
+            result.SqlRoot = options.SqlRootOverride ?? ResolveSqlRoot();
             logger?.LogInformation("SQL updater resolved folder {SqlRoot} for {DatabaseTarget}", result.SqlRoot, databaseTarget);
 
             var allScripts = await LoadMigrationScriptsAsync(result.SqlRoot, cancellationToken);
@@ -85,6 +96,7 @@ public static class SchemaUpdater
                 .Where(script => script.IsExecutableMigration)
                 .Select(script => script.Name)
                 .ToList();
+            result.ExecutionOrder = [.. result.DiscoveredScripts];
             result.IgnoredScripts = allScripts
                 .Where(script => !script.IsExecutableMigration)
                 .Select(script => script.Name)
@@ -196,13 +208,17 @@ public static class SchemaUpdater
         finally
         {
             stopwatch.Stop();
-            ExecutionLock.Release();
+            if (options.UseExecutionLock)
+            {
+                ActiveTargets.TryRemove(executionKey, out _);
+            }
         }
     }
 
     private static SchemaUpdaterExecutionResult Complete(SchemaUpdaterExecutionResult result, Stopwatch stopwatch)
     {
         result.DurationMs = stopwatch.ElapsedMilliseconds;
+        result.EndedAtUtc = DateTimeOffset.UtcNow;
         result.Success = result.Success && string.IsNullOrWhiteSpace(result.ErrorMessage);
         return result;
     }
@@ -413,6 +429,12 @@ public static class SchemaUpdater
         Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ??
         "Production";
 
+    private static string BuildExecutionKey(string connectionString)
+    {
+        var builder = new MySqlConnectionStringBuilder(connectionString);
+        return $"{builder.Server}:{builder.Port}/{builder.Database}";
+    }
+
     private static int GetLeadingNumber(string fileName)
     {
         var prefix = new string(fileName.TakeWhile(char.IsDigit).ToArray());
@@ -434,37 +456,53 @@ public sealed class SchemaUpdaterExecutionOptions
     public bool DryRun { get; init; }
     public bool AllowProduction { get; init; }
     public string? EnvironmentName { get; init; }
+    public string? ConnectionStringOverride { get; init; }
+    public string? DatabaseTargetOverride { get; init; }
+    public string? SqlRootOverride { get; init; }
+    public string? TargetKey { get; init; }
+    public string? TargetDisplayName { get; init; }
+    public bool UseExecutionLock { get; init; } = true;
 }
 
 public sealed class SchemaUpdaterExecutionResult
 {
+    public string TargetKey { get; set; } = string.Empty;
+    public string TargetDisplayName { get; set; } = string.Empty;
     public string EnvironmentName { get; set; } = string.Empty;
     public string DatabaseTarget { get; set; } = string.Empty;
     public string? SqlRoot { get; set; }
     public bool DryRun { get; set; }
     public bool Success { get; set; }
     public long DurationMs { get; set; }
+    public DateTimeOffset StartedAtUtc { get; set; }
+    public DateTimeOffset EndedAtUtc { get; set; }
     public List<string> DiscoveredScripts { get; set; } = [];
     public List<string> IgnoredScripts { get; set; } = [];
     public List<string> PendingScripts { get; set; } = [];
     public List<string> ExecutedScripts { get; set; } = [];
     public List<string> SkippedScripts { get; set; } = [];
+    public List<string> ExecutionOrder { get; set; } = [];
     public string? FailedScript { get; set; }
     public string? ErrorMessage { get; set; }
     public List<SqlUpdaterScriptResultDto> ScriptResults { get; set; } = [];
 
     public SqlUpdaterSummaryDto ToDto() => new()
     {
+        TargetKey = TargetKey,
+        TargetDisplayName = TargetDisplayName,
         EnvironmentName = EnvironmentName,
         DatabaseTarget = DatabaseTarget,
         DryRun = DryRun,
         Success = Success,
         DurationMs = DurationMs,
+        StartedAtUtc = StartedAtUtc,
+        EndedAtUtc = EndedAtUtc,
         DiscoveredScripts = [.. DiscoveredScripts],
         IgnoredScripts = [.. IgnoredScripts],
         PendingScripts = [.. PendingScripts],
         ExecutedScripts = [.. ExecutedScripts],
         SkippedScripts = [.. SkippedScripts],
+        ExecutionOrder = [.. ExecutionOrder],
         FailedScript = FailedScript,
         ErrorMessage = ErrorMessage,
         ScriptResults = [.. ScriptResults]

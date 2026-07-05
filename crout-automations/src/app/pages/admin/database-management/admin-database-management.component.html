@@ -1,0 +1,176 @@
+<div class="admin-layout">
+  <ca-admin-sidebar />
+  <main class="admin-main">
+    <div class="admin-page admin-page--wide">
+      <div class="admin-page-header">
+        <div>
+          <h1 class="admin-page-title">Database Management</h1>
+          <p class="page-copy">Run approved SQL updates or migrate one configured database into another.</p>
+        </div>
+      </div>
+
+      <div *ngIf="error()" class="admin-error">{{ error() }}</div>
+
+      <div *ngIf="loadingTargets()" class="admin-loading">
+        <div class="skeleton-row" *ngFor="let i of [1,2,3]"></div>
+      </div>
+
+      <div *ngIf="!loadingTargets()" class="database-grid">
+        <section class="admin-modal database-card">
+          <h3>SQL Updates</h3>
+          <p class="admin-modal-hint">
+            The SQL folder remains the source of truth. Target connections are resolved on the server from configured definitions only.
+          </p>
+
+          <label>
+            Environment
+            <select class="admin-input" [ngModel]="sqlTargetKey()" (ngModelChange)="sqlTargetKey.set($event); loadSqlPreview()">
+              <option *ngFor="let target of targets()" [ngValue]="target.key" [disabled]="!target.allowSqlUpdates">
+                {{ target.displayName }} ({{ target.serverLabel }})
+              </option>
+            </select>
+          </label>
+
+          <div *ngIf="sqlPreview()" class="summary-box">
+            <div class="summary-row"><span>Resolved target</span><strong>{{ sqlPreview()!.target.databaseLabel }}</strong></div>
+            <div class="summary-row"><span>Pending scripts</span><strong>{{ sqlPreview()!.preview.pendingScripts.length }}</strong></div>
+            <div class="summary-row"><span>Discovered scripts</span><strong>{{ sqlPreview()!.preview.discoveredScripts.length }}</strong></div>
+            <div class="summary-row"><span>Execution order</span><strong>{{ sqlPreview()!.preview.executionOrder.length }}</strong></div>
+          </div>
+
+          <label class="admin-checkbox">
+            <input type="checkbox" [ngModel]="sqlConfirmationChecked()" (ngModelChange)="sqlConfirmationChecked.set($event)" />
+            I confirm that the selected database should receive this SQL update run.
+          </label>
+
+          <label *ngIf="sqlPreview()">
+            Type the exact target label
+            <input class="admin-input" [ngModel]="sqlConfirmationText()" (ngModelChange)="sqlConfirmationText.set($event)" [placeholder]="sqlPreview()!.target.databaseLabel" />
+          </label>
+
+          <div class="admin-modal-actions">
+            <button class="btn-save" [disabled]="sqlRunning() || sqlLoading() || !sqlPreview() || !sqlConfirmationChecked()" (click)="runSqlUpdate()">
+              {{ sqlRunning() ? 'Running...' : 'Run Updates' }}
+            </button>
+            <button class="btn-cancel" [disabled]="sqlLoading() || sqlRunning()" (click)="loadSqlPreview()">Refresh Preview</button>
+            <button class="btn-cancel" [disabled]="sqlLoading() || sqlRunning()" (click)="refreshLatestSqlResult()">Reload Latest Result</button>
+          </div>
+
+          <div *ngIf="sqlResult()" class="result-panel">
+            <h4>Latest Result</h4>
+            <div class="summary-row"><span>Status</span><strong [class.success]="sqlResult()!.success" [class.danger]="!sqlResult()!.success">{{ sqlResult()!.success ? 'Success' : 'Failed' }}</strong></div>
+            <div class="summary-row"><span>Started</span><strong>{{ sqlResult()!.startedAtUtc | date:'medium' }}</strong></div>
+            <div class="summary-row"><span>Finished</span><strong>{{ sqlResult()!.endedAtUtc | date:'medium' }}</strong></div>
+            <div class="summary-row"><span>Executed</span><strong>{{ sqlResult()!.executedScripts.length }}</strong></div>
+            <div class="summary-row"><span>Skipped</span><strong>{{ sqlResult()!.skippedScripts.length }}</strong></div>
+            <div class="summary-row" *ngIf="sqlResult()!.failedScript"><span>Failed script</span><strong class="danger">{{ sqlResult()!.failedScript }}</strong></div>
+            <p *ngIf="sqlResult()!.errorMessage" class="danger-text">{{ sqlResult()!.errorMessage }}</p>
+
+            <div class="log-list">
+              <div class="log-row" *ngFor="let item of sqlResult()!.scriptResults">
+                <span>{{ item.fileName }}</span>
+                <strong [class.danger]="item.status === 'Failed'">{{ item.status }}</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="admin-modal database-card">
+          <h3>Database Migration</h3>
+          <p class="admin-modal-hint warning-copy">
+            This can replace or change destination data. Source and destination connections are resolved on the server from configured targets.
+          </p>
+
+          <div class="selector-grid">
+            <label>
+              Source target
+              <select class="admin-input" [ngModel]="migrationSourceTargetKey()" (ngModelChange)="migrationSourceTargetKey.set($event); onSourceTargetChange()">
+                <option *ngFor="let target of targets()" [ngValue]="target.key" [disabled]="!target.allowMigrationSource">
+                  {{ target.displayName }} ({{ target.serverLabel }})
+                </option>
+              </select>
+            </label>
+
+            <label>
+              Source database
+              <input class="admin-input" [ngModel]="migrationSourceDatabaseName()" (ngModelChange)="migrationSourceDatabaseName.set($event); resetMigrationState()" />
+            </label>
+
+            <label>
+              Destination target
+              <select class="admin-input" [ngModel]="migrationDestinationTargetKey()" (ngModelChange)="migrationDestinationTargetKey.set($event); onDestinationTargetChange()">
+                <option *ngFor="let target of targets()" [ngValue]="target.key" [disabled]="!target.allowMigrationDestination">
+                  {{ target.displayName }} ({{ target.serverLabel }})
+                </option>
+              </select>
+            </label>
+
+            <label>
+              Destination database
+              <input class="admin-input" [ngModel]="migrationDestinationDatabaseName()" (ngModelChange)="migrationDestinationDatabaseName.set($event); resetMigrationState()" />
+            </label>
+          </div>
+
+          <div class="summary-box">
+            <div class="summary-row"><span>Source</span><strong>{{ migrationSourceTargetKey() }} / {{ migrationSourceDatabaseName() || 'Select a database' }}</strong></div>
+            <div class="summary-row"><span>Destination</span><strong class="danger">{{ migrationDestinationTargetKey() }} / {{ migrationDestinationDatabaseName() || 'Select a database' }}</strong></div>
+          </div>
+
+          <div class="admin-modal-actions">
+            <button class="btn-cancel" [disabled]="migrationLoading() || migrationStarting()" (click)="validateMigration()">
+              {{ migrationLoading() ? 'Validating...' : 'Validate Migration' }}
+            </button>
+          </div>
+
+          <div *ngIf="migrationValidation()" class="result-panel">
+            <h4>Validation</h4>
+            <div class="summary-row"><span>Result</span><strong [class.success]="migrationValidation()!.isValid" [class.danger]="!migrationValidation()!.isValid">{{ migrationValidation()!.isValid ? 'Ready' : 'Blocked' }}</strong></div>
+            <div class="summary-row"><span>Source tables</span><strong>{{ migrationValidation()!.sourceTableCount }}</strong></div>
+            <div class="summary-row"><span>Destination tables</span><strong>{{ migrationValidation()!.destinationTableCount }}</strong></div>
+            <p *ngFor="let warning of migrationValidation()!.warnings" class="warning-text">{{ warning }}</p>
+            <p *ngFor="let item of migrationValidation()!.errors" class="danger-text">{{ item }}</p>
+          </div>
+
+          <label class="admin-checkbox">
+            <input type="checkbox" [ngModel]="migrationConfirmationChecked()" (ngModelChange)="migrationConfirmationChecked.set($event)" />
+            I understand that the destination database may be replaced or changed.
+          </label>
+
+          <label *ngIf="migrationValidation()?.source">
+            Type the exact source label
+            <input class="admin-input" [ngModel]="migrationSourceConfirmationText()" (ngModelChange)="migrationSourceConfirmationText.set($event)" [placeholder]="migrationValidation()!.source!.databaseLabel" />
+          </label>
+
+          <label *ngIf="migrationValidation()?.destination">
+            Type the exact destination label
+            <input class="admin-input" [ngModel]="migrationDestinationConfirmationText()" (ngModelChange)="migrationDestinationConfirmationText.set($event)" [placeholder]="migrationValidation()!.destination!.databaseLabel" />
+          </label>
+
+          <div class="admin-modal-actions">
+            <button
+              class="btn-delete"
+              [disabled]="migrationStarting() || !migrationValidation()?.isValid || !migrationConfirmationChecked()"
+              (click)="startMigration()">
+              {{ migrationStarting() ? 'Starting...' : 'Start Migration' }}
+            </button>
+          </div>
+
+          <div *ngIf="migrationOperation()" class="result-panel">
+            <h4>Migration Status</h4>
+            <div class="summary-row"><span>Status</span><strong [class.success]="migrationOperation()!.status === 'Succeeded'" [class.danger]="migrationOperation()!.status === 'Failed'">{{ migrationOperation()!.status }}</strong></div>
+            <div class="summary-row" *ngIf="migrationOperation()!.summary"><span>Rows copied</span><strong>{{ migrationOperation()!.summary!.rowsCopied }}</strong></div>
+            <div class="summary-row" *ngIf="migrationOperation()!.summary"><span>Tables recreated</span><strong>{{ migrationOperation()!.summary!.tablesRecreated }}</strong></div>
+            <p *ngIf="migrationOperation()!.errorMessage" class="danger-text">{{ migrationOperation()!.errorMessage }}</p>
+
+            <div class="log-list">
+              <div class="log-row" *ngFor="let step of migrationOperation()!.steps">
+                <span>{{ step.name }}</span>
+                <strong [class.danger]="step.status === 'Failed'">{{ step.status }}</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>

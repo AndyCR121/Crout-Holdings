@@ -14,7 +14,7 @@ import { DynamicFieldConfig, ServiceTriggerConfig } from '../../../interfaces/i-
 import { ServiceTriggerApiService } from '../../../services/service-trigger-api.service';
 import { IntegrationStatusBadgeComponent } from '../../../components/integration-status-badge/integration-status-badge.component';
 import { IntegrationStatusService } from '../../../services/integration-status.service';
-import { IServiceWorkflowCapability, IUserServiceWorkflowStep } from '../../../interfaces/i-workflow-capability.interface';
+import { ICredentialFieldState, IServiceWorkflowCapability, IUserServiceWorkflowStep } from '../../../interfaces/i-workflow-capability.interface';
 import { WorkflowCapabilityApiService } from '../../../services/workflow-capability-api.service';
 
 interface IntegrationItem {
@@ -34,7 +34,7 @@ interface ServiceRow {
   capabilitiesLoading: boolean;
   sidePanelOpen: boolean;
   credentialsOpen: boolean;
-  credentialStepId: number | null;
+  credentialSelectionKey: string | null;
   credentialValues: Record<string, string>;
   workflowSteps: IUserServiceWorkflowStep[];
   workflowStepsLoading: boolean;
@@ -47,6 +47,15 @@ interface CompanyGroup {
   company:  ICompany;
   rows:     ServiceRow[];
   expanded: boolean;
+}
+
+interface CredentialFormOption {
+  key: string;
+  label: string;
+  fields: DynamicFieldConfig[];
+  stepId?: number;
+  integrationName?: string;
+  fieldStates?: Record<string, ICredentialFieldState> | null;
 }
 
 @Component({
@@ -113,7 +122,7 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
               capabilitiesLoading: false,
               sidePanelOpen: false,
               credentialsOpen: false,
-              credentialStepId: null,
+              credentialSelectionKey: null,
               credentialValues: {},
               workflowSteps: [],
               workflowStepsLoading: false,
@@ -281,6 +290,7 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
   openCredentials(row: ServiceRow): void {
     row.sidePanelOpen = true;
     row.credentialsOpen = true;
+    this.ensureCredentialSelection(row);
     this.lockDrawerScroll();
     this.loadWorkflowSteps(row);
     this.groups.update(g => [...g]);
@@ -303,8 +313,8 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const step = row.workflowSteps.find(item => item.id === row.credentialStepId);
-    if (!step) {
+    const selectedOption = this.selectedCredentialOption(row);
+    if (!selectedOption) {
       this.toast.error('Select a workflow credential form first.');
       return;
     }
@@ -315,9 +325,29 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
       }, {} as Record<string, string>);
 
     this.savingCredentials.set(userServiceId);
-    this.workflowApi.updateStepCredentials(userServiceId, step.id, fields).subscribe({
-      next: updatedStep => {
-        row.workflowSteps = row.workflowSteps.map(item => item.id === updatedStep.id ? updatedStep : item);
+    if (selectedOption.stepId) {
+      this.workflowApi.updateStepCredentials(userServiceId, selectedOption.stepId, fields).subscribe({
+        next: updatedStep => {
+          row.workflowSteps = row.workflowSteps.map(item => item.id === updatedStep.id ? updatedStep : item);
+          row.credentialsOpen = false;
+          row.credentialValues = {};
+          this.savingCredentials.set(null);
+          this.groups.update(g => [...g]);
+          this.toast.success('Credentials saved.');
+        },
+        error: err => {
+          this.savingCredentials.set(null);
+          this.toast.error(err?.error?.error ?? 'Credentials could not be submitted.');
+        },
+      });
+      return;
+    }
+
+    this.api.updateServiceCredentials(userServiceId, {
+      integrationName: selectedOption.integrationName ?? '',
+      fields
+    }).subscribe({
+      next: () => {
         row.credentialsOpen = false;
         row.credentialValues = {};
         this.savingCredentials.set(null);
@@ -407,7 +437,7 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
       next: steps => {
         row.workflowSteps = steps;
         row.workflowStepsLoading = false;
-        row.credentialStepId = row.credentialStepId ?? steps.find(step => step.requiresCredentials && step.status !== 'Disabled')?.id ?? null;
+        this.ensureCredentialSelection(row);
         this.groups.update(g => [...g]);
       },
       error: () => {
@@ -447,13 +477,52 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
     return row.workflowSteps.filter(step => step.requiresCredentials && step.status !== 'Disabled');
   }
 
+  credentialOptions(row: ServiceRow): CredentialFormOption[] {
+    const options: CredentialFormOption[] = [];
+    const seenIntegrationNames = new Set<string>();
+
+    for (const step of this.credentialSteps(row)) {
+      const fields = step.credentialSchema?.fields ?? [];
+      if (!fields.length) continue;
+      if (step.integrationName) {
+        seenIntegrationNames.add(step.integrationName.trim().toLowerCase());
+      }
+      options.push({
+        key: `step:${step.id}`,
+        label: step.integrationName ? `${step.capabilityName} · ${step.integrationName}` : step.capabilityName,
+        fields,
+        stepId: step.id,
+        integrationName: step.integrationName ?? undefined,
+        fieldStates: step.credentialFieldStates ?? null,
+      });
+    }
+
+    for (const addon of this.credentialSourceAddons(row)) {
+      for (const integration of addon.integrations ?? []) {
+        const normalizedName = integration.name.trim().toLowerCase();
+        if (!integration.hasCredentials || !integration.credentialFormSchema?.fields?.length || seenIntegrationNames.has(normalizedName)) {
+          continue;
+        }
+
+        seenIntegrationNames.add(normalizedName);
+        options.push({
+          key: `integration:${integration.id}`,
+          label: `${addon.addonName} · ${integration.name}`,
+          fields: integration.credentialFormSchema.fields,
+          integrationName: integration.name,
+        });
+      }
+    }
+
+    return options;
+  }
+
   credentialSchema(row: ServiceRow): DynamicFieldConfig[] {
-    return row.workflowSteps.find(step => step.id === row.credentialStepId)?.credentialSchema?.fields ?? [];
+    return this.selectedCredentialOption(row)?.fields ?? [];
   }
 
   credentialPlaceholder(row: ServiceRow, field: DynamicFieldConfig): string {
-    const step = row.workflowSteps.find(item => item.id === row.credentialStepId);
-    const state = step?.credentialFieldStates?.[field.key];
+    const state = this.selectedCredentialOption(row)?.fieldStates?.[field.key];
     return state?.hasStoredValue ? state.displayValue ?? 'Saved' : field.placeholder ?? '';
   }
 
@@ -463,6 +532,29 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
     if (field.type === 'number') return 'number';
     if (field.type === 'url') return 'url';
     return 'text';
+  }
+
+  private selectedCredentialOption(row: ServiceRow): CredentialFormOption | null {
+    return this.credentialOptions(row).find(option => option.key === row.credentialSelectionKey) ?? null;
+  }
+
+  private ensureCredentialSelection(row: ServiceRow): void {
+    const options = this.credentialOptions(row);
+    if (options.length === 0) {
+      row.credentialSelectionKey = null;
+      return;
+    }
+
+    const stillExists = options.some(option => option.key === row.credentialSelectionKey);
+    if (!stillExists) {
+      row.credentialSelectionKey = options[0].key;
+    }
+  }
+
+  private credentialSourceAddons(row: ServiceRow): IAddon[] {
+    const activeAddonNames = new Set(row.activeAddons.map(item => item.name.trim().toLowerCase()));
+    if (activeAddonNames.size === 0) return row.addons;
+    return row.addons.filter(addon => activeAddonNames.has(addon.addonName.trim().toLowerCase()));
   }
 
   private hasOpenSidePanel(): boolean {

@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AdminSidebarComponent } from '../../../components/admin-sidebar/admin-sidebar.component';
 import { AuthService } from '../../../services/auth.service';
-import { AdminService, SqlUpdaterSummary } from '../../../services/admin.service';
+import { AdminService, PagedResult } from '../../../services/admin.service';
+import { AdminIntegrationDraftService } from '../../../services/admin-integration-draft.service';
 import { WorkflowCapabilityApiService } from '../../../services/workflow-capability-api.service';
 import { IAddon } from '../../../interfaces/i-service.interface';
 import { IWorkflowIntegrationDefinition } from '../../../interfaces/i-workflow-capability.interface';
@@ -18,8 +19,10 @@ import { IWorkflowIntegrationDefinition } from '../../../interfaces/i-workflow-c
 })
 export class AdminIntegrationsComponent implements OnInit {
   private readonly auth = inject(AuthService);
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly admin = inject(AdminService);
+  private readonly draftStore = inject(AdminIntegrationDraftService);
   private readonly workflowApi = inject(WorkflowCapabilityApiService);
 
   readonly integrations = signal<IWorkflowIntegrationDefinition[]>([]);
@@ -27,12 +30,11 @@ export class AdminIntegrationsComponent implements OnInit {
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly editingIntegrationId = signal<number | null>(null);
+  readonly showCreate = signal(false);
   readonly saving = signal(false);
-  readonly confirmingUpdater = signal(false);
-  readonly runningUpdater = signal(false);
-  readonly updaterSummary = signal<SqlUpdaterSummary | null>(null);
+  readonly integrationTypeOptions = ['Trigger', 'Action', 'Output'] as const;
 
-  integrationDraft: Partial<IWorkflowIntegrationDefinition> = { name: '', integrationType: '', hasCredentials: false, isActive: true };
+  integrationDraft: Partial<IWorkflowIntegrationDefinition> = { name: '', integrationType: 'Action', hasCredentials: false, isActive: true };
 
   readonly addonNamesByIntegration = computed(() => {
     const map = new Map<number, string[]>();
@@ -54,6 +56,7 @@ export class AdminIntegrationsComponent implements OnInit {
     }
 
     this.reload();
+    this.restoreDraftIfNeeded();
   }
 
   reload(): void {
@@ -64,7 +67,7 @@ export class AdminIntegrationsComponent implements OnInit {
       next: integrations => {
         this.integrations.set(integrations);
         this.admin.getAddons(1, 200).subscribe({
-          next: addons => {
+          next: (addons: PagedResult<IAddon>) => {
             this.addons.set(addons.items);
             this.loading.set(false);
           },
@@ -82,6 +85,7 @@ export class AdminIntegrationsComponent implements OnInit {
   }
 
   startEditIntegration(item: IWorkflowIntegrationDefinition): void {
+    this.showCreate.set(false);
     this.editingIntegrationId.set(item.id);
     this.integrationDraft = {
       name: item.name,
@@ -91,11 +95,22 @@ export class AdminIntegrationsComponent implements OnInit {
       credentialFormSchema: item.credentialFormSchema ?? null,
       isActive: item.isActive,
     };
+    this.persistDraft('edit');
   }
 
   cancelIntegrationEdit(): void {
     this.editingIntegrationId.set(null);
-    this.integrationDraft = { name: '', integrationType: '', hasCredentials: false, isActive: true };
+    this.showCreate.set(false);
+    this.integrationDraft = { name: '', integrationType: 'Action', hasCredentials: false, isActive: true };
+    this.draftStore.clearDraft();
+  }
+
+  openCreateIntegration(): void {
+    this.editingIntegrationId.set(null);
+    this.showCreate.set(true);
+    this.integrationDraft = { name: '', integrationType: 'Action', hasCredentials: false, isActive: true };
+    this.error.set(null);
+    this.persistDraft('create');
   }
 
   saveIntegration(): void {
@@ -124,48 +139,43 @@ export class AdminIntegrationsComponent implements OnInit {
     });
   }
 
-  updateIntegrationSchema(value: string): void {
-    try {
-      this.integrationDraft.credentialFormSchema = value.trim() ? JSON.parse(value) : null;
-      this.error.set(null);
-    } catch {
-      this.error.set('Credential schema must be valid JSON.');
-    }
-  }
-
-  openUpdaterConfirmation(): void {
-    this.confirmingUpdater.set(true);
-    this.error.set(null);
-  }
-
-  cancelUpdaterConfirmation(): void {
-    this.confirmingUpdater.set(false);
-  }
-
-  runSqlUpdater(): void {
-    this.runningUpdater.set(true);
-    this.confirmingUpdater.set(false);
-    this.error.set(null);
-
-    this.admin.runSqlUpdater(true).subscribe({
-      next: summary => {
-        this.updaterSummary.set(summary);
-        this.runningUpdater.set(false);
-        if (summary.success) {
-          this.reload();
-          return;
-        }
-
-        this.error.set(summary.errorMessage ?? 'SQL updater failed.');
-      },
-      error: err => {
-        this.error.set(err?.error?.error ?? 'Failed to run SQL updater.');
-        this.runningUpdater.set(false);
-      }
-    });
+  openCredentialBuilder(): void {
+    this.persistDraft(this.editingIntegrationId() === null ? 'create' : 'edit');
+    void this.router.navigate(['/admin/integrations/credentials-builder']);
   }
 
   addonNames(integrationId: number): string {
     return this.addonNamesByIntegration().get(integrationId)?.join(', ') ?? '—';
+  }
+
+  credentialFieldCount(): number {
+    return this.integrationDraft.credentialFormSchema?.fields?.length ?? 0;
+  }
+
+  private restoreDraftIfNeeded(): void {
+    if (this.route.snapshot.queryParamMap.get('resumeDraft') !== '1') return;
+
+    const state = this.draftStore.getDraft();
+    if (!state) return;
+
+    this.integrationDraft = state.draft;
+    this.editingIntegrationId.set(state.editingIntegrationId);
+    this.showCreate.set(state.mode === 'create');
+    this.error.set(null);
+
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { resumeDraft: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  private persistDraft(mode: 'create' | 'edit'): void {
+    this.draftStore.saveDraft({
+      mode,
+      editingIntegrationId: this.editingIntegrationId(),
+      draft: structuredClone(this.integrationDraft),
+    });
   }
 }

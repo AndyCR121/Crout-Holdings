@@ -26,6 +26,11 @@ public sealed class DbHelper
         var user = Environment.GetEnvironmentVariable("DB_USER") ?? "root";
         var password = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? string.Empty;
 
+        return BuildConnectionString(host, port, database, user, password);
+    }
+
+    public static string BuildConnectionString(string host, string port, string database, string user, string password)
+    {
         return
             $"Server={host};Port={port};Database={database};" +
             $"User={user};Password={password};" +

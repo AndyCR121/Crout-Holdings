@@ -98,17 +98,19 @@
         <p class="admin-modal-hint">Select the reusable add-ons available on this service. Existing links remain until you remove them here.</p>
         <div *ngIf="linkLoading()" class="admin-loading"><div class="skeleton-row" *ngFor="let i of [1,2,3]"></div></div>
         <div *ngIf="!linkLoading()" class="admin-multiselect">
-          <label class="admin-multiselect-item" *ngFor="let a of allAddons()">
-            <input type="checkbox" [checked]="isLinked(a.addonId)" (change)="toggleLink(a.addonId)" />
-            <span>{{ a.addonName }}</span>
-            <span class="admin-multiselect-price">{{ a.type }} | R{{ a.monthlyPrice | number:'1.2-2' }}</span>
+          <label class="admin-multiselect-item" *ngFor="let group of addonLinkGroups()">
+            <input type="checkbox" [checked]="isLinked(group.key)" (change)="toggleLink(group.key)" />
+            <span>{{ group.display.addonName }}</span>
+            <span class="admin-multiselect-price">{{ group.display.type }} | R{{ group.display.monthlyPrice | number:'1.2-2' }}</span>
+            <span class="admin-modal-hint">{{ addonGroupMeta(group) }}</span>
           </label>
-          <p *ngIf="allAddons().length === 0" class="admin-empty">No add-ons found.</p>
+          <p *ngIf="addonLinkGroups().length === 0" class="admin-empty">No add-ons found.</p>
         </div>
         <div *ngIf="!linkLoading() && linkedAddonList().length" class="admin-multiselect" style="margin-top: 12px;">
-          <div class="admin-multiselect-item admin-multiselect-item--readonly" *ngFor="let a of linkedAddonList()">
-            <span>{{ a.addonName }}</span>
-            <span class="admin-multiselect-price">{{ a.type }} | R{{ a.monthlyPrice | number:'1.2-2' }}</span>
+          <div class="admin-multiselect-item admin-multiselect-item--readonly" *ngFor="let group of linkedAddonList()">
+            <span>{{ group.display.addonName }}</span>
+            <span class="admin-multiselect-price">{{ group.display.type }} | R{{ group.display.monthlyPrice | number:'1.2-2' }}</span>
+            <span class="admin-modal-hint">{{ addonGroupMeta(group) }}</span>
           </div>
         </div>
         <div class="admin-modal-actions">

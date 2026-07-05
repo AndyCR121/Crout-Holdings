@@ -271,3 +271,101 @@ export interface IAdminPaystackMapping {
   paymentDate?: string;
   dueDate?: string;
 }
+
+export interface IDatabaseManagementTarget {
+  key: string;
+  displayName: string;
+  environmentName: string;
+  serverLabel: string;
+  databaseName: string;
+  databaseLabel: string;
+  allowSqlUpdates: boolean;
+  allowMigrationSource: boolean;
+  allowMigrationDestination: boolean;
+}
+
+export interface ISqlUpdaterScriptResult {
+  fileName: string;
+  status: string;
+  durationMs: number;
+  errorMessage?: string | null;
+}
+
+export interface ISqlUpdaterSummary {
+  targetKey: string;
+  targetDisplayName: string;
+  environmentName: string;
+  databaseTarget: string;
+  dryRun: boolean;
+  success: boolean;
+  durationMs: number;
+  startedAtUtc: string;
+  endedAtUtc: string;
+  discoveredScripts: string[];
+  ignoredScripts: string[];
+  pendingScripts: string[];
+  executedScripts: string[];
+  skippedScripts: string[];
+  executionOrder: string[];
+  failedScript?: string | null;
+  errorMessage?: string | null;
+  scriptResults: ISqlUpdaterScriptResult[];
+}
+
+export interface ISqlUpdatePreview {
+  target: IDatabaseManagementTarget;
+  preview: ISqlUpdaterSummary;
+  latestResult?: ISqlUpdaterSummary | null;
+}
+
+export interface IMigrationSelection {
+  targetKey: string;
+  databaseNameOverride?: string | null;
+}
+
+export interface IDatabaseMigrationValidation {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  source?: IDatabaseManagementTarget | null;
+  destination?: IDatabaseManagementTarget | null;
+  sourceTableCount: number;
+  destinationTableCount: number;
+  destinationExists: boolean;
+}
+
+export interface IDatabaseMigrationStep {
+  name: string;
+  status: string;
+  message?: string | null;
+  startedAtUtc: string;
+  completedAtUtc?: string | null;
+}
+
+export interface IDatabaseMigrationSummary {
+  sourceDatabaseLabel: string;
+  destinationDatabaseLabel: string;
+  success: boolean;
+  startedAtUtc: string;
+  endedAtUtc: string;
+  sourceTableCount: number;
+  destinationTableCount: number;
+  tablesRecreated: number;
+  viewsRecreated: number;
+  rowsCopied: number;
+  errorMessage?: string | null;
+}
+
+export interface IDatabaseMigrationOperation {
+  operationId: string;
+  status: string;
+  createdAtUtc: string;
+  startedAtUtc?: string | null;
+  completedAtUtc?: string | null;
+  source?: IDatabaseManagementTarget | null;
+  destination?: IDatabaseManagementTarget | null;
+  errorMessage?: string | null;
+  validation?: IDatabaseMigrationValidation | null;
+  summary?: IDatabaseMigrationSummary | null;
+  steps: IDatabaseMigrationStep[];
+}
