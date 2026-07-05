@@ -29,6 +29,6 @@ public sealed class DbHelper
         return
             $"Server={host};Port={port};Database={database};" +
             $"User={user};Password={password};" +
-            "AllowPublicKeyRetrieval=true;SslMode=None;";
+            "AllowPublicKeyRetrieval=true;AllowUserVariables=true;SslMode=None;";
     }
 }

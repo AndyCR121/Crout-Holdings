@@ -24,6 +24,7 @@ public class AdminController(
     IUserServiceRepository userServices,
     IDevServiceRepository devServices,
     IIntegrationService integrationService,
+    ISqlUpdaterService sqlUpdater,
     EncryptionHelper enc) : ControllerBase
 {
     private int CallerId =>
@@ -539,6 +540,20 @@ public class AdminController(
         if (await userServices.GetByIdAsync(id) is null) return NotFound();
         await integrationService.StartAsync(id, CallerId);
         return Ok(await userServices.AdminGetRowByIdAsync(id));
+    }
+
+    [HttpPost("sql-updater/run")]
+    public async Task<IActionResult> RunSqlUpdater([FromBody] RunSqlUpdaterRequestDto? dto, CancellationToken cancellationToken)
+    {
+        if (!CallerIsAdmin) return Forbid();
+        if (dto?.ConfirmExecution != true)
+            return BadRequest(new { error = "Confirmation is required before running the SQL updater." });
+
+        var summary = await sqlUpdater.RunCurrentEnvironmentAsync(cancellationToken);
+        if (string.Equals(summary.ErrorMessage, "SQL updater is already running.", StringComparison.Ordinal))
+            return Conflict(new { error = summary.ErrorMessage });
+
+        return Ok(summary);
     }
 
     // Paystack Subscription Mapping

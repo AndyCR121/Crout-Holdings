@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AdminSidebarComponent } from '../../../components/admin-sidebar/admin-sidebar.component';
 import { AuthService } from '../../../services/auth.service';
-import { AdminService } from '../../../services/admin.service';
+import { AdminService, SqlUpdaterSummary } from '../../../services/admin.service';
 import { WorkflowCapabilityApiService } from '../../../services/workflow-capability-api.service';
 import { IAddon } from '../../../interfaces/i-service.interface';
 import { IWorkflowIntegrationDefinition } from '../../../interfaces/i-workflow-capability.interface';
@@ -28,6 +28,9 @@ export class AdminIntegrationsComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly editingIntegrationId = signal<number | null>(null);
   readonly saving = signal(false);
+  readonly confirmingUpdater = signal(false);
+  readonly runningUpdater = signal(false);
+  readonly updaterSummary = signal<SqlUpdaterSummary | null>(null);
 
   integrationDraft: Partial<IWorkflowIntegrationDefinition> = { name: '', integrationType: '', hasCredentials: false, isActive: true };
 
@@ -55,6 +58,8 @@ export class AdminIntegrationsComponent implements OnInit {
 
   reload(): void {
     this.loading.set(true);
+    this.error.set(null);
+
     this.workflowApi.getAdminIntegrationDefinitions(false).subscribe({
       next: integrations => {
         this.integrations.set(integrations);
@@ -126,6 +131,38 @@ export class AdminIntegrationsComponent implements OnInit {
     } catch {
       this.error.set('Credential schema must be valid JSON.');
     }
+  }
+
+  openUpdaterConfirmation(): void {
+    this.confirmingUpdater.set(true);
+    this.error.set(null);
+  }
+
+  cancelUpdaterConfirmation(): void {
+    this.confirmingUpdater.set(false);
+  }
+
+  runSqlUpdater(): void {
+    this.runningUpdater.set(true);
+    this.confirmingUpdater.set(false);
+    this.error.set(null);
+
+    this.admin.runSqlUpdater(true).subscribe({
+      next: summary => {
+        this.updaterSummary.set(summary);
+        this.runningUpdater.set(false);
+        if (summary.success) {
+          this.reload();
+          return;
+        }
+
+        this.error.set(summary.errorMessage ?? 'SQL updater failed.');
+      },
+      error: err => {
+        this.error.set(err?.error?.error ?? 'Failed to run SQL updater.');
+        this.runningUpdater.set(false);
+      }
+    });
   }
 
   addonNames(integrationId: number): string {

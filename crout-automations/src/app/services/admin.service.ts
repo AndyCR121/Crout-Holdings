@@ -55,6 +55,28 @@ function normalizeAddon(raw: any): IAddon {
 }
 
 export interface PagedResult<T> { items: T[]; total: number; page: number; pageSize: number; }
+export interface SqlUpdaterScriptResult {
+  fileName: string;
+  status: string;
+  durationMs: number;
+  errorMessage?: string | null;
+}
+
+export interface SqlUpdaterSummary {
+  environmentName: string;
+  databaseTarget: string;
+  dryRun: boolean;
+  success: boolean;
+  durationMs: number;
+  discoveredScripts: string[];
+  ignoredScripts: string[];
+  pendingScripts: string[];
+  executedScripts: string[];
+  skippedScripts: string[];
+  failedScript?: string | null;
+  errorMessage?: string | null;
+  scriptResults: SqlUpdaterScriptResult[];
+}
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -271,6 +293,14 @@ export class AdminService {
 
   startClientServiceIntegration(id: number): Observable<IAdminClientService> {
     return this.http.post<IAdminClientService>(`${this.base}/client-services/${id}/integration/start`, {}, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  runSqlUpdater(confirmExecution: boolean): Observable<SqlUpdaterSummary> {
+    return this.http.post<SqlUpdaterSummary>(
+      `${this.base}/sql-updater/run`,
+      { confirmExecution },
+      { headers: this.authHeaders(), withCredentials: true }
+    );
   }
 
   // Paystack Subscription Mapping

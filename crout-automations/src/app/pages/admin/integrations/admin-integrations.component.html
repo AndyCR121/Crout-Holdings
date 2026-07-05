@@ -8,6 +8,42 @@
 
       <div *ngIf="error()" class="admin-error">{{ error() }}</div>
 
+      <section class="admin-modal" style="margin-bottom: 1rem;">
+        <h3>SQL Updater</h3>
+        <p class="admin-modal-hint">
+          This runs the approved SQL updater against the database connected to the current API environment.
+          Development updates the Development database. Production updates the Production database.
+          The updater may reconcile schema and seed required system data.
+        </p>
+
+        <div class="admin-modal-actions" *ngIf="!confirmingUpdater()">
+          <button class="btn-save" [disabled]="runningUpdater()" (click)="openUpdaterConfirmation()">
+            {{ runningUpdater() ? 'Running...' : 'Run SQL Updater' }}
+          </button>
+        </div>
+
+        <div *ngIf="confirmingUpdater()">
+          <p class="admin-modal-hint">
+            Confirm that you want to run the SQL updater against the database connected to this environment.
+          </p>
+          <div class="admin-modal-actions">
+            <button class="btn-save" [disabled]="runningUpdater()" (click)="runSqlUpdater()">Confirm Run</button>
+            <button class="btn-cancel" [disabled]="runningUpdater()" (click)="cancelUpdaterConfirmation()">Cancel</button>
+          </div>
+        </div>
+
+        <div *ngIf="updaterSummary()" class="admin-updater-summary">
+          <p><strong>Target:</strong> {{ updaterSummary()!.databaseTarget }}</p>
+          <p><strong>Status:</strong> {{ updaterSummary()!.success ? 'Success' : 'Failed' }}</p>
+          <p><strong>Duration:</strong> {{ updaterSummary()!.durationMs }} ms</p>
+          <p><strong>Executed:</strong> {{ updaterSummary()!.executedScripts.length ? updaterSummary()!.executedScripts.join(', ') : 'none' }}</p>
+          <p><strong>Skipped:</strong> {{ updaterSummary()!.skippedScripts.length ? updaterSummary()!.skippedScripts.join(', ') : 'none' }}</p>
+          <p><strong>Ignored:</strong> {{ updaterSummary()!.ignoredScripts.length ? updaterSummary()!.ignoredScripts.join(', ') : 'none' }}</p>
+          <p *ngIf="updaterSummary()!.failedScript"><strong>Failed script:</strong> {{ updaterSummary()!.failedScript }}</p>
+          <p *ngIf="updaterSummary()!.errorMessage"><strong>Error:</strong> {{ updaterSummary()!.errorMessage }}</p>
+        </div>
+      </section>
+
       <div *ngIf="loading()" class="admin-loading">
         <div class="skeleton-row" *ngFor="let i of [1,2,3]"></div>
       </div>
