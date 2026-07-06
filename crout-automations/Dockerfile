@@ -19,6 +19,4 @@ COPY docker/entrypoint.sh /docker-entrypoint.d/40-generate-env.sh
 
 RUN chmod +x /docker-entrypoint.d/40-generate-env.sh
 
-ENV API_URL=https://api.example.com/api
-
-EXPOSE 80
+ENV API_URL=/api

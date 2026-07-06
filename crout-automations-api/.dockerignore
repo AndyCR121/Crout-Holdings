@@ -1,0 +1,6 @@
+bin
+obj
+CroutApi/bin
+CroutApi/obj
+.vs
+.git

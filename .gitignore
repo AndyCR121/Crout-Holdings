@@ -3,3 +3,4 @@ image-encryptor\demo\orignals\*
 *.pyc
 /image-encryptor/demo
 /image-encryptor/test_files
+.env.production
