@@ -323,6 +323,48 @@ export interface IMigrationSelection {
   databaseNameOverride?: string | null;
 }
 
+export type SchemaDifferenceSeverity =
+  | 'SafeAutoApply'
+  | 'RequiresDataMigration'
+  | 'ManualReviewRequired'
+  | 'DestructiveBlocked';
+
+export interface ISchemaCount {
+  key: string;
+  count: number;
+}
+
+export interface ISchemaDifference {
+  category: string;
+  severity: SchemaDifferenceSeverity;
+  tableName: string;
+  objectName?: string | null;
+  sourceValue?: string | null;
+  targetValue?: string | null;
+  explanation: string;
+  recommendedAction: string;
+  canGenerateSql: boolean;
+  generatedSql?: string | null;
+}
+
+export interface ISchemaSyncPlan {
+  source?: IDatabaseManagementTarget | null;
+  target?: IDatabaseManagementTarget | null;
+  comparedAtUtc: string;
+  readableSummary: string;
+  approvalState: string;
+  generatedMigrationFileName?: string | null;
+  generatedSqlPreview: string;
+  preflightChecks: string[];
+  severityCounts: ISchemaCount[];
+  categoryCounts: ISchemaCount[];
+  differences: ISchemaDifference[];
+}
+
+export interface ISchemaComparisonResponse {
+  plan?: ISchemaSyncPlan | null;
+}
+
 export interface IDatabaseMigrationValidation {
   isValid: boolean;
   errors: string[];

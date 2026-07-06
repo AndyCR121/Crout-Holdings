@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
@@ -7,11 +7,12 @@ import { ToastService } from '../../../services/toast.service';
 import { AdminService } from '../../../services/admin.service';
 import {
   IDatabaseManagementTarget,
-  IDatabaseMigrationOperation,
-  IDatabaseMigrationValidation,
   IMigrationSelection,
+  ISchemaDifference,
+  ISchemaSyncPlan,
   ISqlUpdatePreview,
   ISqlUpdaterSummary,
+  SchemaDifferenceSeverity,
 } from '../../../interfaces/i-service.interface';
 
 @Component({
@@ -21,7 +22,7 @@ import {
   templateUrl: './admin-database-management.component.html',
   styleUrls: ['./admin-database-management.component.scss'],
 })
-export class AdminDatabaseManagementComponent implements OnInit, OnDestroy {
+export class AdminDatabaseManagementComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly admin = inject(AdminService);
   private readonly router = inject(Router);
@@ -39,19 +40,17 @@ export class AdminDatabaseManagementComponent implements OnInit, OnDestroy {
   readonly sqlConfirmationChecked = signal(false);
   readonly sqlConfirmationText = signal('');
 
-  readonly migrationSourceTargetKey = signal('');
-  readonly migrationSourceDatabaseName = signal('');
-  readonly migrationDestinationTargetKey = signal('');
-  readonly migrationDestinationDatabaseName = signal('');
-  readonly migrationValidation = signal<IDatabaseMigrationValidation | null>(null);
-  readonly migrationLoading = signal(false);
-  readonly migrationStarting = signal(false);
-  readonly migrationSourceConfirmationText = signal('');
-  readonly migrationDestinationConfirmationText = signal('');
-  readonly migrationConfirmationChecked = signal(false);
-  readonly migrationOperation = signal<IDatabaseMigrationOperation | null>(null);
-
-  private migrationPollHandle: number | null = null;
+  readonly schemaSourceTargetKey = signal('');
+  readonly schemaSourceDatabaseName = signal('');
+  readonly schemaTargetTargetKey = signal('');
+  readonly schemaTargetDatabaseName = signal('');
+  readonly schemaPlan = signal<ISchemaSyncPlan | null>(null);
+  readonly schemaLoading = signal(false);
+  readonly schemaGenerating = signal(false);
+  readonly schemaConfirmationChecked = signal(false);
+  readonly schemaConfirmationText = signal('');
+  readonly severityFilter = signal<string>('All');
+  readonly categoryFilter = signal<string>('All');
 
   ngOnInit(): void {
     const user = this.auth.currentUser();
@@ -63,10 +62,6 @@ export class AdminDatabaseManagementComponent implements OnInit, OnDestroy {
     this.loadTargets();
   }
 
-  ngOnDestroy(): void {
-    this.stopMigrationPolling();
-  }
-
   loadTargets(): void {
     this.loadingTargets.set(true);
     this.error.set(null);
@@ -74,8 +69,8 @@ export class AdminDatabaseManagementComponent implements OnInit, OnDestroy {
       next: targets => {
         this.targets.set(targets);
         const sqlTarget = targets.find(target => target.allowSqlUpdates);
-        const migrationSource = targets.find(target => target.allowMigrationSource);
-        const migrationDestination = targets.find(target => target.allowMigrationDestination && target.key !== migrationSource?.key)
+        const schemaSource = targets.find(target => target.allowMigrationSource);
+        const schemaTarget = targets.find(target => target.allowMigrationDestination && target.key !== schemaSource?.key)
           ?? targets.find(target => target.allowMigrationDestination);
 
         if (sqlTarget) {
@@ -84,14 +79,14 @@ export class AdminDatabaseManagementComponent implements OnInit, OnDestroy {
           this.loadSqlPreview();
         }
 
-        if (migrationSource) {
-          this.migrationSourceTargetKey.set(migrationSource.key);
-          this.migrationSourceDatabaseName.set(migrationSource.databaseName);
+        if (schemaSource) {
+          this.schemaSourceTargetKey.set(schemaSource.key);
+          this.schemaSourceDatabaseName.set(schemaSource.databaseName);
         }
 
-        if (migrationDestination) {
-          this.migrationDestinationTargetKey.set(migrationDestination.key);
-          this.migrationDestinationDatabaseName.set(migrationDestination.databaseName);
+        if (schemaTarget) {
+          this.schemaTargetTargetKey.set(schemaTarget.key);
+          this.schemaTargetDatabaseName.set(schemaTarget.databaseName);
         }
 
         this.loadingTargets.set(false);
@@ -118,7 +113,7 @@ export class AdminDatabaseManagementComponent implements OnInit, OnDestroy {
         this.sqlLoading.set(false);
       },
       error: err => {
-        this.error.set(err?.error?.error ?? 'Failed to load SQL update preview.');
+        this.error.set(err?.error?.error ?? 'Failed to load migration preview.');
         this.sqlLoading.set(false);
       }
     });
@@ -135,7 +130,7 @@ export class AdminDatabaseManagementComponent implements OnInit, OnDestroy {
         this.sqlLoading.set(false);
       },
       error: err => {
-        this.error.set(err?.error?.error ?? 'No previous SQL update result is available yet.');
+        this.error.set(err?.error?.error ?? 'No previous migration result is available yet.');
         this.sqlLoading.set(false);
       }
     });
@@ -153,112 +148,110 @@ export class AdminDatabaseManagementComponent implements OnInit, OnDestroy {
         this.sqlRunning.set(false);
         this.sqlConfirmationChecked.set(false);
         this.sqlConfirmationText.set('');
-        this.toast.success(result.success ? 'SQL updates completed.' : 'SQL update finished with errors.');
+        this.toast.success(result.success ? 'Numbered migrations completed.' : 'Migration run finished with errors.');
         this.loadSqlPreview();
       },
       error: err => {
-        this.error.set(err?.error?.error ?? 'Failed to run SQL updates.');
+        this.error.set(err?.error?.error ?? 'Failed to run numbered migrations.');
         this.sqlRunning.set(false);
       }
     });
   }
 
-  validateMigration(): void {
-    this.migrationLoading.set(true);
+  compareSchema(): void {
+    this.schemaLoading.set(true);
     this.error.set(null);
-    this.admin.validateDatabaseMigration(this.migrationSourceSelection(), this.migrationDestinationSelection()).subscribe({
-      next: validation => {
-        this.migrationValidation.set(validation);
-        this.migrationLoading.set(false);
+    this.admin.compareSchema(this.schemaSourceSelection(), this.schemaTargetSelection()).subscribe({
+      next: response => {
+        this.schemaPlan.set(response.plan ?? null);
+        this.schemaLoading.set(false);
       },
       error: err => {
-        this.error.set(err?.error?.error ?? 'Migration validation failed.');
-        this.migrationLoading.set(false);
+        this.error.set(err?.error?.error ?? 'Schema comparison failed.');
+        this.schemaLoading.set(false);
       }
     });
   }
 
-  startMigration(): void {
-    this.migrationStarting.set(true);
+  generateSchemaSyncMigration(): void {
+    this.schemaGenerating.set(true);
     this.error.set(null);
-    this.stopMigrationPolling();
-
-    this.admin.startDatabaseMigration(
-      this.migrationSourceSelection(),
-      this.migrationDestinationSelection(),
-      this.migrationSourceConfirmationText(),
-      this.migrationDestinationConfirmationText(),
+    this.admin.generateSchemaSyncMigration(
+      this.schemaSourceSelection(),
+      this.schemaTargetSelection(),
+      this.schemaConfirmationText(),
     ).subscribe({
-      next: operation => {
-        this.migrationOperation.set(operation);
-        this.migrationStarting.set(false);
-        this.startMigrationPolling(operation.operationId);
+      next: plan => {
+        this.schemaPlan.set(plan);
+        this.schemaGenerating.set(false);
+        this.schemaConfirmationChecked.set(false);
+        this.schemaConfirmationText.set('');
+        this.toast.success(`Generated ${plan.generatedMigrationFileName}.`);
+        this.loadSqlPreview();
       },
       error: err => {
-        this.error.set(err?.error?.error ?? 'Failed to start database migration.');
-        this.migrationStarting.set(false);
+        this.error.set(err?.error?.error ?? 'Failed to generate a reviewed migration file.');
+        this.schemaGenerating.set(false);
       }
     });
   }
 
-  onSourceTargetChange(): void {
-    const target = this.targets().find(item => item.key === this.migrationSourceTargetKey());
-    this.migrationSourceDatabaseName.set(target?.databaseName ?? '');
-    this.resetMigrationState();
+  onSchemaSourceTargetChange(): void {
+    const target = this.targets().find(item => item.key === this.schemaSourceTargetKey());
+    this.schemaSourceDatabaseName.set(target?.databaseName ?? '');
+    this.resetSchemaState();
   }
 
-  onDestinationTargetChange(): void {
-    const target = this.targets().find(item => item.key === this.migrationDestinationTargetKey());
-    this.migrationDestinationDatabaseName.set(target?.databaseName ?? '');
-    this.resetMigrationState();
+  onSchemaTargetChange(): void {
+    const target = this.targets().find(item => item.key === this.schemaTargetTargetKey());
+    this.schemaTargetDatabaseName.set(target?.databaseName ?? '');
+    this.resetSchemaState();
   }
 
-  resetMigrationState(): void {
-    this.migrationValidation.set(null);
-    this.migrationOperation.set(null);
-    this.migrationConfirmationChecked.set(false);
-    this.migrationSourceConfirmationText.set('');
-    this.migrationDestinationConfirmationText.set('');
-    this.stopMigrationPolling();
+  resetSchemaState(): void {
+    this.schemaPlan.set(null);
+    this.schemaConfirmationChecked.set(false);
+    this.schemaConfirmationText.set('');
+    this.severityFilter.set('All');
+    this.categoryFilter.set('All');
   }
 
-  private startMigrationPolling(operationId: string): void {
-    this.migrationPollHandle = window.setInterval(() => {
-      this.admin.getDatabaseMigrationStatus(operationId).subscribe({
-        next: operation => {
-          this.migrationOperation.set(operation);
-          if (['Succeeded', 'Failed', 'ValidationFailed'].includes(operation.status)) {
-            this.stopMigrationPolling();
-            this.migrationValidation.set(operation.validation ?? null);
-            this.toast.info(`Migration ${operation.status.toLowerCase()}.`);
-          }
-        },
-        error: err => {
-          this.error.set(err?.error?.error ?? 'Failed to refresh migration status.');
-          this.stopMigrationPolling();
-        }
-      });
-    }, 2000);
+  filteredDifferences(): ISchemaDifference[] {
+    const plan = this.schemaPlan();
+    if (!plan) return [];
+
+    return plan.differences.filter(difference => {
+      const severityMatch = this.severityFilter() === 'All' || difference.severity === this.severityFilter();
+      const categoryMatch = this.categoryFilter() === 'All' || difference.category === this.categoryFilter();
+      return severityMatch && categoryMatch;
+    });
   }
 
-  private stopMigrationPolling(): void {
-    if (this.migrationPollHandle !== null) {
-      window.clearInterval(this.migrationPollHandle);
-      this.migrationPollHandle = null;
-    }
+  severityOptions(): string[] {
+    const plan = this.schemaPlan();
+    return ['All', ...(plan?.severityCounts.map(item => item.key) ?? [])];
   }
 
-  private migrationSourceSelection(): IMigrationSelection {
+  categoryOptions(): string[] {
+    const plan = this.schemaPlan();
+    return ['All', ...(plan?.categoryCounts.map(item => item.key) ?? [])];
+  }
+
+  countForSeverity(severity: SchemaDifferenceSeverity): number {
+    return this.schemaPlan()?.severityCounts.find(item => item.key === severity)?.count ?? 0;
+  }
+
+  private schemaSourceSelection(): IMigrationSelection {
     return {
-      targetKey: this.migrationSourceTargetKey(),
-      databaseNameOverride: this.migrationSourceDatabaseName().trim() || undefined,
+      targetKey: this.schemaSourceTargetKey(),
+      databaseNameOverride: this.schemaSourceDatabaseName().trim() || undefined,
     };
   }
 
-  private migrationDestinationSelection(): IMigrationSelection {
+  private schemaTargetSelection(): IMigrationSelection {
     return {
-      targetKey: this.migrationDestinationTargetKey(),
-      databaseNameOverride: this.migrationDestinationDatabaseName().trim() || undefined,
+      targetKey: this.schemaTargetTargetKey(),
+      databaseNameOverride: this.schemaTargetDatabaseName().trim() || undefined,
     };
   }
 }

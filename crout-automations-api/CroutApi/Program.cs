@@ -1,6 +1,7 @@
 using CroutApi.Helpers;
 using CroutApi.Repositories;
 using CroutApi.Services;
+using CroutApi.Services.SchemaSync;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
@@ -70,6 +71,7 @@ builder.Services.AddScoped<IIntegrationService, IntegrationService>();
 builder.Services.AddScoped<ISqlUpdaterService, SqlUpdaterService>();
 builder.Services.Configure<DatabaseManagementOptions>(builder.Configuration.GetSection("DatabaseManagement"));
 builder.Services.AddScoped<IDatabaseManagementService, DatabaseManagementService>();
+builder.Services.AddScoped<ISchemaSyncPlanService, SchemaSyncPlanService>();
 
 builder.Services.Configure<N8nOptions>(builder.Configuration.GetSection("N8n"));
 builder.Services.AddHttpClient<IN8nWorkflowClient, N8nWorkflowClient>();

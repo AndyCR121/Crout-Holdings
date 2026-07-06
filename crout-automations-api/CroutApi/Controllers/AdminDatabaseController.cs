@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using CroutApi.DTOs;
 using CroutApi.Services;
+using CroutApi.Services.SchemaSync;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +10,9 @@ namespace CroutApi.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/admin/database-management")]
-public class AdminDatabaseController(IDatabaseManagementService databaseManagement) : ControllerBase
+public class AdminDatabaseController(
+    IDatabaseManagementService databaseManagement,
+    ISchemaSyncPlanService schemaSyncPlanService) : ControllerBase
 {
     private bool IsAdmin =>
         string.Equals(
@@ -44,6 +47,48 @@ public class AdminDatabaseController(IDatabaseManagementService databaseManageme
     {
         if (!IsAdmin) return Forbid();
         var result = await databaseManagement.RunSqlUpdateAsync(request, cancellationToken);
+        if (!result.Success && string.Equals(result.ErrorMessage, "SQL updater is already running.", StringComparison.Ordinal))
+        {
+            return Conflict(new { error = result.ErrorMessage });
+        }
+
+        return Ok(result);
+    }
+
+    [HttpPost("schema-compare")]
+    public async Task<IActionResult> CompareSchema([FromBody] SchemaComparisonRequestDto request, CancellationToken cancellationToken)
+    {
+        if (!IsAdmin) return Forbid();
+        return Ok(await schemaSyncPlanService.CompareAsync(request, cancellationToken));
+    }
+
+    [HttpPost("schema-sync-plan")]
+    public async Task<IActionResult> CreateSchemaSyncPlan([FromBody] SchemaComparisonRequestDto request, CancellationToken cancellationToken)
+    {
+        if (!IsAdmin) return Forbid();
+        return Ok(await schemaSyncPlanService.CreatePlanAsync(request, cancellationToken));
+    }
+
+    [HttpPost("schema-sync-plan/generate-migration")]
+    public async Task<IActionResult> GenerateSchemaSyncMigration([FromBody] GenerateSchemaSyncMigrationRequestDto request, CancellationToken cancellationToken)
+    {
+        if (!IsAdmin) return Forbid();
+        return Ok(await schemaSyncPlanService.GenerateMigrationAsync(request, cancellationToken));
+    }
+
+    [HttpPost("run-migrations")]
+    public async Task<IActionResult> RunMigrations([FromBody] RunDatabaseMigrationsRequestDto request, CancellationToken cancellationToken)
+    {
+        if (!IsAdmin) return Forbid();
+        var result = await databaseManagement.RunSqlUpdateAsync(
+            new RunSqlUpdateRequestDto
+            {
+                TargetKey = request.TargetKey,
+                ConfirmExecution = request.ConfirmExecution,
+                ConfirmationText = request.ConfirmationText
+            },
+            cancellationToken);
+
         if (!result.Success && string.Equals(result.ErrorMessage, "SQL updater is already running.", StringComparison.Ordinal))
         {
             return Conflict(new { error = result.ErrorMessage });

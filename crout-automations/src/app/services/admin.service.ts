@@ -20,6 +20,8 @@ import {
   IDatabaseMigrationOperation,
   IDatabaseMigrationValidation,
   IMigrationSelection,
+  ISchemaComparisonResponse,
+  ISchemaSyncPlan,
   ISqlUpdatePreview,
   ISqlUpdaterSummary,
 } from '../interfaces/i-service.interface';
@@ -303,8 +305,36 @@ export class AdminService {
 
   runSqlUpdate(targetKey: string, confirmationText: string): Observable<ISqlUpdaterSummary> {
     return this.http.post<ISqlUpdaterSummary>(
-      `${this.base}/database-management/sql-updates/run`,
+      `${this.base}/database-management/run-migrations`,
       { targetKey, confirmExecution: true, confirmationText },
+      { headers: this.authHeaders(), withCredentials: true }
+    );
+  }
+
+  compareSchema(source: IMigrationSelection, target: IMigrationSelection): Observable<ISchemaComparisonResponse> {
+    return this.http.post<ISchemaComparisonResponse>(
+      `${this.base}/database-management/schema-compare`,
+      { source, target },
+      { headers: this.authHeaders(), withCredentials: true }
+    );
+  }
+
+  createSchemaSyncPlan(source: IMigrationSelection, target: IMigrationSelection): Observable<ISchemaSyncPlan> {
+    return this.http.post<ISchemaSyncPlan>(
+      `${this.base}/database-management/schema-sync-plan`,
+      { source, target },
+      { headers: this.authHeaders(), withCredentials: true }
+    );
+  }
+
+  generateSchemaSyncMigration(
+    source: IMigrationSelection,
+    target: IMigrationSelection,
+    confirmationText: string,
+  ): Observable<ISchemaSyncPlan> {
+    return this.http.post<ISchemaSyncPlan>(
+      `${this.base}/database-management/schema-sync-plan/generate-migration`,
+      { source, target, confirmGeneration: true, confirmationText },
       { headers: this.authHeaders(), withCredentials: true }
     );
   }

@@ -381,6 +381,8 @@ public static class SchemaUpdater
         return results;
     }
 
+    public static string ResolveSqlRootPath() => ResolveSqlRoot();
+
     private static string ResolveSqlRoot()
     {
         var baseDirectory = new DirectoryInfo(AppContext.BaseDirectory);
