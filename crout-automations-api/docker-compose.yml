@@ -25,8 +25,8 @@ services:
   # ── REST API ──────────────────────────────────────────────
   api:
     build:
-      context: ./CroutApi
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: CroutApi/Dockerfile
     image: crout-api:base
     container_name: crout_api
     restart: unless-stopped
@@ -40,6 +40,13 @@ services:
       DB_NAME:                crout_automations
       DB_USER:                ${DB_USER}
       DB_PASSWORD:            ${DB_PASSWORD}
+      # Schema comparison target — production database
+      PROD_DB_HOST:     ${PROD_DB_HOST}
+      PROD_DB_PORT:     ${PROD_DB_PORT}
+      PROD_DB_NAME:     ${PROD_DB_NAME}
+      PROD_DB_USER:     ${PROD_DB_USER}
+      PROD_DB_PASSWORD: ${PROD_DB_PASSWORD}
+      
       JWT_SECRET:             ${JWT_SECRET}
       JWT_ISSUER:             ${JWT_ISSUER}
       JWT_AUDIENCE:           ${JWT_AUDIENCE}
