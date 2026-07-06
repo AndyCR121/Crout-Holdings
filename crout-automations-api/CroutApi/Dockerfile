@@ -12,5 +12,8 @@ RUN dotnet publish CroutApi.csproj -c Release -o /app/publish /p:UseAppHost=fals
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
+ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Production
+EXPOSE 8080
 COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "CroutApi.dll"]

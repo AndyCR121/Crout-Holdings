@@ -2,11 +2,6 @@ services:
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
-    depends_on:
-      frontend:
-        condition: service_started
-      api:
-        condition: service_started
     ports:
       - "80:80"
       - "443:443"
@@ -24,7 +19,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     networks:
-      - internal
+      - public
 
   api:
     build:
@@ -32,12 +27,12 @@ services:
       dockerfile: CroutApi/Dockerfile
     restart: unless-stopped
     depends_on:
-      mysql:
+      db:
         condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
-      DB_HOST: mysql
+      DB_HOST: db
       DB_PORT: "3306"
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
@@ -61,39 +56,36 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       CONTACT_TO_EMAIL: ${CONTACT_TO_EMAIL}
       SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL}
-      N8n__BaseUrl: ${N8N_BASE_URL}
-      N8n__ApiKey: ${N8N_API_KEY}
-      N8n__WorkspaceId: ${N8N_WORKSPACE_ID}
-      N8n__DefaultProjectId: ${N8N_DEFAULT_PROJECT_ID}
-      N8N_BASE_URL: ${N8N_BASE_URL}
-      N8N_API_KEY: ${N8N_API_KEY}
     networks:
+      - public
       - internal
 
-  mysql:
-    image: mysql:8.4
+  db:
+    image: mysql:8.3
+    container_name: crout-mysql
     restart: unless-stopped
     environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u$$MYSQL_USER -p$$MYSQL_PASSWORD --silent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
       interval: 10s
       timeout: 5s
       retries: 12
       start_period: 30s
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./crout-automations-api/sql/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./crout-automations-api/sql/02_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
     networks:
       - internal
 
 networks:
   public:
-    name: crout_public
   internal:
-    name: crout_internal
+    internal: true
 
 volumes:
   mysql_data:

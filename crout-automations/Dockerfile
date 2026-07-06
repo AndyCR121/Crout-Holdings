@@ -5,18 +5,9 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
-RUN npm run build
+RUN npm run build -- --configuration production
 
-FROM nginx:1.27-alpine
-WORKDIR /usr/share/nginx/html
-
-RUN apk add --no-cache gettext
-
-COPY --from=build /app/dist/crout-automations/browser/ ./
+FROM nginx:alpine
+COPY --from=build /app/dist/crout-automations/browser /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY public/env.template.js /usr/share/nginx/html/env.template.js
-COPY docker/entrypoint.sh /docker-entrypoint.d/40-generate-env.sh
-
-RUN chmod +x /docker-entrypoint.d/40-generate-env.sh
-
-ENV API_URL=/api
+EXPOSE 80
