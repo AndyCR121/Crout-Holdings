@@ -87,7 +87,12 @@ public class ReleaseNoteRepository(DbHelper db) : IReleaseNoteRepository
             VALUES (@ReleaseVersion, @ReleaseDate, @ReleaseNotes, UTC_TIMESTAMP());
             SELECT LAST_INSERT_ID();
             """,
-            releaseNote);
+            new
+            {
+                releaseNote.ReleaseVersion,
+                ReleaseDate = releaseNote.ReleaseDate.ToDateTime(TimeOnly.MinValue),
+                releaseNote.ReleaseNotes
+            });
     }
 
     public async Task UpdateAsync(ReleaseNote releaseNote)
@@ -102,7 +107,13 @@ public class ReleaseNoteRepository(DbHelper db) : IReleaseNoteRepository
                 updatedAt = UTC_TIMESTAMP()
             WHERE refRelease = @RefRelease
             """,
-            releaseNote);
+            new
+            {
+                releaseNote.RefRelease,
+                releaseNote.ReleaseVersion,
+                ReleaseDate = releaseNote.ReleaseDate.ToDateTime(TimeOnly.MinValue),
+                releaseNote.ReleaseNotes
+            });
     }
 
     public async Task DeleteAsync(int refRelease)

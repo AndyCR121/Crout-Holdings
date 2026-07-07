@@ -2,6 +2,7 @@ using CroutApi.Helpers;
 using CroutApi.Repositories;
 using CroutApi.Services;
 using CroutApi.Services.SchemaSync;
+using Dapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +19,8 @@ if (migrationExitCode.HasValue)
 }
 
 var builder = WebApplication.CreateBuilder(args);
+
+SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
 
 // -- Config from environment --------------------------------------------------
 var jwtSecret   = Environment.GetEnvironmentVariable("JWT_SECRET")   ?? throw new InvalidOperationException("JWT_SECRET not set");

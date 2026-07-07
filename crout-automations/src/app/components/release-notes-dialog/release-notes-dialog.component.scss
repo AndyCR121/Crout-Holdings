@@ -1,5 +1,6 @@
 .release-dialog {
   width: min(880px, 92vw);
+  font-family: var(--font-body);
   color: #e2e8f0;
   background:
     radial-gradient(circle at top left, rgba(79, 152, 163, 0.12), transparent 32%),
@@ -20,14 +21,17 @@
 .release-dialog__subtitle {
   margin: 0.25rem 0 0;
   color: rgba(226, 232, 240, 0.68);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
 }
 
 .release-dialog__header h2 {
   margin: 0;
   color: #f8fafc;
-  font: inherit;
-  font-size: 1.8rem;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
   font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
 .release-dialog__content {
@@ -77,12 +81,16 @@
 
   h3 {
     margin: 0;
-    font-size: 1.15rem;
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
     color: #f8fafc;
+    letter-spacing: -0.02em;
   }
 
   p {
     margin: 0.25rem 0 0;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
     color: rgba(226, 232, 240, 0.62);
   }
 }
@@ -91,21 +99,76 @@
   padding: 1.25rem;
   max-height: min(46vh, 520px);
   overflow: auto;
-  line-height: 1.7;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: 1.8;
   color: rgba(226, 232, 240, 0.92);
 
   :is(p, ul, ol, h1, h2, h3, h4, h5, h6) {
     margin-top: 0;
   }
 
+  p,
+  li {
+    max-width: none;
+  }
+
+  ul,
+  ol {
+    padding-left: 1.15rem;
+    margin-bottom: 1rem;
+  }
+
+  li + li {
+    margin-top: 0.45rem;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: #f8fafc;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin-bottom: 0.75rem;
+  }
+
+  h1,
+  h2 {
+    font-size: var(--text-lg);
+  }
+
+  h3,
+  h4 {
+    font-size: 1.1rem;
+  }
+
+  p,
+  ul,
+  ol {
+    margin-bottom: 1rem;
+  }
+
   a {
-    color: #7dd3fc;
+    color: #9fd0ff;
+    text-decoration-color: rgba(159, 208, 255, 0.4);
   }
 }
 
 :host ::ng-deep {
   .mat-mdc-form-field-subscript-wrapper {
     display: none;
+  }
+
+  .mat-mdc-text-field-wrapper {
+    min-height: 52px;
+    border-radius: 12px;
+    background: rgba(20, 44, 79, 0.72);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
   }
 
   .mdc-notched-outline__leading,
@@ -120,5 +183,42 @@
   .mat-mdc-form-field label,
   .mat-mdc-form-field .mdc-floating-label {
     color: #e2e8f0 !important;
+  }
+
+  .mat-mdc-form-field-infix,
+  .mat-mdc-select-value {
+    font-family: var(--font-body) !important;
+    font-size: var(--text-sm) !important;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  .mat-mdc-form-field .mdc-floating-label {
+    font-family: var(--font-body) !important;
+    font-size: 0.8rem !important;
+    letter-spacing: 0.02em;
+  }
+
+  .mat-mdc-select-arrow svg {
+    fill: #dbeafe !important;
+  }
+
+  div.mat-mdc-select-panel,
+  .mat-mdc-select-panel {
+    background: #122645 !important;
+    border: 1px solid rgba(109, 184, 196, 0.22);
+    border-radius: 12px !important;
+    box-shadow: 0 18px 40px rgba(2, 6, 23, 0.44) !important;
+  }
+
+  .mat-mdc-option {
+    font-family: var(--font-body) !important;
+    font-size: var(--text-sm) !important;
+    color: rgba(226, 232, 240, 0.92) !important;
+  }
+
+  .mat-mdc-option.mdc-list-item--selected,
+  .mat-mdc-option:hover {
+    background: rgba(74, 123, 175, 0.18) !important;
   }
 }
