@@ -29,11 +29,9 @@ import {
 } from '../../../../interfaces/i-custom-form-builder.interface';
 import { DynamicFieldConfig, DynamicFieldOption } from '../../../../interfaces/i-service-trigger.interface';
 import { IDevPortalService } from '../../../../interfaces/i-service.interface';
-import { IUserServiceWorkflowStep } from '../../../../interfaces/i-workflow-capability.interface';
 import { PendingChangesComponent } from '../../../../guards/pending-changes.guard';
 import { DevService } from '../../../../services/dev.service';
 import { ToastService } from '../../../../services/toast.service';
-import { WorkflowCapabilityApiService } from '../../../../services/workflow-capability-api.service';
 
 type SelectedTarget = 'form' | string;
 
@@ -50,7 +48,6 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
   private readonly router = inject(Router);
   private readonly dev = inject(DevService);
   private readonly toast = inject(ToastService);
-  private readonly workflow = inject(WorkflowCapabilityApiService);
 
   readonly guide = signal<IDevPortalService | null>(null);
   readonly loading = signal(true);
@@ -745,14 +742,13 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
     this.loading.set(true);
     forkJoin({
       guide: this.dev.getGuide(userServiceId),
-      steps: this.workflow.getWorkflowSteps(userServiceId),
       form: this.dev.getForm(userServiceId).pipe(
         catchError(err => err?.status === 404 ? of(null) : throwError(() => err))
       )
     }).subscribe({
-      next: ({ guide, steps, form }) => {
+      next: ({ guide, form }) => {
         this.guide.set(guide);
-        this.hasConfirmedFormTrigger.set(this.checkConfirmedFormTrigger(steps));
+        this.hasConfirmedFormTrigger.set(this.checkConfirmedFormTrigger(guide));
         if (form) this.hydrateForm(form);
         else this.resetEmptyState(guide.serviceName);
         this.loading.set(false);
@@ -790,12 +786,32 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
     this.validationError.set(null);
   }
 
-  private checkConfirmedFormTrigger(steps: IUserServiceWorkflowStep[]): boolean {
-    return steps.some(step =>
-      step.status === 'Confirmed'
-      && step.role === 'Trigger'
-      && (step.capabilityType === 'WebsiteForm' || step.capabilityType === 'CustomForm')
-    );
+  private checkConfirmedFormTrigger(guide: IDevPortalService): boolean {
+    if (!guide.config?.trim()) return false;
+
+    try {
+      const parsed = JSON.parse(guide.config) as Record<string, unknown>;
+      const triggerNames = Array.isArray(parsed['trigger'])
+        ? parsed['trigger'].filter(item => typeof item === 'string') as string[]
+        : [];
+
+      if (triggerNames.some(name => this.isCustomFormTrigger(name))) return true;
+
+      const confirmedAddons = Array.isArray(parsed['confirmedAddons'])
+        ? parsed['confirmedAddons'] as Array<Record<string, unknown>>
+        : [];
+
+      return confirmedAddons.some(addon =>
+        String(addon['type'] ?? '').toLowerCase() === 'trigger'
+        && this.isCustomFormTrigger(String(addon['name'] ?? '')));
+    } catch {
+      return false;
+    }
+  }
+
+  private isCustomFormTrigger(name: string): boolean {
+    const normalized = name.toLowerCase().replace(/[\s_-]+/g, '');
+    return normalized === 'websiteform' || normalized === 'customform';
   }
 
   private validate(): string | null {

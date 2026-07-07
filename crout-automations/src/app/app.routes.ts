@@ -151,11 +151,6 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/admin/service-features/admin-service-features.component').then(m => m.AdminServiceFeaturesComponent),
       },
-      {
-        path: 'workflow-capabilities',
-        loadComponent: () =>
-          import('./pages/admin/workflow-capabilities/admin-workflow-capabilities.component').then(m => m.AdminWorkflowCapabilitiesComponent),
-      },
     ],
   },
   {
@@ -228,57 +223,14 @@ export const routes: Routes = [
         },
       },
       {
-        path: 'quote-system',
-        loadComponent: () =>
-          import('./pages/services/quote-system/quote-system.component').then(m => m.QuoteSystemComponent),
-        data: {
-          seo: {
-            title: 'Quote & Invoice Automation - Crout Automations',
-            description: 'Automate your quoting and invoicing with Xero-integrated, multi-platform, and custom systems. Smart summaries, complex calculations, and invoice follow-ups - all hands-free.',
-            canonical: '/services/quote-system',
-          },
-        },
-      },
-      {
-        path: 'whatsapp-agent',
-        loadComponent: () =>
-          import('./pages/services/whatsapp-agent/whatsapp-agent.component').then(m => m.WhatsappAgentComponent),
-        data: {
-          seo: {
-            title: 'WhatsApp AI Agent - Crout Automations',
-            description: 'Deploy a WhatsApp AI agent that handles client support, sends notifications, gathers quote details, and reaches your client base - automatically, 24/7.',
-            canonical: '/services/whatsapp-agent',
-          },
-        },
-      },
-      {
-        path: 'project-management',
-        loadComponent: () =>
-          import('./pages/services/project-management/project-management.component').then(m => m.ProjectManagementComponent),
-        data: {
-          seo: {
-            title: 'Automated Project Management - Crout Automations',
-            description: 'Auto-create Trello cards, manage Jira boards, and run fully automated project workflows. Custom systems built around how your team works.',
-            canonical: '/services/project-management',
-          },
-        },
-      },
-      {
-        path: 'marketing-systems',
-        loadComponent: () =>
-          import('./pages/services/marketing-systems/marketing-systems.component').then(m => m.MarketingSystemsComponent),
-        data: {
-          seo: {
-            title: 'AI Marketing Systems - Crout Automations',
-            description: 'Automated branded content, AI face & voice videos, social media scheduling, SEO analytics, after-hours receptionist, and CRM - all powered by AI.',
-            canonical: '/services/marketing-systems',
-          },
-        },
-      },
-      {
         path: 'ai-video-editor',
         redirectTo: 'marketing-systems',
         pathMatch: 'full',
+      },
+      {
+        path: ':slug',
+        loadComponent: () =>
+          import('./pages/services/service-detail/service-detail.component').then(m => m.ServiceDetailComponent),
       },
     ],
   },

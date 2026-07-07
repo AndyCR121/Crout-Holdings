@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
-import { IWorkflowIntegrationDefinition } from '../interfaces/i-workflow-capability.interface';
+import { IIntegrationDefinition } from '../interfaces/i-integration-definition.interface';
 
 interface AdminIntegrationDraftState {
   mode: 'create' | 'edit';
   editingIntegrationId: number | null;
-  draft: Partial<IWorkflowIntegrationDefinition>;
+  draft: Partial<IIntegrationDefinition>;
 }
 
 @Injectable({ providedIn: 'root' })

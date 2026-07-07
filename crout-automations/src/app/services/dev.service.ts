@@ -60,7 +60,7 @@ export class DevService {
   }
 
   getForm(userServiceId: number): Observable<DevUserServiceForm> {
-    return this.http.get<DevUserServiceForm>(`${this.env.apiUrl}/workflow/user-services/${userServiceId}/custom-form`, { headers: this.authHeaders(), withCredentials: true });
+    return this.http.get<DevUserServiceForm>(`${this.base}/user-services/${userServiceId}/form`, { headers: this.authHeaders(), withCredentials: true });
   }
 
   createForm(userServiceId: number, payload: {
@@ -71,7 +71,7 @@ export class DevService {
     payloadTemplate?: Record<string, unknown> | null;
     responseMode?: string;
   }): Observable<DevUserServiceForm> {
-    return this.http.post<DevUserServiceForm>(`${this.env.apiUrl}/workflow/user-services/${userServiceId}/custom-form`, payload, { headers: this.authHeaders(), withCredentials: true });
+    return this.http.post<DevUserServiceForm>(`${this.base}/user-services/${userServiceId}/form`, payload, { headers: this.authHeaders(), withCredentials: true });
   }
 
   updateForm(userServiceId: number, payload: {
@@ -82,10 +82,10 @@ export class DevService {
     payloadTemplate?: Record<string, unknown> | null;
     responseMode?: string;
   }): Observable<DevUserServiceForm> {
-    return this.http.put<DevUserServiceForm>(`${this.env.apiUrl}/workflow/user-services/${userServiceId}/custom-form`, payload, { headers: this.authHeaders(), withCredentials: true });
+    return this.http.put<DevUserServiceForm>(`${this.base}/user-services/${userServiceId}/form`, payload, { headers: this.authHeaders(), withCredentials: true });
   }
 
   deleteForm(userServiceId: number): Observable<void> {
-    return this.http.delete<void>(`${this.env.apiUrl}/workflow/user-services/${userServiceId}/custom-form`, { headers: this.authHeaders(), withCredentials: true });
+    return this.http.delete<void>(`${this.base}/user-services/${userServiceId}/form`, { headers: this.authHeaders(), withCredentials: true });
   }
 }

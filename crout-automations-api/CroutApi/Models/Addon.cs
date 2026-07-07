@@ -11,7 +11,7 @@ public class Addon
     public bool IsActive { get; set; } = true;
     public int DisplayOrder { get; set; }
     public List<int> ServiceIds { get; set; } = [];
-    public List<WorkflowIntegrationDefinition> Integrations { get; set; } = [];
+    public List<IntegrationDefinition> Integrations { get; set; } = [];
 
     // Compatibility aliases for older frontend consumers.
     public decimal Price => MonthlyPrice;

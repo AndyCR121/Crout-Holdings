@@ -65,9 +65,14 @@
                         <h4>Triggers</h4>
                         <div class="dguide-option-chips">
                           @for (addon of groupedSelections().trigger; track addon.addonId) {
-                            <button type="button" [class.active]="isIntegrationSelected(addon.addonId)" (click)="toggleIntegration(addon.addonId)">
-                              {{ addon.name }}
-                            </button>
+                            <div class="dguide-option-group">
+                              <button type="button" [class.active]="isIntegrationSelected(addon.addonId)" (click)="toggleIntegration(addon.addonId)">
+                                {{ addon.name }}
+                              </button>
+                              @if (addon.integrations.length) {
+                                <small>{{ addon.integrations.join(', ') }}</small>
+                              }
+                            </div>
                           }
                         </div>
                       </section>
@@ -76,9 +81,14 @@
                         <h4>Actions</h4>
                         <div class="dguide-option-chips">
                           @for (addon of groupedSelections().action; track addon.addonId) {
-                            <button type="button" [class.active]="isIntegrationSelected(addon.addonId)" (click)="toggleIntegration(addon.addonId)">
-                              {{ addon.name }}
-                            </button>
+                            <div class="dguide-option-group">
+                              <button type="button" [class.active]="isIntegrationSelected(addon.addonId)" (click)="toggleIntegration(addon.addonId)">
+                                {{ addon.name }}
+                              </button>
+                              @if (addon.integrations.length) {
+                                <small>{{ addon.integrations.join(', ') }}</small>
+                              }
+                            </div>
                           }
                         </div>
                       </section>
@@ -87,14 +97,19 @@
                         <h4>Outputs</h4>
                         <div class="dguide-option-chips">
                           @for (addon of groupedSelections().output; track addon.addonId) {
-                            <button type="button" [class.active]="isIntegrationSelected(addon.addonId)" (click)="toggleIntegration(addon.addonId)">
-                              {{ addon.name }}
-                            </button>
+                            <div class="dguide-option-group">
+                              <button type="button" [class.active]="isIntegrationSelected(addon.addonId)" (click)="toggleIntegration(addon.addonId)">
+                                {{ addon.name }}
+                              </button>
+                              @if (addon.integrations.length) {
+                                <small>{{ addon.integrations.join(', ') }}</small>
+                              }
+                            </div>
                           }
                         </div>
                       </section>
 
-                      @if (!hasAnyCapabilityOptions()) {
+                      @if (!hasAnyAddonOptions()) {
                         <p class="dguide-empty">No requested add-ons are available for this service yet.</p>
                       }
 

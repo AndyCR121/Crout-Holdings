@@ -40,6 +40,11 @@ function normalizeService(raw: any): IService {
     hasAddons: raw.hasAddons ?? raw.HasAddons ?? false,
     conditional: raw.conditional ?? raw.Conditional ?? false,
     serviceDescription: raw.serviceDescription ?? raw.ServiceDescription ?? raw.description ?? '',
+    displayName: raw.displayName ?? raw.DisplayName ?? '',
+    displayTagline: raw.displayTagline ?? raw.DisplayTagline ?? '',
+    iconKey: raw.iconKey ?? raw.IconKey ?? '',
+    iconSvg: raw.iconSvg ?? raw.IconSvg ?? '',
+    displayOrder: raw.displayOrder ?? raw.DisplayOrder ?? undefined,
     features: raw.features ?? [],
     addons: Array.isArray(raw.addons) ? raw.addons.map(normalizeAddon) : [],
   };

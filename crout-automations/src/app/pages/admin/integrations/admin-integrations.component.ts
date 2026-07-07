@@ -5,9 +5,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { AdminService, PagedResult } from '../../../services/admin.service';
 import { AdminIntegrationDraftService } from '../../../services/admin-integration-draft.service';
-import { WorkflowCapabilityApiService } from '../../../services/workflow-capability-api.service';
+import { IntegrationDefinitionApiService } from '../../../services/integration-definition-api.service';
 import { IAddon } from '../../../interfaces/i-service.interface';
-import { IWorkflowIntegrationDefinition } from '../../../interfaces/i-workflow-capability.interface';
+import { IIntegrationDefinition } from '../../../interfaces/i-integration-definition.interface';
 
 @Component({
   selector: 'ca-admin-integrations',
@@ -22,9 +22,9 @@ export class AdminIntegrationsComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly admin = inject(AdminService);
   private readonly draftStore = inject(AdminIntegrationDraftService);
-  private readonly workflowApi = inject(WorkflowCapabilityApiService);
+  private readonly integrationsApi = inject(IntegrationDefinitionApiService);
 
-  readonly integrations = signal<IWorkflowIntegrationDefinition[]>([]);
+  readonly integrations = signal<IIntegrationDefinition[]>([]);
   readonly addons = signal<IAddon[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
@@ -33,7 +33,7 @@ export class AdminIntegrationsComponent implements OnInit {
   readonly saving = signal(false);
   readonly integrationTypeOptions = ['Trigger', 'Action', 'Output'] as const;
 
-  integrationDraft: Partial<IWorkflowIntegrationDefinition> = { name: '', integrationType: 'Action', hasCredentials: false, isActive: true };
+  integrationDraft: Partial<IIntegrationDefinition> = { name: '', integrationType: 'Action', hasCredentials: false, isActive: true };
 
   readonly addonNamesByIntegration = computed(() => {
     const map = new Map<number, string[]>();
@@ -62,7 +62,7 @@ export class AdminIntegrationsComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.workflowApi.getAdminIntegrationDefinitions(false).subscribe({
+    this.integrationsApi.getAdminIntegrationDefinitions(false).subscribe({
       next: integrations => {
         this.integrations.set(integrations);
         this.admin.getAddons(1, 200).subscribe({
@@ -83,7 +83,7 @@ export class AdminIntegrationsComponent implements OnInit {
     });
   }
 
-  startEditIntegration(item: IWorkflowIntegrationDefinition): void {
+  startEditIntegration(item: IIntegrationDefinition): void {
     this.showCreate.set(false);
     this.editingIntegrationId.set(item.id);
     this.integrationDraft = {
@@ -115,8 +115,8 @@ export class AdminIntegrationsComponent implements OnInit {
   saveIntegration(): void {
     this.saving.set(true);
     const request = this.editingIntegrationId()
-      ? this.workflowApi.updateAdminIntegrationDefinition(this.editingIntegrationId()!, this.integrationDraft)
-      : this.workflowApi.createAdminIntegrationDefinition(this.integrationDraft);
+      ? this.integrationsApi.updateAdminIntegrationDefinition(this.editingIntegrationId()!, this.integrationDraft)
+      : this.integrationsApi.createAdminIntegrationDefinition(this.integrationDraft);
 
     request.subscribe({
       next: () => {
@@ -132,7 +132,7 @@ export class AdminIntegrationsComponent implements OnInit {
   }
 
   deleteIntegration(id: number): void {
-    this.workflowApi.deleteAdminIntegrationDefinition(id).subscribe({
+    this.integrationsApi.deleteAdminIntegrationDefinition(id).subscribe({
       next: () => this.reload(),
       error: err => this.error.set(err?.error?.error ?? 'Failed to delete integration definition.')
     });

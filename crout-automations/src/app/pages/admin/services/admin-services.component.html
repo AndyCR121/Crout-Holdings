@@ -12,12 +12,13 @@
 
   <div *ngIf="!loading()" class="admin-table-wrap">
     <table class="admin-table">
-      <thead><tr><th>ID</th><th>Name</th><th>Description</th><th>Base</th><th>Tokens</th><th>Included Tokens</th><th>Add-ons</th><th>Conditional</th><th>Actions</th></tr></thead>
+      <thead><tr><th>ID</th><th>Name</th><th>Display</th><th>Description</th><th>Base</th><th>Tokens</th><th>Included Tokens</th><th>Add-ons</th><th>Conditional</th><th>Actions</th></tr></thead>
       <tbody>
         <tr *ngFor="let s of items()" [class.editing]="editingId() === s.serviceId">
           <ng-container *ngIf="editingId() !== s.serviceId">
             <td>{{ s.serviceId }}</td>
             <td>{{ s.serviceName }}</td>
+            <td class="td-desc">{{ s.displayName || s.serviceName }}<br /><small>{{ s.iconKey || 'auto' }} | order {{ s.displayOrder ?? 'auto' }}</small></td>
             <td class="td-desc">{{ s.serviceDescription }}</td>
             <td>R{{ s.baseCost | number:'1.2-2' }}</td>
             <td>R{{ s.tokensCost | number:'1.2-2' }}</td>
@@ -33,6 +34,15 @@
           <ng-container *ngIf="editingId() === s.serviceId">
             <td>{{ s.serviceId }}</td>
             <td><input [(ngModel)]="editBuffer().serviceName" class="admin-input" /></td>
+            <td>
+              <input [(ngModel)]="editBuffer().displayName" class="admin-input" placeholder="Display name" />
+              <input [(ngModel)]="editBuffer().displayTagline" class="admin-input" placeholder="Tagline" />
+              <select [(ngModel)]="editBuffer().iconKey" class="admin-input">
+                <option *ngFor="let option of iconOptions" [ngValue]="option.key">{{ option.label }}</option>
+              </select>
+              <input type="number" min="0" step="1" [(ngModel)]="editBuffer().displayOrder" class="admin-input" placeholder="Display order" />
+              <textarea [(ngModel)]="editBuffer().iconSvg" class="admin-input" rows="3" placeholder="Optional inline SVG"></textarea>
+            </td>
             <td><input [(ngModel)]="editBuffer().serviceDescription" class="admin-input" /></td>
             <td><input type="number" min="0" step="0.01" [(ngModel)]="editBuffer().baseCost" class="admin-input" /></td>
             <td><input type="number" min="0" step="0.01" [(ngModel)]="editBuffer().tokensCost" class="admin-input" /></td>
@@ -45,7 +55,7 @@
             </td>
           </ng-container>
         </tr>
-        <tr *ngIf="items().length === 0"><td colspan="9" class="admin-empty">No services found.</td></tr>
+        <tr *ngIf="items().length === 0"><td colspan="10" class="admin-empty">No services found.</td></tr>
       </tbody>
     </table>
   </div>
@@ -65,6 +75,15 @@
   <div class="admin-modal" (click)="$event.stopPropagation()">
     <h3>New Service</h3>
     <label>Name<input [(ngModel)]="createBuffer().serviceName" class="admin-input" /></label>
+    <label>Display Name<input [(ngModel)]="createBuffer().displayName" class="admin-input" /></label>
+    <label>Tagline<input [(ngModel)]="createBuffer().displayTagline" class="admin-input" /></label>
+    <label>Icon
+      <select [(ngModel)]="createBuffer().iconKey" class="admin-input">
+        <option *ngFor="let option of iconOptions" [ngValue]="option.key">{{ option.label }}</option>
+      </select>
+    </label>
+    <label>Display Order<input type="number" min="0" step="1" [(ngModel)]="createBuffer().displayOrder" class="admin-input" /></label>
+    <label>Inline SVG<textarea [(ngModel)]="createBuffer().iconSvg" class="admin-input" rows="4"></textarea></label>
     <label>Description<input [(ngModel)]="createBuffer().serviceDescription" class="admin-input" /></label>
     <label>Base Cost (R)<input type="number" min="0" step="0.01" [(ngModel)]="createBuffer().baseCost" class="admin-input" /></label>
     <label>Tokens Cost (R)<input type="number" min="0" step="0.01" [(ngModel)]="createBuffer().tokensCost" class="admin-input" /></label>

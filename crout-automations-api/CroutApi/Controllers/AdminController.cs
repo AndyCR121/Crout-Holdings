@@ -240,7 +240,12 @@ public class AdminController(
             TokensCost = RequireNonNegative(dto.TokensCost ?? 1000m, "TokensCost"),
             TotalTokens = RequireNonNegative(dto.TotalTokens ?? 6_000_000, "TotalTokens"),
             HasAddons = dto.HasAddons,
-            Conditional = dto.Conditional
+            Conditional = dto.Conditional,
+            DisplayName = TrimOrNull(dto.DisplayName),
+            DisplayTagline = TrimOrNull(dto.DisplayTagline),
+            IconKey = TrimOrNull(dto.IconKey),
+            IconSvg = TrimOrNull(dto.IconSvg),
+            DisplayOrder = NormalizeDisplayOrder(dto.DisplayOrder)
         };
 
         var newId = await services.CreateAsync(service);
@@ -262,6 +267,11 @@ public class AdminController(
         current.TotalTokens = RequireNonNegative(dto.TotalTokens ?? current.TotalTokens, "TotalTokens");
         current.HasAddons = dto.HasAddons ?? current.HasAddons;
         current.Conditional = dto.Conditional ?? current.Conditional;
+        current.DisplayName = dto.DisplayName is null ? current.DisplayName : TrimOrNull(dto.DisplayName);
+        current.DisplayTagline = dto.DisplayTagline is null ? current.DisplayTagline : TrimOrNull(dto.DisplayTagline);
+        current.IconKey = dto.IconKey is null ? current.IconKey : TrimOrNull(dto.IconKey);
+        current.IconSvg = dto.IconSvg is null ? current.IconSvg : TrimOrNull(dto.IconSvg);
+        current.DisplayOrder = dto.DisplayOrder.HasValue ? NormalizeDisplayOrder(dto.DisplayOrder) : current.DisplayOrder;
 
         await services.UpdateAsync(current);
         return Ok(await services.GetByIdAsync(id));
@@ -684,7 +694,7 @@ public class AdminController(
             DisplayOrder = dto.DisplayOrder < 0 ? 0 : dto.DisplayOrder,
             ServiceIds = NormalizeIds(dto.ServiceIds),
             ServiceId = NormalizeIds(dto.ServiceIds).FirstOrDefault() is var first && first > 0 ? first : null,
-            Integrations = NormalizeIds(dto.IntegrationIds).Select(id => new WorkflowIntegrationDefinition { Id = id }).ToList()
+            Integrations = NormalizeIds(dto.IntegrationIds).Select(id => new IntegrationDefinition { Id = id }).ToList()
         };
     }
 
@@ -711,6 +721,13 @@ public class AdminController(
     {
         if (value < 0) throw new ArgumentException($"{fieldName} cannot be negative.");
         return value;
+    }
+
+    private static int? NormalizeDisplayOrder(int? value)
+    {
+        if (!value.HasValue) return null;
+        if (value.Value < 0) throw new ArgumentException("DisplayOrder cannot be negative.");
+        return value.Value;
     }
 
     private static long RequireNonNegative(long value, string fieldName)

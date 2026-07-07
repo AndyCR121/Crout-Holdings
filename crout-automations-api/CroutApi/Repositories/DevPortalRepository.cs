@@ -1,6 +1,7 @@
 using CroutApi.DTOs;
 using CroutApi.Helpers;
 using Dapper;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace CroutApi.Repositories;
@@ -175,13 +176,37 @@ public class DevPortalRepository(DbHelper db) : IDevPortalRepository
         var action = Normalize(dto.Action);
         var output = Normalize(dto.Output);
         var config = ParseConfig(current);
+        var requestedAddons = ParseRequestedAddons(config["requestedAddons"]);
+        var selectedKeys = new HashSet<string>(
+            trigger.Select(name => BuildSelectionKey(name, "Trigger"))
+                .Concat(action.Select(name => BuildSelectionKey(name, "Action")))
+                .Concat(output.Select(name => BuildSelectionKey(name, "Output"))),
+            StringComparer.OrdinalIgnoreCase);
+
+        var refreshedRequested = new JsonArray();
+        var confirmedAddons = new JsonArray();
+        foreach (var addon in requestedAddons)
+        {
+            var confirmed = selectedKeys.Contains(BuildSelectionKey(addon.Name, addon.Type));
+            var snapshot = BuildAddonSnapshot(addon, confirmed);
+            refreshedRequested.Add(snapshot.DeepClone());
+            if (confirmed)
+                confirmedAddons.Add(snapshot);
+        }
+
         config["trigger"] = new JsonArray(trigger.Select(v => JsonValue.Create(v)).ToArray<JsonNode?>());
         config["action"] = new JsonArray(action.Select(v => JsonValue.Create(v)).ToArray<JsonNode?>());
         config["output"] = new JsonArray(output.Select(v => JsonValue.Create(v)).ToArray<JsonNode?>());
+        config["requestedAddons"] = refreshedRequested;
+        config["confirmedAddons"] = confirmedAddons;
         config["integrations"] = new JsonArray(
-            trigger.Select(v => IntegrationNode(v, "trigger"))
-                .Concat(action.Select(v => IntegrationNode(v, "action")))
-                .Concat(output.Select(v => IntegrationNode(v, "output")))
+            confirmedAddons
+                .OfType<JsonObject>()
+                .SelectMany(addon => (addon["integrations"] as JsonArray ?? [])
+                    .OfType<JsonObject>()
+                    .Select(integration => IntegrationNode(
+                        integration["integrationName"]?.GetValue<string>() ?? string.Empty,
+                        addon["type"]?.GetValue<string>()?.ToLowerInvariant() ?? "action")))
                 .ToArray<JsonNode?>());
         config["notes"] = new JsonObject
         {
@@ -299,4 +324,92 @@ public class DevPortalRepository(DbHelper db) : IDevPortalRepository
         ["confirmed"] = true,
         ["category"] = category
     };
+
+    private static string BuildSelectionKey(string name, string type) =>
+        $"{type.Trim().ToLowerInvariant()}::{name.Trim().ToLowerInvariant()}";
+
+    private static List<RequestedAddonSnapshot> ParseRequestedAddons(JsonNode? node)
+    {
+        if (node is not JsonArray array) return [];
+
+        var items = new List<RequestedAddonSnapshot>();
+        foreach (var item in array.OfType<JsonObject>())
+        {
+            var name = item["name"]?.GetValue<string>()?.Trim();
+            var type = item["type"]?.GetValue<string>()?.Trim();
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(type)) continue;
+
+            var integrations = new List<RequestedIntegrationSnapshot>();
+            foreach (var integration in (item["integrations"] as JsonArray ?? []).OfType<JsonObject>())
+            {
+                var integrationName = integration["integrationName"]?.GetValue<string>()?.Trim();
+                if (string.IsNullOrWhiteSpace(integrationName)) continue;
+
+                integrations.Add(new RequestedIntegrationSnapshot(
+                    integration["integrationId"]?.GetValue<int>() ?? 0,
+                    integrationName,
+                    integration["integrationType"]?.GetValue<string>() ?? type,
+                    integration["hasCredentials"]?.GetValue<bool>() == true,
+                    integration["isActive"]?.GetValue<bool>() != false));
+            }
+
+            items.Add(new RequestedAddonSnapshot(
+                item["addonId"]?.GetValue<int>() ?? 0,
+                name,
+                item["description"]?.GetValue<string>(),
+                type,
+                item["monthlyPrice"]?.GetValue<decimal>() ?? 0m,
+                item["isActive"]?.GetValue<bool>() != false,
+                item["displayOrder"]?.GetValue<int>() ?? 0,
+                integrations));
+        }
+
+        return items;
+    }
+
+    private static JsonObject BuildAddonSnapshot(RequestedAddonSnapshot addon, bool confirmed)
+    {
+        var integrations = new JsonArray();
+        foreach (var integration in addon.Integrations)
+        {
+            integrations.Add(new JsonObject
+            {
+                ["integrationId"] = integration.Id,
+                ["integrationName"] = integration.Name,
+                ["integrationType"] = integration.Type,
+                ["hasCredentials"] = integration.HasCredentials,
+                ["isActive"] = integration.IsActive
+            });
+        }
+
+        return new JsonObject
+        {
+            ["addonId"] = addon.Id,
+            ["name"] = addon.Name,
+            ["description"] = addon.Description,
+            ["type"] = addon.Type,
+            ["monthlyPrice"] = addon.MonthlyPrice,
+            ["isActive"] = addon.IsActive,
+            ["displayOrder"] = addon.DisplayOrder,
+            ["confirmed"] = confirmed,
+            ["integrations"] = integrations
+        };
+    }
+
+    private sealed record RequestedAddonSnapshot(
+        int Id,
+        string Name,
+        string? Description,
+        string Type,
+        decimal MonthlyPrice,
+        bool IsActive,
+        int DisplayOrder,
+        List<RequestedIntegrationSnapshot> Integrations);
+
+    private sealed record RequestedIntegrationSnapshot(
+        int Id,
+        string Name,
+        string Type,
+        bool HasCredentials,
+        bool IsActive);
 }

@@ -5,9 +5,9 @@ import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../../services/auth.service';
 import { AdminService } from '../../../services/admin.service';
-import { WorkflowCapabilityApiService } from '../../../services/workflow-capability-api.service';
+import { IntegrationDefinitionApiService } from '../../../services/integration-definition-api.service';
 import { IAddon, IService } from '../../../interfaces/i-service.interface';
-import { IWorkflowIntegrationDefinition } from '../../../interfaces/i-workflow-capability.interface';
+import { IIntegrationDefinition } from '../../../interfaces/i-integration-definition.interface';
 
 @Component({
   selector: 'ca-admin-addons',
@@ -19,12 +19,12 @@ import { IWorkflowIntegrationDefinition } from '../../../interfaces/i-workflow-c
 export class AdminAddonsComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly admin = inject(AdminService);
-  private readonly workflowApi = inject(WorkflowCapabilityApiService);
+  private readonly integrationsApi = inject(IntegrationDefinitionApiService);
   private readonly router = inject(Router);
 
   items = signal<IAddon[]>([]);
   services = signal<IService[]>([]);
-  integrations = signal<IWorkflowIntegrationDefinition[]>([]);
+  integrations = signal<IIntegrationDefinition[]>([]);
   total = signal(0);
   loading = signal(true);
   error = signal<string | null>(null);
@@ -77,7 +77,7 @@ export class AdminAddonsComponent implements OnInit {
   }
 
   loadIntegrations(): void {
-    this.workflowApi.getAdminIntegrationDefinitions(false).subscribe({ next: data => this.integrations.set(data) });
+    this.integrationsApi.getAdminIntegrationDefinitions(false).subscribe({ next: data => this.integrations.set(data) });
   }
 
   prevPage(): void { if (this.page() > 1) { this.page.update(p => p - 1); this.load(); } }

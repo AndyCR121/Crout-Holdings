@@ -250,6 +250,33 @@
     color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.06em;
+    margin: 0;
+  }
+
+  &__card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-4);
+  }
+
+  &__card-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-orange);
+    background: rgba(218,113,1,0.1);
+    border: 1px solid rgba(218,113,1,0.18);
+    border-radius: var(--radius-lg);
+    flex-shrink: 0;
+  }
+
+  &__card-tagline {
+    margin: var(--space-2) 0 0;
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    color: var(--color-text);
   }
 
   &__card-price {

@@ -21,7 +21,9 @@ interface GuideStep {
 interface WorkflowAddonSelection {
   addonId: number;
   name: string;
+  description?: string;
   type: 'Trigger' | 'Action' | 'Output';
+  integrations: string[];
   confirmed: boolean;
   isActive: boolean;
 }
@@ -73,7 +75,7 @@ export class DevServiceGuideComponent implements OnInit {
   }));
   readonly canBuildCustomForm = computed(() =>
     this.confirmedSummary().trigger.some(item => this.isCustomFormTrigger(item.name)));
-  readonly hasAnyCapabilityOptions = computed(() => this.availableSelections().length > 0);
+  readonly hasAnyAddonOptions = computed(() => this.availableSelections().length > 0);
   readonly hasAnyIntegrationSelection = computed(() => this.selectedAddonIds.length > 0);
 
   ngOnInit(): void {
@@ -299,7 +301,9 @@ export class DevServiceGuideComponent implements OnInit {
         .map(item => ({
           addonId: Number(item['addonId'] ?? 0),
           name: typeof item['name'] === 'string' ? item['name'].trim() : '',
+          description: typeof item['description'] === 'string' ? item['description'].trim() : '',
           type: this.normalizeType(item['type']),
+          integrations: this.parseIntegrationNames(item['integrations']),
           confirmed: this.isConfirmedSelection(
             typeof item['name'] === 'string' ? item['name'] : '',
             this.normalizeType(item['type']),
@@ -322,7 +326,9 @@ export class DevServiceGuideComponent implements OnInit {
         return {
           addonId: addon.addonId,
           name: addon.addonName.trim(),
+          description: addon.addonDescription?.trim() || '',
           type,
+          integrations: (addon.integrations ?? []).map(integration => integration.name),
           confirmed: this.isConfirmedSelection(addon.addonName, type, false, confirmedByRole),
           isActive: addon.isActive,
         };
@@ -376,5 +382,15 @@ export class DevServiceGuideComponent implements OnInit {
     if (normalized === 'trigger') return 'Trigger';
     if (normalized === 'output') return 'Output';
     return 'Action';
+  }
+
+  private parseIntegrationNames(value: unknown): string[] {
+    if (!Array.isArray(value)) return [];
+    return value
+      .map(item => typeof item === 'object' && item
+        ? String((item as Record<string, unknown>)['integrationName'] ?? '')
+        : '')
+      .map(item => item.trim())
+      .filter(item => item.length > 0);
   }
 }

@@ -19,9 +19,18 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
               TotalTokens,
               HasAddons,
               Conditional,
-              ServiceDescription
+              ServiceDescription,
+              DisplayName,
+              DisplayTagline,
+              IconKey,
+              IconSvg,
+              DisplayOrder
             FROM Services
-            ORDER BY ServiceName
+            ORDER BY
+              CASE WHEN DisplayOrder IS NULL THEN 1 ELSE 0 END,
+              DisplayOrder,
+              COALESCE(DisplayName, ServiceName),
+              service_id
             """)).ToList();
 
         var features = await conn.QueryAsync<(int ServiceId, string Feature)>(
@@ -61,7 +70,12 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
               TotalTokens,
               HasAddons,
               Conditional,
-              ServiceDescription
+              ServiceDescription,
+              DisplayName,
+              DisplayTagline,
+              IconKey,
+              IconSvg,
+              DisplayOrder
             FROM Services
             WHERE service_id=@serviceId
             """,
@@ -82,8 +96,8 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
         using var conn = db.GetConnection();
         return await conn.ExecuteScalarAsync<int>(
             """
-            INSERT INTO Services (ServiceName, BaseCost, TokensCost, TotalTokens, HasAddons, Conditional, ServiceDescription)
-            VALUES (@ServiceName, @BaseCost, @TokensCost, @TotalTokens, @HasAddons, @Conditional, @ServiceDescription);
+            INSERT INTO Services (ServiceName, BaseCost, TokensCost, TotalTokens, HasAddons, Conditional, ServiceDescription, DisplayName, DisplayTagline, IconKey, IconSvg, DisplayOrder)
+            VALUES (@ServiceName, @BaseCost, @TokensCost, @TotalTokens, @HasAddons, @Conditional, @ServiceDescription, @DisplayName, @DisplayTagline, @IconKey, @IconSvg, @DisplayOrder);
             SELECT LAST_INSERT_ID();
             """,
             service);
@@ -101,7 +115,12 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
                 TotalTokens = @TotalTokens,
                 HasAddons = @HasAddons,
                 Conditional = @Conditional,
-                ServiceDescription = @ServiceDescription
+                ServiceDescription = @ServiceDescription,
+                DisplayName = @DisplayName,
+                DisplayTagline = @DisplayTagline,
+                IconKey = @IconKey,
+                IconSvg = @IconSvg,
+                DisplayOrder = @DisplayOrder
             WHERE service_id = @ServiceId
             """,
             service);
@@ -298,7 +317,7 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
 
         foreach (var link in integrationLinks)
         {
-            addons.First(addon => addon.AddonId == link.AddonId).Integrations.Add(new WorkflowIntegrationDefinition
+            addons.First(addon => addon.AddonId == link.AddonId).Integrations.Add(new IntegrationDefinition
             {
                 Id = link.Id,
                 Name = link.Name,

@@ -9,6 +9,7 @@ import { AuthService } from '../../services/auth.service';
 import { CompanyService } from '../../services/company.service';
 import { ToastService } from '../../services/toast.service';
 import { AuthModalComponent } from '../auth-modal/auth-modal.component';
+import { dedupeAddonsById } from '../../utils/service-display';
 
 @Component({
   selector: 'ca-service-configurator',
@@ -137,11 +138,8 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
         .find((svc): svc is IService => !!svc && (svc.conditional || !serviceIds.includes(svc.serviceId)))
         ?? null;
 
-      const rootAddonStates: IAddonState[] = serviceIds.flatMap(svcId =>
-        this.addons
-          .filter(a => (a.serviceIds?.length ? a.serviceIds.includes(svcId) : a.serviceId === svcId))
-          .map(a => ({ addon: a, enabled: false }))
-      );
+      const rootAddonStates: IAddonState[] = this.addonsForServiceIds(serviceIds)
+        .map(addon => ({ addon, enabled: false }));
 
       return {
         pkg,
@@ -161,11 +159,8 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
     view.conditionalEnabled = !view.conditionalEnabled;
 
     if (view.conditionalEnabled && view.childPkg && view.childAddonStates.length === 0) {
-      view.childAddonStates = (view.childPkg.serviceIds ?? []).flatMap(svcId =>
-        this.addons
-          .filter(a => (a.serviceIds?.length ? a.serviceIds.includes(svcId) : a.serviceId === svcId))
-          .map(a => ({ addon: a, enabled: false, isConditionalChild: true }))
-      );
+      view.childAddonStates = this.addonsForServiceIds(view.childPkg.serviceIds ?? [])
+        .map(addon => ({ addon, enabled: false, isConditionalChild: true }));
     }
 
     view.addonStates = this.buildMergedAddonList(view);
@@ -173,7 +168,7 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
 
   private buildMergedAddonList(view: IPackageView): IAddonState[] {
     if (!view.conditionalEnabled) return [...view.rootAddonStates];
-    return [...view.rootAddonStates, ...view.childAddonStates];
+    return this.mergeAddonStates(view.rootAddonStates, view.childAddonStates);
   }
 
   toggleAddon(state: IAddonState): void {
@@ -329,5 +324,26 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
         price: s.addon.price
       }))
     };
+  }
+
+  private addonsForServiceIds(serviceIds: number[]): IAddon[] {
+    if (serviceIds.length === 0) return [];
+    const serviceIdSet = new Set(serviceIds);
+    return dedupeAddonsById(this.addons.filter(addon =>
+      addon.serviceIds?.some(id => serviceIdSet.has(id))
+      || (addon.serviceId != null && serviceIdSet.has(addon.serviceId))
+    ));
+  }
+
+  private mergeAddonStates(...lists: IAddonState[][]): IAddonState[] {
+    const seen = new Map<number, IAddonState>();
+    for (const list of lists) {
+      for (const state of list) {
+        if (!seen.has(state.addon.addonId)) {
+          seen.set(state.addon.addonId, state);
+        }
+      }
+    }
+    return [...seen.values()];
   }
 }

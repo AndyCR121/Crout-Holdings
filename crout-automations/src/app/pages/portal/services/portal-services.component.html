@@ -76,45 +76,77 @@
 
           <!-- Edit section -->
           <div class="pservices__edit" *ngIf="row.editing">
-            <p class="pservices__edit-hint">Select the workflow capabilities you need. New selections remain pending until confirmed in consultation.</p>
+            <p class="pservices__edit-hint">Select the add-ons you need. Each add-on shows the integrations it can connect to for this service.</p>
             <div class="pservices__credential-note">
               <span aria-hidden="true">i</span>
               <p>Credentials are encrypted and saved directly into n8n. They are not stored in plain text. Credential names are generated as Company Name | Service | Credential Integration.</p>
             </div>
-            <div class="pservices__integration-help" *ngIf="row.capabilitiesLoading">
+            <div class="pservices__integration-help">
               <span aria-hidden="true">?</span>
-              <p>Loading service capabilities...</p>
-            </div>
-            <div class="pservices__integration-help" *ngIf="!row.capabilitiesLoading">
-              <span aria-hidden="true">?</span>
-              <p>Configure how the automation starts, what it should do or process, and how you want to receive the result.</p>
+              <p>Choose the trigger, action, and output add-ons the developer should confirm for this client.</p>
             </div>
 
-            <div class="pservices__integration-groups" *ngIf="!row.capabilitiesLoading">
+            <div class="pservices__integration-groups">
               <section>
                 <h4>Trigger</h4>
-                <div class="pservices__chips">
-                  <button *ngFor="let capability of groupedCapabilities(row, 'Trigger')" type="button" [class.active]="isCapabilitySelected(row, capability.id)" (click)="toggleCapability(row, capability.id)">{{ capability.name }}</button>
+                <div class="pservices__addon-toggle-list">
+                  <button
+                    *ngFor="let addon of groupedAddons(row, 'Trigger')"
+                    type="button"
+                    class="pservices__addon-toggle"
+                    [class.pservices__addon-toggle--active]="isAddonSelected(row, addon.addonId)"
+                    (click)="toggleAddon(row, addon.addonId)"
+                  >
+                    <span class="pservices__addon-check"></span>
+                    <span class="pservices__addon-info">
+                      <strong>{{ addon.addonName }}</strong>
+                      <small>{{ addonIntegrationNames(addon) }}</small>
+                    </span>
+                  </button>
                 </div>
               </section>
               <section>
                 <h4>Action</h4>
-                <div class="pservices__chips">
-                  <button *ngFor="let capability of groupedCapabilities(row, 'Action')" type="button" [class.active]="isCapabilitySelected(row, capability.id)" (click)="toggleCapability(row, capability.id)">{{ capability.name }}</button>
+                <div class="pservices__addon-toggle-list">
+                  <button
+                    *ngFor="let addon of groupedAddons(row, 'Action')"
+                    type="button"
+                    class="pservices__addon-toggle"
+                    [class.pservices__addon-toggle--active]="isAddonSelected(row, addon.addonId)"
+                    (click)="toggleAddon(row, addon.addonId)"
+                  >
+                    <span class="pservices__addon-check"></span>
+                    <span class="pservices__addon-info">
+                      <strong>{{ addon.addonName }}</strong>
+                      <small>{{ addonIntegrationNames(addon) }}</small>
+                    </span>
+                  </button>
                 </div>
               </section>
               <section>
                 <h4>Output</h4>
-                <div class="pservices__chips">
-                  <button *ngFor="let capability of groupedCapabilities(row, 'Output')" type="button" [class.active]="isCapabilitySelected(row, capability.id)" (click)="toggleCapability(row, capability.id)">{{ capability.name }}</button>
+                <div class="pservices__addon-toggle-list">
+                  <button
+                    *ngFor="let addon of groupedAddons(row, 'Output')"
+                    type="button"
+                    class="pservices__addon-toggle"
+                    [class.pservices__addon-toggle--active]="isAddonSelected(row, addon.addonId)"
+                    (click)="toggleAddon(row, addon.addonId)"
+                  >
+                    <span class="pservices__addon-check"></span>
+                    <span class="pservices__addon-info">
+                      <strong>{{ addon.addonName }}</strong>
+                      <small>{{ addonIntegrationNames(addon) }}</small>
+                    </span>
+                  </button>
                 </div>
               </section>
             </div>
             <div class="pservices__edit-actions">
               <button class="pservices__btn pservices__btn--ghost" (click)="cancelEdit(row)">Cancel</button>
-              <button class="pservices__btn pservices__btn--primary" (click)="submitConfigRequest(row)" [disabled]="saving() === row.userService.serviceId">
-                <span *ngIf="saving() !== row.userService.serviceId">Submit Request</span>
-                <span *ngIf="saving() === row.userService.serviceId">Submitting...</span>
+              <button class="pservices__btn pservices__btn--primary" (click)="submitConfigRequest(row)" [disabled]="saving() === row.userService.userServiceId">
+                <span *ngIf="saving() !== row.userService.userServiceId">Submit Request</span>
+                <span *ngIf="saving() === row.userService.userServiceId">Submitting...</span>
               </button>
             </div>
           </div>
@@ -138,14 +170,13 @@
                     Update Credentials
                   </button>
                   <div class="pservices__credentials-form" *ngIf="row.credentialsOpen">
-                    <p *ngIf="row.workflowStepsLoading">Loading credential forms...</p>
                     <label>
-                      Workflow Step
+                      Integration
                       <select [(ngModel)]="row.credentialSelectionKey">
                         <option *ngFor="let option of credentialOptions(row)" [ngValue]="option.key">{{ option.label }}</option>
                       </select>
                     </label>
-                    <p *ngIf="!row.workflowStepsLoading && credentialOptions(row).length === 0">No credential forms are required yet.</p>
+                    <p *ngIf="credentialOptions(row).length === 0">No credential forms are required yet.</p>
                     <div class="pservices__credential-fields" *ngIf="credentialOptions(row).length > 0">
                       <label *ngFor="let field of credentialSchema(row)">
                         {{ field.key }}

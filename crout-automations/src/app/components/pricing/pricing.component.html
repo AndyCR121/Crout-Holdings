@@ -37,8 +37,13 @@
           class="pricing__card"
           [class.pricing__card--highlight]="i % 2 === 0"
         >
-
-          <h3 class="pricing__card-name">{{ svc.serviceName }}</h3>
+          <div class="pricing__card-top">
+            <div class="pricing__card-icon" [innerHTML]="serviceCardIcon(svc) | safeHtml"></div>
+            <div>
+              <h3 class="pricing__card-name">{{ serviceCardLabel(svc) }}</h3>
+              <p class="pricing__card-tagline">{{ serviceCardTagline(svc) }}</p>
+            </div>
+          </div>
 
           <div class="pricing__card-price">
             <span class="pricing__price-from">from</span>
@@ -94,15 +99,13 @@
       }
     </div>
 
-    <!-- View More CTA (shown when there are more than 6 services) -->
-    @if (hasMoreServices) {
-      <div class="pricing__view-more">
-        <a routerLink="/services" class="pricing__view-more-btn">
-          View All Services
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </a>
-      </div>
-    }
+    <!-- View More CTA -->
+    <div class="pricing__view-more">
+      <a routerLink="/services" class="pricing__view-more-btn">
+        View More
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
 
     } <!-- end @else ghost -->
 

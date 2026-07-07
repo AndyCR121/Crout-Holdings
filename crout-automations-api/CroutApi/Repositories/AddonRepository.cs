@@ -201,7 +201,7 @@ public class AddonRepository(DbHelper db) : IAddonRepository
             new { ids });
         foreach (var link in integrationLinks)
         {
-            addons.First(addon => addon.AddonId == link.AddonId).Integrations.Add(new WorkflowIntegrationDefinition
+            addons.First(addon => addon.AddonId == link.AddonId).Integrations.Add(new IntegrationDefinition
             {
                 Id = link.Id,
                 Name = link.Name,

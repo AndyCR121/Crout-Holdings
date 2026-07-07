@@ -21,6 +21,7 @@ public class CustomFormAccessContextDto
 {
     public int IntegrationId { get; set; }
     public int UserServiceId { get; set; }
+    public int ServiceId { get; set; }
     public int CompanyId { get; set; }
     public int CompanyOwnerUserId { get; set; }
     public int? AssignedDeveloperUserId { get; set; }

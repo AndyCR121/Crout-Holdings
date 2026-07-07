@@ -10,6 +10,11 @@ public class Service
     public bool HasAddons { get; set; }
     public bool Conditional { get; set; }
     public string? ServiceDescription { get; set; }
+    public string? DisplayName { get; set; }
+    public string? DisplayTagline { get; set; }
+    public string? IconKey { get; set; }
+    public string? IconSvg { get; set; }
+    public int? DisplayOrder { get; set; }
     public List<string> Features { get; set; } = [];
     public List<Addon> Addons { get; set; } = [];
 

@@ -58,7 +58,7 @@ builder.Services.AddScoped<IVideoProjectRepository, VideoProjectRepository>();
 builder.Services.AddScoped<IDevServiceRepository, DevServiceRepository>();
 builder.Services.AddScoped<IDevPortalRepository, DevPortalRepository>();
 builder.Services.AddScoped<IIntegrationRepository, IntegrationRepository>();
-builder.Services.AddScoped<IWorkflowCapabilityRepository, WorkflowCapabilityRepository>();
+builder.Services.AddScoped<IIntegrationDefinitionRepository, IntegrationDefinitionRepository>();
 builder.Services.AddScoped<IReleaseNoteRepository, ReleaseNoteRepository>();
 
 // -- Application Services -----------------------------------------------------
@@ -68,7 +68,7 @@ builder.Services.AddScoped<IServiceCatalogService, ServiceCatalogService>();
 builder.Services.AddScoped<IServiceRequestService, ServiceRequestService>();
 builder.Services.AddScoped<IServiceTriggerService, ServiceTriggerService>();
 builder.Services.AddScoped<IDevUserServiceFormService, DevUserServiceFormService>();
-builder.Services.AddScoped<IWorkflowCapabilityService, WorkflowCapabilityService>();
+builder.Services.AddScoped<IIntegrationDefinitionService, IntegrationDefinitionService>();
 builder.Services.AddScoped<IVideoProjectService, VideoProjectService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IContactRequestService, ContactRequestService>();

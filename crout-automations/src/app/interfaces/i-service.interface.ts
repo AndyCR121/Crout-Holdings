@@ -1,4 +1,4 @@
-import { IWorkflowIntegrationDefinition } from './i-workflow-capability.interface';
+import { IIntegrationDefinition } from './i-integration-definition.interface';
 
 export interface IUser {
   userId: number;
@@ -40,6 +40,11 @@ export interface IService {
   hasAddons: boolean;
   conditional: boolean;
   serviceDescription?: string;
+  displayName?: string;
+  displayTagline?: string;
+  iconKey?: string;
+  iconSvg?: string;
+  displayOrder?: number;
   features?: string[];
   addons?: IAddon[];
 }
@@ -62,7 +67,7 @@ export interface IAddon {
   price: number;
   isActive: boolean;
   displayOrder: number;
-  integrations?: IWorkflowIntegrationDefinition[];
+  integrations?: IIntegrationDefinition[];
 }
 
 export interface IPricingComponent {

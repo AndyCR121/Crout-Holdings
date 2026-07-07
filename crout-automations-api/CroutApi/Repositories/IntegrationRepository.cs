@@ -84,6 +84,7 @@ public class IntegrationRepository(DbHelper db) : IIntegrationRepository
             SELECT
               i.integration_id AS IntegrationId,
               i.user_service_id AS UserServiceId,
+              us.service_id AS ServiceId,
               i.company_id AS CompanyId,
               c.user_id AS CompanyOwnerUserId,
               (
@@ -118,6 +119,7 @@ public class IntegrationRepository(DbHelper db) : IIntegrationRepository
             SELECT
               i.integration_id AS IntegrationId,
               i.user_service_id AS UserServiceId,
+              us.service_id AS ServiceId,
               i.company_id AS CompanyId,
               c.user_id AS CompanyOwnerUserId,
               (

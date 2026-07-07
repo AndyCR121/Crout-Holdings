@@ -1,6 +1,8 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using CroutApi.DTOs;
 using CroutApi.DTOs.ServiceTriggers;
 using CroutApi.Models;
 using CroutApi.Repositories;
@@ -10,8 +12,8 @@ namespace CroutApi.Services;
 
 public class ServiceTriggerService(
     IServiceTriggerRepository repo,
-    IWorkflowCapabilityRepository workflowRepo,
     IIntegrationRepository integrations,
+    IUserServiceRepository userServices,
     IHttpClientFactory httpFactory,
     IOptions<N8nOptions> n8nOptions) : IServiceTriggerService
 {
@@ -19,27 +21,13 @@ public class ServiceTriggerService(
     {
         if (userServiceId is int scopedUserServiceId)
         {
-            var access = await workflowRepo.GetUserServiceAccessContextAsync(scopedUserServiceId);
-            if (access is not null && access.OwnerUserId == userId && access.ServiceId == serviceId)
-            {
-                var steps = (await workflowRepo.GetWorkflowStepsByUserServiceIdAsync(scopedUserServiceId))
-                    .Where(step =>
-                        step.Role.Equals(WorkflowRoles.Trigger, StringComparison.OrdinalIgnoreCase) &&
-                        step.Status.Equals(WorkflowStepStatuses.Confirmed, StringComparison.OrdinalIgnoreCase))
-                    .Select(MapWorkflowStepToTriggerConfig)
-                    .ToList();
-
-                if (steps.Count > 0)
-                    return steps;
-            }
-
             var legacyConfigs = (await repo.GetConfigsAsync(userId, companyId, serviceId, userServiceId)).Select(ToDto).ToList();
             if (legacyConfigs.Count > 0)
                 return legacyConfigs;
 
-            var legacyCustomForm = await TryBuildLegacyCustomFormTriggerAsync(scopedUserServiceId, serviceId, access, userId);
-            if (legacyCustomForm is not null)
-                return [legacyCustomForm];
+            var customForm = await TryBuildCustomFormTriggerAsync(scopedUserServiceId, serviceId, userId);
+            if (customForm is not null)
+                return [customForm];
         }
 
         var configs = await repo.GetConfigsAsync(userId, companyId, serviceId, userServiceId);
@@ -48,26 +36,19 @@ public class ServiceTriggerService(
 
     public async Task<ExecuteTriggerResponseDto> ExecuteAsync(int userId, int configId, int companyId, int? userServiceId, string? payloadJson, IEnumerable<string> fileNames)
     {
-        if (userServiceId is int scopedUserServiceId)
+        if (userServiceId is int scopedUserServiceId && configId < 0)
         {
-            var access = await workflowRepo.GetUserServiceAccessContextAsync(scopedUserServiceId);
-            if (access is not null && access.OwnerUserId == userId)
+            var context = await integrations.GetCustomFormContextByUserServiceIdAsync(scopedUserServiceId);
+            var userService = await userServices.GetByIdAsync(scopedUserServiceId);
+            if (context is not null
+                && userService is not null
+                && context.CompanyOwnerUserId == userId
+                && -context.IntegrationId == configId
+                && HasConfirmedCustomFormTrigger(userService.Config))
             {
-                var step = await workflowRepo.GetWorkflowStepByIdAsync(configId);
-                if (step is not null
-                    && step.UserServiceId == scopedUserServiceId
-                    && step.Role.Equals(WorkflowRoles.Trigger, StringComparison.OrdinalIgnoreCase)
-                    && step.Status.Equals(WorkflowStepStatuses.Confirmed, StringComparison.OrdinalIgnoreCase))
-                {
-                    return await ExecuteWorkflowStepAsync(step, userId, companyId, payloadJson, fileNames);
-                }
-
-                if (configId < 0)
-                {
-                    var integration = await integrations.GetByUserServiceIdAsync(scopedUserServiceId);
-                    if (integration is not null && -integration.IntegrationId == configId)
-                        return await ExecuteLegacyCustomFormAsync(integration, serviceId: access.ServiceId, userId, companyId, payloadJson, fileNames);
-                }
+                var integration = await integrations.GetByIntegrationIdAsync(context.IntegrationId);
+                if (integration is not null)
+                    return await ExecuteCustomFormAsync(integration, context, companyId, userId, payloadJson, fileNames);
             }
         }
 
@@ -125,31 +106,37 @@ public class ServiceTriggerService(
         return new ExecuteTriggerResponseDto(executionId, status, mode, message, response);
     }
 
-    private async Task<ServiceTriggerConfigDto?> TryBuildLegacyCustomFormTriggerAsync(int userServiceId, int serviceId, UserServiceAccessContext? access, int userId)
+    private async Task<ServiceTriggerConfigDto?> TryBuildCustomFormTriggerAsync(int userServiceId, int serviceId, int userId)
     {
-        if (access is null || access.OwnerUserId != userId || access.ServiceId != serviceId)
+        var context = await integrations.GetCustomFormContextByUserServiceIdAsync(userServiceId);
+        var userService = await userServices.GetByIdAsync(userServiceId);
+        if (context is null
+            || userService is null
+            || context.CompanyOwnerUserId != userId
+            || context.ServiceId != serviceId
+            || !HasConfirmedCustomFormTrigger(userService.Config))
+        {
             return null;
+        }
 
-        var integration = await integrations.GetByUserServiceIdAsync(userServiceId);
-        if (integration is null)
-            return null;
-
-        return BuildLegacyCustomFormTriggerConfig(integration, serviceId);
+        return BuildCustomFormTriggerConfig(context, serviceId);
     }
 
-    private async Task<ExecuteTriggerResponseDto> ExecuteLegacyCustomFormAsync(Integration integration, int serviceId, int userId, int companyId, string? payloadJson, IEnumerable<string> fileNames)
+    private async Task<ExecuteTriggerResponseDto> ExecuteCustomFormAsync(
+        Integration integration,
+        CustomFormAccessContextDto context,
+        int companyId,
+        int userId,
+        string? payloadJson,
+        IEnumerable<string> fileNames)
     {
-        var runtimeConfig = BuildLegacyCustomFormTriggerConfig(integration, serviceId)
-            ?? throw new InvalidOperationException("Legacy custom form data is not available for this service.");
-        var requestPayload = BuildRequestPayload(
-            "WebsiteForm",
-            integration.WorkflowId,
-            payloadJson,
-            fileNames);
+        var runtimeConfig = BuildCustomFormTriggerConfig(context, context.ServiceId)
+            ?? throw new InvalidOperationException("Custom form data is not available for this service.");
+        var requestPayload = BuildRequestPayload("WebsiteForm", integration.WorkflowId, payloadJson, fileNames);
 
         var baseUrl = n8nOptions.Value.BaseUrl;
         var apiKey = n8nOptions.Value.ApiKey;
-        var endpointPath = ExtractEndpointPath(integration.CustomFormWebhookUrl);
+        var endpointPath = ExtractEndpointPath(context.WebhookUrl);
         var liveReady = !string.IsNullOrWhiteSpace(baseUrl) && !string.IsNullOrWhiteSpace(apiKey) && !string.IsNullOrWhiteSpace(endpointPath);
 
         var status = "queued";
@@ -159,7 +146,7 @@ public class ServiceTriggerService(
 
         if (!liveReady)
         {
-            response = Parse("""{"accepted":true,"mode":"mock","message":"Legacy custom form queued locally because a live webhook endpoint is not configured."}""")!.Value;
+            response = Parse("""{"accepted":true,"mode":"mock","message":"Custom form queued locally because a live webhook endpoint is not configured."}""")!.Value;
         }
         else
         {
@@ -171,7 +158,7 @@ public class ServiceTriggerService(
             {
                 status = "failed";
                 error = ex.Message;
-                response = Parse(JsonSerializer.Serialize(new { accepted = false, mode = "live", message = "Legacy custom form execution failed.", error }))!.Value;
+                response = Parse(JsonSerializer.Serialize(new { accepted = false, mode = "live", message = "Custom form execution failed.", error }))!.Value;
             }
         }
 
@@ -189,64 +176,8 @@ public class ServiceTriggerService(
         };
         var executionId = await repo.CreateExecutionAsync(execution);
         var message = mode == "mock"
-            ? "Legacy custom form queued in mock mode."
-            : status == "failed" ? "Legacy custom form execution failed." : "Legacy custom form sent to n8n.";
-
-        return new ExecuteTriggerResponseDto(executionId, status, mode, message, response);
-    }
-
-    private async Task<ExecuteTriggerResponseDto> ExecuteWorkflowStepAsync(UserServiceWorkflowStep step, int userId, int companyId, string? payloadJson, IEnumerable<string> fileNames)
-    {
-        var runtime = ParseRuntimeSchema(step.ConfigurationSchemaJson);
-        var requestPayload = BuildRequestPayload(
-            step.CapabilityType,
-            runtime.WorkflowId,
-            payloadJson,
-            fileNames);
-
-        var baseUrl = n8nOptions.Value.BaseUrl;
-        var apiKey = n8nOptions.Value.ApiKey;
-        var liveReady = !string.IsNullOrWhiteSpace(baseUrl) && !string.IsNullOrWhiteSpace(apiKey) && !string.IsNullOrWhiteSpace(runtime.EndpointPath);
-
-        var status = "queued";
-        var mode = liveReady ? "live" : "mock";
-        string? error = null;
-        JsonElement response;
-
-        if (!liveReady)
-        {
-            response = Parse("""{"accepted":true,"mode":"mock","message":"Workflow step queued locally because live endpoint configuration is missing."}""")!.Value;
-        }
-        else
-        {
-            try
-            {
-                response = await CallN8nAsync(baseUrl!, apiKey!, runtime.EndpointPath!, requestPayload);
-            }
-            catch (Exception ex)
-            {
-                status = "failed";
-                error = ex.Message;
-                response = Parse(JsonSerializer.Serialize(new { accepted = false, mode = "live", message = "Workflow step execution failed.", error }))!.Value;
-            }
-        }
-
-        var execution = new ServiceTriggerExecution
-        {
-            ServiceTriggerConfigId = step.Id,
-            UserId = userId,
-            CompanyId = companyId,
-            UserServiceId = step.UserServiceId,
-            RequestPayload = requestPayload,
-            ResponsePayload = response.GetRawText(),
-            Status = status,
-            Mode = mode,
-            ErrorMessage = error
-        };
-        var executionId = await repo.CreateExecutionAsync(execution);
-        var message = mode == "mock"
-            ? "Workflow step queued in mock mode."
-            : status == "failed" ? "Workflow step execution failed." : "Workflow step sent to n8n.";
+            ? "Custom form queued in mock mode."
+            : status == "failed" ? "Custom form execution failed." : "Custom form sent to n8n.";
 
         return new ExecuteTriggerResponseDto(executionId, status, mode, message, response);
     }
@@ -281,13 +212,13 @@ public class ServiceTriggerService(
         return JsonSerializer.Serialize(payload);
     }
 
-    private static string BuildRequestPayload(string capabilityType, string? workflowId, string? payloadJson, IEnumerable<string> fileNames)
+    private static string BuildRequestPayload(string triggerType, string? workflowId, string? payloadJson, IEnumerable<string> fileNames)
     {
         using var doc = JsonDocument.Parse(string.IsNullOrWhiteSpace(payloadJson) ? "{}" : payloadJson);
         var payload = new
         {
             workflowId,
-            triggerType = capabilityType,
+            triggerType,
             payload = doc.RootElement.Clone(),
             files = fileNames.Select(name => new { name }).ToArray()
         };
@@ -313,40 +244,19 @@ public class ServiceTriggerService(
         return doc.RootElement.Clone();
     }
 
-    private static ServiceTriggerConfigDto MapWorkflowStepToTriggerConfig(UserServiceWorkflowStep step)
+    private static ServiceTriggerConfigDto? BuildCustomFormTriggerConfig(CustomFormAccessContextDto context, int serviceId)
     {
-        var runtime = ParseRuntimeSchema(step.ConfigurationSchemaJson);
-        return new ServiceTriggerConfigDto(
-            step.Id,
-            step.ServiceId,
-            step.UserServiceId,
-            runtime.WorkflowId,
-            NormalizeTriggerType(step.CapabilityType),
-            step.CapabilityName,
-            step.CapabilityDescription,
-            runtime.Method,
-            false,
-            runtime.PayloadTemplate,
-            runtime.Fields,
-            runtime.FileUpload,
-            runtime.ResponseMode,
-            null,
-            null);
-    }
-
-    private static ServiceTriggerConfigDto? BuildLegacyCustomFormTriggerConfig(Integration integration, int serviceId)
-    {
-        var schemaJson = !string.IsNullOrWhiteSpace(integration.CustomFormPublishedSchemaJson)
-            ? integration.CustomFormPublishedSchemaJson
-            : integration.CustomFormDraftSchemaJson;
+        var schemaJson = !string.IsNullOrWhiteSpace(context.PublishedSchemaJson)
+            ? context.PublishedSchemaJson
+            : context.DraftSchemaJson;
         if (string.IsNullOrWhiteSpace(schemaJson))
             return null;
 
         using var doc = JsonDocument.Parse(schemaJson);
         var root = doc.RootElement;
         var label = root.TryGetProperty("label", out var labelNode) && labelNode.ValueKind == JsonValueKind.String
-            ? labelNode.GetString() ?? integration.CustomFormTitle ?? "Website Form"
-            : integration.CustomFormTitle ?? "Website Form";
+            ? labelNode.GetString() ?? context.Title ?? "Website Form"
+            : context.Title ?? "Website Form";
         var description = root.TryGetProperty("description", out var descriptionNode) && descriptionNode.ValueKind == JsonValueKind.String
             ? descriptionNode.GetString()
             : null;
@@ -359,19 +269,17 @@ public class ServiceTriggerService(
         var formSchema = root.TryGetProperty("schema", out var schemaNode)
             ? schemaNode.Clone()
             : (JsonElement?)null;
-        var fields = formSchema is JsonElement schema
-            ? BuildLegacyFormFields(schema)
-            : null;
+        var fields = formSchema is JsonElement schema ? BuildLegacyFormFields(schema) : null;
         var activeTabId = ExtractActiveTabId(formSchema);
 
         return new ServiceTriggerConfigDto(
-            -integration.IntegrationId,
+            -context.IntegrationId,
             serviceId,
-            integration.UserServiceId,
-            integration.WorkflowId,
+            context.UserServiceId,
+            null,
             "form",
             label,
-            description ?? "Legacy website form fallback. Save the canonical workflow capability to replace this compatibility path.",
+            description ?? "Custom website form linked to this confirmed trigger add-on.",
             "POST",
             false,
             payloadTemplate,
@@ -380,34 +288,6 @@ public class ServiceTriggerService(
             responseMode,
             formSchema,
             activeTabId);
-    }
-
-    private static string NormalizeTriggerType(string capabilityType)
-    {
-        if (capabilityType.Equals("WebsiteForm", StringComparison.OrdinalIgnoreCase) || capabilityType.Equals("CustomForm", StringComparison.OrdinalIgnoreCase))
-            return "form";
-        if (capabilityType.Equals("Webhook", StringComparison.OrdinalIgnoreCase))
-            return "webhook";
-        return "custom";
-    }
-
-    private static TriggerRuntimeSchema ParseRuntimeSchema(string? json)
-    {
-        if (string.IsNullOrWhiteSpace(json))
-            return new TriggerRuntimeSchema();
-
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-        return new TriggerRuntimeSchema
-        {
-            WorkflowId = root.TryGetProperty("workflowId", out var workflowId) ? workflowId.GetString() : null,
-            EndpointPath = root.TryGetProperty("endpointPath", out var endpointPath) ? endpointPath.GetString() : null,
-            Method = root.TryGetProperty("method", out var method) && method.ValueKind == JsonValueKind.String ? method.GetString() ?? "POST" : "POST",
-            ResponseMode = root.TryGetProperty("responseMode", out var responseMode) && responseMode.ValueKind == JsonValueKind.String ? responseMode.GetString() ?? "inline" : "inline",
-            PayloadTemplate = root.TryGetProperty("payloadTemplate", out var payloadTemplate) ? payloadTemplate.Clone() : (JsonElement?)null,
-            Fields = root.TryGetProperty("fields", out var fields) ? fields.Clone() : (JsonElement?)null,
-            FileUpload = root.TryGetProperty("fileUpload", out var fileUpload) ? fileUpload.Clone() : (JsonElement?)null
-        };
     }
 
     private static JsonElement? BuildLegacyFormFields(JsonElement schemaRoot)
@@ -485,9 +365,7 @@ public class ServiceTriggerService(
             }
         }
 
-        return fields.Count == 0
-            ? null
-            : Parse(JsonSerializer.Serialize(fields))!.Value;
+        return fields.Count == 0 ? null : Parse(JsonSerializer.Serialize(fields))!.Value;
     }
 
     private static string? ExtractActiveTabId(JsonElement? formSchema)
@@ -583,14 +461,45 @@ public class ServiceTriggerService(
         return string.Concat(uri.AbsolutePath, uri.Query);
     }
 
-    private sealed class TriggerRuntimeSchema
+    private static bool HasConfirmedCustomFormTrigger(string? configJson)
     {
-        public string? WorkflowId { get; init; }
-        public string? EndpointPath { get; init; }
-        public string Method { get; init; } = "POST";
-        public string ResponseMode { get; init; } = "inline";
-        public JsonElement? PayloadTemplate { get; init; }
-        public JsonElement? Fields { get; init; }
-        public JsonElement? FileUpload { get; init; }
+        if (string.IsNullOrWhiteSpace(configJson)) return false;
+
+        try
+        {
+            var config = JsonNode.Parse(configJson) as JsonObject;
+            if (config is null) return false;
+
+            if (config["trigger"] is JsonArray triggerValues
+                && triggerValues.OfType<JsonValue>()
+                    .Select(value => value.TryGetValue<string>(out var raw) ? raw : null)
+                    .Any(IsCustomFormName))
+            {
+                return true;
+            }
+
+            if (config["confirmedAddons"] is JsonArray confirmedAddons)
+            {
+                foreach (var addon in confirmedAddons.OfType<JsonObject>())
+                {
+                    if (!string.Equals(addon["type"]?.GetValue<string>(), WorkflowRoles.Trigger, StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    if (IsCustomFormName(addon["name"]?.GetValue<string>()))
+                        return true;
+                }
+            }
+        }
+        catch
+        {
+            return false;
+        }
+
+        return false;
+    }
+
+    private static bool IsCustomFormName(string? value)
+    {
+        var normalized = (value ?? string.Empty).Trim().ToLowerInvariant().Replace(" ", string.Empty).Replace("-", string.Empty).Replace("_", string.Empty);
+        return normalized is "websiteform" or "customform";
     }
 }

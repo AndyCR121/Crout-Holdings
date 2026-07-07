@@ -6,6 +6,7 @@ import { forkJoin, of } from 'rxjs';
 import { AuthService } from '../../../services/auth.service';
 import { AdminService, PagedResult } from '../../../services/admin.service';
 import { IService, IAddon } from '../../../interfaces/i-service.interface';
+import { SERVICE_ICON_OPTIONS } from '../../../utils/service-display';
 
 interface AddonLinkGroup {
   key: string;
@@ -25,6 +26,8 @@ export class AdminServicesComponent implements OnInit {
   private readonly admin  = inject(AdminService);
   private readonly router = inject(Router);
 
+  readonly iconOptions = SERVICE_ICON_OPTIONS;
+
   items    = signal<IService[]>([]);
   loading  = signal(true);
   error    = signal<string | null>(null);
@@ -37,7 +40,7 @@ export class AdminServicesComponent implements OnInit {
   saving          = signal(false);
   deleteConfirmId = signal<number | null>(null);
   showCreate      = signal(false);
-  createBuffer    = signal<Partial<IService>>({
+    createBuffer    = signal<Partial<IService>>({
     serviceName: '',
     serviceDescription: '',
     baseCost: 5000,
@@ -45,7 +48,11 @@ export class AdminServicesComponent implements OnInit {
     totalTokens: 6000000,
     price: 6000,
     hasAddons: false,
-    conditional: false
+    conditional: false,
+    displayName: '',
+    displayTagline: '',
+    iconKey: '',
+    iconSvg: '',
   });
 
   showLinkModal = signal(false);
@@ -83,7 +90,12 @@ export class AdminServicesComponent implements OnInit {
       totalTokens: s.totalTokens,
       price: s.price,
       hasAddons: s.hasAddons,
-      conditional: s.conditional
+      conditional: s.conditional,
+      displayName: s.displayName,
+      displayTagline: s.displayTagline,
+      iconKey: s.iconKey,
+      iconSvg: s.iconSvg,
+      displayOrder: s.displayOrder,
     });
   }
   cancelEdit(): void { this.editingId.set(null); }
@@ -120,7 +132,11 @@ export class AdminServicesComponent implements OnInit {
           totalTokens: 6000000,
           price: 6000,
           hasAddons: false,
-          conditional: false
+          conditional: false,
+          displayName: '',
+          displayTagline: '',
+          iconKey: '',
+          iconSvg: '',
         });
       },
       error: () => { this.error.set('Failed to create.'); this.saving.set(false); }

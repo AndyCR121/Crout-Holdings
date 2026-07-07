@@ -13,12 +13,12 @@ INSERT INTO Companies (company_id,user_id,CompanyName,Industry,Email,Phone,Addre
 (2,2,'WoodenWeld','Manufacturing / Woodwork','admin@woodenweld.co.za','(+27) 79 024 6945',NULL,1),
 (3,2,'Globefurn','Furniture / Retail',NULL,NULL,NULL,1);
 
-INSERT INTO Services (service_id,ServiceName,Price,HasAddons,Conditional,ServiceDescription) VALUES
-(1,'WhatsApp Agent',5000.00,1,0,'A flexible WhatsApp Agent that handles enquiries, automates quotes, creates job cards, and manages client comms.'),
-(2,'Quote System',5000.00,1,0,'End-to-end quote automation — triggered by email, webhook, or WhatsApp, linked to Xero, and approved automatically.'),
-(3,'Project Management System',5000.00,1,0,'Auto-generate job cards from any trigger — email, webhook, or WhatsApp — synced with Trello and managed by AI agents.'),
-(4,'Marketing Systems',5000.00,1,0,'Automated marketing workflows — bulk messaging, campaign triggers, and scheduled broadcasts via WhatsApp and email.'),
-(5,'WhatsApp Agent [Xero Suite Add-on]',5000.00,1,1,'The WhatsApp Agent as a conditional add-on within the Xero Suite package.');
+INSERT INTO Services (service_id,ServiceName,Price,HasAddons,Conditional,ServiceDescription,DisplayName,DisplayTagline,IconKey,DisplayOrder) VALUES
+(1,'WhatsApp Agent',5000.00,1,0,'A flexible WhatsApp Agent that handles enquiries, automates quotes, creates job cards, and manages client comms.','WhatsApp AI Agent','Your business, always available on WhatsApp.','whatsapp-agent',1),
+(2,'Quote System',5000.00,1,0,'End-to-end quote automation — triggered by email, webhook, or WhatsApp, linked to Xero, and approved automatically.','Quote & Invoice System','From enquiry to invoice — fully automated.','quote-system',2),
+(3,'Project Management System',5000.00,1,0,'Auto-generate job cards from any trigger — email, webhook, or WhatsApp — synced with Trello and managed by AI agents.','Project Management','Cards created. Teams notified. Progress tracked.','project-management',3),
+(4,'Marketing Systems',5000.00,1,0,'Automated marketing workflows — bulk messaging, campaign triggers, and scheduled broadcasts via WhatsApp and email.','Marketing Systems','Content on autopilot. Results on the dashboard.','marketing-systems',4),
+(5,'WhatsApp Agent [Xero Suite Add-on]',5000.00,1,1,'The WhatsApp Agent as a conditional add-on within the Xero Suite package.','WhatsApp Agent [Xero Suite Add-on]','Conditional WhatsApp expansion for the Xero Suite package.','whatsapp-agent',5);
 INSERT INTO PricingComponents
   (component_key, component_name, category, pricing_type, amount, is_required_default, is_active)
 VALUES

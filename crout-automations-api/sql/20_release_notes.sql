@@ -1,3 +1,4 @@
+-- Active: 1781193513914@@169.255.58.150@3306@crout_automations
 CREATE TABLE IF NOT EXISTS ReleaseNotes (
   refRelease INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   releaseVersion VARCHAR(32) NOT NULL,
