@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { AdminService } from '../../../services/admin.service';
 import { ConfirmDialogService } from '../../../services/confirm-dialog.service';
-import { ICompany } from '../../../interfaces/i-service.interface';
+import { ICompany, IUser } from '../../../interfaces/i-service.interface';
 
 @Component({
   selector: 'ca-admin-companies',
@@ -21,6 +21,7 @@ export class AdminCompaniesComponent implements OnInit {
   private readonly confirm = inject(ConfirmDialogService);
 
   items    = signal<ICompany[]>([]);
+  users    = signal<IUser[]>([]);
   loading  = signal(true);
   error    = signal<string | null>(null);
   page     = signal(1);
@@ -32,6 +33,7 @@ export class AdminCompaniesComponent implements OnInit {
 
   showCreate   = signal(false);
   createBuffer = signal<Partial<ICompany>>({
+    userId: undefined,
     companyName: '', industry: undefined, email: undefined,
     phone: undefined, address: undefined, active: true,
   });
@@ -42,6 +44,7 @@ export class AdminCompaniesComponent implements OnInit {
   ngOnInit(): void {
     const user = this.auth.currentUser();
     if (!user?.isAdmin) { this.router.navigate(['/client/dashboard']); return; }
+    this.loadUsers();
     this.load();
   }
 
@@ -59,6 +62,13 @@ export class AdminCompaniesComponent implements OnInit {
     });
   }
 
+  loadUsers(): void {
+    this.admin.getUsers(1, 200).subscribe({
+      next: result => this.users.set(result.items.filter(user => user.active)),
+      error: () => this.error.set('Failed to load users for company assignment.')
+    });
+  }
+
   prevPage(): void { if (this.page() > 1) { this.page.update(p => p - 1); this.load(); } }
   nextPage(): void { if (this.hasMore) { this.page.update(p => p + 1); this.load(); } }
 
@@ -67,6 +77,7 @@ export class AdminCompaniesComponent implements OnInit {
 
   startEdit(c: ICompany): void {
     this.drafts.set(c.companyId, {
+      userId:       c.userId,
       companyName: c.companyName,
       industry:    c.industry,
       email:       c.email,
@@ -93,7 +104,7 @@ export class AdminCompaniesComponent implements OnInit {
   }
 
   openCreate(): void {
-    this.createBuffer.set({ companyName: '', industry: undefined, email: undefined, phone: undefined, address: undefined, active: true });
+    this.createBuffer.set({ userId: undefined, companyName: '', industry: undefined, email: undefined, phone: undefined, address: undefined, active: true });
     this.showCreate.set(true);
   }
 
@@ -101,6 +112,10 @@ export class AdminCompaniesComponent implements OnInit {
     const buf = this.createBuffer();
     if (!buf.companyName?.trim()) {
       this.error.set('Company name is required.');
+      return;
+    }
+    if (!buf.userId) {
+      this.error.set('Select the user account that owns this company.');
       return;
     }
     this.saving.set(true);
@@ -113,6 +128,13 @@ export class AdminCompaniesComponent implements OnInit {
       },
       error: () => { this.error.set('Failed to create company.'); this.saving.set(false); }
     });
+  }
+
+  getUserName(userId: number | undefined): string {
+    if (!userId) return 'Unassigned';
+    const user = this.users().find(item => item.userId === userId);
+    if (!user) return `User #${userId}`;
+    return `${user.firstName} ${user.surname}`.trim();
   }
 
   async onDelete(c: ICompany): Promise<void> {

@@ -16,33 +16,39 @@
     <table class="admin-table">
       <thead>
         <tr>
-          <th>ID</th><th>Name</th><th>Industry</th><th>Email</th><th>Phone</th><th>Active</th><th>Actions</th>
+          <th>ID</th><th>Name</th><th>Owner</th><th>Industry</th><th>Email</th><th>Phone</th><th>Active</th><th>Actions</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let c of items()" [class.editing]="isEditing(c.companyId)">
-
-          <!-- View row -->
           <ng-container *ngIf="!isEditing(c.companyId)">
             <td>{{ c.companyId }}</td>
             <td>{{ c.companyName }}</td>
-            <td>{{ c.industry ?? '—' }}</td>
-            <td>{{ c.email ?? '—' }}</td>
-            <td>{{ c.phone ?? '—' }}</td>
+            <td>{{ getUserName(c.userId) }}</td>
+            <td>{{ c.industry ?? '-' }}</td>
+            <td>{{ c.email ?? '-' }}</td>
+            <td>{{ c.phone ?? '-' }}</td>
             <td><span class="admin-pill" [class.green]="c.active">{{ c.active ? 'Active' : 'Inactive' }}</span></td>
             <td class="admin-actions">
-              <button class="btn-edit"   (click)="startEdit(c)">Edit</button>
+              <button class="btn-edit" (click)="startEdit(c)">Edit</button>
               <button class="btn-delete" (click)="onDelete(c)">Delete</button>
             </td>
           </ng-container>
 
-          <!-- Edit row -->
           <ng-container *ngIf="isEditing(c.companyId)">
             <td>{{ c.companyId }}</td>
             <td><input [(ngModel)]="getDraft(c.companyId).companyName" class="admin-input" /></td>
-            <td><input [(ngModel)]="getDraft(c.companyId).industry"    class="admin-input" /></td>
-            <td><input [(ngModel)]="getDraft(c.companyId).email"       class="admin-input" /></td>
-            <td><input [(ngModel)]="getDraft(c.companyId).phone"       class="admin-input" /></td>
+            <td>
+              <select [(ngModel)]="getDraft(c.companyId).userId" class="admin-input">
+                <option [ngValue]="undefined" disabled>Select owner...</option>
+                <option *ngFor="let user of users()" [ngValue]="user.userId">
+                  {{ user.firstName }} {{ user.surname }} ({{ user.email }})
+                </option>
+              </select>
+            </td>
+            <td><input [(ngModel)]="getDraft(c.companyId).industry" class="admin-input" /></td>
+            <td><input [(ngModel)]="getDraft(c.companyId).email" class="admin-input" /></td>
+            <td><input [(ngModel)]="getDraft(c.companyId).phone" class="admin-input" /></td>
             <td>
               <select [(ngModel)]="getDraft(c.companyId).active" class="admin-input">
                 <option [ngValue]="true">Active</option>
@@ -50,14 +56,13 @@
               </select>
             </td>
             <td class="admin-actions">
-              <button class="btn-save"   [disabled]="saving()" (click)="saveEdit(c)">{{ saving() ? '…' : 'Save' }}</button>
+              <button class="btn-save" [disabled]="saving()" (click)="saveEdit(c)">{{ saving() ? '...' : 'Save' }}</button>
               <button class="btn-cancel" (click)="cancelEdit(c.companyId)">Cancel</button>
             </td>
           </ng-container>
-
         </tr>
         <tr *ngIf="items().length === 0">
-          <td colspan="7" class="admin-empty">No companies found.</td>
+          <td colspan="8" class="admin-empty">No companies found.</td>
         </tr>
       </tbody>
     </table>
@@ -76,10 +81,17 @@
   </div>
 </div>
 
-<!-- Create Modal -->
 <div class="admin-modal-backdrop" *ngIf="showCreate()" (click)="showCreate.set(false)">
   <div class="admin-modal" (click)="$event.stopPropagation()">
     <h3>New Company</h3>
+    <label>Owner User <span class="required">*</span>
+      <select [(ngModel)]="createBuffer().userId" class="admin-input">
+        <option [ngValue]="undefined" disabled>Select owner...</option>
+        <option *ngFor="let user of users()" [ngValue]="user.userId">
+          {{ user.firstName }} {{ user.surname }} ({{ user.email }})
+        </option>
+      </select>
+    </label>
     <label>Company Name <span class="required">*</span>
       <input [(ngModel)]="createBuffer().companyName" class="admin-input" />
     </label>
@@ -102,9 +114,8 @@
       </select>
     </label>
     <div class="admin-modal-actions">
-      <button class="btn-save" [disabled]="saving()" (click)="submitCreate()">{{ saving() ? 'Creating…' : 'Create' }}</button>
+      <button class="btn-save" [disabled]="saving()" (click)="submitCreate()">{{ saving() ? 'Creating...' : 'Create' }}</button>
       <button class="btn-cancel" (click)="showCreate.set(false)">Cancel</button>
     </div>
   </div>
 </div>
-
