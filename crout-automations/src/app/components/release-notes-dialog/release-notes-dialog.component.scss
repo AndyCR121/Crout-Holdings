@@ -40,10 +40,25 @@
 }
 
 .release-dialog__close {
-  background: rgba(79, 152, 163, 0.16);
-  color: #e2e8f0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border-radius: 999px;
   border: 1px solid rgba(109, 184, 196, 0.24);
+  background: rgba(79, 152, 163, 0.08);
+  color: #f8fafc;
   box-shadow: none;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.release-dialog__close:hover {
+  background: rgba(79, 152, 163, 0.18);
 }
 
 .release-dialog__state {
