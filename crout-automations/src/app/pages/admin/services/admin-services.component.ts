@@ -6,7 +6,6 @@ import { forkJoin, of } from 'rxjs';
 import { AuthService } from '../../../services/auth.service';
 import { AdminService, PagedResult } from '../../../services/admin.service';
 import { IService, IAddon } from '../../../interfaces/i-service.interface';
-import { AdminSidebarComponent } from '../../../components/admin-sidebar/admin-sidebar.component';
 
 interface AddonLinkGroup {
   key: string;
@@ -17,7 +16,7 @@ interface AddonLinkGroup {
 @Component({
   selector: 'ca-admin-services',
   standalone: true,
-  imports: [CommonModule, FormsModule, AdminSidebarComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './admin-services.component.html',
   styleUrls: ['./admin-services.component.scss'],
 })

@@ -9,8 +9,6 @@ import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-import { AdminSidebarComponent } from '../../../components/admin-sidebar/admin-sidebar.component';
-import { ConfirmDialogComponent } from '../../../components/confirm-dialog/confirm-dialog.component';
 import { IReleaseNote } from '../../../interfaces/i-service.interface';
 import { AdminService } from '../../../services/admin.service';
 import { AuthService } from '../../../services/auth.service';
@@ -22,8 +20,6 @@ import { ReleaseNoteFormDialogComponent } from './release-note-form-dialog.compo
   standalone: true,
   imports: [
     CommonModule,
-    AdminSidebarComponent,
-    ConfirmDialogComponent,
     MatButtonModule,
     MatDialogModule,
     MatIconModule,

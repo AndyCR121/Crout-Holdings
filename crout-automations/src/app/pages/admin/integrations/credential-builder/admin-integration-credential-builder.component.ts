@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AdminSidebarComponent } from '../../../../components/admin-sidebar/admin-sidebar.component';
 import { DynamicFieldConfig, DynamicFieldOption, DynamicFieldType } from '../../../../interfaces/i-service-trigger.interface';
 import { AuthService } from '../../../../services/auth.service';
 import { AdminIntegrationDraftService } from '../../../../services/admin-integration-draft.service';
@@ -21,7 +20,7 @@ type SupportedCredentialFieldType =
 @Component({
   selector: 'ca-admin-integration-credential-builder',
   standalone: true,
-  imports: [CommonModule, FormsModule, AdminSidebarComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './admin-integration-credential-builder.component.html',
   styleUrls: ['./admin-integration-credential-builder.component.scss'],
 })

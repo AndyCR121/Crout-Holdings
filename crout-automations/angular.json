@@ -50,33 +50,6 @@
               "extractLicenses": false,
               "sourceMap": true,
               "fileReplacements": []
-            },
-            "elements": {
-              "outputPath": {
-                "base": "dist/crout-automations",
-                "browser": ""
-              },
-              "index": false,
-              "browser": "src/elements/main.ts",
-              "polyfills": ["zone.js"],
-              "assets": [
-                { "glob": "**/*", "input": "src/assets", "output": "assets" }
-              ],
-              "outputHashing": "none",
-              "optimization": {
-                "scripts": true,
-                "styles": {
-                  "minify": true,
-                  "inlineCritical": false
-                },
-                "fonts": false
-              },
-              "sourceMap": false,
-              "extractLicenses": false,
-              "budgets": [
-                { "type": "initial", "maximumWarning": "2MB", "maximumError": "5MB" },
-                { "type": "anyComponentStyle", "maximumWarning": "16kB", "maximumError": "32kB" }
-              ]
             }
           },
           "defaultConfiguration": "production"

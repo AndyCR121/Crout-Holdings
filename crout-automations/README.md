@@ -7,7 +7,6 @@ Angular 20 frontend for the Crout Automations public site plus the client, devel
 - Angular 20 standalone components
 - SCSS
 - Angular Router with nested shell routes
-- Optional Angular Elements build for legacy WordPress embeds
 - Docker Compose + Nginx for standalone SPA hosting
 
 ## Local development
@@ -26,14 +25,6 @@ npm run build
 ```
 
 The production app is built to `dist/crout-automations/browser/`.
-
-## Legacy Elements build
-
-```bash
-npm run build:elements
-```
-
-That build remains available for legacy WordPress/custom-element usage in [WORDPRESS-DEPLOY.md](C:\Users\User\Documents\GitHub\FinanceManager\Crout-Holdings\crout-automations\WORDPRESS-DEPLOY.md), but the main application routing now runs as a normal Angular SPA.
 
 ## Docker Compose hosting
 

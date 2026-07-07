@@ -1,6 +1,12 @@
 .release-dialog {
   width: min(880px, 92vw);
-  color: #0f172a;
+  color: #e2e8f0;
+  background:
+    radial-gradient(circle at top left, rgba(79, 152, 163, 0.12), transparent 32%),
+    linear-gradient(180deg, #10233f 0%, #0b1a31 100%);
+  border: 1px solid rgba(124, 179, 196, 0.16);
+  border-radius: 24px;
+  box-shadow: 0 28px 80px rgba(2, 6, 23, 0.48);
 }
 
 .release-dialog__header {
@@ -13,12 +19,19 @@
 
 .release-dialog__subtitle {
   margin: 0.25rem 0 0;
-  color: #475569;
+  color: rgba(226, 232, 240, 0.68);
 }
 
 .release-dialog__content {
   padding: 1rem 1.5rem 1.5rem;
   max-height: min(70vh, 720px);
+}
+
+.release-dialog__close {
+  background: rgba(79, 152, 163, 0.16);
+  color: #e2e8f0;
+  border: 1px solid rgba(109, 184, 196, 0.24);
+  box-shadow: none;
 }
 
 .release-dialog__state {
@@ -29,7 +42,7 @@
 }
 
 .release-dialog__state--message {
-  color: #475569;
+  color: rgba(226, 232, 240, 0.76);
   text-align: center;
   font-size: 1rem;
 }
@@ -44,24 +57,25 @@
 }
 
 .release-dialog__panel {
-  border: 1px solid #dbe2ea;
+  border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 18px;
-  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+  background: rgba(8, 18, 35, 0.58);
   overflow: hidden;
 }
 
 .release-dialog__panel-header {
   padding: 1.25rem 1.25rem 0.75rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
 
   h3 {
     margin: 0;
     font-size: 1.15rem;
+    color: #f8fafc;
   }
 
   p {
     margin: 0.25rem 0 0;
-    color: #64748b;
+    color: rgba(226, 232, 240, 0.62);
   }
 }
 
@@ -70,13 +84,33 @@
   max-height: min(46vh, 520px);
   overflow: auto;
   line-height: 1.7;
-  color: #0f172a;
+  color: rgba(226, 232, 240, 0.92);
 
   :is(p, ul, ol, h1, h2, h3, h4, h5, h6) {
     margin-top: 0;
   }
 
   a {
-    color: #0f766e;
+    color: #7dd3fc;
+  }
+}
+
+:host ::ng-deep {
+  .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
+
+  .mdc-notched-outline__leading,
+  .mdc-notched-outline__notch,
+  .mdc-notched-outline__trailing {
+    border-color: rgba(109, 184, 196, 0.26) !important;
+  }
+
+  .mat-mdc-form-field-infix,
+  .mat-mdc-select-value,
+  .mat-mdc-select-arrow,
+  .mat-mdc-form-field label,
+  .mat-mdc-form-field .mdc-floating-label {
+    color: #e2e8f0 !important;
   }
 }

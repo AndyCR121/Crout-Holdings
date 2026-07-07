@@ -5,7 +5,6 @@
     "ng": "ng",
     "start": "ng serve -o",
     "build": "ng build",
-    "build:elements": "ng build crout-automations --configuration elements",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
@@ -16,7 +15,6 @@
     "@angular/common": "^20.0.0",
     "@angular/compiler": "^20.0.0",
     "@angular/core": "^20.0.0",
-    "@angular/elements": "^20.0.0",
     "@angular/forms": "^20.0.0",
     "@angular/material": "^20.0.0",
     "@angular/platform-browser": "^20.0.0",

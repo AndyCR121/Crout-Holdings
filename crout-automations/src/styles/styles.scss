@@ -2,3 +2,12 @@
 @use 'base';
 @use 'service-page';
 @use 'shell-layouts';
+
+.ca-release-notes-overlay {
+  .mdc-dialog__surface,
+  .mat-mdc-dialog-surface {
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+}
