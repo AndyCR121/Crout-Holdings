@@ -11,3 +11,12 @@
     overflow: visible !important;
   }
 }
+
+.ca-admin-modal-panel {
+  .mdc-dialog__surface,
+  .mat-mdc-dialog-surface {
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+}

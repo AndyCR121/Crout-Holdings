@@ -1,14 +1,8 @@
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { HttpErrorResponse } from '@angular/common/http';
 import { AdminService } from '../../../services/admin.service';
 import { IReleaseNote } from '../../../interfaces/i-service.interface';
 
@@ -20,17 +14,7 @@ interface ReleaseNoteDialogData {
 @Component({
   selector: 'ca-release-note-form-dialog',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatButtonModule,
-    MatDatepickerModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatNativeDateModule,
-    MatProgressSpinnerModule,
-  ],
+  imports: [CommonModule, ReactiveFormsModule, MatDialogModule],
   templateUrl: './release-note-form-dialog.component.html',
   styleUrl: './release-note-form-dialog.component.scss',
 })
@@ -49,7 +33,7 @@ export class ReleaseNoteFormDialogComponent {
       [Validators.required, Validators.pattern(/^\d+\.\d+\.\d+$/)]
     ],
     releaseDate: [
-      this.data.releaseNote ? this.parseDate(this.data.releaseNote.releaseDate) : null,
+      this.data.releaseNote?.releaseDate ?? '',
       [Validators.required]
     ],
     releaseNotes: [
@@ -75,10 +59,9 @@ export class ReleaseNoteFormDialogComponent {
 
     this.isSaving = true;
     const formValue = this.form.getRawValue();
-    const dateValue = formValue.releaseDate!;
     const payload = {
       releaseVersion: (formValue.releaseVersion ?? '').trim(),
-      releaseDate: this.formatDate(dateValue),
+      releaseDate: `${formValue.releaseDate ?? ''}`,
       releaseNotes: (formValue.releaseNotes ?? '').trim(),
     };
 
@@ -104,17 +87,5 @@ export class ReleaseNoteFormDialogComponent {
         }
       }
     });
-  }
-
-  private formatDate(value: Date): string {
-    const year = value.getFullYear();
-    const month = `${value.getMonth() + 1}`.padStart(2, '0');
-    const day = `${value.getDate()}`.padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
-
-  private parseDate(value: string): Date {
-    const [year, month, day] = value.split('-').map(Number);
-    return new Date(year, (month || 1) - 1, day || 1);
   }
 }

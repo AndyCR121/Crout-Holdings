@@ -1,14 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, ViewChild, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
-import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
-import { MatTableModule } from '@angular/material/table';
-import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Component, computed, inject, signal } from '@angular/core';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { IReleaseNote } from '../../../interfaces/i-service.interface';
 import { AdminService } from '../../../services/admin.service';
 import { AuthService } from '../../../services/auth.service';
@@ -18,30 +12,17 @@ import { ReleaseNoteFormDialogComponent } from './release-note-form-dialog.compo
 @Component({
   selector: 'ca-admin-release-notes',
   standalone: true,
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatDialogModule,
-    MatIconModule,
-    MatPaginatorModule,
-    MatProgressSpinnerModule,
-    MatSortModule,
-    MatTableModule,
-  ],
+  imports: [CommonModule, MatDialogModule],
   templateUrl: './admin-release-notes.component.html',
   styleUrl: './admin-release-notes.component.scss',
 })
-export class AdminReleaseNotesComponent implements AfterViewInit {
+export class AdminReleaseNotesComponent {
   private readonly auth = inject(AuthService);
   private readonly admin = inject(AdminService);
   private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
 
-  @ViewChild(MatPaginator) paginator?: MatPaginator;
-  @ViewChild(MatSort) sort?: MatSort;
-
-  readonly displayedColumns = ['releaseVersion', 'releaseDate', 'actions'];
   readonly items = signal<IReleaseNote[]>([]);
   readonly total = signal(0);
   readonly loading = signal(true);
@@ -50,6 +31,8 @@ export class AdminReleaseNotesComponent implements AfterViewInit {
   readonly pageIndex = signal(0);
   readonly sortBy = signal<'releaseVersion' | 'releaseDate'>('releaseVersion');
   readonly sortDirection = signal<'asc' | 'desc'>('desc');
+  readonly totalPages = computed(() => Math.max(1, Math.ceil(this.total() / this.pageSize())));
+  readonly hasMore = computed(() => (this.pageIndex() + 1) * this.pageSize() < this.total());
 
   constructor() {
     const user = this.auth.currentUser();
@@ -59,13 +42,6 @@ export class AdminReleaseNotesComponent implements AfterViewInit {
     }
 
     this.load();
-  }
-
-  ngAfterViewInit(): void {
-    if (this.sort) {
-      this.sort.active = 'releaseVersion';
-      this.sort.direction = 'desc';
-    }
   }
 
   load(): void {
@@ -94,6 +70,7 @@ export class AdminReleaseNotesComponent implements AfterViewInit {
     this.dialog.open(ReleaseNoteFormDialogComponent, {
       width: '760px',
       maxWidth: '95vw',
+      panelClass: 'ca-admin-modal-panel',
       data: { mode: 'create' }
     }).afterClosed().subscribe(result => {
       if (result) {
@@ -107,6 +84,7 @@ export class AdminReleaseNotesComponent implements AfterViewInit {
     this.dialog.open(ReleaseNoteFormDialogComponent, {
       width: '760px',
       maxWidth: '95vw',
+      panelClass: 'ca-admin-modal-panel',
       data: { mode: 'edit', releaseNote }
     }).afterClosed().subscribe(result => {
       if (result === 'deleted') {
@@ -149,16 +127,41 @@ export class AdminReleaseNotesComponent implements AfterViewInit {
     });
   }
 
-  onPage(event: PageEvent): void {
-    this.pageIndex.set(event.pageIndex);
-    this.pageSize.set(event.pageSize);
+  prevPage(): void {
+    if (this.pageIndex() === 0) {
+      return;
+    }
+
+    this.pageIndex.set(this.pageIndex() - 1);
     this.load();
   }
 
-  onSortChange(event: Sort): void {
-    this.sortBy.set((event.active === 'releaseDate' ? 'releaseDate' : 'releaseVersion'));
-    this.sortDirection.set((event.direction === 'asc' ? 'asc' : 'desc'));
+  nextPage(): void {
+    if (!this.hasMore()) {
+      return;
+    }
+
+    this.pageIndex.set(this.pageIndex() + 1);
+    this.load();
+  }
+
+  toggleSort(column: 'releaseVersion' | 'releaseDate'): void {
+    if (this.sortBy() === column) {
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortBy.set(column);
+      this.sortDirection.set('desc');
+    }
+
     this.pageIndex.set(0);
     this.load();
+  }
+
+  sortIndicator(column: 'releaseVersion' | 'releaseDate'): string {
+    if (this.sortBy() !== column) {
+      return '';
+    }
+
+    return this.sortDirection() === 'asc' ? 'ASC' : 'DESC';
   }
 }

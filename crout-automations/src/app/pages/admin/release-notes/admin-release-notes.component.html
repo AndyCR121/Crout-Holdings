@@ -1,55 +1,62 @@
-<div class="release-admin">
-  <div class="release-admin__header">
+<div class="admin-page release-admin">
+  <div class="admin-page-header release-admin__header">
     <div>
-      <h1>Release Notes</h1>
-      <p>Manage the public changelog shown from the footer version button.</p>
+      <h1 class="admin-page-title">Release Notes</h1>
+      <p class="release-admin__intro">Manage the public changelog shown from the footer version button.</p>
     </div>
-    <button mat-flat-button color="primary" type="button" (click)="openCreate()">Create release note</button>
+    <button class="btn-create" type="button" (click)="openCreate()">+ New Release Note</button>
   </div>
 
-  <div *ngIf="error()" class="release-admin__error">{{ error() }}</div>
+  <div *ngIf="error()" class="admin-error">{{ error() }}</div>
 
-  <div *ngIf="loading()" class="release-admin__loading">
-    <mat-progress-spinner diameter="44" mode="indeterminate"></mat-progress-spinner>
+  <div *ngIf="loading()" class="admin-loading">
+    <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
   </div>
 
-  <div *ngIf="!loading()" class="release-admin__table-wrap">
-    <table mat-table [dataSource]="items()" matSort (matSortChange)="onSortChange($event)" class="release-admin__table">
-      <ng-container matColumnDef="releaseVersion">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header="releaseVersion">Version</th>
-        <td mat-cell *matCellDef="let item"><strong>v{{ item.releaseVersion }}</strong></td>
-      </ng-container>
-
-      <ng-container matColumnDef="releaseDate">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header="releaseDate">Release Date</th>
-        <td mat-cell *matCellDef="let item">{{ item.releaseDate }}</td>
-      </ng-container>
-
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef>Actions</th>
-        <td mat-cell *matCellDef="let item" class="release-admin__actions">
-          <button mat-icon-button type="button" aria-label="Edit release note" (click)="openEdit(item)">
-            <mat-icon>edit</mat-icon>
-          </button>
-          <button mat-icon-button type="button" aria-label="Delete release note" (click)="deleteReleaseNote(item)">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </td>
-      </ng-container>
-
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-      <tr class="mat-row" *ngIf="items().length === 0">
-        <td class="mat-cell release-admin__empty" [attr.colspan]="displayedColumns.length">No release notes found.</td>
-      </tr>
+  <div *ngIf="!loading()" class="admin-table-wrap">
+    <table class="admin-table release-admin__table">
+      <thead>
+        <tr>
+          <th>
+            <button class="release-admin__sort" type="button" (click)="toggleSort('releaseVersion')">
+              Version
+              <span>{{ sortIndicator('releaseVersion') }}</span>
+            </button>
+          </th>
+          <th>
+            <button class="release-admin__sort" type="button" (click)="toggleSort('releaseDate')">
+              Release Date
+              <span>{{ sortIndicator('releaseDate') }}</span>
+            </button>
+          </th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of items()">
+          <td><strong>v{{ item.releaseVersion }}</strong></td>
+          <td>{{ item.releaseDate }}</td>
+          <td class="admin-actions">
+            <button class="btn-edit" type="button" (click)="openEdit(item)">Edit</button>
+            <button class="btn-delete" type="button" (click)="deleteReleaseNote(item)">Delete</button>
+          </td>
+        </tr>
+        <tr *ngIf="items().length === 0">
+          <td colspan="3" class="admin-empty">No release notes found.</td>
+        </tr>
+      </tbody>
     </table>
+  </div>
 
-    <mat-paginator
-      [length]="total()"
-      [pageIndex]="pageIndex()"
-      [pageSize]="pageSize()"
-      [pageSizeOptions]="[10]"
-      (page)="onPage($event)">
-    </mat-paginator>
+  <div *ngIf="!loading()" class="admin-pagination">
+    <button class="btn-page" [disabled]="pageIndex() === 0" (click)="prevPage()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Prev
+    </button>
+    <span>Page {{ pageIndex() + 1 }} of {{ totalPages() }}</span>
+    <button class="btn-page" [disabled]="!hasMore()" (click)="nextPage()">
+      Next
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
   </div>
 </div>

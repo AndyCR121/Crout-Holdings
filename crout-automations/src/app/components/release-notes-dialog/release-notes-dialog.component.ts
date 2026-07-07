@@ -5,6 +5,7 @@ import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
+import { APP_VERSION } from '../../app-version';
 import { IReleaseNote } from '../../interfaces/i-service.interface';
 import { ReleaseNotesService } from '../../services/release-notes.service';
 
@@ -25,6 +26,7 @@ import { ReleaseNotesService } from '../../services/release-notes.service';
 export class ReleaseNotesDialogComponent {
   private readonly dialogRef = inject(MatDialogRef<ReleaseNotesDialogComponent>);
   private readonly releaseNotes = inject(ReleaseNotesService);
+  readonly currentVersion = APP_VERSION;
 
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);

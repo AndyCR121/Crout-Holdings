@@ -1,5 +1,12 @@
+@import '../admin-table.shared';
+
 .release-form {
   width: min(760px, 92vw);
+  background: #0f1f38;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 12px;
+  color: rgba(255,255,255,0.85);
+  padding: 28px 32px;
 }
 
 .release-form__header {
@@ -7,35 +14,54 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
-  padding: 1.5rem 1.5rem 0;
+  margin-bottom: 18px;
+
+  h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.92);
+  }
 }
 
 .release-form__body {
   display: grid;
-  gap: 1rem;
-  padding-top: 0.5rem;
+  gap: 10px;
 
-  mat-form-field {
-    width: 100%;
+  label {
+    display: block;
+    font-size: 13px;
+    color: rgba(255,255,255,0.60);
+  }
+
+  .admin-input {
+    margin-top: 6px;
   }
 }
 
+.release-form__notes {
+  resize: vertical;
+  min-height: 240px;
+}
+
 .release-form__error {
-  margin: 0;
-  color: #b91c1c;
+  margin: -4px 0 0;
+  color: #e74c3c;
+  font-size: 12px;
   font-weight: 600;
 }
 
-mat-dialog-actions {
-  padding: 0 1.5rem 1.5rem;
+.release-form__actions {
+  margin-top: 20px;
+  justify-content: flex-end;
 }
 
-button[mat-flat-button] {
-  min-width: 112px;
+.required {
+  color: #e74c3c;
 }
 
-mat-progress-spinner {
-  display: inline-block;
-  vertical-align: middle;
-  margin-right: 0.5rem;
+@media (max-width: 700px) {
+  .release-form {
+    padding: 22px 18px;
+  }
 }
