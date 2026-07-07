@@ -187,6 +187,7 @@ export class AdminDatabaseManagementComponent implements OnInit {
         this.schemaConfirmationChecked.set(false);
         this.schemaConfirmationText.set('');
         this.toast.success(`Generated ${plan.generatedMigrationFileName}.`);
+        this.downloadGeneratedSchemaSyncMigration(plan.generatedMigrationFileName);
         this.loadSqlPreview();
       },
       error: err => {
@@ -241,6 +242,13 @@ export class AdminDatabaseManagementComponent implements OnInit {
     return this.schemaPlan()?.severityCounts.find(item => item.key === severity)?.count ?? 0;
   }
 
+  downloadGeneratedSchemaSyncMigration(fileName?: string | null): void {
+    const resolvedFileName = fileName?.trim();
+    if (!resolvedFileName) return;
+
+    this.triggerSqlDownload(this.admin.getSchemaSyncMigrationDownloadUrl(resolvedFileName), resolvedFileName);
+  }
+
   private schemaSourceSelection(): IMigrationSelection {
     return {
       targetKey: this.schemaSourceTargetKey(),
@@ -253,5 +261,16 @@ export class AdminDatabaseManagementComponent implements OnInit {
       targetKey: this.schemaTargetTargetKey(),
       databaseNameOverride: this.schemaTargetDatabaseName().trim() || undefined,
     };
+  }
+
+  private triggerSqlDownload(downloadUrl: string, fileName: string): void {
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = fileName;
+    link.rel = 'noopener';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   }
 }

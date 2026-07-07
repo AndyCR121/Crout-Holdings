@@ -64,3 +64,9 @@ public class SchemaCountDto
     public string Key { get; set; } = string.Empty;
     public int Count { get; set; }
 }
+
+public class SchemaSyncMigrationFileDto
+{
+    public string FileName { get; set; } = string.Empty;
+    public byte[] Content { get; set; } = [];
+}

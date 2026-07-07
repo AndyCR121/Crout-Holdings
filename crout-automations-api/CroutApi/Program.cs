@@ -103,6 +103,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     };
     o.Events = new JwtBearerEvents
     {
+      OnMessageReceived = ctx =>
+      {
+        if (!string.IsNullOrWhiteSpace(ctx.Token))
+        {
+          return Task.CompletedTask;
+        }
+
+        if (ctx.Request.Cookies.TryGetValue("ca_jwt", out var cookieToken) &&
+            !string.IsNullOrWhiteSpace(cookieToken))
+        {
+          ctx.Token = cookieToken;
+        }
+
+        return Task.CompletedTask;
+      },
       OnTokenValidated = async ctx =>
       {
         var principal = ctx.Principal;

@@ -12,6 +12,7 @@ public sealed class SchemaSyncPlanService(
     IOptions<DatabaseManagementOptions> options) : ISchemaSyncPlanService
 {
     private static readonly Regex DatabaseNamePattern = new("^[A-Za-z0-9_\\-]+$", RegexOptions.Compiled);
+    private static readonly Regex MigrationFileNamePattern = new("^\\d+_schema_sync_\\d{14}\\.sql$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private readonly SchemaMetadataReader _metadataReader = new();
     private readonly SchemaComparer _comparer = new();
     private readonly SchemaSafetyClassifier _classifier = new();
@@ -66,6 +67,30 @@ public sealed class SchemaSyncPlanService(
         plan.GeneratedMigrationFileName = fileName;
         plan.ApprovalState = "MigrationGenerated";
         return plan;
+    }
+
+    public async Task<SchemaSyncMigrationFileDto?> GetGeneratedMigrationFileAsync(
+        string fileName,
+        CancellationToken cancellationToken = default)
+    {
+        var trimmedFileName = fileName?.Trim();
+        if (string.IsNullOrWhiteSpace(trimmedFileName) || !MigrationFileNamePattern.IsMatch(trimmedFileName))
+        {
+            throw new ArgumentException("The requested migration file name is invalid.");
+        }
+
+        var sqlRoot = SchemaUpdater.ResolveSqlRootPath();
+        var filePath = Path.Combine(sqlRoot, trimmedFileName);
+        if (!File.Exists(filePath))
+        {
+            return null;
+        }
+
+        return new SchemaSyncMigrationFileDto
+        {
+            FileName = trimmedFileName,
+            Content = await File.ReadAllBytesAsync(filePath, cancellationToken)
+        };
     }
 
     private async Task<SchemaSyncPlanDto> BuildPlanAsync(

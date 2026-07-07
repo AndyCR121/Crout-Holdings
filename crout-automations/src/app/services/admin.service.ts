@@ -339,6 +339,11 @@ export class AdminService {
     );
   }
 
+  getSchemaSyncMigrationDownloadUrl(fileName: string): string {
+    const params = new HttpParams().set('fileName', fileName);
+    return `${this.base}/database-management/schema-sync-plan/download?${params.toString()}`;
+  }
+
   validateDatabaseMigration(source: IMigrationSelection, destination: IMigrationSelection): Observable<IDatabaseMigrationValidation> {
     return this.http.post<IDatabaseMigrationValidation>(
       `${this.base}/database-management/migrations/validate`,

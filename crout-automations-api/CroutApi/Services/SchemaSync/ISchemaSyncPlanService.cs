@@ -7,4 +7,5 @@ public interface ISchemaSyncPlanService
     Task<SchemaComparisonResponseDto> CompareAsync(SchemaComparisonRequestDto request, CancellationToken cancellationToken = default);
     Task<SchemaSyncPlanDto> CreatePlanAsync(SchemaComparisonRequestDto request, CancellationToken cancellationToken = default);
     Task<SchemaSyncPlanDto> GenerateMigrationAsync(GenerateSchemaSyncMigrationRequestDto request, CancellationToken cancellationToken = default);
+    Task<SchemaSyncMigrationFileDto?> GetGeneratedMigrationFileAsync(string fileName, CancellationToken cancellationToken = default);
 }

@@ -1,4 +1,5 @@
 using System.Reflection;
+using CroutApi.Services;
 using CroutApi.Services.SchemaSync;
 using Xunit;
 
@@ -250,6 +251,17 @@ public class SchemaSyncTests
         {
             tempDirectory.Delete(recursive: true);
         }
+    }
+
+    [Fact]
+    public async Task GeneratedMigrationDownload_AllowsOnlyExpectedSchemaSyncFiles()
+    {
+        var logger = Microsoft.Extensions.Logging.Abstractions.NullLogger<SchemaSyncPlanService>.Instance;
+        var options = Microsoft.Extensions.Options.Options.Create(new DatabaseManagementOptions());
+        var service = new SchemaSyncPlanService(logger, options);
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            service.GetGeneratedMigrationFileAsync("../01_schema.sql", CancellationToken.None));
     }
 
     private SchemaComparisonResult Classify(SchemaComparisonResult comparison)

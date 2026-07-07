@@ -134,6 +134,13 @@
             (click)="generateSchemaSyncMigration()">
             {{ schemaGenerating() ? 'Generating...' : 'Generate Reviewed Migration' }}
           </button>
+          <button
+            *ngIf="schemaPlan()!.generatedMigrationFileName"
+            class="btn-cancel"
+            [disabled]="schemaGenerating()"
+            (click)="downloadGeneratedSchemaSyncMigration(schemaPlan()!.generatedMigrationFileName)">
+            Download Generated SQL
+          </button>
         </div>
       </div>
     </section>

@@ -76,6 +76,15 @@ public class AdminDatabaseController(
         return Ok(await schemaSyncPlanService.GenerateMigrationAsync(request, cancellationToken));
     }
 
+    [HttpGet("schema-sync-plan/download")]
+    public async Task<IActionResult> DownloadSchemaSyncMigration([FromQuery] string fileName, CancellationToken cancellationToken)
+    {
+        if (!IsAdmin) return Forbid();
+        var file = await schemaSyncPlanService.GetGeneratedMigrationFileAsync(fileName, cancellationToken);
+        if (file is null) return NotFound();
+        return File(file.Content, "application/sql", file.FileName);
+    }
+
     [HttpPost("run-migrations")]
     public async Task<IActionResult> RunMigrations([FromBody] RunDatabaseMigrationsRequestDto request, CancellationToken cancellationToken)
     {
