@@ -316,7 +316,39 @@ $ca-white:        #e8f4fd;
   }
 }
 
+.ca-footer-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 .ca-footer-copy { white-space: nowrap; }
+
+.ca-footer-version {
+  border: 1px solid rgba(109, 184, 196, 0.28);
+  background: rgba(79, 152, 163, 0.12);
+  color: rgba(232, 244, 253, 0.88);
+  border-radius: 999px;
+  padding: 0.32rem 0.72rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
+
+  &:hover {
+    background: rgba(79, 152, 163, 0.2);
+    border-color: rgba(109, 184, 196, 0.48);
+    color: $ca-white;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba($ca-teal-light, 0.85);
+    outline-offset: 2px;
+  }
+}
 
 .ca-footer-brought {
   color: $ca-text-faint;

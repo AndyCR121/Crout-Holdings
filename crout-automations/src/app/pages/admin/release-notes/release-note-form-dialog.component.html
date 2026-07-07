@@ -1,0 +1,41 @@
+<div class="release-form">
+  <div class="release-form__header">
+    <h2 mat-dialog-title>{{ title }}</h2>
+    <button mat-stroked-button type="button" mat-dialog-close>Cancel</button>
+  </div>
+
+  <mat-dialog-content>
+    <form [formGroup]="form" class="release-form__body">
+      <mat-form-field appearance="outline">
+        <mat-label>Release Version</mat-label>
+        <input matInput formControlName="releaseVersion" placeholder="1.0.10" />
+        <mat-error *ngIf="form.controls.releaseVersion.hasError('required')">Version required.</mat-error>
+        <mat-error *ngIf="form.controls.releaseVersion.hasError('pattern')">Version must match x.y.z.</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Release Date</mat-label>
+        <input matInput [matDatepicker]="picker" formControlName="releaseDate" />
+        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+        <mat-error *ngIf="form.controls.releaseDate.hasError('required')">Release date required.</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Release Notes HTML</mat-label>
+        <textarea matInput rows="12" formControlName="releaseNotes"></textarea>
+        <mat-error *ngIf="form.controls.releaseNotes.hasError('required')">Release notes required.</mat-error>
+      </mat-form-field>
+
+      <p *ngIf="duplicateError" class="release-form__error">{{ duplicateError }}</p>
+      <p *ngIf="notFoundError" class="release-form__error">{{ notFoundError }}</p>
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-flat-button color="primary" type="button" [disabled]="isSaving" (click)="submit()">
+      <mat-progress-spinner *ngIf="isSaving" diameter="18" mode="indeterminate"></mat-progress-spinner>
+      <span>{{ data.mode === 'create' ? 'Create' : 'Save' }}</span>
+    </button>
+  </mat-dialog-actions>
+</div>

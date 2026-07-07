@@ -44,6 +44,13 @@ export interface IService {
   addons?: IAddon[];
 }
 
+export interface IReleaseNote {
+  refRelease: number;
+  releaseVersion: string;
+  releaseDate: string;
+  releaseNotes: string;
+}
+
 export interface IAddon {
   addonId: number;
   serviceId: number | null;

@@ -20,6 +20,7 @@ import {
   IDatabaseMigrationOperation,
   IDatabaseMigrationValidation,
   IMigrationSelection,
+  IReleaseNote,
   ISchemaComparisonResponse,
   ISchemaSyncPlan,
   ISqlUpdatePreview,
@@ -403,5 +404,30 @@ export class AdminService {
 
   clearPaystackMapping(userServiceId: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/paystack-mappings/${userServiceId}`, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  getReleaseNotes(page = 1, pageSize = 10, sortBy = 'releaseVersion', sortDirection: 'asc' | 'desc' = 'desc'): Observable<PagedResult<IReleaseNote>> {
+    const params = new HttpParams()
+      .set('page', page)
+      .set('pageSize', pageSize)
+      .set('sortBy', sortBy)
+      .set('sortDirection', sortDirection);
+    return this.http.get<PagedResult<IReleaseNote>>(`${this.base}/release-notes`, { params, headers: this.authHeaders(), withCredentials: true });
+  }
+
+  getReleaseNote(refRelease: number): Observable<IReleaseNote> {
+    return this.http.get<IReleaseNote>(`${this.base}/release-notes/${refRelease}`, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  createReleaseNote(body: Omit<IReleaseNote, 'refRelease'>): Observable<IReleaseNote> {
+    return this.http.post<IReleaseNote>(`${this.base}/release-notes`, body, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  updateReleaseNote(refRelease: number, body: Omit<IReleaseNote, 'refRelease'>): Observable<IReleaseNote> {
+    return this.http.put<IReleaseNote>(`${this.base}/release-notes/${refRelease}`, body, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  deleteReleaseNote(refRelease: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/release-notes/${refRelease}`, { headers: this.authHeaders(), withCredentials: true });
   }
 }

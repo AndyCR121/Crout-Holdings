@@ -34,6 +34,7 @@
  *   <ca-admin-dev-management></ca-admin-dev-management>
  *   <ca-admin-client-services></ca-admin-client-services>
  *   <ca-admin-paystack-management></ca-admin-paystack-management>
+ *   <ca-admin-release-notes></ca-admin-release-notes>
  *
  * Portal pages (standalone — include their own sidebar):
  *   <ca-portal-dashboard></ca-portal-dashboard>
@@ -99,6 +100,7 @@ import { AdminCompaniesComponent } from '../app/pages/admin/companies/admin-comp
 import { AdminDevManagementComponent } from '../app/pages/admin/dev-management/admin-dev-management.component';
 import { AdminClientServicesComponent } from '../app/pages/admin/client-services/admin-client-services.component';
 import { AdminPaystackManagementComponent } from '../app/pages/admin/paystack-management/admin-paystack-management.component';
+import { AdminReleaseNotesComponent } from '../app/pages/admin/release-notes/admin-release-notes.component';
 
 // ── Portal sub-pages (standalone — embed PortalSidebarComponent internally) ──
 import { PortalDashboardComponent } from '../app/pages/portal/dashboard/portal-dashboard.component';
@@ -159,6 +161,7 @@ import { NavigationPageComponent } from '../app/components/navigation-page/navig
     ['ca-admin-dev-management',   AdminDevManagementComponent],
     ['ca-admin-client-services',  AdminClientServicesComponent],
     ['ca-admin-paystack-management', AdminPaystackManagementComponent],
+    ['ca-admin-release-notes',    AdminReleaseNotesComponent],
 
     // ── Portal sub-pages ───────────────────────────────────────────────────
     ['ca-portal-dashboard',       PortalDashboardComponent],

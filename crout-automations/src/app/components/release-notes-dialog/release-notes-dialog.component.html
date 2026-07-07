@@ -1,0 +1,44 @@
+<div class="release-dialog">
+  <div class="release-dialog__header">
+    <div>
+      <h2 mat-dialog-title>Release Notes</h2>
+      <p class="release-dialog__subtitle">Track what changed in the deployed application.</p>
+    </div>
+    <button mat-stroked-button type="button" (click)="close()">Close</button>
+  </div>
+
+  <mat-dialog-content class="release-dialog__content">
+    <div *ngIf="loading()" class="release-dialog__state">
+      <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
+    </div>
+
+    <div *ngIf="!loading() && error()" class="release-dialog__state release-dialog__state--message">
+      {{ error() }}
+    </div>
+
+    <div *ngIf="!loading() && !error() && items().length === 0" class="release-dialog__state release-dialog__state--message">
+      Release notes to be added soon!
+    </div>
+
+    <div *ngIf="!loading() && !error() && items().length > 0" class="release-dialog__body">
+      <mat-form-field appearance="outline" class="release-dialog__select">
+        <mat-label>Release</mat-label>
+        <mat-select [value]="selectedVersion()" (valueChange)="selectedVersion.set($event)">
+          <mat-option *ngFor="let item of items()" [value]="item.releaseVersion">
+            Release {{ item.releaseVersion }} | {{ item.releaseDate }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <section *ngIf="selectedRelease() as release" class="release-dialog__panel">
+        <header class="release-dialog__panel-header">
+          <div>
+            <h3>v{{ release.releaseVersion }}</h3>
+            <p>{{ release.releaseDate }}</p>
+          </div>
+        </header>
+        <div class="release-dialog__notes" [innerHTML]="release.releaseNotes"></div>
+      </section>
+    </div>
+  </mat-dialog-content>
+</div>

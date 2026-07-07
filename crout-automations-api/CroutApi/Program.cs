@@ -37,6 +37,7 @@ builder.Services.AddSingleton(new DbHelper());
 builder.Services.AddSingleton(new JwtHelper(jwtSecret, jwtIssuer, jwtAudience, jwtExpiry));
 builder.Services.AddSingleton(new EncryptionHelper(hmacSecret));
 builder.Services.AddSingleton(new SensitiveDataProtector(hmacSecret));
+builder.Services.AddSingleton<ReleaseNotesHtmlSanitizer>();
 
 // -- Repositories -------------------------------------------------------------
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -55,6 +56,7 @@ builder.Services.AddScoped<IDevServiceRepository, DevServiceRepository>();
 builder.Services.AddScoped<IDevPortalRepository, DevPortalRepository>();
 builder.Services.AddScoped<IIntegrationRepository, IntegrationRepository>();
 builder.Services.AddScoped<IWorkflowCapabilityRepository, WorkflowCapabilityRepository>();
+builder.Services.AddScoped<IReleaseNoteRepository, ReleaseNoteRepository>();
 
 // -- Application Services -----------------------------------------------------
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -69,6 +71,7 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IContactRequestService, ContactRequestService>();
 builder.Services.AddScoped<IIntegrationService, IntegrationService>();
 builder.Services.AddScoped<ISqlUpdaterService, SqlUpdaterService>();
+builder.Services.AddScoped<IReleaseNoteService, ReleaseNoteService>();
 builder.Services.Configure<DatabaseManagementOptions>(builder.Configuration.GetSection("DatabaseManagement"));
 builder.Services.AddScoped<IDatabaseManagementService, DatabaseManagementService>();
 builder.Services.AddScoped<ISchemaSyncPlanService, SchemaSyncPlanService>();

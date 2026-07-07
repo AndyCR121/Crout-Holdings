@@ -123,7 +123,10 @@
   <!-- ── Bottom bar ── -->
   <div class="ca-footer-bottom-wrap">
     <div class="ca-footer-bottom">
-      <span class="ca-footer-copy">&copy; {{ currentYear }} Crout Holdings. All Rights Reserved.</span>
+      <div class="ca-footer-meta">
+        <span class="ca-footer-copy">&copy; {{ currentYear }} Crout Holdings. All Rights Reserved.</span>
+        <button type="button" class="ca-footer-version" (click)="openReleaseNotes()">v{{ version }}</button>
+      </div>
       <span class="ca-footer-brought">
         Brought to you by <strong>Crout Holdings</strong>
       </span>

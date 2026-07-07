@@ -1,16 +1,21 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { APP_VERSION } from '../../app-version';
+import { ReleaseNotesDialogComponent } from '../release-notes-dialog/release-notes-dialog.component';
 
 @Component({
   selector: 'ca-footer',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, MatDialogModule],
   templateUrl: './footer.component.html',
   styleUrl: './footer.component.scss'
 })
 export class FooterComponent {
+  private readonly dialog = inject(MatDialog);
   currentYear = new Date().getFullYear();
+  readonly version = APP_VERSION;
   @Input() assetsBase: string = '/assets/';
 
   services = [
@@ -27,4 +32,12 @@ export class FooterComponent {
     { label: 'Services',   route: '/services' },
     { label: 'Contact Us', route: '/contact-us' },
   ];
+
+  openReleaseNotes(): void {
+    this.dialog.open(ReleaseNotesDialogComponent, {
+      width: '880px',
+      maxWidth: '95vw',
+      panelClass: 'ca-release-notes-overlay'
+    });
+  }
 }

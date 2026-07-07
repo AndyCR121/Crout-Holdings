@@ -137,6 +137,11 @@ export const routes: Routes = [
           import('./pages/admin/database-management/admin-database-management.component').then(m => m.AdminDatabaseManagementComponent),
       },
       {
+        path: 'release-notes',
+        loadComponent: () =>
+          import('./pages/admin/release-notes/admin-release-notes.component').then(m => m.AdminReleaseNotesComponent),
+      },
+      {
         path: 'addons',
         loadComponent: () =>
           import('./pages/admin/addons/admin-addons.component').then(m => m.AdminAddonsComponent),
