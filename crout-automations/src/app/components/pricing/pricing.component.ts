@@ -17,6 +17,13 @@ import {
   sortServicesForDisplay,
 } from '../../utils/service-display';
 
+interface BundleRequiredComponentView {
+  pricingComponentId: number;
+  componentKey: string;
+  componentName: string;
+  amount: number;
+}
+
 const MAX_VISIBLE_SERVICES = 4;
 
 @Component({
@@ -189,7 +196,7 @@ export class PricingComponent implements OnInit {
   }
 
   basePrice(view: IPackageView): number {
-    return this.activeServices(view).reduce((sum, service) => sum + (service.price ?? 0), 0);
+    return this.activeServices(view).reduce((sum, service) => sum + (service.baseCost ?? 0), 0);
   }
 
   enabledAddonTotal(view: IPackageView): number {
@@ -199,11 +206,11 @@ export class PricingComponent implements OnInit {
   }
 
   fullTotal(view: IPackageView): number {
-    return this.basePrice(view) + this.enabledAddonTotal(view) + this.requiredTotal();
+    return this.basePrice(view) + this.enabledAddonTotal(view) + this.requiredTotal(view);
   }
 
-  requiredTotal(): number {
-    return this.requiredPricingComponents.reduce((sum, component) => sum + (component.amount ?? 0), 0);
+  requiredTotal(view: IPackageView): number {
+    return this.requiredComponentsForView(view).reduce((sum, component) => sum + (component.amount ?? 0), 0);
   }
 
   discountedTotal(view: IPackageView): number {
@@ -259,6 +266,37 @@ export class PricingComponent implements OnInit {
     return this.serviceUrl(this.activeServices(view).find(service => !service.conditional) ?? this.activeServices(view)[0]);
   }
 
+  serviceBaseLinePrice(service: IService): number {
+    return service.baseCost ?? 0;
+  }
+
+  requiredComponentsForView(view: IPackageView): BundleRequiredComponentView[] {
+    const includedTokenService = this.includedTokenService(view);
+
+    return this.requiredPricingComponents.map(component => {
+      if (!this.isTokenComponent(component)) {
+        return {
+          pricingComponentId: component.pricingComponentId,
+          componentKey: component.componentKey,
+          componentName: component.componentName,
+          amount: component.amount ?? 0,
+        };
+      }
+
+      const tokenCount = includedTokenService?.totalTokens ?? 0;
+      const tokenLabel = tokenCount > 0
+        ? `AI Usage Base (${tokenCount.toLocaleString('en-ZA')} bundled tokens)`
+        : component.componentName;
+
+      return {
+        pricingComponentId: component.pricingComponentId,
+        componentKey: component.componentKey,
+        componentName: tokenLabel,
+        amount: includedTokenService?.tokensCost ?? 0,
+      };
+    });
+  }
+
   private addonsForServiceIds(serviceIds: number[]): IAddon[] {
     if (serviceIds.length === 0) return [];
     const serviceIdSet = new Set(serviceIds);
@@ -278,5 +316,25 @@ export class PricingComponent implements OnInit {
       }
     }
     return [...seen.values()];
+  }
+
+  private includedTokenService(view: IPackageView): IService | null {
+    return this.activeServices(view).reduce<IService | null>((selected, service) => {
+      if (!selected) return service;
+      const selectedTokensCost = selected.tokensCost ?? 0;
+      const serviceTokensCost = service.tokensCost ?? 0;
+      if (serviceTokensCost !== selectedTokensCost) {
+        return serviceTokensCost > selectedTokensCost ? service : selected;
+      }
+      const selectedTokenCount = selected.totalTokens ?? 0;
+      const serviceTokenCount = service.totalTokens ?? 0;
+      return serviceTokenCount > selectedTokenCount ? service : selected;
+    }, null);
+  }
+
+  private isTokenComponent(component: IPricingComponent): boolean {
+    const key = component.componentKey.toLowerCase();
+    const name = component.componentName.toLowerCase();
+    return key.includes('token') || key.includes('ai_usage') || name.includes('token');
   }
 }

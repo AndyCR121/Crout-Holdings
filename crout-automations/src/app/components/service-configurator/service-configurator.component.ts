@@ -11,6 +11,13 @@ import { ToastService } from '../../services/toast.service';
 import { AuthModalComponent } from '../auth-modal/auth-modal.component';
 import { dedupeAddonsById } from '../../utils/service-display';
 
+interface BundleRequiredComponentView {
+  pricingComponentId: number;
+  componentKey: string;
+  componentName: string;
+  amount: number;
+}
+
 @Component({
   selector: 'ca-service-configurator',
   standalone: true,
@@ -216,7 +223,7 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
   }
 
   basePrice(view: IPackageView): number {
-    return this.activeServices(view).reduce((sum, svc) => sum + (svc.price ?? 0), 0);
+    return this.activeServices(view).reduce((sum, svc) => sum + (svc.baseCost ?? 0), 0);
   }
 
   enabledAddonTotal(view: IPackageView): number {
@@ -225,12 +232,12 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
       .reduce((sum, s) => sum + s.addon.price, 0);
   }
 
-  requiredTotal(): number {
-    return this.requiredPricingComponents.reduce((sum, c) => sum + (c.amount ?? 0), 0);
+  requiredTotal(view: IPackageView): number {
+    return this.requiredComponentsForView(view).reduce((sum, component) => sum + (component.amount ?? 0), 0);
   }
 
   fullTotal(view: IPackageView): number {
-    return this.basePrice(view) + this.enabledAddonTotal(view) + this.requiredTotal();
+    return this.basePrice(view) + this.enabledAddonTotal(view) + this.requiredTotal(view);
   }
 
   discountedTotal(view: IPackageView): number {
@@ -304,19 +311,21 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
       packageId: this.activePkg(view).packageId,
       packageName: this.activePkg(view).packageName,
       basePrice: this.basePrice(view),
-      requiredComponents: this.requiredPricingComponents.map(c => ({
+      requiredComponents: this.requiredComponentsForView(view).map(c => ({
         componentKey: c.componentKey,
         componentName: c.componentName,
         amount: c.amount
       })),
-      requiredTotal: this.requiredTotal(),
+      requiredTotal: this.requiredTotal(view),
       fullTotal: this.fullTotal(view),
       discountedTotal: this.discountedTotal(view),
       discount: this.activePkg(view).discount,
       services: this.activeServices(view).map(s => ({
         serviceId: s.serviceId,
         serviceName: s.serviceName,
-        price: s.price
+        price: s.baseCost,
+        tokensCost: s.tokensCost,
+        totalTokens: s.totalTokens,
       })),
       addons: view.addonStates.filter(s => s.enabled).map(s => ({
         addonId: s.addon.addonId,
@@ -345,5 +354,60 @@ export class ServiceConfiguratorComponent implements OnInit, OnChanges {
       }
     }
     return [...seen.values()];
+  }
+
+  requiredComponentsForView(view: IPackageView): BundleRequiredComponentView[] {
+    const includedTokenService = this.includedTokenService(view);
+
+    return this.requiredPricingComponents.map(component => {
+      if (!this.isTokenComponent(component)) {
+        return {
+          pricingComponentId: component.pricingComponentId,
+          componentKey: component.componentKey,
+          componentName: component.componentName,
+          amount: component.amount ?? 0,
+        };
+      }
+
+      const tokenCount = includedTokenService?.totalTokens ?? 0;
+      const tokenLabel = tokenCount > 0
+        ? `AI Usage Base (${tokenCount.toLocaleString('en-ZA')} bundled tokens)`
+        : component.componentName;
+
+      return {
+        pricingComponentId: component.pricingComponentId,
+        componentKey: component.componentKey,
+        componentName: tokenLabel,
+        amount: includedTokenService?.tokensCost ?? 0,
+      };
+    });
+  }
+
+  serviceBaseLinePrice(service: IService): number {
+    return service.baseCost ?? 0;
+  }
+
+  conditionalServiceLinePrice(service: IService): number {
+    return service.baseCost ?? 0;
+  }
+
+  private includedTokenService(view: IPackageView): IService | null {
+    return this.activeServices(view).reduce<IService | null>((selected, service) => {
+      if (!selected) return service;
+      const selectedTokensCost = selected.tokensCost ?? 0;
+      const serviceTokensCost = service.tokensCost ?? 0;
+      if (serviceTokensCost !== selectedTokensCost) {
+        return serviceTokensCost > selectedTokensCost ? service : selected;
+      }
+      const selectedTokenCount = selected.totalTokens ?? 0;
+      const serviceTokenCount = service.totalTokens ?? 0;
+      return serviceTokenCount > selectedTokenCount ? service : selected;
+    }, null);
+  }
+
+  private isTokenComponent(component: IPricingComponent): boolean {
+    const key = component.componentKey.toLowerCase();
+    const name = component.componentName.toLowerCase();
+    return key.includes('token') || key.includes('ai_usage') || name.includes('token');
   }
 }

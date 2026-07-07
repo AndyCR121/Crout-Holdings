@@ -39,12 +39,12 @@
                 <li class="pricing__suite-item">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
                   <span class="pricing__suite-item-label">{{ svc.serviceName }} (base)</span>
-                  <span class="pricing__suite-item-price">R{{ formatPrice(svc.price) }}</span>
+                  <span class="pricing__suite-item-price">R{{ formatPrice(serviceBaseLinePrice(svc)) }}</span>
                 </li>
               }
 
               <!-- Required defaults -->
-              @for (component of requiredPricingComponents; track component.pricingComponentId) {
+              @for (component of requiredComponentsForView(view); track component.pricingComponentId) {
                 <li class="pricing__suite-item">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
                   <span class="pricing__suite-item-label">{{ component.componentName }}</span>
@@ -100,7 +100,7 @@
                     }
                   </span>
                   <span class="pricing__suite-item-price">
-                    + R{{ formatPrice(view.conditionalService.price) }}
+                    + R{{ formatPrice(conditionalServiceLinePrice(view.conditionalService)) }}
                   </span>
                 </li>
               }
