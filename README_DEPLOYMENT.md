@@ -2,14 +2,13 @@
 
 Production architecture:
 
-Domain -> VPS IP -> Caddy :443 -> frontend/API Docker containers -> private MySQL
+Domain -> VPS IP -> Caddy :443 -> frontend/API Docker containers -> existing production MySQL
 
 This stack deploys:
 
 - `crout-automations/` as a static Angular SPA served by Nginx
 - `crout-automations-api/CroutApi/` as an ASP.NET Core .NET 8 API
 - `crout-automations-api/sql/` as the reviewed SQL migration source
-- `mysql:8.3` on a private Docker network
 
 Only Caddy is public. Only ports `80` and `443` should be reachable from the internet.
 
@@ -22,8 +21,7 @@ Port `4200` is Angular development only. Do not expose `4200`, `5000`, `8080`, o
 Containers communicate internally over Docker networks:
 
 - `frontend` is reachable by Caddy on the `public` network
-- `api` is reachable by Caddy on the `public` network and by MySQL on the `internal` network
-- `db` is reachable only on the private `internal` network
+- `api` is reachable by Caddy on the `public` network and connects outward to the existing MySQL host using the configured `DB_*` credentials
 
 ## Ubuntu VPS setup
 
@@ -81,7 +79,6 @@ Service-specific logs:
 docker compose -f docker-compose.prod.yml logs -f caddy
 docker compose -f docker-compose.prod.yml logs -f frontend
 docker compose -f docker-compose.prod.yml logs -f api
-docker compose -f docker-compose.prod.yml logs -f db
 ```
 
 ## SQL migration process
@@ -146,15 +143,4 @@ docker compose --env-file .env.production -f docker-compose.prod.yml up -d --bui
 
 ## Database backups
 
-Persistent Docker volumes are not backups. Copy backups off the VPS after creating them.
-
-```bash
-mkdir -p /opt/crout-backups
-
-docker exec crout-mysql \
-  mysqldump \
-  -u root \
-  -pYOUR_DB_ROOT_PASSWORD \
-  crout_automations \
-  > /opt/crout-backups/crout_automations_$(date +%F).sql
-```
+Back up the existing production MySQL instance directly using its real host and credentials. Do not assume Docker volumes contain the production data.

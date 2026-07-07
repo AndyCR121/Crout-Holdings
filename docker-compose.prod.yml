@@ -26,14 +26,11 @@ services:
       context: ./crout-automations-api
       dockerfile: CroutApi/Dockerfile
     restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
-      DB_HOST: db
-      DB_PORT: "3306"
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
@@ -60,34 +57,11 @@ services:
       - public
       - internal
 
-  db:
-    image: mysql:8.3
-    container_name: crout-mysql
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-      start_period: 30s
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./crout-automations-api/sql/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
-      - ./crout-automations-api/sql/02_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
-    networks:
-      - internal
-
 networks:
   public:
   internal:
     internal: true
 
 volumes:
-  mysql_data:
   caddy_data:
   caddy_config:
