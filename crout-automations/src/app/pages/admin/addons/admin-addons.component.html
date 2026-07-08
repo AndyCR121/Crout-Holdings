@@ -1,7 +1,7 @@
 <div class="admin-page">
       <div class="admin-page-header">
         <h1 class="admin-page-title">Addons</h1>
-        <button class="btn-create" (click)="showCreate.set(true)">+ New Addon</button>
+        <button class="btn-create" (click)="openCreateModal()">+ New Addon</button>
       </div>
 
       <div *ngIf="error()" class="admin-error">{{ error() }}</div>
@@ -67,43 +67,59 @@
       </div>
     </div>
 
-    <div class="admin-modal-backdrop" *ngIf="showCreate()" (click)="showCreate.set(false)">
+    <div class="admin-modal-backdrop" *ngIf="showCreate()" (click)="closeCreateModal()">
       <div class="admin-modal admin-modal--link" (click)="$event.stopPropagation()">
-        <h3>New Addon</h3>
-        <label>Name<input [(ngModel)]="createBuffer().addonName" class="admin-input" /></label>
-        <label>Type
-          <select [(ngModel)]="createBuffer().type" class="admin-input">
-            <option value="Trigger">Trigger</option>
-            <option value="Action">Action</option>
-            <option value="Output">Output</option>
-          </select>
-        </label>
-        <label>Description<input [(ngModel)]="createBuffer().addonDescription" class="admin-input" /></label>
-        <label>Monthly Price (R)<input type="number" min="0" step="0.01" [(ngModel)]="createBuffer().monthlyPrice" class="admin-input" /></label>
-        <label>Display Order<input type="number" min="0" step="1" [(ngModel)]="createBuffer().displayOrder" class="admin-input" /></label>
-        <label class="admin-checkbox"><input type="checkbox" [(ngModel)]="createBuffer().isActive" /> Active</label>
-
-        <p class="admin-modal-hint">Linked services</p>
-        <div class="admin-multiselect">
-          <label class="admin-multiselect-item" *ngFor="let service of services()">
-            <input type="checkbox" [checked]="isCreateServiceSelected(service.serviceId)" (change)="toggleCreateService(service.serviceId)" />
-            <span>{{ service.serviceName }}</span>
-            <span class="admin-multiselect-price">R{{ service.baseCost | number:'1.2-2' }} + R{{ service.tokensCost | number:'1.2-2' }}</span>
+        <div class="admin-modal-scroll">
+          <h3>New Addon</h3>
+          <label>Name<input [(ngModel)]="createBuffer().addonName" class="admin-input" /></label>
+          <label>Type
+            <select [(ngModel)]="createBuffer().type" class="admin-input">
+              <option value="Trigger">Trigger</option>
+              <option value="Action">Action</option>
+              <option value="Output">Output</option>
+            </select>
           </label>
-        </div>
+          <label>Description<input [(ngModel)]="createBuffer().addonDescription" class="admin-input" /></label>
+          <label>Monthly Price (R)<input type="number" min="0" step="0.01" [(ngModel)]="createBuffer().monthlyPrice" class="admin-input" /></label>
+          <label>Display Order<input type="number" min="0" step="1" [(ngModel)]="createBuffer().displayOrder" class="admin-input" /></label>
+          <label class="admin-checkbox"><input type="checkbox" [(ngModel)]="createBuffer().isActive" /> Active</label>
 
-        <p class="admin-modal-hint">Linked integrations</p>
-        <div class="admin-multiselect">
-          <label class="admin-multiselect-item" *ngFor="let integration of integrations()">
-            <input type="checkbox" [checked]="isCreateIntegrationSelected(integration.id)" (change)="toggleCreateIntegration(integration.id)" />
-            <span>{{ integration.name }}</span>
-            <span class="admin-multiselect-price">{{ integration.integrationType }}</span>
-          </label>
-        </div>
+          <p class="admin-modal-hint">Linked services</p>
+          <input
+            class="admin-input admin-modal-search"
+            [ngModel]="createServiceSearch()"
+            (ngModelChange)="createServiceSearch.set($event)"
+            placeholder="Search services"
+          />
+          <div class="admin-multiselect">
+            <label class="admin-multiselect-item" *ngFor="let service of filteredCreateServices()">
+              <input type="checkbox" [checked]="isCreateServiceSelected(service.serviceId)" (change)="toggleCreateService(service.serviceId)" />
+              <span>{{ service.serviceName }}</span>
+              <span class="admin-multiselect-price">R{{ service.baseCost | number:'1.2-2' }} + R{{ service.tokensCost | number:'1.2-2' }}</span>
+            </label>
+            <p class="admin-multiselect-empty" *ngIf="filteredCreateServices().length === 0">No services match your search.</p>
+          </div>
 
-        <div class="admin-modal-actions">
-          <button class="btn-save" [disabled]="saving()" (click)="submitCreate()">{{ saving() ? 'Saving...' : 'Create' }}</button>
-          <button class="btn-cancel" (click)="showCreate.set(false)">Cancel</button>
+          <p class="admin-modal-hint">Linked integrations</p>
+          <input
+            class="admin-input admin-modal-search"
+            [ngModel]="createIntegrationSearch()"
+            (ngModelChange)="createIntegrationSearch.set($event)"
+            placeholder="Search integrations"
+          />
+          <div class="admin-multiselect">
+            <label class="admin-multiselect-item" *ngFor="let integration of filteredCreateIntegrations()">
+              <input type="checkbox" [checked]="isCreateIntegrationSelected(integration.id)" (change)="toggleCreateIntegration(integration.id)" />
+              <span>{{ integration.name }}</span>
+              <span class="admin-multiselect-price">{{ integration.integrationType }}</span>
+            </label>
+            <p class="admin-multiselect-empty" *ngIf="filteredCreateIntegrations().length === 0">No integrations match your search.</p>
+          </div>
+
+          <div class="admin-modal-actions">
+            <button class="btn-save" [disabled]="saving()" (click)="submitCreate()">{{ saving() ? 'Saving...' : 'Create' }}</button>
+            <button class="btn-cancel" (click)="closeCreateModal()">Cancel</button>
+          </div>
         </div>
       </div>
     </div>
@@ -119,32 +135,48 @@
       </div>
     </div>
 
-    <div class="admin-modal-backdrop" *ngIf="showLinkModal()" (click)="showLinkModal.set(false)">
+    <div class="admin-modal-backdrop" *ngIf="showLinkModal()" (click)="closeLinkModal()">
       <div class="admin-modal admin-modal--link" (click)="$event.stopPropagation()">
-        <h3>Link Add-on -> {{ linkTarget()?.addonName }}</h3>
-        <p class="admin-modal-hint">Manage the many-to-many service links and reusable integration definitions for this add-on.</p>
+        <div class="admin-modal-scroll">
+          <h3>Link Add-on -> {{ linkTarget()?.addonName }}</h3>
+          <p class="admin-modal-hint">Manage the many-to-many service links and reusable integration definitions for this add-on.</p>
 
-        <p class="admin-modal-hint">Services</p>
-        <div class="admin-multiselect">
-          <label class="admin-multiselect-item" *ngFor="let service of services()">
-            <input type="checkbox" [checked]="isLinkedService(service.serviceId)" (change)="toggleLinkedService(service.serviceId)" />
-            <span>{{ service.serviceName }}</span>
-            <span class="admin-multiselect-price">R{{ service.baseCost | number:'1.2-2' }} + R{{ service.tokensCost | number:'1.2-2' }}</span>
-          </label>
-        </div>
+          <p class="admin-modal-hint">Services</p>
+          <input
+            class="admin-input admin-modal-search"
+            [ngModel]="linkServiceSearch()"
+            (ngModelChange)="linkServiceSearch.set($event)"
+            placeholder="Search services"
+          />
+          <div class="admin-multiselect">
+            <label class="admin-multiselect-item" *ngFor="let service of filteredLinkedServices()">
+              <input type="checkbox" [checked]="isLinkedService(service.serviceId)" (change)="toggleLinkedService(service.serviceId)" />
+              <span>{{ service.serviceName }}</span>
+              <span class="admin-multiselect-price">R{{ service.baseCost | number:'1.2-2' }} + R{{ service.tokensCost | number:'1.2-2' }}</span>
+            </label>
+            <p class="admin-multiselect-empty" *ngIf="filteredLinkedServices().length === 0">No services match your search.</p>
+          </div>
 
-        <p class="admin-modal-hint">Integrations</p>
-        <div class="admin-multiselect">
-          <label class="admin-multiselect-item" *ngFor="let integration of integrations()">
-            <input type="checkbox" [checked]="isLinkedIntegration(integration.id)" (change)="toggleLinkedIntegration(integration.id)" />
-            <span>{{ integration.name }}</span>
-            <span class="admin-multiselect-price">{{ integration.integrationType }}</span>
-          </label>
-        </div>
+          <p class="admin-modal-hint">Integrations</p>
+          <input
+            class="admin-input admin-modal-search"
+            [ngModel]="linkIntegrationSearch()"
+            (ngModelChange)="linkIntegrationSearch.set($event)"
+            placeholder="Search integrations"
+          />
+          <div class="admin-multiselect">
+            <label class="admin-multiselect-item" *ngFor="let integration of filteredLinkedIntegrations()">
+              <input type="checkbox" [checked]="isLinkedIntegration(integration.id)" (change)="toggleLinkedIntegration(integration.id)" />
+              <span>{{ integration.name }}</span>
+              <span class="admin-multiselect-price">{{ integration.integrationType }}</span>
+            </label>
+            <p class="admin-multiselect-empty" *ngIf="filteredLinkedIntegrations().length === 0">No integrations match your search.</p>
+          </div>
 
-        <div class="admin-modal-actions">
-          <button class="btn-save" [disabled]="linkSaving()" (click)="saveLinks()">{{ linkSaving() ? 'Saving...' : 'Save Links' }}</button>
-          <button class="btn-cancel" (click)="showLinkModal.set(false)">Cancel</button>
+          <div class="admin-modal-actions">
+            <button class="btn-save" [disabled]="linkSaving()" (click)="saveLinks()">{{ linkSaving() ? 'Saving...' : 'Save Links' }}</button>
+            <button class="btn-cancel" (click)="closeLinkModal()">Cancel</button>
+          </div>
         </div>
       </div>
     </div>

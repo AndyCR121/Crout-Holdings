@@ -37,6 +37,8 @@ export class AdminAddonsComponent implements OnInit {
   saving = signal(false);
   deleteConfirmId = signal<number | null>(null);
   showCreate = signal(false);
+  createServiceSearch = signal('');
+  createIntegrationSearch = signal('');
   createBuffer = signal<Partial<IAddon> & { integrationIds?: number[] }>({
     addonName: '',
     addonDescription: '',
@@ -52,6 +54,8 @@ export class AdminAddonsComponent implements OnInit {
 
   showLinkModal = signal(false);
   linkTarget = signal<IAddon | null>(null);
+  linkServiceSearch = signal('');
+  linkIntegrationSearch = signal('');
   linkServiceIds = signal<Set<number>>(new Set());
   linkIntegrationIds = signal<Set<number>>(new Set());
   linkSaving = signal(false);
@@ -127,7 +131,7 @@ export class AdminAddonsComponent implements OnInit {
     }).subscribe({
       next: created => {
         this.items.update(list => [created, ...list]);
-        this.showCreate.set(false);
+        this.closeCreateModal();
         this.saving.set(false);
         this.createBuffer.set({
           addonName: '',
@@ -146,11 +150,30 @@ export class AdminAddonsComponent implements OnInit {
     });
   }
 
+  openCreateModal(): void {
+    this.resetCreateSearch();
+    this.showCreate.set(true);
+  }
+
+  closeCreateModal(): void {
+    this.showCreate.set(false);
+    this.resetCreateSearch();
+  }
+
   openLink(a: IAddon): void {
     this.linkTarget.set(a);
+    this.linkServiceSearch.set('');
+    this.linkIntegrationSearch.set('');
     this.linkServiceIds.set(new Set(a.serviceIds));
     this.linkIntegrationIds.set(new Set((a.integrations ?? []).map(integration => integration.id)));
     this.showLinkModal.set(true);
+  }
+
+  closeLinkModal(): void {
+    this.showLinkModal.set(false);
+    this.linkTarget.set(null);
+    this.linkServiceSearch.set('');
+    this.linkIntegrationSearch.set('');
   }
 
   getServiceName(id: number | null): string {
@@ -188,6 +211,14 @@ export class AdminAddonsComponent implements OnInit {
     return (this.createBuffer().integrationIds ?? []).includes(integrationId);
   }
 
+  filteredCreateServices(): IService[] {
+    return this.filterServices(this.createServiceSearch());
+  }
+
+  filteredCreateIntegrations(): IIntegrationDefinition[] {
+    return this.filterIntegrations(this.createIntegrationSearch());
+  }
+
   toggleLinkedService(serviceId: number): void {
     const next = new Set(this.linkServiceIds());
     next.has(serviceId) ? next.delete(serviceId) : next.add(serviceId);
@@ -208,6 +239,14 @@ export class AdminAddonsComponent implements OnInit {
     return this.linkIntegrationIds().has(integrationId);
   }
 
+  filteredLinkedServices(): IService[] {
+    return this.filterServices(this.linkServiceSearch());
+  }
+
+  filteredLinkedIntegrations(): IIntegrationDefinition[] {
+    return this.filterIntegrations(this.linkIntegrationSearch());
+  }
+
   saveLinks(): void {
     const addon = this.linkTarget();
     if (!addon) return;
@@ -219,7 +258,7 @@ export class AdminAddonsComponent implements OnInit {
     ]).subscribe({
       next: () => {
         this.linkSaving.set(false);
-        this.showLinkModal.set(false);
+        this.closeLinkModal();
         this.load();
       },
       error: () => {
@@ -227,5 +266,28 @@ export class AdminAddonsComponent implements OnInit {
         this.linkSaving.set(false);
       }
     });
+  }
+
+  private resetCreateSearch(): void {
+    this.createServiceSearch.set('');
+    this.createIntegrationSearch.set('');
+  }
+
+  private filterServices(search: string): IService[] {
+    const query = search.trim().toLowerCase();
+    if (!query) return this.services();
+
+    return this.services().filter(service =>
+      service.serviceName.toLowerCase().includes(query) ||
+      `${service.baseCost} ${service.tokensCost}`.includes(query));
+  }
+
+  private filterIntegrations(search: string): IIntegrationDefinition[] {
+    const query = search.trim().toLowerCase();
+    if (!query) return this.integrations();
+
+    return this.integrations().filter(integration =>
+      integration.name.toLowerCase().includes(query) ||
+      integration.integrationType.toLowerCase().includes(query));
   }
 }
