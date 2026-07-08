@@ -75,6 +75,14 @@
                             </div>
                           }
                         </div>
+                        <label class="dguide-note-field">
+                          <span>Trigger Notes</span>
+                          <textarea
+                            [ngModel]="integrationNotes().trigger"
+                            (ngModelChange)="updateIntegrationNote('trigger', $event)"
+                            placeholder="Shared notes for trigger setup, client decisions, or implementation context."
+                          ></textarea>
+                        </label>
                       </section>
 
                       <section>
@@ -91,6 +99,14 @@
                             </div>
                           }
                         </div>
+                        <label class="dguide-note-field">
+                          <span>Action Notes</span>
+                          <textarea
+                            [ngModel]="integrationNotes().action"
+                            (ngModelChange)="updateIntegrationNote('action', $event)"
+                            placeholder="Shared notes for action setup, client decisions, or implementation context."
+                          ></textarea>
+                        </label>
                       </section>
 
                       <section>
@@ -107,6 +123,14 @@
                             </div>
                           }
                         </div>
+                        <label class="dguide-note-field">
+                          <span>Output Notes</span>
+                          <textarea
+                            [ngModel]="integrationNotes().output"
+                            (ngModelChange)="updateIntegrationNote('output', $event)"
+                            placeholder="Shared notes for output setup, client decisions, or implementation context."
+                          ></textarea>
+                        </label>
                       </section>
 
                       @if (!hasAnyAddonOptions()) {
@@ -158,6 +182,9 @@
                 } @else {
                   <p>No trigger data captured.</p>
                 }
+                @if (integrationNotes().trigger) {
+                  <p class="dguide-note-copy">{{ integrationNotes().trigger }}</p>
+                }
               </div>
               <div class="dguide-chip-block">
                 <h3>Actions</h3>
@@ -170,6 +197,9 @@
                 } @else {
                   <p>No action data captured.</p>
                 }
+                @if (integrationNotes().action) {
+                  <p class="dguide-note-copy">{{ integrationNotes().action }}</p>
+                }
               </div>
               <div class="dguide-chip-block">
                 <h3>Outputs</h3>
@@ -181,6 +211,9 @@
                   </div>
                 } @else {
                   <p>No output data captured.</p>
+                }
+                @if (integrationNotes().output) {
+                  <p class="dguide-note-copy">{{ integrationNotes().output }}</p>
                 }
               </div>
             </section>

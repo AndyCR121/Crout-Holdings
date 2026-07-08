@@ -53,6 +53,11 @@ export class DevServiceGuideComponent implements OnInit {
   readonly integrationEditorOpen = signal(true);
   readonly userServiceId = signal<number | null>(null);
   readonly availableSelections = signal<WorkflowAddonSelection[]>([]);
+  readonly integrationNotes = signal<{ trigger: string; action: string; output: string }>({
+    trigger: '',
+    action: '',
+    output: '',
+  });
   selectedAddonIds: number[] = [];
 
   readonly steps: GuideStep[] = [
@@ -149,6 +154,10 @@ export class DevServiceGuideComponent implements OnInit {
     return this.selectedAddonIds.includes(addonId);
   }
 
+  updateIntegrationNote(role: 'trigger' | 'action' | 'output', value: string): void {
+    this.integrationNotes.update(notes => ({ ...notes, [role]: value }));
+  }
+
   saveIntegrationConfirmation(): void {
     const userServiceId = this.userServiceId();
     if (userServiceId === null) return;
@@ -158,11 +167,15 @@ export class DevServiceGuideComponent implements OnInit {
     }
 
     const selected = this.availableSelections().filter(item => this.selectedAddonIds.includes(item.addonId));
+    const notes = this.integrationNotes();
     this.savingIntegrations.set(true);
     this.dev.updateGuideIntegrations(userServiceId, {
       trigger: selected.filter(item => item.type === 'Trigger').map(item => item.name),
       action: selected.filter(item => item.type === 'Action').map(item => item.name),
       output: selected.filter(item => item.type === 'Output').map(item => item.name),
+      triggerNotes: notes.trigger.trim() || undefined,
+      actionNotes: notes.action.trim() || undefined,
+      outputNotes: notes.output.trim() || undefined,
     }).subscribe({
       next: guide => {
         this.guide.set(guide);
@@ -274,6 +287,7 @@ export class DevServiceGuideComponent implements OnInit {
     const uniqueSelections = selections.filter((item, index, all) =>
       all.findIndex(candidate => candidate.addonId === item.addonId) === index);
     this.availableSelections.set(uniqueSelections);
+    this.integrationNotes.set(this.parseNotes(this.guide()?.config));
     this.selectedAddonIds = uniqueSelections.filter(item => item.confirmed).map(item => item.addonId);
     if (!this.selectedAddonIds.length) {
       this.selectedAddonIds = uniqueSelections.filter(item => item.isActive).map(item => item.addonId);
@@ -314,6 +328,24 @@ export class DevServiceGuideComponent implements OnInit {
         .filter(item => item.addonId > 0 && item.name.length > 0 && item.isActive);
     } catch {
       return [];
+    }
+  }
+
+  private parseNotes(config?: string | null): { trigger: string; action: string; output: string } {
+    if (!config?.trim()) {
+      return { trigger: '', action: '', output: '' };
+    }
+
+    try {
+      const parsed = JSON.parse(config) as Record<string, unknown>;
+      const notes = (parsed['notes'] ?? null) as Record<string, unknown> | null;
+      return {
+        trigger: typeof notes?.['trigger'] === 'string' ? notes['trigger'].trim() : '',
+        action: typeof notes?.['action'] === 'string' ? notes['action'].trim() : '',
+        output: typeof notes?.['output'] === 'string' ? notes['output'].trim() : '',
+      };
+    } catch {
+      return { trigger: '', action: '', output: '' };
     }
   }
 
