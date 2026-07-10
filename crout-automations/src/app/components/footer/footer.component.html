@@ -72,7 +72,7 @@
           Services
         </h4>
         <ul class="ca-footer-list" role="list">
-          <li *ngFor="let svc of services">
+          <li *ngFor="let svc of services()">
             <a [routerLink]="svc.route" class="ca-footer-link">
               <span class="ca-footer-link-arrow" aria-hidden="true">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>

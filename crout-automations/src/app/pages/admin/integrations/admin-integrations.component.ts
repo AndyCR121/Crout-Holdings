@@ -28,9 +28,12 @@ export class AdminIntegrationsComponent implements OnInit {
   readonly addons = signal<IAddon[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
+  readonly searchTerm = signal('');
   readonly editingIntegrationId = signal<number | null>(null);
   readonly showCreate = signal(false);
   readonly saving = signal(false);
+  readonly page = signal(1);
+  readonly pageSize = 10;
   readonly integrationTypeOptions = ['Trigger', 'Action', 'Output'] as const;
 
   integrationDraft: Partial<IIntegrationDefinition> = { name: '', integrationType: 'Action', hasCredentials: false, isActive: true };
@@ -46,6 +49,31 @@ export class AdminIntegrationsComponent implements OnInit {
     }
     return map;
   });
+
+  readonly filteredIntegrations = computed(() => {
+    const query = this.searchTerm().trim().toLowerCase();
+    if (!query) return this.integrations();
+
+    return this.integrations().filter(integration => {
+      const addonNames = this.addonNamesByIntegration().get(integration.id)?.join(' ') ?? '';
+      return [
+        integration.name,
+        integration.integrationType,
+        integration.description ?? '',
+        integration.hasCredentials ? 'yes' : 'no',
+        integration.isActive ? 'yes' : 'no',
+        addonNames,
+      ].some(value => value.toLowerCase().includes(query));
+    });
+  });
+
+  readonly pagedIntegrations = computed(() => {
+    const start = (this.page() - 1) * this.pageSize;
+    return this.filteredIntegrations().slice(start, start + this.pageSize);
+  });
+
+  readonly totalPages = computed(() => Math.max(1, Math.ceil(this.filteredIntegrations().length / this.pageSize)));
+  readonly hasMore = computed(() => this.page() < this.totalPages());
 
   ngOnInit(): void {
     const user = this.auth.currentUser();
@@ -65,6 +93,7 @@ export class AdminIntegrationsComponent implements OnInit {
     this.integrationsApi.getAdminIntegrationDefinitions(false).subscribe({
       next: integrations => {
         this.integrations.set(integrations);
+        this.page.set(1);
         this.admin.getAddons(1, 200).subscribe({
           next: (addons: PagedResult<IAddon>) => {
             this.addons.set(addons.items);
@@ -136,6 +165,23 @@ export class AdminIntegrationsComponent implements OnInit {
       next: () => this.reload(),
       error: err => this.error.set(err?.error?.error ?? 'Failed to delete integration definition.')
     });
+  }
+
+  updateSearch(term: string): void {
+    this.searchTerm.set(term);
+    this.page.set(1);
+  }
+
+  prevPage(): void {
+    if (this.page() > 1) {
+      this.page.update(page => page - 1);
+    }
+  }
+
+  nextPage(): void {
+    if (this.hasMore()) {
+      this.page.update(page => page + 1);
+    }
   }
 
   openCredentialBuilder(): void {

@@ -26,6 +26,17 @@
   margin-bottom:   24px;
 }
 
+.admin-page-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.admin-page-search {
+  width: min(280px, 100%);
+}
+
 .admin-page-title {
   font-size:   22px;
   font-weight: 700;
@@ -324,6 +335,7 @@
   }
 
   .admin-page-header,
+  .admin-page-actions,
   .admin-modal-actions,
   .admin-pagination {
     align-items: stretch;

@@ -1,7 +1,16 @@
 <div class="admin-page">
       <div class="admin-page-header">
         <h1 class="admin-page-title">Integrations</h1>
-        <button class="btn-create" (click)="openCreateIntegration()">+ New Integration</button>
+        <div class="admin-page-actions">
+          <input
+            class="admin-input admin-page-search"
+            [ngModel]="searchTerm()"
+            (ngModelChange)="updateSearch($event)"
+            placeholder="Search integrations"
+            aria-label="Search integrations"
+          />
+          <button class="btn-create" (click)="openCreateIntegration()">+ New Integration</button>
+        </div>
       </div>
 
       <div *ngIf="error()" class="admin-error">{{ error() }}</div>
@@ -14,7 +23,7 @@
         <table class="admin-table">
           <thead><tr><th>Name</th><th>Type</th><th>Credentials</th><th>Active</th><th>Linked Add-ons</th><th>Actions</th></tr></thead>
           <tbody>
-            <tr *ngFor="let integration of integrations()">
+            <tr *ngFor="let integration of pagedIntegrations()">
               <td>{{ integration.name }}</td>
               <td>{{ integration.integrationType }}</td>
               <td>{{ integration.hasCredentials ? 'Yes' : 'No' }}</td>
@@ -25,8 +34,20 @@
                 <button class="btn-delete" (click)="deleteIntegration(integration.id)">Delete</button>
               </td>
             </tr>
+            <tr *ngIf="pagedIntegrations().length === 0">
+              <td colspan="6" class="admin-empty">No integrations found.</td>
+            </tr>
           </tbody>
         </table>
+      </div>
+      <div *ngIf="!loading()" class="admin-pagination">
+        <button class="btn-page" [disabled]="page() === 1" (click)="prevPage()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Prev
+        </button>
+        <span>Page {{ page() }} of {{ totalPages() }}</span>
+        <button class="btn-page" [disabled]="!hasMore()" (click)="nextPage()">
+          Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
       </div>
     </div>
 
