@@ -1,42 +1,131 @@
-# Crout Holdings — Scoped Codex Operating Rules
+# Crout-Holdings Codex Operating Guide
 
-## Required reading and execution order
-1. Read `.codex/layer-1/Project.md`.
-2. Read the Layer 2 map(s) relevant to the task: `Architecture.md` plus `Frontend.md` and/or `API.md`.
-3. Read `.codex/layer-3/Notes.md`.
-4. Establish an explicit initial search scope from those files and the task.
-5. For any non-trivial, unfamiliar, cross-file, feature, bug-investigation task, or layer 3 notes updates, use the read-only `context_mapper` subagent with `gpt-5.4-mini` when available. Give it only the initial scope, wait for its report, then implement with `gpt-5.4`.
+## Mandatory first step
 
-Skip the mapper only for a trivial, obvious, isolated single-file edit. State why in the final report.
+Read and follow `.codex/AGENTS.md` first.
 
-## Scope discipline
-- Primary workspaces are `crout-automations/` and `crout-automations-api/CroutApi/`.
-- Ignore all other repository areas unless the task provides evidence they are required.
-- Do not scan the whole repository by default.
-- Start at the relevant route/controller, then trace one layer at a time into component/service/model or controller/service/repository/model.
-- Expand scope only when evidence requires it. Before expanding, state the reason and the new boundary.
-- Exclude by default: `node_modules/`, `dist/`, `bin/`, `obj/`, coverage output, generated files, lock files, binaries, screenshots, and migrations unless directly relevant.
+Before changing anything, read:
 
-## Change rules
-- Implement with `gpt-5.4`.
-- Make the smallest safe change consistent with existing local patterns.
-- Avoid broad refactors, unrelated formatting, dependency upgrades, generated-file changes, and configuration rewrites.
-- Preserve Angular standalone/lazy-route conventions and ASP.NET controller/service/repository separation where currently used.
-- Never expose, log, hard-code, or replace secrets. Treat JWT, HMAC, Paystack, database, and allowed-origin configuration as security-sensitive.
-- Do not modify CORS/authentication behavior, payment behavior, or role guards without tracing the full request path and validating the impact.
+1. `.codex/layer-1/Project.md`
+2. `.codex/layer-2/Architecture.md`
+3. `.codex/layer-3/Notes.md`
 
-## Validation
-Run or recommend only the narrowest relevant confirmed validation:
-- Frontend: from `crout-automations/`, `npm run build`, `npm test`, or `npm run build:elements` when the change concerns web components/elements.
-- API: from `crout-automations-api/CroutApi/`, use the smallest applicable `dotnet` build/test command after confirming the solution/project layout and test availability.
-- Do not claim validation passed unless it was actually run successfully.
+Treat confirmed facts as authoritative only within the evidence recorded there. Treat likely or unknown items as hypotheses requiring verification.
 
-## Final response format
-End every task with:
-- changed files;
-- behavior changed;
-- validation run/recommended and result;
-- mapper use or explicit skip reason;
-- search-scope expansions and why;
-- risks/unknowns;
-- proposed dated entry for `.codex/layer-3/Notes.md`.
+## Repository focus
+
+The primary working boundary is:
+
+- `crout-automations/`
+- `crout-automations-api/`
+
+Do not scan or modify other repository areas unless the task directly names them or evidence from the primary boundary proves expansion is necessary.
+
+Exclude by default:
+
+- `.git/`
+- `.codex/`
+- `node_modules/`
+- `dist/`, `build/`, `bin/`, `obj/`
+- coverage, caches and generated output
+- lock files unless dependency resolution is relevant
+- SQL migrations unless persistence/schema work is relevant
+- unrelated applications or legacy deployment assets
+
+## Required workflow
+
+For every task:
+
+1. Define explicit acceptance criteria.
+2. Define the narrow initial search scope.
+3. Run `context_mapper` before non-trivial work and wait for its mapping.
+4. Skip mapping only for a trivial isolated edit; state why.
+5. Implement with the Main Implementer model, **5.6 Terra**.
+6. Reuse existing helpers, services, repositories, components, guards, models, abstractions and established architecture.
+7. Make the smallest safe change.
+8. Run focused validation.
+9. Run `code_reviewer` using **5.6 Luna**.
+10. Resolve valid findings.
+11. Re-run affected validation.
+12. Update `.codex/layer-3/Notes.md` with concise, durable, evidence-backed knowledge.
+13. Return the required final report.
+
+Agent depth is 1. Subagents must not create additional agents.
+
+## Search discipline
+
+Start with only high-value sources relevant to the task:
+
+- root tree for the two primary applications
+- manifests and workspace configuration
+- startup/entry files
+- Angular routes, guards and app configuration
+- ASP.NET controllers and DI registration
+- relevant services, repositories, models and helpers
+- configuration and environment handling
+- persistence and SQL only when relevant
+- focused tests
+- Docker/CI only when deployment or validation is relevant
+- existing architecture documentation
+
+Search for an existing shared implementation before creating anything new.
+
+Avoid broad repository scans, unrelated refactors, formatting-only edits, unnecessary dependency upgrades, duplicate helpers and speculative architecture changes.
+
+Expand search scope only when evidence requires it. Record the reason, evidence, previous boundary and new boundary.
+
+## Implementation rules
+
+- Preserve Angular standalone and lazy-loaded route patterns.
+- Preserve ASP.NET controller/service/repository separation where present.
+- Keep authentication, authorization and environment-secret handling consistent with existing patterns.
+- Do not expose secrets, connection strings, tokens or credentials.
+- Do not silently weaken guards, role checks, sanitization, validation or production error handling.
+- Prefer targeted changes over rewrites.
+- Do not replace the numbered SQL migration system.
+- Schema and persistence work must protect production data and remain reviewable.
+- Keep frontend/API contracts synchronized when either side changes.
+- Do not modify Git state unless the user explicitly asks.
+
+## Validation policy
+
+Prefer targeted validation.
+
+Frontend, subject to repository verification:
+
+```bash
+cd crout-automations
+npm test -- --watch=false
+npm run build
+```
+
+API, subject to repository verification:
+
+```bash
+dotnet build crout-automations-api/CroutApi/CroutApi.csproj
+dotnet test
+```
+
+Broaden validation only when changing shared libraries, contracts, startup, routing, persistence, schema, DI or build configuration.
+
+## Review policy
+
+Run `code_reviewer` after application-code changes. Review may be skipped only when no application code changed, agents are unavailable, or review is explicitly disabled. State the reason.
+
+## Layer 3 policy
+
+`context_mapper` may write only to `.codex/layer-3/`.
+
+Layer 3 entries must be concise, reusable, evidence-backed, free of secrets and free of temporary task chatter.
+
+## Required final report
+
+### Summary
+### Changed files
+### Behaviour changes
+### Patterns reused
+### Validation
+### Review findings
+### Scope expansions
+### Layer 3 updates
+### Risks

@@ -1,4 +1,11 @@
-[agents]
-max_threads = 2
-max_depth = 1
-job_max_runtime_seconds = 900
+# Minimal repository-local Codex configuration.
+# Model names are preserved exactly for verification if installed identifiers differ.
+
+model = "5.6 Terra"
+agent_depth = 1
+
+[agents.context_mapper]
+config_file = "agents/context-mapper-agent.toml"
+
+[agents.code_reviewer]
+config_file = "agents/code-reviewer-agent.toml"
