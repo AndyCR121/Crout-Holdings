@@ -15,6 +15,22 @@ public class IntegrationLifecycleResponseDto
     public IntegrationSummaryDto Integration { get; set; } = new();
 }
 
+public class IntegrationStatusDto
+{
+    public int UserServiceId { get; set; }
+    public string LifecycleStatus { get; set; } = Models.IntegrationStatuses.Development;
+    public string PublicationStatus { get; set; } = "Unknown";
+    public string CredentialStatus { get; set; } = "NotRequired";
+    public string AccessStatus { get; set; } = "Unknown";
+    public string StatusSource { get; set; } = "DatabaseFallback";
+    public bool WorkflowExists { get; set; }
+    public bool? WorkflowActive { get; set; }
+    public bool? ExpectedTagsPresent { get; set; }
+    public bool HasMismatch { get; set; }
+    public string? WorkflowId { get; set; }
+    public string? Message { get; set; }
+}
+
 public class UserServiceIntegrationContextDto
 {
     public int UserServiceId { get; set; }
@@ -23,4 +39,6 @@ public class UserServiceIntegrationContextDto
     public int ServiceId { get; set; }
     public string ServiceName { get; set; } = string.Empty;
     public string? Config { get; set; }
+    public int? AssignedDeveloperUserId { get; set; }
+    public string? AssignedDeveloperName { get; set; }
 }

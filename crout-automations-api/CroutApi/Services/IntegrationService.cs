@@ -12,215 +12,198 @@ public class IntegrationService(
     IIntegrationRepository integrations,
     IUserServiceRepository userServices,
     IN8nWorkflowClient workflowClient,
+    N8nTemplateWorkflowService templates,
+    IIntegrationDefinitionRepository integrationDefinitions,
+    IUserServiceCredentialRepository credentials,
     DbHelper db) : IIntegrationService
 {
     public async Task<IntegrationSummaryDto> EnsureProvisionedAsync(int userServiceId, CancellationToken cancellationToken = default)
     {
-        var lockName = $"integration:{userServiceId}:provision";
-        await using var integrationLock = await AcquireLockAsync(lockName, cancellationToken);
-        var existing = await integrations.GetByUserServiceIdAsync(userServiceId);
-        if (existing?.WorkflowId is { Length: > 0 })
-        {
-            return ToSummary(existing);
-        }
-
+        await using var integrationLock = await AcquireLockAsync($"integration:{userServiceId}:provision", cancellationToken);
         var context = await userServices.GetIntegrationContextAsync(userServiceId)
             ?? throw new KeyNotFoundException("Client service not found.");
+        var integration = await EnsurePlaceholderAsync(context);
 
-        if (existing is null)
-        {
-            var placeholder = new Integration
-            {
-                UserServiceId = userServiceId,
-                CompanyId = context.CompanyId,
-                WorkflowName = BuildWorkflowName(context),
-                Status = IntegrationStatuses.Development
-            };
+        if (!string.IsNullOrWhiteSpace(integration.WorkflowId))
+            return await SynchronizeExistingWorkflowAsync(integration, context, cancellationToken);
 
-            var created = await integrations.TryCreatePlaceholderAsync(placeholder);
-            existing = created ? await integrations.GetByUserServiceIdAsync(userServiceId) : await integrations.GetByUserServiceIdAsync(userServiceId);
-        }
+        var template = await templates.ResolveAsync(integration, context, cancellationToken);
+        var clonedWorkflow = templates.Clone(template, integration, context);
+        var createdWorkflow = await workflowClient.CreateWorkflowAsync(clonedWorkflow.Name, clonedWorkflow, cancellationToken);
+        if (string.IsNullOrWhiteSpace(createdWorkflow.Id))
+            throw new InvalidOperationException("n8n did not return an ID for the created workflow.");
 
-        if (existing is null)
-            throw new InvalidOperationException("Integration placeholder could not be created.");
+        await integrations.UpdateProvisioningAsync(
+            integration.IntegrationId,
+            createdWorkflow.Id,
+            JsonSerializer.Serialize(createdWorkflow),
+            integration.NodeMappingsJson,
+            template.WorkflowId,
+            template.ServiceTag,
+            template.Version,
+            template.SnapshotHash,
+            template.ResolvedAt);
 
-        if (!string.IsNullOrWhiteSpace(existing.WorkflowId))
-            return ToSummary(existing);
-
-        var nodeMappingsJson = BuildNodeMappingsJson(context.Config, existing.NodeMappingsJson);
-        var workflow = BuildWorkflow(existing.WorkflowName, context.Config, nodeMappingsJson);
-        var createdWorkflow = await workflowClient.CreateWorkflowAsync(existing.WorkflowName, workflow, cancellationToken);
-        var workflowDefinitionJson = JsonSerializer.Serialize(workflow);
-        await integrations.UpdateProvisioningAsync(existing.IntegrationId, createdWorkflow.Id ?? $"mock-{userServiceId}", workflowDefinitionJson, nodeMappingsJson);
-
-        existing = await integrations.GetByUserServiceIdAsync(userServiceId)
-            ?? throw new InvalidOperationException("Integration provisioning result could not be reloaded.");
-        return ToSummary(existing);
+        return ToSummary(await ReloadAsync(userServiceId));
     }
 
     public async Task<IntegrationSummaryDto> SynchronizeAsync(int userServiceId, CancellationToken cancellationToken = default)
     {
-        var provisioned = await EnsureProvisionedAsync(userServiceId, cancellationToken);
-        var integration = await integrations.GetByUserServiceIdAsync(userServiceId)
-            ?? throw new KeyNotFoundException("Integration not found.");
+        await using var integrationLock = await AcquireLockAsync($"integration:{userServiceId}:sync", cancellationToken);
         var context = await userServices.GetIntegrationContextAsync(userServiceId)
             ?? throw new KeyNotFoundException("Client service not found.");
+        var integration = await EnsurePlaceholderAsync(context);
+        if (string.IsNullOrWhiteSpace(integration.WorkflowId))
+            return await EnsureProvisionedAsync(userServiceId, cancellationToken);
+        return await SynchronizeExistingWorkflowAsync(integration, context, cancellationToken);
+    }
 
-        var nodeMappingsJson = BuildNodeMappingsJson(context.Config, integration.NodeMappingsJson);
-        var workflow = BuildWorkflow(integration.WorkflowName, context.Config, nodeMappingsJson);
-        var updated = await workflowClient.UpdateWorkflowAsync(integration.WorkflowId!, workflow, cancellationToken);
-        await integrations.UpdateWorkflowStateAsync(
-            integration.IntegrationId,
-            integration.Status,
-            null,
-            integration.PublishedBy,
-            integration.PublishedDate,
-            integration.PausedBy,
-            integration.PausedDate,
-            JsonSerializer.Serialize(workflow),
-            nodeMappingsJson);
+    public async Task<IntegrationStatusDto> GetStatusAsync(int userServiceId, CancellationToken cancellationToken = default)
+    {
+        var integration = await integrations.GetByUserServiceIdAsync(userServiceId);
+        if (integration is null)
+            return new IntegrationStatusDto { UserServiceId = userServiceId, LifecycleStatus = "PendingConfirmation", Message = "Integration has not been provisioned." };
 
-        integration = await integrations.GetByUserServiceIdAsync(userServiceId)
-            ?? throw new KeyNotFoundException("Integration not found.");
-        integration.WorkflowId = updated.Id ?? integration.WorkflowId;
-        integration.LastError = null;
-        return ToSummary(integration);
+        var result = new IntegrationStatusDto
+        {
+            UserServiceId = userServiceId,
+            LifecycleStatus = integration.Status,
+            CredentialStatus = await GetCredentialStatusAsync(userServiceId),
+            WorkflowId = integration.WorkflowId,
+            WorkflowExists = !string.IsNullOrWhiteSpace(integration.WorkflowId)
+        };
+        if (string.IsNullOrWhiteSpace(integration.WorkflowId)) return result;
+
+        try
+        {
+            var remote = await workflowClient.GetWorkflowAsync(integration.WorkflowId, cancellationToken);
+            if (remote is null)
+            {
+                result.WorkflowExists = false;
+                result.PublicationStatus = "Missing";
+                result.StatusSource = "N8n";
+                result.HasMismatch = true;
+                result.Message = "The n8n workflow no longer exists and was not recreated automatically.";
+                return result;
+            }
+
+            var context = await userServices.GetIntegrationContextAsync(userServiceId) ?? throw new KeyNotFoundException("Client service not found.");
+            result.StatusSource = "N8n";
+            result.WorkflowActive = remote.Active;
+            result.PublicationStatus = remote.Active ? "Published" : "Unpublished";
+            result.ExpectedTagsPresent = N8nTemplateWorkflowService.HasExpectedClientTags(remote, context);
+            result.HasMismatch = (!result.ExpectedTagsPresent.Value)
+                || !N8nTemplateWorkflowService.HasManagedNotesNode(remote)
+                || (remote.Active && integration.Status != IntegrationStatuses.Live);
+            return result;
+        }
+        catch (Exception)
+        {
+            result.StatusSource = "DatabaseFallback";
+            result.PublicationStatus = "Unknown";
+            result.Message = "n8n is currently unavailable; the database lifecycle status is shown.";
+            return result;
+        }
     }
 
     public async Task<IntegrationSummaryDto> PublishAsync(int userServiceId, int callerUserId, CancellationToken cancellationToken = default)
     {
-        var lockName = $"integration:{userServiceId}:publish";
-        await using var integrationLock = await AcquireLockAsync(lockName, cancellationToken);
+        await using var integrationLock = await AcquireLockAsync($"integration:{userServiceId}:publish", cancellationToken);
         var context = await userServices.GetIntegrationContextAsync(userServiceId)
             ?? throw new KeyNotFoundException("Client service not found.");
         ValidatePublishable(context.Config);
-
-        await SynchronizeAsync(userServiceId, cancellationToken);
-        var integration = await integrations.GetByUserServiceIdAsync(userServiceId)
-            ?? throw new KeyNotFoundException("Integration not found.");
+        await EnsureProvisionedAsync(userServiceId, cancellationToken);
+        var current = await integrations.GetByUserServiceIdAsync(userServiceId) ?? throw new KeyNotFoundException("Integration not found.");
 
         try
         {
-            await workflowClient.ActivateWorkflowAsync(integration.WorkflowId!, cancellationToken);
-            await integrations.UpdateWorkflowStateAsync(
-                integration.IntegrationId,
-                IntegrationStatuses.Live,
-                null,
-                callerUserId,
-                DateTime.UtcNow,
-                null,
-                null,
-                null,
-                BuildNodeMappingsJson(context.Config, integration.NodeMappingsJson));
+            await ValidatePublicationPreflightAsync(current, context, cancellationToken);
+            await workflowClient.ActivateWorkflowAsync(current.WorkflowId!, cancellationToken);
+            var verified = await workflowClient.GetWorkflowAsync(current.WorkflowId!, cancellationToken);
+            if (verified is not { Active: true }) throw new InvalidOperationException("n8n did not confirm workflow activation.");
+            await integrations.UpdateWorkflowStateAsync(current.IntegrationId, IntegrationStatuses.Live, null, callerUserId, DateTime.UtcNow, null, null, null, current.NodeMappingsJson);
         }
         catch (Exception ex)
         {
-            await integrations.UpdateWorkflowStateAsync(
-                integration.IntegrationId,
-                IntegrationStatuses.Failed,
-                ex.Message,
-                integration.PublishedBy,
-                integration.PublishedDate,
-                integration.PausedBy,
-                integration.PausedDate,
-                null,
-                BuildNodeMappingsJson(context.Config, integration.NodeMappingsJson));
-            throw new InvalidOperationException($"Integration publish failed: {ex.Message}");
+            await integrations.UpdateWorkflowStateAsync(current.IntegrationId, IntegrationStatuses.Failed, Redact(ex), current.PublishedBy, current.PublishedDate, current.PausedBy, current.PausedDate, null, current.NodeMappingsJson);
+            throw new InvalidOperationException("Integration publish failed. Review the integration status and retry.");
         }
 
-        integration = await integrations.GetByUserServiceIdAsync(userServiceId)
-            ?? throw new KeyNotFoundException("Integration not found.");
-        return ToSummary(integration);
+        return ToSummary(await ReloadAsync(userServiceId));
     }
 
     public async Task<IntegrationSummaryDto> PauseAsync(int userServiceId, int callerUserId, CancellationToken cancellationToken = default)
     {
-        var lockName = $"integration:{userServiceId}:pause";
-        await using var integrationLock = await AcquireLockAsync(lockName, cancellationToken);
-        var integration = await integrations.GetByUserServiceIdAsync(userServiceId)
-            ?? throw new KeyNotFoundException("Integration not found.");
-        if (string.IsNullOrWhiteSpace(integration.WorkflowId))
-            throw new InvalidOperationException("Integration workflow has not been provisioned.");
-
+        await using var integrationLock = await AcquireLockAsync($"integration:{userServiceId}:pause", cancellationToken);
+        var integration = await RequireWorkflowAsync(userServiceId);
         try
         {
-            await workflowClient.DeactivateWorkflowAsync(integration.WorkflowId, cancellationToken);
-            await integrations.UpdateWorkflowStateAsync(
-                integration.IntegrationId,
-                IntegrationStatuses.Paused,
-                null,
-                integration.PublishedBy,
-                integration.PublishedDate,
-                callerUserId,
-                DateTime.UtcNow,
-                null,
-                integration.NodeMappingsJson);
+            await workflowClient.DeactivateWorkflowAsync(integration.WorkflowId!, cancellationToken);
+            var verified = await workflowClient.GetWorkflowAsync(integration.WorkflowId!, cancellationToken);
+            if (verified is not { Active: false }) throw new InvalidOperationException("n8n did not confirm workflow deactivation.");
+            await integrations.UpdateWorkflowStateAsync(integration.IntegrationId, IntegrationStatuses.Paused, null, integration.PublishedBy, integration.PublishedDate, callerUserId, DateTime.UtcNow, null, integration.NodeMappingsJson);
         }
         catch (Exception ex)
         {
-            await integrations.UpdateWorkflowStateAsync(
-                integration.IntegrationId,
-                IntegrationStatuses.Failed,
-                ex.Message,
-                integration.PublishedBy,
-                integration.PublishedDate,
-                integration.PausedBy,
-                integration.PausedDate,
-                null,
-                integration.NodeMappingsJson);
-            throw new InvalidOperationException($"Integration pause failed: {ex.Message}");
+            await integrations.UpdateWorkflowStateAsync(integration.IntegrationId, IntegrationStatuses.Failed, Redact(ex), integration.PublishedBy, integration.PublishedDate, integration.PausedBy, integration.PausedDate, null, integration.NodeMappingsJson);
+            throw new InvalidOperationException("Integration pause failed. Review the integration status and retry.");
         }
-
-        integration = await integrations.GetByUserServiceIdAsync(userServiceId)
-            ?? throw new KeyNotFoundException("Integration not found.");
-        return ToSummary(integration);
+        return ToSummary(await ReloadAsync(userServiceId));
     }
 
     public async Task<IntegrationSummaryDto> StartAsync(int userServiceId, int callerUserId, CancellationToken cancellationToken = default)
     {
-        var lockName = $"integration:{userServiceId}:start";
-        await using var integrationLock = await AcquireLockAsync(lockName, cancellationToken);
-        var integration = await integrations.GetByUserServiceIdAsync(userServiceId)
-            ?? throw new KeyNotFoundException("Integration not found.");
-        if (string.IsNullOrWhiteSpace(integration.WorkflowId))
-            throw new InvalidOperationException("Integration workflow has not been provisioned.");
-
+        await using var integrationLock = await AcquireLockAsync($"integration:{userServiceId}:start", cancellationToken);
+        var integration = await RequireWorkflowAsync(userServiceId);
         try
         {
-            await workflowClient.ActivateWorkflowAsync(integration.WorkflowId, cancellationToken);
-            await integrations.UpdateWorkflowStateAsync(
-                integration.IntegrationId,
-                IntegrationStatuses.Live,
-                null,
-                callerUserId,
-                integration.PublishedDate ?? DateTime.UtcNow,
-                null,
-                null,
-                null,
-                integration.NodeMappingsJson);
+            await workflowClient.ActivateWorkflowAsync(integration.WorkflowId!, cancellationToken);
+            var verified = await workflowClient.GetWorkflowAsync(integration.WorkflowId!, cancellationToken);
+            if (verified is not { Active: true }) throw new InvalidOperationException("n8n did not confirm workflow activation.");
+            await integrations.UpdateWorkflowStateAsync(integration.IntegrationId, IntegrationStatuses.Live, null, callerUserId, integration.PublishedDate ?? DateTime.UtcNow, null, null, null, integration.NodeMappingsJson);
         }
         catch (Exception ex)
         {
-            await integrations.UpdateWorkflowStateAsync(
-                integration.IntegrationId,
-                IntegrationStatuses.Failed,
-                ex.Message,
-                integration.PublishedBy,
-                integration.PublishedDate,
-                integration.PausedBy,
-                integration.PausedDate,
-                null,
-                integration.NodeMappingsJson);
-            throw new InvalidOperationException($"Integration start failed: {ex.Message}");
+            await integrations.UpdateWorkflowStateAsync(integration.IntegrationId, IntegrationStatuses.Failed, Redact(ex), integration.PublishedBy, integration.PublishedDate, integration.PausedBy, integration.PausedDate, null, integration.NodeMappingsJson);
+            throw new InvalidOperationException("Integration start failed. Review the integration status and retry.");
         }
-
-        integration = await integrations.GetByUserServiceIdAsync(userServiceId)
-            ?? throw new KeyNotFoundException("Integration not found.");
-        return ToSummary(integration);
+        return ToSummary(await ReloadAsync(userServiceId));
     }
 
-    private static string BuildWorkflowName(UserServiceIntegrationContextDto context) =>
-        $"{context.CompanyName} | {context.ServiceName}";
+    private async Task<IntegrationSummaryDto> SynchronizeExistingWorkflowAsync(Integration integration, UserServiceIntegrationContextDto context, CancellationToken cancellationToken)
+    {
+        var remote = await workflowClient.GetWorkflowAsync(integration.WorkflowId!, cancellationToken)
+            ?? throw new InvalidOperationException("The provisioned n8n workflow no longer exists. It will not be recreated automatically.");
+        templates.SynchronizeManagedContent(remote, context);
+        var updated = await workflowClient.UpdateWorkflowAsync(integration.WorkflowId!, remote, cancellationToken);
+        await integrations.UpdateWorkflowStateAsync(integration.IntegrationId, integration.Status, null, integration.PublishedBy, integration.PublishedDate, integration.PausedBy, integration.PausedDate, JsonSerializer.Serialize(updated), integration.NodeMappingsJson);
+        return ToSummary(await ReloadAsync(context.UserServiceId));
+    }
+
+    private async Task<Integration> EnsurePlaceholderAsync(UserServiceIntegrationContextDto context)
+    {
+        var existing = await integrations.GetByUserServiceIdAsync(context.UserServiceId);
+        if (existing is not null) return existing;
+        var created = await integrations.TryCreatePlaceholderAsync(new Integration
+        {
+            UserServiceId = context.UserServiceId,
+            CompanyId = context.CompanyId,
+            WorkflowName = $"{context.CompanyName} | {context.ServiceName}",
+            Status = IntegrationStatuses.Development
+        });
+        return await integrations.GetByUserServiceIdAsync(context.UserServiceId)
+            ?? throw new InvalidOperationException(created ? "Integration placeholder could not be reloaded." : "Integration placeholder could not be created.");
+    }
+
+    private async Task<Integration> RequireWorkflowAsync(int userServiceId)
+    {
+        var integration = await integrations.GetByUserServiceIdAsync(userServiceId) ?? throw new KeyNotFoundException("Integration not found.");
+        if (string.IsNullOrWhiteSpace(integration.WorkflowId)) throw new InvalidOperationException("Integration workflow has not been provisioned.");
+        return integration;
+    }
+
+    private async Task<Integration> ReloadAsync(int userServiceId) =>
+        await integrations.GetByUserServiceIdAsync(userServiceId) ?? throw new KeyNotFoundException("Integration not found.");
 
     private static IntegrationSummaryDto ToSummary(Integration integration) => new()
     {
@@ -233,159 +216,69 @@ public class IntegrationService(
 
     private static void ValidatePublishable(string? configJson)
     {
-        var config = ParseConfig(configJson);
-        var triggerCount = CountArray(config, "trigger");
-        var actionCount = CountArray(config, "action");
-        var outputCount = CountArray(config, "output");
-
-        if (triggerCount == 0 || actionCount == 0 || outputCount == 0)
+        var config = string.IsNullOrWhiteSpace(configJson) ? [] : JsonNode.Parse(configJson) as JsonObject ?? [];
+        if (config["trigger"] is not JsonArray { Count: > 0 } || config["action"] is not JsonArray { Count: > 0 } || config["output"] is not JsonArray { Count: > 0 })
             throw new ArgumentException("Trigger, Action, and Output selections must all be confirmed before publishing.");
     }
 
-    private static int CountArray(JsonObject config, string key) =>
-        config[key] is JsonArray arr ? arr.Count : 0;
-
-    private static N8nWorkflowDocument BuildWorkflow(string workflowName, string? configJson, string? existingNodeMappingsJson)
+    private async Task ValidatePublicationPreflightAsync(Integration integration, UserServiceIntegrationContextDto context, CancellationToken cancellationToken)
     {
-        var config = ParseConfig(configJson);
-        var mappings = ParseNodeMappings(existingNodeMappingsJson);
-        var nodes = new List<object>
-        {
-            new
-            {
-                id = "start-node",
-                name = "Start",
-                type = "n8n-nodes-base.scheduleTrigger",
-                typeVersion = 1,
-                position = new[] { 200, 300 },
-                parameters = new
-                {
-                    rule = new
-                    {
-                        interval = new[] { new { field = "minutes", minutesInterval = 15 } }
-                    }
-                }
-            }
-        };
-        var connections = new Dictionary<string, object[]>();
-        var orderedKeys = new[] { "trigger", "action", "output" };
-        var previousNodeName = "Start";
-        var positionX = 460;
-        var positionY = 180;
-
-        foreach (var category in orderedKeys)
-        {
-            if (config[category] is not JsonArray values) continue;
-            foreach (var value in values.Select(node => node?.GetValue<string>()).Where(value => !string.IsNullOrWhiteSpace(value)))
-            {
-                var nodeName = value!.Trim();
-                var mappingKey = $"{category}:{nodeName}".ToLowerInvariant();
-                if (!mappings.TryGetValue(mappingKey, out var nodeId))
-                {
-                    nodeId = Guid.NewGuid().ToString("N");
-                    mappings[mappingKey] = nodeId;
-                }
-
-                nodes.Add(new
-                {
-                    id = nodeId,
-                    name = $"{category.ToUpperInvariant()}: {nodeName}",
-                    type = "n8n-nodes-base.set",
-                    typeVersion = 3,
-                    position = new[] { positionX, positionY },
-                    parameters = new
-                    {
-                        keepOnlySet = false,
-                        values = new
-                        {
-                            @string = new[]
-                            {
-                                new { name = "category", value = category },
-                                new { name = "name", value = nodeName }
-                            }
-                        }
-                    }
-                });
-
-                connections[previousNodeName] =
-                [
-                    new
-                    {
-                        node = $"{category.ToUpperInvariant()}: {nodeName}",
-                        type = "main",
-                        index = 0
-                    }
-                ];
-                previousNodeName = $"{category.ToUpperInvariant()}: {nodeName}";
-                positionX += 240;
-                if (category == "action") positionY += 120;
-            }
-        }
-
-        return new N8nWorkflowDocument
-        {
-            Name = workflowName,
-            Active = false,
-            Nodes = nodes.ToArray(),
-            Connections = connections,
-            Settings = new Dictionary<string, object?>()
-        };
+        var remote = await workflowClient.GetWorkflowAsync(integration.WorkflowId!, cancellationToken)
+            ?? throw new InvalidOperationException("The n8n workflow no longer exists.");
+        if (!N8nTemplateWorkflowService.HasExpectedClientTags(remote, context))
+            throw new InvalidOperationException("The workflow is missing required Crout-managed tags.");
+        if (!N8nTemplateWorkflowService.HasManagedNotesNode(remote))
+            throw new InvalidOperationException("The workflow is missing the required Crout-managed Notes node.");
+        if (await GetCredentialStatusAsync(context.UserServiceId) is not "NotRequired" and not "Configured")
+            throw new InvalidOperationException("Required integration credentials are incomplete.");
     }
 
-    private static Dictionary<string, string> ParseNodeMappings(string? raw)
+    private async Task<string> GetCredentialStatusAsync(int userServiceId)
     {
-        if (string.IsNullOrWhiteSpace(raw)) return [];
+        var context = await userServices.GetIntegrationContextAsync(userServiceId);
+        if (context is null) return "Unknown";
+        var configuredNames = GetConfirmedIntegrationNames(context.Config);
+        if (configuredNames.Count == 0) return "NotRequired";
+        var definitions = (await integrationDefinitions.GetAllAsync(activeOnly: true))
+            .Where(definition => definition.HasCredentials && configuredNames.Contains(definition.Name))
+            .ToArray();
+        if (definitions.Length == 0) return "NotRequired";
+        var stored = await credentials.GetByUserServiceIdAsync(userServiceId);
+        var configured = definitions.Count(definition => stored.Any(value => value.IntegrationDefinitionId == definition.Id && value.Status == "Configured"));
+        return configured == definitions.Length ? "Configured" : configured == 0 ? "Missing" : "PartiallyConfigured";
+    }
+
+    private static HashSet<string> GetConfirmedIntegrationNames(string? configJson)
+    {
+        if (string.IsNullOrWhiteSpace(configJson)) return new(StringComparer.OrdinalIgnoreCase);
         try
         {
-            return JsonSerializer.Deserialize<Dictionary<string, string>>(raw) ?? [];
+            var config = JsonNode.Parse(configJson) as JsonObject;
+            return (config?["confirmedAddons"] as JsonArray ?? [])
+                .OfType<JsonObject>()
+                .SelectMany(addon => (addon["integrations"] as JsonArray ?? []).OfType<JsonObject>())
+                .Select(integration => integration["integrationName"]?.GetValue<string>())
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Select(name => name!)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
         }
-        catch
+        catch (JsonException)
         {
-            return [];
+            return new(StringComparer.OrdinalIgnoreCase);
         }
     }
 
-    private static string BuildNodeMappingsJson(string? configJson, string? existingNodeMappingsJson)
-    {
-        var config = ParseConfig(configJson);
-        var mapping = ParseNodeMappings(existingNodeMappingsJson);
-        foreach (var key in new[] { "trigger", "action", "output" })
-        {
-            if (config[key] is not JsonArray values) continue;
-            foreach (var value in values.Select(node => node?.GetValue<string>()).Where(value => !string.IsNullOrWhiteSpace(value)))
-            {
-                var mappingKey = $"{key}:{value!.Trim()}";
-                if (!mapping.ContainsKey(mappingKey))
-                    mapping[mappingKey] = Guid.NewGuid().ToString("N");
-            }
-        }
-        return JsonSerializer.Serialize(mapping);
-    }
-
-    private static JsonObject ParseConfig(string? raw)
-    {
-        if (string.IsNullOrWhiteSpace(raw)) return [];
-        try
-        {
-            return JsonNode.Parse(raw) as JsonObject ?? [];
-        }
-        catch
-        {
-            return [];
-        }
-    }
+    private static string Redact(Exception exception) => exception.GetType().Name;
 
     private async Task<IntegrationLock> AcquireLockAsync(string lockName, CancellationToken cancellationToken)
     {
         var conn = db.GetConnection();
         await conn.OpenAsync(cancellationToken);
-        var acquired = await conn.ExecuteScalarAsync<long>("SELECT GET_LOCK(@lockName, 1)", new { lockName });
-        if (acquired != 1)
+        if (await conn.ExecuteScalarAsync<long>("SELECT GET_LOCK(@lockName, 1)", new { lockName }) != 1)
         {
             await conn.DisposeAsync();
             throw new InvalidOperationException("An integration operation is already in progress. Refresh and try again.");
         }
-
         return new IntegrationLock(conn, lockName);
     }
 
@@ -393,14 +286,8 @@ public class IntegrationService(
     {
         public async ValueTask DisposeAsync()
         {
-            try
-            {
-                await connection.ExecuteAsync("SELECT RELEASE_LOCK(@lockName)", new { lockName });
-            }
-            finally
-            {
-                await connection.DisposeAsync();
-            }
+            try { await connection.ExecuteAsync("SELECT RELEASE_LOCK(@lockName)", new { lockName }); }
+            finally { await connection.DisposeAsync(); }
         }
     }
 }

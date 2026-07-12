@@ -7,6 +7,11 @@ public class Integration
     public int CompanyId { get; set; }
     public string? WorkflowId { get; set; }
     public string WorkflowName { get; set; } = string.Empty;
+    public string? TemplateWorkflowId { get; set; }
+    public string? TemplateServiceTag { get; set; }
+    public string? TemplateVersion { get; set; }
+    public string? TemplateSnapshotHash { get; set; }
+    public DateTime? TemplateResolvedAt { get; set; }
     public string? CustomFormTitle { get; set; }
     public string? CustomFormWebhookUrl { get; set; }
     public string Status { get; set; } = IntegrationStatuses.Development;

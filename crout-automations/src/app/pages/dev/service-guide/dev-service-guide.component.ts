@@ -6,7 +6,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { distinctUntilChanged, map } from 'rxjs';
 import { IAddon, IDevPortalService } from '../../../interfaces/i-service.interface';
 import { ApiService } from '../../../services/api.service';
-import { DevService } from '../../../services/dev.service';
+import { DevService, IntegrationStatus } from '../../../services/dev.service';
 import { ToastService } from '../../../services/toast.service';
 import { IntegrationStatusBadgeComponent } from '../../../components/integration-status-badge/integration-status-badge.component';
 import { IntegrationStatusService } from '../../../services/integration-status.service';
@@ -46,6 +46,7 @@ export class DevServiceGuideComponent implements OnInit {
   private redirectingToServices = false;
 
   readonly guide = signal<IDevPortalService | null>(null);
+  readonly workflowStatus = signal<IntegrationStatus | null>(null);
   readonly loading = signal(true);
   readonly savingStep = signal<number | null>(null);
   readonly savingIntegrations = signal(false);
@@ -117,6 +118,7 @@ export class DevServiceGuideComponent implements OnInit {
         }
 
         this.guide.set(guide);
+        this.loadWorkflowStatus(userServiceId);
         this.resolveSelections(guide);
       },
       error: () => this.handleGuideLoadFailure(),
@@ -247,6 +249,13 @@ export class DevServiceGuideComponent implements OnInit {
 
     const userServiceId = Number(value);
     return Number.isSafeInteger(userServiceId) && userServiceId > 0 ? userServiceId : null;
+  }
+
+  private loadWorkflowStatus(userServiceId: number): void {
+    this.dev.getIntegrationStatus(userServiceId).subscribe({
+      next: status => this.workflowStatus.set(status),
+      error: () => this.workflowStatus.set(null),
+    });
   }
 
   private handleGuideLoadFailure(): void {

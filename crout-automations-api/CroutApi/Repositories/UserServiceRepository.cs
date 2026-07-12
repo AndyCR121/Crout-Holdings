@@ -82,7 +82,22 @@ public class UserServiceRepository(DbHelper db) : IUserServiceRepository
               c.CompanyName AS CompanyName,
               us.service_id AS ServiceId,
               s.ServiceName AS ServiceName,
-              us.Config AS Config
+              us.Config AS Config,
+              (
+                SELECT ds.userId
+                FROM DevServices ds
+                WHERE ds.userServiceId = us.id AND ds.isActive = 1
+                ORDER BY ds.devServiceId DESC
+                LIMIT 1
+              ) AS AssignedDeveloperUserId,
+              (
+                SELECT CONCAT(COALESCE(u.FirstName, ''), ' ', COALESCE(u.Surname, ''))
+                FROM DevServices ds
+                JOIN Users u ON u.user_id = ds.userId
+                WHERE ds.userServiceId = us.id AND ds.isActive = 1
+                ORDER BY ds.devServiceId DESC
+                LIMIT 1
+              ) AS AssignedDeveloperName
             FROM UserServices us
             JOIN Companies c ON c.company_id = us.company_id
             JOIN Services s ON s.service_id = us.service_id

@@ -59,6 +59,7 @@ builder.Services.AddScoped<IDevServiceRepository, DevServiceRepository>();
 builder.Services.AddScoped<IDevPortalRepository, DevPortalRepository>();
 builder.Services.AddScoped<IIntegrationRepository, IntegrationRepository>();
 builder.Services.AddScoped<IIntegrationDefinitionRepository, IntegrationDefinitionRepository>();
+builder.Services.AddScoped<IUserServiceCredentialRepository, UserServiceCredentialRepository>();
 builder.Services.AddScoped<IReleaseNoteRepository, ReleaseNoteRepository>();
 
 // -- Application Services -----------------------------------------------------
@@ -79,8 +80,18 @@ builder.Services.Configure<DatabaseManagementOptions>(builder.Configuration.GetS
 builder.Services.AddScoped<IDatabaseManagementService, DatabaseManagementService>();
 builder.Services.AddScoped<ISchemaSyncPlanService, SchemaSyncPlanService>();
 
-builder.Services.Configure<N8nOptions>(builder.Configuration.GetSection("N8n"));
+builder.Services.Configure<N8nOptions>(options =>
+{
+    builder.Configuration.GetSection("N8n").Bind(options);
+    options.BaseUrl = Environment.GetEnvironmentVariable("N8N_BASE_URL") ?? options.BaseUrl;
+    options.ApiKey = Environment.GetEnvironmentVariable("N8N_APIKEY")
+        ?? Environment.GetEnvironmentVariable("N8N_API_KEY")
+        ?? options.ApiKey;
+    options.WorkspaceId = Environment.GetEnvironmentVariable("N8N_WORKSPACEID") ?? options.WorkspaceId;
+    options.DefaultProjectId = Environment.GetEnvironmentVariable("N8N_DEFAULTPROJECTID") ?? options.DefaultProjectId;
+});
 builder.Services.AddHttpClient<IN8nWorkflowClient, N8nWorkflowClient>();
+builder.Services.AddScoped<N8nTemplateWorkflowService>();
 
 // -- Paystack proxy -----------------------------------------------------------
 // Uses a named HttpClient scoped to the Paystack base URL.
