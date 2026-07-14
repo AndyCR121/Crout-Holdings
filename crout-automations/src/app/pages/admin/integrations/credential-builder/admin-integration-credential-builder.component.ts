@@ -35,6 +35,8 @@ export class AdminIntegrationCredentialBuilderComponent implements OnInit {
   readonly fields = signal<DynamicFieldConfig[]>([]);
   readonly selectedIndex = signal<number>(-1);
   readonly integrationLabel = signal('Integration');
+  readonly n8nCredentialType = signal('');
+  readonly managedNodeNames = signal('');
 
   readonly supportedTypes: SupportedCredentialFieldType[] = [
     'text',
@@ -63,6 +65,8 @@ export class AdminIntegrationCredentialBuilderComponent implements OnInit {
 
     this.integrationLabel.set(draftState.draft.name?.trim() || 'Integration');
     this.fields.set(structuredClone(draftState.draft.credentialFormSchema?.fields ?? []));
+    this.n8nCredentialType.set(draftState.draft.credentialFormSchema?.n8nCredentialType?.trim() ?? '');
+    this.managedNodeNames.set((draftState.draft.credentialFormSchema?.managedNodeNames ?? []).join('\n'));
     this.selectedIndex.set(this.fields().length > 0 ? 0 : -1);
     this.loading.set(false);
   }
@@ -164,7 +168,16 @@ export class AdminIntegrationCredentialBuilderComponent implements OnInit {
 
     draftState.draft = {
       ...draftState.draft,
-      credentialFormSchema: this.fields().length ? { fields: structuredClone(this.fields()) } : null,
+      credentialFormSchema: this.fields().length
+        ? {
+          fields: structuredClone(this.fields()),
+          n8nCredentialType: this.n8nCredentialType().trim(),
+          managedNodeNames: this.managedNodeNames()
+            .split(/\r?\n/)
+            .map(name => name.trim())
+            .filter(Boolean),
+        }
+        : null,
     };
     this.draftStore.saveDraft(draftState);
     void this.router.navigate(['/admin/integrations'], { queryParams: { resumeDraft: 1 } });
@@ -196,6 +209,11 @@ export class AdminIntegrationCredentialBuilderComponent implements OnInit {
         return `All options for "${key}" need a label.`;
       }
     }
+
+    if (this.fields().length && !this.n8nCredentialType().trim())
+      return 'An n8n credential type is required for automatic assignment.';
+    if (this.fields().length && !this.managedNodeNames().split(/\r?\n/).some(name => name.trim()))
+      return 'At least one stable n8n node name is required for automatic assignment.';
 
     return null;
   }

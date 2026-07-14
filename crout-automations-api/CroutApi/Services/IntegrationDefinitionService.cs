@@ -74,6 +74,15 @@ public class IntegrationDefinitionService(
         using var document = JsonDocument.Parse(schemaJson);
         if (!document.RootElement.TryGetProperty("fields", out var fields) || fields.ValueKind != JsonValueKind.Array || fields.GetArrayLength() == 0)
             throw new ArgumentException("Credential schema must include a non-empty fields array.");
+        if (!document.RootElement.TryGetProperty("n8nCredentialType", out var credentialType)
+            || credentialType.ValueKind != JsonValueKind.String
+            || string.IsNullOrWhiteSpace(credentialType.GetString()))
+            throw new ArgumentException("Credential schema must define an n8n credential type.");
+        if (!document.RootElement.TryGetProperty("managedNodeNames", out var managedNodes)
+            || managedNodes.ValueKind != JsonValueKind.Array
+            || managedNodes.GetArrayLength() == 0
+            || managedNodes.EnumerateArray().Any(node => node.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(node.GetString())))
+            throw new ArgumentException("Credential schema must define one or more managed n8n node names.");
     }
 
     private static string RequireValue(string? value, string message) =>
