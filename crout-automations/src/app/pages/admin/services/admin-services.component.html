@@ -12,7 +12,7 @@
 
   <div *ngIf="!loading()" class="admin-table-wrap">
     <table class="admin-table">
-      <thead><tr><th>ID</th><th>Name</th><th>Display</th><th>Description</th><th>Base</th><th>Tokens</th><th>Included Tokens</th><th>Add-ons</th><th>Conditional</th><th>Actions</th></tr></thead>
+      <thead><tr><th>ID</th><th>Name</th><th>Display</th><th>Description</th><th>Base</th><th>Tokens</th><th>Included Tokens</th><th>Add-ons</th><th>Conditional</th><th>Status</th><th>Actions</th></tr></thead>
       <tbody>
         <tr *ngFor="let s of items()" [class.editing]="editingId() === s.serviceId">
           <ng-container *ngIf="editingId() !== s.serviceId">
@@ -25,9 +25,11 @@
             <td>{{ s.totalTokens | number }}</td>
             <td><span class="admin-pill" [class.green]="s.hasAddons">{{ s.hasAddons ? 'Yes' : 'No' }}</span></td>
             <td><span class="admin-pill" [class.green]="s.conditional">{{ s.conditional ? 'Yes' : 'No' }}</span></td>
+            <td><span class="admin-pill" [class.green]="s.active">{{ s.active ? 'Active' : 'Hidden' }}</span></td>
             <td class="admin-actions">
               <button class="btn-link" (click)="openLink(s)">Link</button>
               <button class="btn-edit" (click)="startEdit(s)">Edit</button>
+              <button class="btn-save" (click)="toggleActive(s)">{{ s.active ? 'Disable' : 'Enable' }}</button>
               <button class="btn-delete" (click)="confirmDelete(s.serviceId)">Delete</button>
             </td>
           </ng-container>
@@ -49,13 +51,14 @@
             <td><input type="number" min="0" step="1" [(ngModel)]="editBuffer().totalTokens" class="admin-input" /></td>
             <td><select [(ngModel)]="editBuffer().hasAddons" class="admin-input"><option [ngValue]="true">Yes</option><option [ngValue]="false">No</option></select></td>
             <td><select [(ngModel)]="editBuffer().conditional" class="admin-input"><option [ngValue]="true">Yes</option><option [ngValue]="false">No</option></select></td>
+            <td><span class="admin-pill" [class.green]="s.active">{{ s.active ? 'Active' : 'Hidden' }}</span></td>
             <td class="admin-actions">
               <button class="btn-save" [disabled]="saving()" (click)="saveEdit(s)">{{ saving() ? '...' : 'Save' }}</button>
               <button class="btn-cancel" (click)="cancelEdit()">Cancel</button>
             </td>
           </ng-container>
         </tr>
-        <tr *ngIf="items().length === 0"><td colspan="10" class="admin-empty">No services found.</td></tr>
+        <tr *ngIf="items().length === 0"><td colspan="11" class="admin-empty">No services found.</td></tr>
       </tbody>
     </table>
   </div>

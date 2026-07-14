@@ -14,7 +14,7 @@ public class PackageRepository(DbHelper db) : IPackageRepository
         var total = await conn.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Packages", param);
         var packages = (await conn.QueryAsync<Package>(
             "SELECT package_id AS PackageId, parent_package_id AS ParentPackageId, PackageName, " +
-            "PackageDescription, Discount, minimumRequiredAddons AS MinimumRequiredAddons " +
+            "PackageDescription, Discount, minimumRequiredAddons AS MinimumRequiredAddons, Active " +
             "FROM Packages ORDER BY PackageName LIMIT @pageSize OFFSET @offset", param)).ToList();
 
         if (packages.Count > 0)
@@ -35,7 +35,7 @@ public class PackageRepository(DbHelper db) : IPackageRepository
         using var conn = db.GetConnection();
         var pkg = await conn.QuerySingleOrDefaultAsync<Package>(
             "SELECT package_id AS PackageId, parent_package_id AS ParentPackageId, PackageName, " +
-            "PackageDescription, Discount, minimumRequiredAddons AS MinimumRequiredAddons " +
+            "PackageDescription, Discount, minimumRequiredAddons AS MinimumRequiredAddons, Active " +
             "FROM Packages WHERE package_id=@packageId", new { packageId });
         if (pkg is null) return null;
         var svcIds = await conn.QueryAsync<int>(
@@ -48,8 +48,8 @@ public class PackageRepository(DbHelper db) : IPackageRepository
     {
         using var conn = db.GetConnection();
         return await conn.ExecuteScalarAsync<int>(
-            "INSERT INTO Packages (parent_package_id, PackageName, PackageDescription, Discount, minimumRequiredAddons) " +
-            "VALUES (@ParentPackageId, @PackageName, @PackageDescription, @Discount, @MinimumRequiredAddons); " +
+            "INSERT INTO Packages (parent_package_id, PackageName, PackageDescription, Discount, minimumRequiredAddons, Active) " +
+            "VALUES (@ParentPackageId, @PackageName, @PackageDescription, @Discount, @MinimumRequiredAddons, @Active); " +
             "SELECT LAST_INSERT_ID();", package);
     }
 
@@ -66,6 +66,12 @@ public class PackageRepository(DbHelper db) : IPackageRepository
     {
         using var conn = db.GetConnection();
         await conn.ExecuteAsync("DELETE FROM Packages WHERE package_id=@packageId", new { packageId });
+    }
+
+    public async Task SetActiveAsync(int packageId, bool active)
+    {
+        using var conn = db.GetConnection();
+        await conn.ExecuteAsync("UPDATE Packages SET Active = @active WHERE package_id = @packageId", new { packageId, active });
     }
 
     public async Task SetServiceLinksAsync(int packageId, List<int> serviceIds)

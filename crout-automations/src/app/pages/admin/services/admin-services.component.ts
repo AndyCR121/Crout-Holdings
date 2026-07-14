@@ -117,6 +117,13 @@ export class AdminServicesComponent implements OnInit {
     });
   }
 
+  toggleActive(service: IService): void {
+    this.admin.toggleServiceActive(service.serviceId).subscribe({
+      next: ({ active }) => this.items.update(list => list.map(item => item.serviceId === service.serviceId ? { ...item, active } : item)),
+      error: () => this.error.set('Failed to update service availability.')
+    });
+  }
+
   submitCreate(): void {
     this.saving.set(true);
     this.admin.createService(this.createBuffer()).subscribe({

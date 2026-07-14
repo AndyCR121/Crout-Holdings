@@ -31,6 +31,7 @@ function normalizeService(raw: any): IService {
     hasAddons:          raw.HasAddons           ?? raw.hasAddons          ?? false,
     serviceDescription: raw.ServiceDescription  ?? raw.serviceDescription ?? raw.description ?? '',
     conditional:        raw.Conditional         ?? raw.conditional        ?? false,
+    active:             raw.Active              ?? raw.active             ?? true,
     displayName:        raw.DisplayName         ?? raw.displayName        ?? '',
     displayTagline:     raw.DisplayTagline      ?? raw.displayTagline     ?? '',
     iconKey:            raw.IconKey             ?? raw.iconKey            ?? '',
@@ -68,6 +69,7 @@ function normalizePackage(raw: any): IPackage {
     packageDescription:   raw.PackageDescription   ?? raw.packageDescription ?? raw.description ?? '',
     discount:             raw.Discount             ?? raw.discount           ?? 0,
     minimumRequiredAddons: raw.minimumRequiredAddons ?? raw.minimumrequiredaddons ?? undefined,
+    active:               raw.Active ?? raw.active ?? true,
   };
 }
 

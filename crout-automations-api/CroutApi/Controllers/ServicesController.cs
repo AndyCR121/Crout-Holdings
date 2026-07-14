@@ -32,7 +32,11 @@ public class ServicesController(IServiceCatalogService catalog) : ControllerBase
 
     /// <summary>GET /api/services/{id}/addons</summary>
     [HttpGet("{id:int}/addons")]
-    public async Task<IActionResult> GetAddons(int id) => Ok(await catalog.GetAddonsByServiceAsync(id));
+    public async Task<IActionResult> GetAddons(int id)
+    {
+        if (await catalog.GetServiceByIdAsync(id) is null) return NotFound();
+        return Ok(await catalog.GetAddonsByServiceAsync(id));
+    }
 
     /// <summary>GET /api/services/pricing-components/required</summary>
     [HttpGet("pricing-components/required")]
@@ -40,7 +44,11 @@ public class ServicesController(IServiceCatalogService catalog) : ControllerBase
 
     /// <summary>GET /api/services/{id}/packages</summary>
     [HttpGet("{id:int}/packages")]
-    public async Task<IActionResult> GetPackages(int id) => Ok(await catalog.GetPackagesByServiceAsync(id));
+    public async Task<IActionResult> GetPackages(int id)
+    {
+        if (await catalog.GetServiceByIdAsync(id) is null) return NotFound();
+        return Ok(await catalog.GetPackagesByServiceAsync(id));
+    }
 
     /// <summary>GET /api/services/company/{companyId} — active UserServices for a company</summary>
     [HttpGet("company/{companyId:int}")]

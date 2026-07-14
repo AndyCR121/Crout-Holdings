@@ -89,6 +89,13 @@ export class AdminPackagesComponent implements OnInit {
     });
   }
 
+  toggleActive(packageItem: IPackage): void {
+    this.admin.togglePackageActive(packageItem.packageId).subscribe({
+      next: ({ active }) => this.items.update(list => list.map(item => item.packageId === packageItem.packageId ? { ...item, active } : item)),
+      error: () => this.error.set('Failed to update package availability.')
+    });
+  }
+
   submitCreate(): void {
     this.saving.set(true);
     this.admin.createPackage(this.createBuffer()).subscribe({

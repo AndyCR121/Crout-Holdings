@@ -9,6 +9,7 @@ public class Service
     public long TotalTokens { get; set; } = 6_000_000;
     public bool HasAddons { get; set; }
     public bool Conditional { get; set; }
+    public bool Active { get; set; } = true;
     public string? ServiceDescription { get; set; }
     public string? DisplayName { get; set; }
     public string? DisplayTagline { get; set; }

@@ -252,6 +252,16 @@ public class AdminController(
         return CreatedAtAction(nameof(GetService), new { id = newId }, await services.GetByIdAsync(newId));
     }
 
+    [HttpPatch("services/{id:int}/toggle-active")]
+    public async Task<IActionResult> ToggleServiceActive(int id)
+    {
+        if (!CallerIsAdmin) return Forbid();
+        var service = await services.GetByIdAsync(id);
+        if (service is null) return NotFound();
+        await services.SetActiveAsync(id, !service.Active);
+        return Ok(new { active = !service.Active });
+    }
+
     [HttpPut("services/{id:int}")]
     public async Task<IActionResult> UpdateService(int id, [FromBody] UpdateAdminServiceDto dto)
     {
@@ -340,6 +350,16 @@ public class AdminController(
         if (!CallerIsAdmin) return Forbid();
         await packages.DeleteAsync(id);
         return NoContent();
+    }
+
+    [HttpPatch("packages/{id:int}/toggle-active")]
+    public async Task<IActionResult> TogglePackageActive(int id)
+    {
+        if (!CallerIsAdmin) return Forbid();
+        var package = await packages.GetByIdAsync(id);
+        if (package is null) return NotFound();
+        await packages.SetActiveAsync(id, !package.Active);
+        return Ok(new { active = !package.Active });
     }
 
     [HttpPut("packages/{id:int}/services")]

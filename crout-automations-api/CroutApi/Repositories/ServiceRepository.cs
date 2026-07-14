@@ -6,7 +6,7 @@ namespace CroutApi.Repositories;
 
 public class ServiceRepository(DbHelper db) : IServiceRepository
 {
-    public async Task<IEnumerable<Service>> GetAllAsync()
+    public async Task<IEnumerable<Service>> GetAllAsync(bool activeOnly = false)
     {
         using var conn = db.GetConnection();
         var services = (await conn.QueryAsync<Service>(
@@ -19,6 +19,7 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
               TotalTokens,
               HasAddons,
               Conditional,
+              Active,
               ServiceDescription,
               DisplayName,
               DisplayTagline,
@@ -26,12 +27,13 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
               IconSvg,
               DisplayOrder
             FROM Services
+            WHERE (@activeOnly = 0 OR Active = 1)
             ORDER BY
               CASE WHEN DisplayOrder IS NULL THEN 1 ELSE 0 END,
               DisplayOrder,
               COALESCE(DisplayName, ServiceName),
               service_id
-            """)).ToList();
+            """, new { activeOnly })).ToList();
 
         var features = await conn.QueryAsync<(int ServiceId, string Feature)>(
             "SELECT service_id, Feature FROM ServiceFeatures ORDER BY SortOrder");
@@ -57,7 +59,7 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
         return services;
     }
 
-    public async Task<Service?> GetByIdAsync(int serviceId)
+    public async Task<Service?> GetByIdAsync(int serviceId, bool activeOnly = false)
     {
         using var conn = db.GetConnection();
         var svc = await conn.QuerySingleOrDefaultAsync<Service>(
@@ -70,6 +72,7 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
               TotalTokens,
               HasAddons,
               Conditional,
+              Active,
               ServiceDescription,
               DisplayName,
               DisplayTagline,
@@ -77,9 +80,9 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
               IconSvg,
               DisplayOrder
             FROM Services
-            WHERE service_id=@serviceId
+            WHERE service_id=@serviceId AND (@activeOnly = 0 OR Active = 1)
             """,
-            new { serviceId });
+            new { serviceId, activeOnly });
         if (svc is null) return null;
 
         var features = await conn.QueryAsync<string>(
@@ -96,8 +99,8 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
         using var conn = db.GetConnection();
         return await conn.ExecuteScalarAsync<int>(
             """
-            INSERT INTO Services (ServiceName, BaseCost, TokensCost, TotalTokens, HasAddons, Conditional, ServiceDescription, DisplayName, DisplayTagline, IconKey, IconSvg, DisplayOrder)
-            VALUES (@ServiceName, @BaseCost, @TokensCost, @TotalTokens, @HasAddons, @Conditional, @ServiceDescription, @DisplayName, @DisplayTagline, @IconKey, @IconSvg, @DisplayOrder);
+            INSERT INTO Services (ServiceName, BaseCost, TokensCost, TotalTokens, HasAddons, Conditional, Active, ServiceDescription, DisplayName, DisplayTagline, IconKey, IconSvg, DisplayOrder)
+            VALUES (@ServiceName, @BaseCost, @TokensCost, @TotalTokens, @HasAddons, @Conditional, @Active, @ServiceDescription, @DisplayName, @DisplayTagline, @IconKey, @IconSvg, @DisplayOrder);
             SELECT LAST_INSERT_ID();
             """,
             service);
@@ -132,6 +135,12 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
         await conn.ExecuteAsync("DELETE FROM Services WHERE service_id = @serviceId", new { serviceId });
     }
 
+    public async Task SetActiveAsync(int serviceId, bool active)
+    {
+        using var conn = db.GetConnection();
+        await conn.ExecuteAsync("UPDATE Services SET Active = @active WHERE service_id = @serviceId", new { serviceId, active });
+    }
+
     public async Task<IEnumerable<Addon>> GetAddonsByServiceAsync(int serviceId)
     {
         using var conn = db.GetConnection();
@@ -164,16 +173,16 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
     {
         using var conn = db.GetConnection();
         var packages = (await conn.QueryAsync<Package>(
-            @"SELECT p.package_id AS PackageId, p.parent_package_id AS ParentPackageId, p.PackageName, p.PackageDescription, p.Discount, p.minimumRequiredAddons AS MinimumRequiredAddons
+            @"SELECT p.package_id AS PackageId, p.parent_package_id AS ParentPackageId, p.PackageName, p.PackageDescription, p.Discount, p.minimumRequiredAddons AS MinimumRequiredAddons, p.Active
               FROM Packages p
               INNER JOIN PackageServices ps ON ps.package_id = p.package_id
-              WHERE ps.service_id = @serviceId
+              WHERE p.Active = 1 AND (ps.service_id = @serviceId
                  OR p.parent_package_id IN (
                     SELECT parent.package_id
                     FROM Packages parent
                     INNER JOIN PackageServices parent_ps ON parent_ps.package_id = parent.package_id
                     WHERE parent_ps.service_id = @serviceId
-                 )",
+                 ))",
             new { serviceId })).ToList();
 
         await EnrichPackageServiceIds(conn, packages);
@@ -185,9 +194,9 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
         using var conn = db.GetConnection();
         var packages = (await conn.QueryAsync<Package>(
             """
-            SELECT package_id AS PackageId, parent_package_id AS ParentPackageId, PackageName, PackageDescription, Discount, minimumRequiredAddons AS MinimumRequiredAddons
+            SELECT package_id AS PackageId, parent_package_id AS ParentPackageId, PackageName, PackageDescription, Discount, minimumRequiredAddons AS MinimumRequiredAddons, Active
             FROM Packages
-            WHERE EXISTS (SELECT 1 FROM PackageServices ps WHERE ps.package_id = Packages.package_id)
+            WHERE Active = 1 AND EXISTS (SELECT 1 FROM PackageServices ps WHERE ps.package_id = Packages.package_id)
             """
         )).ToList();
         await EnrichPackageServiceIds(conn, packages);
@@ -198,7 +207,7 @@ public class ServiceRepository(DbHelper db) : IServiceRepository
     {
         using var conn = db.GetConnection();
         var package = await conn.QuerySingleOrDefaultAsync<Package>(
-            "SELECT package_id AS PackageId, parent_package_id AS ParentPackageId, PackageName, PackageDescription, Discount, minimumRequiredAddons AS MinimumRequiredAddons FROM Packages WHERE package_id=@packageId",
+            "SELECT package_id AS PackageId, parent_package_id AS ParentPackageId, PackageName, PackageDescription, Discount, minimumRequiredAddons AS MinimumRequiredAddons, Active FROM Packages WHERE package_id=@packageId AND Active = 1",
             new { packageId });
         if (package is null) return null;
         await EnrichPackageServiceIds(conn, [package]);

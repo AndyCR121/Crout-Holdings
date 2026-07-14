@@ -8,5 +8,6 @@ public class Package
     public string? PackageDescription     { get; set; }
     public decimal Discount               { get; set; }
     public int?    MinimumRequiredAddons  { get; set; }
+    public bool    Active                 { get; set; } = true;
     public List<int> ServiceIds           { get; set; } = [];
 }

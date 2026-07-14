@@ -9,6 +9,7 @@ public interface IPackageRepository
     Task<int> CreateAsync(Package package);
     Task UpdateAsync(Package package);
     Task DeleteAsync(int packageId);
+    Task SetActiveAsync(int packageId, bool active);
     Task SetServiceLinksAsync(int packageId, List<int> serviceIds);
     Task<IEnumerable<int>> GetLinkedServiceIdsAsync(int packageId);
 }
