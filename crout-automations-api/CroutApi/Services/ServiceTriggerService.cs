@@ -136,8 +136,8 @@ public class ServiceTriggerService(
 
         var baseUrl = n8nOptions.Value.BaseUrl;
         var apiKey = n8nOptions.Value.ApiKey;
-        var endpointPath = ExtractEndpointPath(context.WebhookUrl);
-        var liveReady = !string.IsNullOrWhiteSpace(baseUrl) && !string.IsNullOrWhiteSpace(apiKey) && !string.IsNullOrWhiteSpace(endpointPath);
+        var webhookUrl = NormalizeWebhookUrl(context.WebhookUrl, baseUrl);
+        var liveReady = !string.IsNullOrWhiteSpace(webhookUrl);
 
         var status = "queued";
         var mode = liveReady ? "live" : "mock";
@@ -152,7 +152,7 @@ public class ServiceTriggerService(
         {
             try
             {
-                response = await CallN8nAsync(baseUrl!, apiKey!, endpointPath!, requestPayload);
+                response = await CallWebhookAsync(webhookUrl!, requestPayload);
             }
             catch (Exception ex)
             {
@@ -234,6 +234,16 @@ public class ServiceTriggerService(
         var content = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
             throw new InvalidOperationException($"n8n returned {(int)response.StatusCode}.");
+        return Parse(string.IsNullOrWhiteSpace(content) ? "{\"accepted\":true}" : content)!.Value;
+    }
+
+    private async Task<JsonElement> CallWebhookAsync(string webhookUrl, string requestPayload)
+    {
+        var client = httpFactory.CreateClient();
+        var response = await client.PostAsync(webhookUrl, new StringContent(requestPayload, Encoding.UTF8, "application/json"));
+        var content = await response.Content.ReadAsStringAsync();
+        if (!response.IsSuccessStatusCode)
+            throw new InvalidOperationException($"Webhook returned {(int)response.StatusCode}: {TrimError(content)}");
         return Parse(string.IsNullOrWhiteSpace(content) ? "{\"accepted\":true}" : content)!.Value;
     }
 
@@ -452,14 +462,24 @@ public class ServiceTriggerService(
         _ => "datetime"
     };
 
-    private static string? ExtractEndpointPath(string? webhookUrl)
+    private static string? NormalizeWebhookUrl(string? webhookUrl, string? fallbackBaseUrl)
     {
         if (string.IsNullOrWhiteSpace(webhookUrl))
             return null;
-        if (!Uri.TryCreate(webhookUrl, UriKind.Absolute, out var uri))
-            return webhookUrl;
-        return string.Concat(uri.AbsolutePath, uri.Query);
+        if (Uri.TryCreate(webhookUrl.Trim(), UriKind.Absolute, out var uri)
+            && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp))
+            return uri.ToString();
+
+        if (Uri.TryCreate(fallbackBaseUrl?.Trim(), UriKind.Absolute, out var baseUri))
+            return new Uri(baseUri, webhookUrl.TrimStart('/')).ToString();
+
+        return null;
     }
+
+    private static string TrimError(string content) =>
+        string.IsNullOrWhiteSpace(content)
+            ? "The webhook did not return an error message."
+            : content.Length <= 240 ? content : content[..240];
 
     private static bool HasConfirmedCustomFormTrigger(string? configJson)
     {

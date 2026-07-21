@@ -44,7 +44,11 @@ export class ServiceTriggerRendererComponent implements OnChanges {
       const nextTabs: Record<number, string | null> = {};
       for (const config of this.configs) {
         next[config.id] = this.defaultValues(config);
-        nextTabs[config.id] = config.activeTabId ?? this.formTabs(config)[0]?.id ?? null;
+        const tabs = this.formTabs(config);
+        const configuredTabId = config.activeTabId;
+        nextTabs[config.id] = configuredTabId && tabs.some(tab => tab.id === configuredTabId)
+          ? configuredTabId
+          : tabs[0]?.id ?? null;
       }
       this.values.set(next);
       this.activeTabs.set(nextTabs);

@@ -127,6 +127,10 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
 
   addElement(type: CustomFormElement['type']): void {
     const element = this.createElement(type);
+    const activeTabId = this.tabsElement()?.activeTabId;
+    if (type !== 'tabs' && activeTabId) {
+      element.tabId = activeTabId;
+    }
     this.elements.update(items => [...items, element]);
     this.selectedTarget.set(element.id);
     this.touch();
