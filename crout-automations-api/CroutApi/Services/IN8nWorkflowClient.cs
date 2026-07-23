@@ -8,6 +8,7 @@ public interface IN8nWorkflowClient
     Task<N8nWorkflowDocument?> GetWorkflowAsync(string workflowId, CancellationToken cancellationToken = default);
     Task<N8nWorkflowDocument> CreateWorkflowAsync(string name, N8nWorkflowDocument workflow, CancellationToken cancellationToken = default);
     Task<N8nWorkflowDocument> UpdateWorkflowAsync(string workflowId, N8nWorkflowDocument workflow, CancellationToken cancellationToken = default);
+    Task UpdateWorkflowTagsAsync(string workflowId, JsonArray tags, CancellationToken cancellationToken = default);
     Task ActivateWorkflowAsync(string workflowId, CancellationToken cancellationToken = default);
     Task DeactivateWorkflowAsync(string workflowId, CancellationToken cancellationToken = default);
 }

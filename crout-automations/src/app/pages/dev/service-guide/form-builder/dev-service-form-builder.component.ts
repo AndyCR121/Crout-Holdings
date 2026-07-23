@@ -35,6 +35,12 @@ import { ToastService } from '../../../../services/toast.service';
 
 type SelectedTarget = 'form' | string;
 
+interface CopySourceForm {
+  userServiceId: number;
+  label: string;
+  form: DevUserServiceForm;
+}
+
 @Component({
   selector: 'ca-dev-service-form-builder',
   standalone: true,
@@ -58,12 +64,14 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
   readonly elements = signal<CustomFormElement[]>([]);
   readonly selectedTarget = signal<SelectedTarget>('form');
   readonly hasConfirmedFormTrigger = signal(true);
+  readonly copySourceForms = signal<CopySourceForm[]>([]);
 
   formLabel = '';
   formDescription = '';
   responseMode: CustomFormResponseMode = 'inline';
   productionWebhookUrl = '';
   payloadTemplateText = '{\n  "source": "custom-form"\n}';
+  copySourceUserServiceId: number | null = null;
 
   private userServiceId: number | null = null;
   private lastSavedSnapshot = '';
@@ -82,6 +90,18 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
   );
 
   readonly availableTabs = computed(() => this.tabsElement()?.tabs ?? []);
+
+  readonly canvasElements = computed(() => {
+    const activeTabId = this.tabsElement()?.activeTabId;
+    return this.elements()
+      .map((element, index) => ({ element, index }))
+      .filter(({ element }) =>
+        element.type === 'tabs'
+        || !activeTabId
+        || !element.tabId
+        || element.tabId === activeTabId
+      );
+  });
 
   ngOnInit(): void {
     this.route.queryParamMap
@@ -162,6 +182,27 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
     this.touch();
   }
 
+  canMoveVisibleElement(elementId: string, direction: -1 | 1): boolean {
+    const visible = this.canvasElements();
+    const index = visible.findIndex(item => item.element.id === elementId);
+    return index >= 0 && index + direction >= 0 && index + direction < visible.length;
+  }
+
+  moveVisibleElement(elementId: string, direction: -1 | 1): void {
+    const visible = this.canvasElements();
+    const visibleIndex = visible.findIndex(item => item.element.id === elementId);
+    const target = visible[visibleIndex + direction];
+    if (visibleIndex < 0 || !target) return;
+
+    const sourceIndex = visible[visibleIndex].index;
+    this.elements.update(items => {
+      const clone = [...items];
+      [clone[sourceIndex], clone[target.index]] = [clone[target.index], clone[sourceIndex]];
+      return clone;
+    });
+    this.touch();
+  }
+
   addOption(elementId: string): void {
     this.updateElement(elementId, element => {
       if (element.type !== 'select' && element.type !== 'checkbox') return;
@@ -222,6 +263,10 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
       if (element.type !== 'tabs') return;
       element.activeTabId = tabId;
     });
+
+    const selected = this.selectedElement();
+    if (selected && selected.type !== 'tabs' && selected.tabId && selected.tabId !== tabId)
+      this.selectedTarget.set(elementId);
   }
 
   setTabAssignment(elementId: string, tabId: string | null): void {
@@ -286,6 +331,20 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
         ...(field.validation ?? {}),
         maxLength: Number.isFinite(maxLength as number) ? maxLength : null
       };
+    });
+  }
+
+  updateListInputFieldMin(listElementId: string, fieldId: string, value: string): void {
+    this.updateListField(listElementId, fieldId, field => {
+      if (field.type !== 'input') return;
+      field.validation = { ...(field.validation ?? {}), min: this.toOptionalNumber(value) };
+    });
+  }
+
+  updateListInputFieldMax(listElementId: string, fieldId: string, value: string): void {
+    this.updateListField(listElementId, fieldId, field => {
+      if (field.type !== 'input') return;
+      field.validation = { ...(field.validation ?? {}), max: this.toOptionalNumber(value) };
     });
   }
 
@@ -400,6 +459,14 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
   updateSelectedInputMaxLength(value: string): void {
     const maxLength = value.trim() === '' ? null : Number(value);
     this.updateSelectedInputValidation({ maxLength: Number.isFinite(maxLength as number) ? maxLength : null });
+  }
+
+  updateSelectedInputMin(value: string): void {
+    this.updateSelectedInputValidation({ min: this.toOptionalNumber(value) });
+  }
+
+  updateSelectedInputMax(value: string): void {
+    this.updateSelectedInputValidation({ max: this.toOptionalNumber(value) });
   }
 
   updateSelectedInputRegex(value: string): void {
@@ -618,9 +685,25 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
     });
   }
 
+  copySelectedLayout(): void {
+    const source = this.copySourceForms().find(item => item.userServiceId === this.copySourceUserServiceId);
+    if (!source) {
+      this.toast.error('Choose a source form to copy.');
+      return;
+    }
+    if (this.elements().length && !window.confirm('Replace this form\'s current layout with the selected layout?')) return;
+
+    const elements = this.extractLoadedElements(source.form).map(element => structuredClone(element));
+    this.elements.set(elements);
+    this.syncCounters(elements);
+    this.selectedTarget.set('form');
+    this.touch();
+    this.toast.success(`Copied the layout from ${source.label}.`);
+  }
+
   goBackToGuide(): void {
     if (this.userServiceId === null) return;
-    void this.router.navigateByUrl(`/dev/dev-services/guide/?userServiceId=${this.userServiceId}`);
+    void this.router.navigate(['/dev/dev-services/guide'], { queryParams: { userServiceId: this.userServiceId } });
   }
 
   selectedInputElement(): CustomFormInputElement | null {
@@ -755,9 +838,24 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
         this.hasConfirmedFormTrigger.set(this.checkConfirmedFormTrigger(guide));
         if (form) this.hydrateForm(form);
         else this.resetEmptyState(guide.serviceName);
+        this.loadCopySources(userServiceId);
         this.loading.set(false);
       },
       error: () => this.handleLoadFailure()
+    });
+  }
+
+  private loadCopySources(currentUserServiceId: number): void {
+    this.dev.getAssigned(1, 100).subscribe({
+      next: page => {
+        const candidates = page.items.filter(item => item.userServiceId !== currentUserServiceId);
+        if (!candidates.length) return;
+        forkJoin(candidates.map(item => this.dev.getForm(item.userServiceId).pipe(
+          map(form => ({ userServiceId: item.userServiceId, label: `${item.companyName} — ${item.serviceName}`, form })),
+          catchError(() => of(null))
+        ))).subscribe(sources => this.copySourceForms.set(sources.filter((source): source is CopySourceForm => source !== null)));
+      },
+      error: () => this.copySourceForms.set([])
     });
   }
 
@@ -845,6 +943,8 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
         if (element.type === 'input') {
           const isInputHidden = (element.hidden ?? false) || element.inputMode === 'hidden';
           if (isInputHidden && !(element.defaultValueText ?? '').trim()) return `Hidden field "${key}" requires a default value.`;
+          const rangeError = this.validateNumericRange(element.validation, `Field "${key}"`);
+          if (rangeError) return rangeError;
         }
 
         if (element.type === 'select' && element.options.some(option => !option.label.trim())) {
@@ -870,6 +970,8 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
               if (isHidden && !(childField.defaultValueText ?? '').trim()) {
                 return `List field "${key}" hidden child field "${childKey}" requires a default value.`;
               }
+              const rangeError = this.validateNumericRange(childField.validation, `List field "${key}" child field "${childKey}"`);
+              if (rangeError) return rangeError;
             }
 
             if (childField.type === 'select' && childField.options.some(option => !option.label.trim())) {
@@ -1238,6 +1340,17 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
       if (!match) return highest;
       return Math.max(highest, Number(match[1]));
     }, 0);
+  }
+
+  private toOptionalNumber(value: string): number | null {
+    const parsed = value.trim() === '' ? null : Number(value);
+    return Number.isFinite(parsed as number) ? parsed : null;
+  }
+
+  private validateNumericRange(validation: { min?: number | null; max?: number | null } | undefined, label: string): string | null {
+    if (validation?.min !== null && validation?.min !== undefined && validation?.max !== null && validation?.max !== undefined && validation.min > validation.max)
+      return `${label} has a minimum greater than its maximum.`;
+    return null;
   }
 
   touch(): void {

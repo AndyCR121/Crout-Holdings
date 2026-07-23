@@ -74,6 +74,7 @@ public class N8nTemplateWorkflowServiceTests
         public Task<N8nWorkflowDocument?> GetWorkflowAsync(string workflowId, CancellationToken cancellationToken = default) => Task.FromResult(workflows.SingleOrDefault(workflow => workflow.Id == workflowId));
         public Task<N8nWorkflowDocument> CreateWorkflowAsync(string name, N8nWorkflowDocument workflow, CancellationToken cancellationToken = default) => Task.FromResult(workflow);
         public Task<N8nWorkflowDocument> UpdateWorkflowAsync(string workflowId, N8nWorkflowDocument workflow, CancellationToken cancellationToken = default) => Task.FromResult(workflow);
+        public Task UpdateWorkflowTagsAsync(string workflowId, JsonArray tags, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task ActivateWorkflowAsync(string workflowId, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task DeactivateWorkflowAsync(string workflowId, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }

@@ -303,3 +303,17 @@
     grid-template-columns: 1fr;
   }
 }
+
+.trigger-secret-toggle {
+  align-self: flex-start;
+  margin-top: 0.45rem;
+  border: 1px solid rgba(121, 150, 190, 0.35);
+  border-radius: 5px;
+  padding: 0.35rem 0.6rem;
+  background: rgba(13, 29, 53, 0.78);
+  color: #cfe1f5;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+}

@@ -27,14 +27,13 @@ public sealed class N8nTemplateWorkflowService(IN8nWorkflowClient workflows)
             .Where(workflow => HasTag(workflow, TemplateTag))
             .ToArray();
 
-        foreach (var candidate in candidates)
-            ValidateTemplateTagShape(candidate);
-
         var matches = candidates.Where(workflow => HasTag(workflow, expectedServiceTag)).ToArray();
         if (matches.Length == 0)
             throw new ArgumentException($"No inactive n8n template was found for service tag '{expectedServiceTag}'.");
         if (matches.Length > 1)
             throw new ArgumentException($"More than one n8n template was found for service tag '{expectedServiceTag}'.");
+
+        ValidateTemplateTagShape(matches[0]);
 
         var complete = await workflows.GetWorkflowAsync(matches[0].Id ?? throw new InvalidOperationException("Template workflow did not include an ID."), cancellationToken)
             ?? throw new ArgumentException("The resolved n8n template could not be read.");

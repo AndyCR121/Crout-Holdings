@@ -56,7 +56,7 @@ public class N8nWorkflowClient(
             return workflow;
         }
 
-        using var request = CreateRequest(HttpMethod.Post, "api/v1/workflows", ToPayload(workflow, includeId: false));
+        using var request = CreateRequest(HttpMethod.Post, "api/v1/workflows", ToPayload(workflow));
         using var response = await httpClient.SendAsync(request, cancellationToken);
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
         EnsureSuccess(response, body);
@@ -68,11 +68,56 @@ public class N8nWorkflowClient(
         workflow.Id = workflowId;
         if (UseLocalMockMode()) return workflow;
 
-        using var request = CreateRequest(HttpMethod.Put, $"api/v1/workflows/{Uri.EscapeDataString(workflowId)}", ToPayload(workflow, includeId: true));
+        using var request = CreateRequest(HttpMethod.Put, $"api/v1/workflows/{Uri.EscapeDataString(workflowId)}", ToPayload(workflow));
         using var response = await httpClient.SendAsync(request, cancellationToken);
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
         EnsureSuccess(response, body);
         return MergeResponse(body, workflow);
+    }
+
+    public async Task UpdateWorkflowTagsAsync(string workflowId, JsonArray tags, CancellationToken cancellationToken = default)
+    {
+        if (UseLocalMockMode()) return;
+
+        var requestedNames = tags.Select(tag => tag switch
+            {
+                JsonValue value when value.TryGetValue<string>(out var name) => name,
+                JsonObject value => value["name"]?.GetValue<string>(),
+                _ => null
+            })
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Select(name => name!.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        using var listRequest = CreateRequest(HttpMethod.Get, "api/v1/tags?limit=250");
+        using var listResponse = await httpClient.SendAsync(listRequest, cancellationToken);
+        var listBody = await listResponse.Content.ReadAsStringAsync(cancellationToken);
+        EnsureSuccess(listResponse, listBody);
+        var knownTags = (JsonNode.Parse(listBody)?["data"] as JsonArray ?? [])
+            .OfType<JsonObject>()
+            .ToDictionary(tag => tag["name"]?.GetValue<string>() ?? string.Empty, tag => tag["id"]?.GetValue<string>() ?? string.Empty, StringComparer.OrdinalIgnoreCase);
+
+        var tagIds = new List<string>();
+        foreach (var name in requestedNames)
+        {
+            if (!knownTags.TryGetValue(name, out var tagId))
+            {
+                using var createRequest = CreateRequest(HttpMethod.Post, "api/v1/tags", new { name });
+                using var createResponse = await httpClient.SendAsync(createRequest, cancellationToken);
+                var createBody = await createResponse.Content.ReadAsStringAsync(cancellationToken);
+                EnsureSuccess(createResponse, createBody);
+                var created = JsonNode.Parse(createBody)?["data"] as JsonObject ?? JsonNode.Parse(createBody) as JsonObject ?? [];
+                tagId = created["id"]?.GetValue<string>() ?? throw new InvalidOperationException("n8n did not return an ID for the created tag.");
+                knownTags[name] = tagId;
+            }
+            tagIds.Add(tagId);
+        }
+
+        using var updateRequest = CreateRequest(HttpMethod.Put, $"api/v1/workflows/{Uri.EscapeDataString(workflowId)}/tags", tagIds.Select(id => new { id }).ToArray());
+        using var updateResponse = await httpClient.SendAsync(updateRequest, cancellationToken);
+        var updateBody = await updateResponse.Content.ReadAsStringAsync(cancellationToken);
+        EnsureSuccess(updateResponse, updateBody);
     }
 
     public async Task ActivateWorkflowAsync(string workflowId, CancellationToken cancellationToken = default)
@@ -116,18 +161,12 @@ public class N8nWorkflowClient(
         return request;
     }
 
-    private static object ToPayload(N8nWorkflowDocument workflow, bool includeId) => new
+    private static object ToPayload(N8nWorkflowDocument workflow) => new
     {
-        id = includeId ? workflow.Id : null,
         name = workflow.Name,
-        active = false,
         nodes = workflow.Nodes,
         connections = workflow.Connections,
-        settings = workflow.Settings,
-        tags = workflow.Tags,
-        staticData = workflow.StaticData,
-        pinData = workflow.PinData,
-        meta = workflow.Meta
+        settings = new { executionOrder = workflow.Settings["executionOrder"]?.GetValue<string>() ?? "v1" }
     };
 
     private static N8nWorkflowDocument MergeResponse(string body, N8nWorkflowDocument fallback)

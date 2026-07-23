@@ -27,11 +27,17 @@ public class IntegrationService(
         if (!string.IsNullOrWhiteSpace(integration.WorkflowId))
             return await SynchronizeExistingWorkflowAsync(integration, context, cancellationToken);
 
+        return await ProvisionFromTemplateAsync(integration, context, cancellationToken);
+    }
+
+    private async Task<IntegrationSummaryDto> ProvisionFromTemplateAsync(Integration integration, UserServiceIntegrationContextDto context, CancellationToken cancellationToken)
+    {
         var template = await templates.ResolveAsync(integration, context, cancellationToken);
         var clonedWorkflow = templates.Clone(template, integration, context);
         var createdWorkflow = await workflowClient.CreateWorkflowAsync(clonedWorkflow.Name, clonedWorkflow, cancellationToken);
         if (string.IsNullOrWhiteSpace(createdWorkflow.Id))
             throw new InvalidOperationException("n8n did not return an ID for the created workflow.");
+        await workflowClient.UpdateWorkflowTagsAsync(createdWorkflow.Id, clonedWorkflow.Tags, cancellationToken);
 
         await integrations.UpdateProvisioningAsync(
             integration.IntegrationId,
@@ -44,7 +50,7 @@ public class IntegrationService(
             template.SnapshotHash,
             template.ResolvedAt);
 
-        return ToSummary(await ReloadAsync(userServiceId));
+        return ToSummary(await ReloadAsync(context.UserServiceId));
     }
 
     public async Task<IntegrationSummaryDto> SynchronizeAsync(int userServiceId, CancellationToken cancellationToken = default)
@@ -172,10 +178,18 @@ public class IntegrationService(
 
     private async Task<IntegrationSummaryDto> SynchronizeExistingWorkflowAsync(Integration integration, UserServiceIntegrationContextDto context, CancellationToken cancellationToken)
     {
-        var remote = await workflowClient.GetWorkflowAsync(integration.WorkflowId!, cancellationToken)
-            ?? throw new InvalidOperationException("The provisioned n8n workflow no longer exists. It will not be recreated automatically.");
+        var remote = await workflowClient.GetWorkflowAsync(integration.WorkflowId!, cancellationToken);
+        if (remote is null)
+        {
+            if (string.Equals(integration.Status, IntegrationStatuses.Development, StringComparison.OrdinalIgnoreCase))
+                return await ProvisionFromTemplateAsync(integration, context, cancellationToken);
+
+            throw new InvalidOperationException("The provisioned n8n workflow no longer exists. Re-provision it from an approved template before continuing.");
+        }
+
         templates.SynchronizeManagedContent(remote, context);
         var updated = await workflowClient.UpdateWorkflowAsync(integration.WorkflowId!, remote, cancellationToken);
+        await workflowClient.UpdateWorkflowTagsAsync(integration.WorkflowId!, remote.Tags, cancellationToken);
         await integrations.UpdateWorkflowStateAsync(integration.IntegrationId, integration.Status, null, integration.PublishedBy, integration.PublishedDate, integration.PausedBy, integration.PausedDate, JsonSerializer.Serialize(updated), integration.NodeMappingsJson);
         return ToSummary(await ReloadAsync(context.UserServiceId));
     }

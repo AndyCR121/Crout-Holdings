@@ -47,8 +47,9 @@ public class DevUserServiceFormService(
             : dto.ProductionWebhookUrl.Trim();
         if (string.IsNullOrWhiteSpace(webhookUrl))
             throw new ArgumentException("A production webhook URL is required.");
-        if (!Uri.TryCreate(webhookUrl, UriKind.Absolute, out _))
-            throw new ArgumentException("Webhook URL must be absolute.");
+        if (!Uri.TryCreate(webhookUrl, UriKind.Absolute, out var webhookUri)
+            || webhookUri.Scheme is not ("http" or "https"))
+            throw new ArgumentException("Webhook URL must be an absolute HTTP or HTTPS URL.");
 
         var envelope = JsonSerializer.Serialize(new
         {
