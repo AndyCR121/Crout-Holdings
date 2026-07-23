@@ -132,7 +132,9 @@ public class ServiceTriggerService(
     {
         var runtimeConfig = BuildCustomFormTriggerConfig(context, context.ServiceId)
             ?? throw new InvalidOperationException("Custom form data is not available for this service.");
-        var requestPayload = BuildRequestPayload("WebsiteForm", integration.WorkflowId, payloadJson, fileNames);
+        // A custom form's webhook is its integration boundary: send the completed form
+        // object itself as JSON, rather than the internal workflow execution envelope.
+        var requestPayload = NormalizeFormPayload(payloadJson);
 
         var baseUrl = n8nOptions.Value.BaseUrl;
         var apiKey = n8nOptions.Value.ApiKey;
@@ -164,7 +166,9 @@ public class ServiceTriggerService(
 
         var execution = new ServiceTriggerExecution
         {
-            ServiceTriggerConfigId = runtimeConfig.Id,
+            // Custom forms use a virtual negative trigger ID for rendering. They do not
+            // have a ServiceTriggerConfigs row, so retain the execution via UserServiceId.
+            ServiceTriggerConfigId = null,
             UserId = userId,
             CompanyId = companyId,
             UserServiceId = integration.UserServiceId,
@@ -244,7 +248,30 @@ public class ServiceTriggerService(
         var content = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
             throw new InvalidOperationException($"Webhook returned {(int)response.StatusCode}: {TrimError(content)}");
-        return Parse(string.IsNullOrWhiteSpace(content) ? "{\"accepted\":true}" : content)!.Value;
+        if (string.IsNullOrWhiteSpace(content))
+            return Parse("{\"accepted\":true}")!.Value;
+
+        try
+        {
+            return Parse(content)!.Value;
+        }
+        catch (JsonException)
+        {
+            // A webhook may correctly accept a request while returning plain text or HTML.
+            return Parse(JsonSerializer.Serialize(new { accepted = true, response = content }))!.Value;
+        }
+    }
+
+    private static string NormalizeFormPayload(string? payloadJson)
+    {
+        if (string.IsNullOrWhiteSpace(payloadJson))
+            return "{}";
+
+        using var document = JsonDocument.Parse(payloadJson);
+        if (document.RootElement.ValueKind != JsonValueKind.Object)
+            throw new InvalidOperationException("Custom form submissions must be a JSON object.");
+
+        return JsonSerializer.Serialize(document.RootElement);
     }
 
     private static JsonElement? Parse(string? json)
