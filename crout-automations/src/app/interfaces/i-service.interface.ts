@@ -39,6 +39,7 @@ export interface IService {
   price: number;
   hasAddons: boolean;
   conditional: boolean;
+  active: boolean;
   serviceDescription?: string;
   displayName?: string;
   displayTagline?: string;
@@ -104,6 +105,7 @@ export interface IPackage {
   packageDescription?: string;
   discount: number;
   minimumRequiredAddons?: number;
+  active: boolean;
   serviceIds: number[];
 }
 

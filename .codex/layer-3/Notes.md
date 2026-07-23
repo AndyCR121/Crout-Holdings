@@ -20,6 +20,12 @@
 - Preserve the numbered SQL migration mechanism.
 - Use focused validation first; broaden for routing, shared contracts, startup, DI, schema or build changes.
 
+## Catalogue availability
+
+- Public catalogue reads flow through `ServicesController` -> `IServiceCatalogService` -> `IServiceRepository`; admin catalogue management reads `AdminController` directly through `IServiceRepository` and `IPackageRepository`.
+- Services and packages use an `Active` availability column; public reads filter it while admin management reads remain unfiltered.
+- New user-service creation must validate the selected service, package, and every package-linked service are active server-side.
+
 ## Unknown / verify per task
 
 - Preferred solution-level .NET build/test command.

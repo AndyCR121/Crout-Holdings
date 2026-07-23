@@ -18,8 +18,8 @@ public class ServiceCatalogService(
     CroutApi.Helpers.SensitiveDataProtector protector) : IServiceCatalogService
 {
     public Task<IEnumerable<DeveloperReferralOptionDto>> GetDeveloperReferralOptionsAsync() => users.GetActiveDeveloperReferralOptionsAsync();
-    public Task<IEnumerable<Service>>    GetServicesAsync()                      => services.GetAllAsync();
-    public Task<Service?>                GetServiceByIdAsync(int serviceId)      => services.GetByIdAsync(serviceId);
+    public Task<IEnumerable<Service>>    GetServicesAsync()                      => services.GetAllAsync(activeOnly: true);
+    public Task<Service?>                GetServiceByIdAsync(int serviceId)      => services.GetByIdAsync(serviceId, activeOnly: true);
     public Task<IEnumerable<Addon>>      GetAddonsByServiceAsync(int id)         => services.GetAddonsByServiceAsync(id);
     public Task<IEnumerable<PricingComponent>> GetRequiredPricingComponentsAsync() => services.GetRequiredPricingComponentsAsync();
     public Task<IEnumerable<Package>>    GetPackagesByServiceAsync(int id)       => services.GetPackagesByServiceAsync(id);
@@ -42,7 +42,7 @@ public class ServiceCatalogService(
         if (company.UserId != userId)
             throw new UnauthorizedAccessException("Company does not belong to this user.");
 
-        var service = await services.GetByIdAsync(dto.ServiceId)
+        var service = await services.GetByIdAsync(dto.ServiceId, activeOnly: true)
             ?? throw new KeyNotFoundException("Service not found.");
 
         Package? package = null;
@@ -67,10 +67,10 @@ public class ServiceCatalogService(
         if (invalidAddon is not null)
             throw new ArgumentException($"Add-on '{invalidAddon.AddonName}' does not belong to the selected service package.");
 
-        var packageServices = (await Task.WhenAll(activeServiceIds.Select(id => services.GetByIdAsync(id))))
-            .Where(s => s is not null)
-            .Select(s => s!)
-            .ToList();
+        var packageServiceResults = await Task.WhenAll(activeServiceIds.Select(id => services.GetByIdAsync(id, activeOnly: true)));
+        if (packageServiceResults.Any(serviceItem => serviceItem is null))
+            throw new ArgumentException("Selected package includes an unavailable service.");
+        var packageServices = packageServiceResults.Select(serviceItem => serviceItem!).ToList();
 
         var requiredComponents = (await services.GetRequiredPricingComponentsAsync()).ToList();
         var basePrice = packageServices.Count > 0 ? packageServices.Sum(GetServiceMonthlyPrice) : GetServiceMonthlyPrice(service);

@@ -39,6 +39,7 @@ function normalizeService(raw: any): IService {
     price: raw.price ?? raw.Price ?? (baseCost + tokensCost),
     hasAddons: raw.hasAddons ?? raw.HasAddons ?? false,
     conditional: raw.conditional ?? raw.Conditional ?? false,
+    active: raw.active ?? raw.Active ?? true,
     serviceDescription: raw.serviceDescription ?? raw.ServiceDescription ?? raw.description ?? '',
     displayName: raw.displayName ?? raw.DisplayName ?? '',
     displayTagline: raw.displayTagline ?? raw.DisplayTagline ?? '',
@@ -47,6 +48,19 @@ function normalizeService(raw: any): IService {
     displayOrder: raw.displayOrder ?? raw.DisplayOrder ?? undefined,
     features: raw.features ?? [],
     addons: Array.isArray(raw.addons) ? raw.addons.map(normalizeAddon) : [],
+  };
+}
+
+function normalizePackage(raw: any): IPackage {
+  return {
+    packageId: raw.packageId ?? raw.PackageId ?? raw.id ?? 0,
+    parentPackageId: raw.parentPackageId ?? raw.ParentPackageId ?? undefined,
+    packageName: raw.packageName ?? raw.PackageName ?? '',
+    packageDescription: raw.packageDescription ?? raw.PackageDescription ?? '',
+    discount: raw.discount ?? raw.Discount ?? 0,
+    minimumRequiredAddons: raw.minimumRequiredAddons ?? raw.MinimumRequiredAddons ?? undefined,
+    serviceIds: raw.serviceIds ?? raw.ServiceIds ?? [],
+    active: raw.active ?? raw.Active ?? true,
   };
 }
 
@@ -145,23 +159,30 @@ export class AdminService {
   deleteService(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/services/${id}`, { headers: this.authHeaders(), withCredentials: true });
   }
+  toggleServiceActive(id: number): Observable<{ active: boolean }> {
+    return this.http.patch<{ active: boolean }>(`${this.base}/services/${id}/toggle-active`, {}, { headers: this.authHeaders(), withCredentials: true });
+  }
 
   // ── Packages ───────────────────────────────────────────────────────────────
   getPackages(page = 1, pageSize = 20): Observable<PagedResult<IPackage>> {
     const params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    return this.http.get<PagedResult<IPackage>>(`${this.base}/packages`, { params, headers: this.authHeaders(), withCredentials: true });
+    return this.http.get<PagedResult<any>>(`${this.base}/packages`, { params, headers: this.authHeaders(), withCredentials: true })
+      .pipe(map(result => ({ ...result, items: result.items.map(normalizePackage) })));
   }
   getPackage(id: number): Observable<IPackage> {
-    return this.http.get<IPackage>(`${this.base}/packages/${id}`, { headers: this.authHeaders(), withCredentials: true });
+    return this.http.get<any>(`${this.base}/packages/${id}`, { headers: this.authHeaders(), withCredentials: true }).pipe(map(normalizePackage));
   }
   createPackage(dto: Partial<IPackage>): Observable<IPackage> {
-    return this.http.post<IPackage>(`${this.base}/packages`, dto, { headers: this.authHeaders(), withCredentials: true });
+    return this.http.post<any>(`${this.base}/packages`, dto, { headers: this.authHeaders(), withCredentials: true }).pipe(map(normalizePackage));
   }
   updatePackage(id: number, dto: Partial<IPackage>): Observable<IPackage> {
-    return this.http.put<IPackage>(`${this.base}/packages/${id}`, dto, { headers: this.authHeaders(), withCredentials: true });
+    return this.http.put<any>(`${this.base}/packages/${id}`, dto, { headers: this.authHeaders(), withCredentials: true }).pipe(map(normalizePackage));
   }
   deletePackage(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/packages/${id}`, { headers: this.authHeaders(), withCredentials: true });
+  }
+  togglePackageActive(id: number): Observable<{ active: boolean }> {
+    return this.http.patch<{ active: boolean }>(`${this.base}/packages/${id}/toggle-active`, {}, { headers: this.authHeaders(), withCredentials: true });
   }
   linkServicesToPackage(packageId: number, serviceIds: number[]): Observable<any> {
     return this.http.put(`${this.base}/packages/${packageId}/services`, { serviceIds }, { headers: this.authHeaders(), withCredentials: true });

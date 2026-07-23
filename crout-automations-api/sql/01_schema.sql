@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS Services (
   Price              DECIMAL(10,2)  NOT NULL,
   HasAddons          TINYINT(1)     NOT NULL DEFAULT 0,
   Conditional        TINYINT(1)     NOT NULL DEFAULT 0,
+  Active             TINYINT(1)     NOT NULL DEFAULT 1,
   ServiceDescription TEXT               NULL,
   DisplayName        VARCHAR(255)       NULL,
   DisplayTagline     VARCHAR(255)       NULL,
@@ -90,6 +91,7 @@ CREATE TABLE IF NOT EXISTS Packages (
   PackageDescription    TEXT              NULL,
   Discount              DECIMAL(5,4)  NOT NULL DEFAULT 0,
   minimumRequiredAddons INT               NULL,
+  Active                TINYINT(1)     NOT NULL DEFAULT 1,
   CONSTRAINT fk_package_parent FOREIGN KEY (parent_package_id) REFERENCES Packages(package_id) ON DELETE SET NULL
 );
 
