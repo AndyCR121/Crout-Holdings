@@ -26,6 +26,13 @@
 - Services and packages use an `Active` availability column; public reads filter it while admin management reads remain unfiltered.
 - New user-service creation must validate the selected service, package, and every package-linked service are active server-side.
 
+## n8n lifecycle
+
+- Provisioning is deferred until the developer confirms Step 2 integrations or publishes the service; creation must not require a matching n8n template.
+- Publishing and restarting an integration must pass the same workflow-tag, managed-note, confirmed Trigger/Action/Output, and credential-readiness checks.
+- Developer Step 2 notes are stored under `config.notes` by role and rendered into the managed `CROUT_SERVICE_NOTES` n8n node.
+- All workflow-mutating lifecycle operations share one advisory lock per user service to avoid concurrent n8n updates and activation changes.
+
 ## Unknown / verify per task
 
 - Preferred solution-level .NET build/test command.

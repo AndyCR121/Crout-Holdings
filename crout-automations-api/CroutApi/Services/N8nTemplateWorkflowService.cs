@@ -180,18 +180,21 @@ public sealed class N8nTemplateWorkflowService(IN8nWorkflowClient workflows)
             ## Selected integrations
             {ListValues(config, "integrations")}
             
-            ## Integration-specific developer notes
-            {SafeNote(config, "integrationDeveloperNotes")}
+            ## Trigger developer notes
+            {RoleNote(config, "trigger")}
             
-            ## General developer notes
-            {SafeNote(config, "developerNotes")}
+            ## Action developer notes
+            {RoleNote(config, "action")}
             
+            ## Output developer notes
+            {RoleNote(config, "output")}
+
             > Do not rename or delete this managed node. Credential values are never stored here.
             """;
     }
 
-    private static string SafeNote(JsonObject config, string key) =>
-        config[key]?.GetValue<string>()?.Trim() is { Length: > 0 } value ? value : "None";
+    private static string RoleNote(JsonObject config, string role) =>
+        (config["notes"] as JsonObject)?[role]?.GetValue<string>()?.Trim() is { Length: > 0 } value ? value : "None";
 
     private static string ListValues(JsonObject config, string key)
     {

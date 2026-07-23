@@ -58,6 +58,10 @@ export class DevService {
     return this.http.get<IntegrationStatus>(`${this.base}/user-services/${userServiceId}/integration/status`, { headers: this.authHeaders(), withCredentials: true });
   }
 
+  publishIntegration(userServiceId: number): Observable<unknown> {
+    return this.http.post(`${this.base}/services/${userServiceId}/integration/publish`, {}, { headers: this.authHeaders(), withCredentials: true });
+  }
+
   updateGuideStep(userServiceId: number, step: number): Observable<IDevPortalService> {
     return this.http.post<IDevPortalService>(`${this.base}/services/${userServiceId}/guide/step`, { step }, { headers: this.authHeaders(), withCredentials: true });
   }

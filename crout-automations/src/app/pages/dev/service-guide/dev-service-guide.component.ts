@@ -51,6 +51,7 @@ export class DevServiceGuideComponent implements OnInit {
   readonly savingStep = signal<number | null>(null);
   readonly savingIntegrations = signal(false);
   readonly savingMaintenance = signal(false);
+  readonly publishingIntegration = signal(false);
   readonly integrationEditorOpen = signal(true);
   readonly userServiceId = signal<number | null>(null);
   readonly availableSelections = signal<WorkflowAddonSelection[]>([]);
@@ -206,6 +207,23 @@ export class DevServiceGuideComponent implements OnInit {
       error: err => {
         this.savingMaintenance.set(false);
         this.toast.error(err?.error?.error ?? 'Could not update maintenance mode.');
+      },
+    });
+  }
+
+  publishIntegration(): void {
+    const userServiceId = this.userServiceId();
+    if (userServiceId === null) return;
+    this.publishingIntegration.set(true);
+    this.dev.publishIntegration(userServiceId).subscribe({
+      next: () => {
+        this.publishingIntegration.set(false);
+        this.loadGuide(userServiceId);
+        this.toast.success('Workflow published.');
+      },
+      error: err => {
+        this.publishingIntegration.set(false);
+        this.toast.error(err?.error?.error ?? 'Could not publish the workflow.');
       },
     });
   }

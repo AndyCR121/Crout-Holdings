@@ -165,6 +165,9 @@
                   <div><dt>Managed Tags</dt><dd>{{ status.expectedTagsPresent === false ? 'Mismatch' : 'Verified' }}</dd></div>
                 </dl>
                 @if (status.message) { <p class="dguide-note-copy">{{ status.message }}</p> }
+                <button type="button" class="dguide-confirm" [disabled]="publishingIntegration()" (click)="publishIntegration()">
+                  {{ publishingIntegration() ? 'Publishing...' : 'Publish Workflow' }}
+                </button>
               } @else {
                 <p class="dguide-empty">Workflow status is unavailable.</p>
               }

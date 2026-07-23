@@ -118,6 +118,15 @@ public class DevController(
         return Ok(await integrationService.GetStatusAsync(userServiceId));
     }
 
+    [HttpPost("services/{userServiceId:int}/integration/publish")]
+    public async Task<IActionResult> PublishIntegration(int userServiceId)
+    {
+        if (!await IsDeveloperAsync()) return Forbid();
+        var guide = await devPortal.GetGuideAsync(CallerId, userServiceId);
+        if (guide is null) return NotFound(new { error = "Assigned service was not found." });
+        return Ok(await integrationService.PublishAsync(userServiceId, CallerId));
+    }
+
     [HttpPost("user-services/{userServiceId:int}/form")]
     public async Task<IActionResult> CreateForm(int userServiceId, [FromBody] UpsertDevUserServiceFormDto dto)
     {

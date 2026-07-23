@@ -19,7 +19,12 @@ public class IntegrationService(
 {
     public async Task<IntegrationSummaryDto> EnsureProvisionedAsync(int userServiceId, CancellationToken cancellationToken = default)
     {
-        await using var integrationLock = await AcquireLockAsync($"integration:{userServiceId}:provision", cancellationToken);
+        await using var integrationLock = await AcquireLockAsync($"integration:{userServiceId}", cancellationToken);
+        return await EnsureProvisionedCoreAsync(userServiceId, cancellationToken);
+    }
+
+    private async Task<IntegrationSummaryDto> EnsureProvisionedCoreAsync(int userServiceId, CancellationToken cancellationToken)
+    {
         var context = await userServices.GetIntegrationContextAsync(userServiceId)
             ?? throw new KeyNotFoundException("Client service not found.");
         var integration = await EnsurePlaceholderAsync(context);
@@ -55,12 +60,12 @@ public class IntegrationService(
 
     public async Task<IntegrationSummaryDto> SynchronizeAsync(int userServiceId, CancellationToken cancellationToken = default)
     {
-        await using var integrationLock = await AcquireLockAsync($"integration:{userServiceId}:sync", cancellationToken);
+        await using var integrationLock = await AcquireLockAsync($"integration:{userServiceId}", cancellationToken);
         var context = await userServices.GetIntegrationContextAsync(userServiceId)
             ?? throw new KeyNotFoundException("Client service not found.");
         var integration = await EnsurePlaceholderAsync(context);
         if (string.IsNullOrWhiteSpace(integration.WorkflowId))
-            return await EnsureProvisionedAsync(userServiceId, cancellationToken);
+            return await ProvisionFromTemplateAsync(integration, context, cancellationToken);
         return await SynchronizeExistingWorkflowAsync(integration, context, cancellationToken);
     }
 
@@ -114,11 +119,11 @@ public class IntegrationService(
 
     public async Task<IntegrationSummaryDto> PublishAsync(int userServiceId, int callerUserId, CancellationToken cancellationToken = default)
     {
-        await using var integrationLock = await AcquireLockAsync($"integration:{userServiceId}:publish", cancellationToken);
+        await using var integrationLock = await AcquireLockAsync($"integration:{userServiceId}", cancellationToken);
         var context = await userServices.GetIntegrationContextAsync(userServiceId)
             ?? throw new KeyNotFoundException("Client service not found.");
         ValidatePublishable(context.Config);
-        await EnsureProvisionedAsync(userServiceId, cancellationToken);
+        await EnsureProvisionedCoreAsync(userServiceId, cancellationToken);
         var current = await integrations.GetByUserServiceIdAsync(userServiceId) ?? throw new KeyNotFoundException("Integration not found.");
 
         try
@@ -140,7 +145,7 @@ public class IntegrationService(
 
     public async Task<IntegrationSummaryDto> PauseAsync(int userServiceId, int callerUserId, CancellationToken cancellationToken = default)
     {
-        await using var integrationLock = await AcquireLockAsync($"integration:{userServiceId}:pause", cancellationToken);
+        await using var integrationLock = await AcquireLockAsync($"integration:{userServiceId}", cancellationToken);
         var integration = await RequireWorkflowAsync(userServiceId);
         try
         {
@@ -159,10 +164,15 @@ public class IntegrationService(
 
     public async Task<IntegrationSummaryDto> StartAsync(int userServiceId, int callerUserId, CancellationToken cancellationToken = default)
     {
-        await using var integrationLock = await AcquireLockAsync($"integration:{userServiceId}:start", cancellationToken);
+        await using var integrationLock = await AcquireLockAsync($"integration:{userServiceId}", cancellationToken);
         var integration = await RequireWorkflowAsync(userServiceId);
+        var context = await userServices.GetIntegrationContextAsync(userServiceId)
+            ?? throw new KeyNotFoundException("Client service not found.");
         try
         {
+            await SynchronizeExistingWorkflowAsync(integration, context, cancellationToken);
+            ValidatePublishable(context.Config);
+            await ValidatePublicationPreflightAsync(integration, context, cancellationToken);
             await workflowClient.ActivateWorkflowAsync(integration.WorkflowId!, cancellationToken);
             var verified = await workflowClient.GetWorkflowAsync(integration.WorkflowId!, cancellationToken);
             if (verified is not { Active: true }) throw new InvalidOperationException("n8n did not confirm workflow activation.");

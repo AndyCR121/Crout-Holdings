@@ -1,4 +1,4 @@
--- Active: 1781367621525@@localhost@3306@crout_automations
+-- Active: 1781193513914@@169.255.58.150@3306@crout_automations
 SET @add_template_workflow_id := (
   SELECT IF(
     EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'Integrations' AND COLUMN_NAME = 'template_workflow_id'),

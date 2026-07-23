@@ -528,7 +528,6 @@ public class AdminController(
         };
 
         var id = await userServices.AdminCreateAsync(userService);
-        await integrationService.EnsureProvisionedAsync(id);
         return Created($"/api/admin/client-services/{id}", await userServices.AdminGetRowByIdAsync(id));
     }
 

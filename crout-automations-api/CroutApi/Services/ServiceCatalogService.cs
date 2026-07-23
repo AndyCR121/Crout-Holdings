@@ -154,7 +154,6 @@ public class ServiceCatalogService(
         };
 
         var id = await userServices.CreateAsync(userService);
-        await integrationService.EnsureProvisionedAsync(id);
         if (referredDeveloper is not null)
         {
             await devServices.CreateWithSubscriptionSnapshotAsync(
