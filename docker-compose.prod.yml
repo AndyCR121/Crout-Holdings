@@ -57,6 +57,7 @@ services:
       N8N_APIKEY: ${N8N_APIKEY}
       N8N_WORKSPACEID: ${N8N_WORKSPACEID:-}
       N8N_DEFAULTPROJECTID: ${N8N_DEFAULTPROJECTID:-}
+      API_URL: ${API_URL:-/api}
     networks:
       - public
       - internal
