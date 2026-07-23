@@ -1,6 +1,6 @@
 # Minimal repository-local Codex configuration.
 # Model names are preserved exactly for verification if installed identifiers differ.
-agent_depth = 1
+
 
 [agents.context_mapper]
 config_file = "agents/context-mapper-agent.toml"

@@ -21,5 +21,6 @@ public record RequestServiceConfigChangeDto(
 
 public record UpdateServiceCredentialsDto(
     string IntegrationName,
-    Dictionary<string, string>? Fields
+    Dictionary<string, string>? Fields,
+    string[]? RemoveFields = null
 );

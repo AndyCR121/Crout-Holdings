@@ -34,10 +34,23 @@ public class ServiceTriggersController(IServiceTriggerService triggers) : Contro
         }
         else
         {
-            var body = await System.Text.Json.JsonSerializer.DeserializeAsync<ExecuteTriggerBody>(Request.Body);
-            companyId = body?.CompanyId ?? 0;
-            userServiceId = body?.UserServiceId;
-            payloadJson = body?.Payload.GetRawText();
+            using var body = await System.Text.Json.JsonDocument.ParseAsync(Request.Body);
+            var root = body.RootElement;
+            if (root.TryGetProperty("companyId", out var companyIdValue)
+                && companyIdValue.TryGetInt32(out var parsedCompanyId))
+            {
+                companyId = parsedCompanyId;
+            }
+            if (root.TryGetProperty("userServiceId", out var userServiceIdValue)
+                && userServiceIdValue.TryGetInt32(out var parsedUserServiceId))
+            {
+                userServiceId = parsedUserServiceId;
+            }
+            if (root.TryGetProperty("payload", out var payloadValue)
+                && payloadValue.ValueKind is not System.Text.Json.JsonValueKind.Null)
+            {
+                payloadJson = payloadValue.GetRawText();
+            }
         }
 
         if (companyId <= 0)
@@ -45,6 +58,4 @@ public class ServiceTriggersController(IServiceTriggerService triggers) : Contro
 
         return Ok(await triggers.ExecuteAsync(UserId, triggerId, companyId, userServiceId, payloadJson, fileNames));
     }
-
-    private sealed record ExecuteTriggerBody(int CompanyId, int? UserServiceId, System.Text.Json.JsonElement Payload);
 }

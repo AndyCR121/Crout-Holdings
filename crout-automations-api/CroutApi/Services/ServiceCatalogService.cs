@@ -12,7 +12,10 @@ public class ServiceCatalogService(
     IDevServiceRepository devServices,
     ICompanyRepository companies,
     IUserRepository users,
-    IIntegrationService integrationService) : IServiceCatalogService
+    IIntegrationService integrationService,
+    IIntegrationDefinitionRepository integrationDefinitions,
+    IUserServiceCredentialRepository credentials,
+    CroutApi.Helpers.SensitiveDataProtector protector) : IServiceCatalogService
 {
     public Task<IEnumerable<DeveloperReferralOptionDto>> GetDeveloperReferralOptionsAsync() => users.GetActiveDeveloperReferralOptionsAsync();
     public Task<IEnumerable<Service>>    GetServicesAsync()                      => services.GetAllAsync(activeOnly: true);
@@ -248,8 +251,6 @@ public class ServiceCatalogService(
         var fields = (dto.Fields ?? [])
             .Where(pair => !string.IsNullOrWhiteSpace(pair.Key) && !string.IsNullOrWhiteSpace(pair.Value))
             .ToDictionary(pair => pair.Key.Trim(), pair => pair.Value, StringComparer.OrdinalIgnoreCase);
-        if (fields.Count == 0)
-            throw new ArgumentException("At least one credential field is required.");
 
         var config = ParseConfig(userService.Config);
         var confirmedIntegrationNames = (config["confirmedAddons"] as JsonArray ?? [])
@@ -264,17 +265,44 @@ public class ServiceCatalogService(
         if (confirmedIntegrationNames.Count > 0 && !confirmedIntegrationNames.Contains(integrationName))
             throw new ArgumentException("Credentials can only be submitted for confirmed add-on integrations.");
 
+        var definition = (await integrationDefinitions.GetAllAsync(activeOnly: false))
+            .SingleOrDefault(item => string.Equals(item.Name, integrationName, StringComparison.OrdinalIgnoreCase));
+        if (definition is null || !definition.IsActive || !definition.HasCredentials)
+            throw new ArgumentException("The selected integration does not accept client credentials.");
+
+        var credential = await credentials.GetAsync(userServiceId, definition.Id);
+        var storedValues = credential is null
+            ? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            : DeserializeValues(protector.Unprotect(credential.EncryptedValues));
+        foreach (var field in fields) storedValues[field.Key] = field.Value;
+        foreach (var field in dto.RemoveFields ?? [])
+        {
+            if (!string.IsNullOrWhiteSpace(field)) storedValues.Remove(field.Trim());
+        }
+        if (storedValues.Count == 0)
+            throw new ArgumentException("Provide a credential value or remove an existing credential only when another required value remains.");
+
+        await credentials.UpsertAsync(new UserServiceCredential
+        {
+            UserServiceId = userServiceId,
+            CompanyId = company.CompanyId,
+            IntegrationDefinitionId = definition.Id,
+            EncryptedValues = protector.Protect(JsonSerializer.Serialize(storedValues)),
+            Status = "Configured",
+            N8nCredentialId = credential?.N8nCredentialId,
+            VerifiedAt = null
+        });
+
         var existingCredentials = config["credentialReferences"] as JsonArray ?? [];
         var credentialName = $"{company.CompanyName} | {integrationName}";
         var credentialReference = new JsonObject
         {
             ["integrationName"] = integrationName,
             ["credentialName"] = credentialName,
-            ["mode"] = "mock",
-            ["status"] = "queued",
-            ["fieldNames"] = new JsonArray(fields.Keys.Select(k => JsonValue.Create(k)).ToArray<JsonNode?>()),
+            ["status"] = "Configured",
+            ["fieldNames"] = new JsonArray(storedValues.Keys.Select(k => JsonValue.Create(k)).ToArray<JsonNode?>()),
             ["submittedAt"] = DateTime.UtcNow,
-            ["message"] = "Credential values were sent through the backend gateway. Only metadata is stored locally while n8n credential provisioning is processed."
+            ["message"] = "Credential values are encrypted at rest. Only readiness metadata is retained in service configuration."
         };
 
         var updatedCredentials = new JsonArray(
@@ -288,7 +316,21 @@ public class ServiceCatalogService(
         config["credentialsUpdatedAt"] = DateTime.UtcNow;
 
         await userServices.UpdateConfigAsync(userServiceId, config.ToJsonString(), userService.Status);
+        await integrationService.SynchronizeAsync(userServiceId);
         return await userServices.GetByIdAsync(userServiceId) ?? userService;
+    }
+
+    private static Dictionary<string, string> DeserializeValues(string json)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<Dictionary<string, string>>(json)
+                ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        }
+        catch (JsonException)
+        {
+            throw new InvalidOperationException("Stored credential data is invalid and must be replaced.");
+        }
     }
 
     private static string[] Normalize(string[]? values) =>

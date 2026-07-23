@@ -5,6 +5,20 @@ import { IDevDashboard, IDevPortalService, IPagedResult } from '../interfaces/i-
 import { DevUserServiceForm } from '../interfaces/i-custom-form-builder.interface';
 import { EnvironmentService } from './environment.service';
 
+export interface IntegrationStatus {
+  userServiceId: number;
+  lifecycleStatus: string;
+  publicationStatus: string;
+  credentialStatus: string;
+  accessStatus: string;
+  statusSource: string;
+  workflowExists: boolean;
+  workflowActive?: boolean | null;
+  expectedTagsPresent?: boolean | null;
+  hasMismatch: boolean;
+  message?: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DevService {
   private readonly http = inject(HttpClient);
@@ -38,6 +52,10 @@ export class DevService {
 
   getGuide(userServiceId: number): Observable<IDevPortalService> {
     return this.http.get<IDevPortalService>(`${this.base}/services/${userServiceId}/guide`, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  getIntegrationStatus(userServiceId: number): Observable<IntegrationStatus> {
+    return this.http.get<IntegrationStatus>(`${this.base}/user-services/${userServiceId}/integration/status`, { headers: this.authHeaders(), withCredentials: true });
   }
 
   updateGuideStep(userServiceId: number, step: number): Observable<IDevPortalService> {

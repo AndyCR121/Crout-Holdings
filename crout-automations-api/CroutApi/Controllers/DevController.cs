@@ -109,6 +109,15 @@ public class DevController(
         return form is null ? NotFound(new { error = "No custom form has been created for this service yet." }) : Ok(form);
     }
 
+    [HttpGet("user-services/{userServiceId:int}/integration/status")]
+    public async Task<IActionResult> IntegrationStatus(int userServiceId)
+    {
+        if (!await IsDeveloperAsync()) return Forbid();
+        var guide = await devPortal.GetGuideAsync(CallerId, userServiceId);
+        if (guide is null) return NotFound(new { error = "Assigned service was not found." });
+        return Ok(await integrationService.GetStatusAsync(userServiceId));
+    }
+
     [HttpPost("user-services/{userServiceId:int}/form")]
     public async Task<IActionResult> CreateForm(int userServiceId, [FromBody] UpsertDevUserServiceFormDto dto)
     {

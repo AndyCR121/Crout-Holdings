@@ -61,6 +61,11 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       CONTACT_TO_EMAIL: ${CONTACT_TO_EMAIL}
       SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL}
+
+      N8N_BASE_URL: ${N8N_BASE_URL}
+      N8N_APIKEY: ${N8N_APIKEY}
+      N8N_WORKSPACEID: ${N8N_WORKSPACEID:-}
+      N8N_DEFAULTPROJECTID: ${N8N_DEFAULTPROJECTID:-}
     ports:
       - '5000:8080'   # exposed to host only — host Nginx proxies this
 

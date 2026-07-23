@@ -232,7 +232,7 @@ CREATE TABLE IF NOT EXISTS ServiceTriggerConfigs (
 
 CREATE TABLE IF NOT EXISTS ServiceTriggerExecutions (
   service_trigger_execution_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  service_trigger_config_id    INT NOT NULL,
+  service_trigger_config_id    INT NULL,
   user_id                      INT NOT NULL,
   company_id                   INT NOT NULL,
   user_service_id              INT NULL,

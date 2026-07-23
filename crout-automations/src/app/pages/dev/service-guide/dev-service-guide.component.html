@@ -152,6 +152,26 @@
           <aside class="dguide-side">
             <section class="dguide-panel">
               <div class="dguide-panel-head">
+                <h2>Integration Status</h2>
+                <span>{{ workflowStatus()?.statusSource ?? 'Unavailable' }}</span>
+              </div>
+              @if (workflowStatus(); as status) {
+                <dl class="dguide-details">
+                  <div><dt>Lifecycle</dt><dd>{{ status.lifecycleStatus }}</dd></div>
+                  <div><dt>Publication</dt><dd>{{ status.publicationStatus }}</dd></div>
+                  <div><dt>Credentials</dt><dd>{{ status.credentialStatus }}</dd></div>
+                  <div><dt>Access</dt><dd>{{ status.accessStatus }}</dd></div>
+                  <div><dt>Workflow</dt><dd>{{ status.workflowExists ? (status.workflowActive ? 'Active' : 'Inactive') : 'Missing' }}</dd></div>
+                  <div><dt>Managed Tags</dt><dd>{{ status.expectedTagsPresent === false ? 'Mismatch' : 'Verified' }}</dd></div>
+                </dl>
+                @if (status.message) { <p class="dguide-note-copy">{{ status.message }}</p> }
+              } @else {
+                <p class="dguide-empty">Workflow status is unavailable.</p>
+              }
+            </section>
+
+            <section class="dguide-panel">
+              <div class="dguide-panel-head">
                 <h2>Client Contact</h2>
               </div>
               <dl class="dguide-details">

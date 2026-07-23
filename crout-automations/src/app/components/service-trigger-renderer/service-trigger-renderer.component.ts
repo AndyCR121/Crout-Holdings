@@ -37,6 +37,7 @@ export class ServiceTriggerRendererComponent implements OnChanges {
   readonly responses = signal<Record<number, ExecuteTriggerResponse>>({});
   readonly selectedConfigId = signal<number | null>(null);
   readonly activeTabs = signal<Record<number, string | null>>({});
+  readonly revealedSecrets = signal<Record<string, boolean>>({});
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['configs']) {
@@ -44,7 +45,11 @@ export class ServiceTriggerRendererComponent implements OnChanges {
       const nextTabs: Record<number, string | null> = {};
       for (const config of this.configs) {
         next[config.id] = this.defaultValues(config);
-        nextTabs[config.id] = config.activeTabId ?? this.formTabs(config)[0]?.id ?? null;
+        const tabs = this.formTabs(config);
+        const configuredTabId = config.activeTabId;
+        nextTabs[config.id] = configuredTabId && tabs.some(tab => tab.id === configuredTabId)
+          ? configuredTabId
+          : tabs[0]?.id ?? null;
       }
       this.values.set(next);
       this.activeTabs.set(nextTabs);
@@ -196,10 +201,28 @@ export class ServiceTriggerRendererComponent implements OnChanges {
     return element.type === 'list';
   }
 
-  customInputType(element: CustomFormInputElement): string {
+  customInputType(element: CustomFormInputElement, revealed = false): string {
     if (element.inputMode === 'number') return 'number';
     if (element.inputMode === 'email') return 'email';
+    if (element.inputMode === 'password') return revealed ? 'text' : 'password';
     return 'text';
+  }
+
+  isSecretInput(element: CustomFormInputElement): boolean {
+    return element.inputMode === 'password';
+  }
+
+  isSecretRevealed(configId: number, elementId: string): boolean {
+    return this.revealedSecrets()[`${configId}:${elementId}`] === true;
+  }
+
+  toggleSecretVisibility(configId: number, elementId: string): void {
+    const key = `${configId}:${elementId}`;
+    this.revealedSecrets.update(values => ({ ...values, [key]: !values[key] }));
+  }
+
+  canExecute(config: ServiceTriggerConfig): boolean {
+    return this.validate(config) === null;
   }
 
   customDateTimeInputType(element: CustomFormDateTimeElement): string {
@@ -405,7 +428,13 @@ export class ServiceTriggerRendererComponent implements OnChanges {
     const rules = field.validation;
     if (!rules) return null;
     if (rules.maxLength && String(value).length > rules.maxLength) return `${field.label} is too long.`;
-    if (rules.regex && !new RegExp(rules.regex).test(String(value))) return `${field.label} is invalid.`;
+    if (rules.regex) {
+      try {
+        if (!new RegExp(rules.regex).test(String(value))) return `${field.label} is invalid.`;
+      } catch {
+        return `${field.label} has an invalid validation pattern.`;
+      }
+    }
     const numericValue = typeof value === 'number' ? value : (type === 'number' && value !== '' ? Number(value) : null);
     if (numericValue !== null && !Number.isNaN(numericValue)) {
       if (rules.min !== undefined && numericValue < rules.min) return `${field.label} is below the minimum.`;

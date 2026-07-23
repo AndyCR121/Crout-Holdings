@@ -9,6 +9,15 @@
             }
           </div>
           <div class="dfb-actions">
+            @if (copySourceForms().length) {
+              <select class="dfb-copy-select" [ngModel]="copySourceUserServiceId" (ngModelChange)="copySourceUserServiceId = $event === null || $event === '' ? null : +$event">
+                <option [ngValue]="null">Copy layout from…</option>
+                @for (source of copySourceForms(); track source.userServiceId) {
+                  <option [ngValue]="source.userServiceId">{{ source.label }}</option>
+                }
+              </select>
+              <button type="button" class="dfb-secondary" (click)="copySelectedLayout()" [disabled]="copySourceUserServiceId === null">Copy Layout</button>
+            }
             <button type="button" class="dfb-danger" (click)="deleteForm()" [disabled]="deleting() || formId() === null">
               {{ deleting() ? 'Deleting...' : 'Delete Form' }}
             </button>
@@ -58,7 +67,9 @@
               </div>
             } @else {
               <div class="dfb-canvas-list">
-                @for (element of elements(); track element.id; let index = $index) {
+                @for (item of canvasElements(); track item.element.id) {
+                  @let element = item.element;
+                  @let index = item.index;
                   <article class="dfb-canvas-card" [class.is-selected]="isSelected(element.id)" (click)="selectCanvasElement(element.id)">
                     <div class="dfb-canvas-card__head">
                       <div>
@@ -66,8 +77,8 @@
                         <h3>{{ elementTitle(element, index) }}</h3>
                       </div>
                       <div class="dfb-canvas-card__actions">
-                        <button type="button" (click)="$event.stopPropagation(); moveElement(index, -1)" [disabled]="index === 0">Up</button>
-                        <button type="button" (click)="$event.stopPropagation(); moveElement(index, 1)" [disabled]="index === elements().length - 1">Down</button>
+                        <button type="button" (click)="$event.stopPropagation(); moveVisibleElement(element.id, -1)" [disabled]="!canMoveVisibleElement(element.id, -1)">Up</button>
+                        <button type="button" (click)="$event.stopPropagation(); moveVisibleElement(element.id, 1)" [disabled]="!canMoveVisibleElement(element.id, 1)">Down</button>
                         <button type="button" class="dfb-danger" (click)="$event.stopPropagation(); removeElement(element.id)">Remove</button>
                       </div>
                     </div>
@@ -190,6 +201,7 @@
                       <option value="richText">Rich Text</option>
                       <option value="number">Number</option>
                       <option value="email">Email</option>
+                      <option value="password">Password</option>
                       <option value="hidden">Hidden</option>
                     </select>
                   </label>
@@ -212,6 +224,10 @@
                   </label>
 
                   <label><span>Max Length</span><input type="number" [ngModel]="inputElement.validation?.maxLength ?? ''" (ngModelChange)="updateSelectedInputMaxLength($event)" /></label>
+                  @if (inputElement.inputMode === 'number') {
+                    <label><span>Minimum</span><input type="number" [ngModel]="inputElement.validation?.min ?? ''" (ngModelChange)="updateSelectedInputMin($event)" /></label>
+                    <label><span>Maximum</span><input type="number" [ngModel]="inputElement.validation?.max ?? ''" (ngModelChange)="updateSelectedInputMax($event)" /></label>
+                  }
                   <label><span>Regex</span><input [ngModel]="inputElement.validation?.regex ?? ''" (ngModelChange)="updateSelectedInputRegex($event)" /></label>
 
                   <label>
@@ -419,6 +435,7 @@
                                 <option value="textarea">Textarea</option>
                                 <option value="number">Number</option>
                                 <option value="email">Email</option>
+                                <option value="password">Password</option>
                                 <option value="hidden">Hidden</option>
                               </select>
                             </label>
@@ -475,6 +492,10 @@
                               </select>
                             </label>
                             <label><span>Max Length</span><input type="number" [ngModel]="field.validation?.maxLength ?? ''" (ngModelChange)="updateListInputFieldMaxLength(listElement.id, field.id, $event)" /></label>
+                            @if (field.inputMode === 'number') {
+                              <label><span>Minimum</span><input type="number" [ngModel]="field.validation?.min ?? ''" (ngModelChange)="updateListInputFieldMin(listElement.id, field.id, $event)" /></label>
+                              <label><span>Maximum</span><input type="number" [ngModel]="field.validation?.max ?? ''" (ngModelChange)="updateListInputFieldMax(listElement.id, field.id, $event)" /></label>
+                            }
                             <label><span>Regex</span><input [ngModel]="field.validation?.regex ?? ''" (ngModelChange)="updateListInputFieldRegex(listElement.id, field.id, $event)" /></label>
                           }
 

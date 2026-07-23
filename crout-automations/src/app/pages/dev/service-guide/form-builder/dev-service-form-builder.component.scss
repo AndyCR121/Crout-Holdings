@@ -355,6 +355,7 @@
 
 .dfb-back,
 .dfb-primary,
+.dfb-secondary,
 .dfb-danger,
 .dfb-library button,
 .dfb-canvas-card__actions button,
@@ -372,6 +373,7 @@
 
 .dfb-back:hover,
 .dfb-primary:hover,
+.dfb-secondary:hover,
 .dfb-danger:hover,
 .dfb-library button:hover,
 .dfb-canvas-card__actions button:hover,
@@ -383,6 +385,14 @@
   background: rgba(22, 101, 52, 0.92);
   border-color: rgba(74, 222, 128, 0.34);
   color: #dcfce7;
+}
+
+.dfb-secondary {
+  background: rgba(30, 58, 95, 0.94);
+}
+
+.dfb-copy-select {
+  max-width: 18rem;
 }
 
 .dfb-danger {
@@ -399,6 +409,7 @@ button.dfb-danger {
 
 .dfb-back:disabled,
 .dfb-primary:disabled,
+.dfb-secondary:disabled,
 .dfb-danger:disabled,
 .dfb-library button:disabled,
 .dfb-canvas-card__actions button:disabled,

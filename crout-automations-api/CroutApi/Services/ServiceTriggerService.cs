@@ -132,12 +132,14 @@ public class ServiceTriggerService(
     {
         var runtimeConfig = BuildCustomFormTriggerConfig(context, context.ServiceId)
             ?? throw new InvalidOperationException("Custom form data is not available for this service.");
-        var requestPayload = BuildRequestPayload("WebsiteForm", integration.WorkflowId, payloadJson, fileNames);
+        // A custom form's webhook is its integration boundary: send the completed form
+        // object itself as JSON, rather than the internal workflow execution envelope.
+        var requestPayload = NormalizeFormPayload(payloadJson);
 
         var baseUrl = n8nOptions.Value.BaseUrl;
         var apiKey = n8nOptions.Value.ApiKey;
-        var endpointPath = ExtractEndpointPath(context.WebhookUrl);
-        var liveReady = !string.IsNullOrWhiteSpace(baseUrl) && !string.IsNullOrWhiteSpace(apiKey) && !string.IsNullOrWhiteSpace(endpointPath);
+        var webhookUrl = NormalizeWebhookUrl(context.WebhookUrl, baseUrl);
+        var liveReady = !string.IsNullOrWhiteSpace(webhookUrl);
 
         var status = "queued";
         var mode = liveReady ? "live" : "mock";
@@ -152,7 +154,7 @@ public class ServiceTriggerService(
         {
             try
             {
-                response = await CallN8nAsync(baseUrl!, apiKey!, endpointPath!, requestPayload);
+                response = await CallWebhookAsync(webhookUrl!, requestPayload);
             }
             catch (Exception ex)
             {
@@ -164,7 +166,9 @@ public class ServiceTriggerService(
 
         var execution = new ServiceTriggerExecution
         {
-            ServiceTriggerConfigId = runtimeConfig.Id,
+            // Custom forms use a virtual negative trigger ID for rendering. They do not
+            // have a ServiceTriggerConfigs row, so retain the execution via UserServiceId.
+            ServiceTriggerConfigId = null,
             UserId = userId,
             CompanyId = companyId,
             UserServiceId = integration.UserServiceId,
@@ -235,6 +239,39 @@ public class ServiceTriggerService(
         if (!response.IsSuccessStatusCode)
             throw new InvalidOperationException($"n8n returned {(int)response.StatusCode}.");
         return Parse(string.IsNullOrWhiteSpace(content) ? "{\"accepted\":true}" : content)!.Value;
+    }
+
+    private async Task<JsonElement> CallWebhookAsync(string webhookUrl, string requestPayload)
+    {
+        var client = httpFactory.CreateClient();
+        var response = await client.PostAsync(webhookUrl, new StringContent(requestPayload, Encoding.UTF8, "application/json"));
+        var content = await response.Content.ReadAsStringAsync();
+        if (!response.IsSuccessStatusCode)
+            throw new InvalidOperationException($"Webhook returned {(int)response.StatusCode}: {TrimError(content)}");
+        if (string.IsNullOrWhiteSpace(content))
+            return Parse("{\"accepted\":true}")!.Value;
+
+        try
+        {
+            return Parse(content)!.Value;
+        }
+        catch (JsonException)
+        {
+            // A webhook may correctly accept a request while returning plain text or HTML.
+            return Parse(JsonSerializer.Serialize(new { accepted = true, response = content }))!.Value;
+        }
+    }
+
+    private static string NormalizeFormPayload(string? payloadJson)
+    {
+        if (string.IsNullOrWhiteSpace(payloadJson))
+            return "{}";
+
+        using var document = JsonDocument.Parse(payloadJson);
+        if (document.RootElement.ValueKind != JsonValueKind.Object)
+            throw new InvalidOperationException("Custom form submissions must be a JSON object.");
+
+        return JsonSerializer.Serialize(document.RootElement);
     }
 
     private static JsonElement? Parse(string? json)
@@ -452,14 +489,24 @@ public class ServiceTriggerService(
         _ => "datetime"
     };
 
-    private static string? ExtractEndpointPath(string? webhookUrl)
+    private static string? NormalizeWebhookUrl(string? webhookUrl, string? fallbackBaseUrl)
     {
         if (string.IsNullOrWhiteSpace(webhookUrl))
             return null;
-        if (!Uri.TryCreate(webhookUrl, UriKind.Absolute, out var uri))
-            return webhookUrl;
-        return string.Concat(uri.AbsolutePath, uri.Query);
+        if (Uri.TryCreate(webhookUrl.Trim(), UriKind.Absolute, out var uri)
+            && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp))
+            return uri.ToString();
+
+        if (Uri.TryCreate(fallbackBaseUrl?.Trim(), UriKind.Absolute, out var baseUri))
+            return new Uri(baseUri, webhookUrl.TrimStart('/')).ToString();
+
+        return null;
     }
+
+    private static string TrimError(string content) =>
+        string.IsNullOrWhiteSpace(content)
+            ? "The webhook did not return an error message."
+            : content.Length <= 240 ? content : content[..240];
 
     private static bool HasConfirmedCustomFormTrigger(string? configJson)
     {

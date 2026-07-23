@@ -6,7 +6,11 @@ export interface IIntegrationDefinition {
   description?: string | null;
   integrationType: string;
   hasCredentials: boolean;
-  credentialFormSchema?: { fields: DynamicFieldConfig[] } | null;
+  credentialFormSchema?: {
+    fields: DynamicFieldConfig[];
+    n8nCredentialType?: string;
+    managedNodeNames?: string[];
+  } | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

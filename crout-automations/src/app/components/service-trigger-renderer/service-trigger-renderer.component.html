@@ -49,12 +49,22 @@
               <label class="trigger-field" *ngIf="isInputElement(element) && normalizeCustomInputMode(element.inputMode) !== 'hidden'">
                 <span>{{ element.label }} <strong *ngIf="element.required">*</strong></span>
                 <input
-                  *ngIf="['text','email','number'].includes(normalizeCustomInputMode(element.inputMode))"
-                  [type]="customInputType(element)"
+                  *ngIf="['text','email','number','password'].includes(normalizeCustomInputMode(element.inputMode))"
+                  [type]="customInputType(element, isSecretRevealed(config.id, element.id))"
                   [placeholder]="element.placeholder || ''"
+                  [attr.min]="element.inputMode === 'number' ? (element.validation?.min ?? null) : null"
+                  [attr.max]="element.inputMode === 'number' ? (element.validation?.max ?? null) : null"
+                  [attr.maxlength]="element.validation?.maxLength ?? null"
                   [ngModel]="customFieldValue(config.id, element.key)"
                   (ngModelChange)="setCustomFieldValue(config.id, element.key, $event)"
                 />
+                <button
+                  *ngIf="isSecretInput(element)"
+                  type="button"
+                  class="trigger-secret-toggle"
+                  (click)="toggleSecretVisibility(config.id, element.id)"
+                  [attr.aria-label]="isSecretRevealed(config.id, element.id) ? 'Hide value' : 'Show value'"
+                >{{ isSecretRevealed(config.id, element.id) ? '🙈 Hide' : '👁 Show' }}</button>
                 <textarea
                   *ngIf="normalizeCustomInputMode(element.inputMode) === 'textarea' || normalizeCustomInputMode(element.inputMode) === 'richText'"
                   rows="4"
@@ -165,12 +175,22 @@
                         <label class="trigger-field" *ngIf="field.type === 'input' && normalizeCustomInputMode(field.inputMode) !== 'hidden'">
                           <span>{{ field.label }} <strong *ngIf="field.required">*</strong></span>
                           <input
-                            *ngIf="['text','email','number'].includes(normalizeCustomInputMode(field.inputMode))"
-                            [type]="field.inputMode === 'number' ? 'number' : field.inputMode === 'email' ? 'email' : 'text'"
+                            *ngIf="['text','email','number','password'].includes(normalizeCustomInputMode(field.inputMode))"
+                            [type]="customInputType(field, isSecretRevealed(config.id, element.id + ':' + field.id))"
                             [placeholder]="field.placeholder || ''"
+                            [attr.min]="field.inputMode === 'number' ? (field.validation?.min ?? null) : null"
+                            [attr.max]="field.inputMode === 'number' ? (field.validation?.max ?? null) : null"
+                            [attr.maxlength]="field.validation?.maxLength ?? null"
                             [ngModel]="listFieldValue(config.id, element.key, itemIndex, field.key)"
                             (ngModelChange)="setListFieldValue(config.id, element.key, itemIndex, field.key, $event)"
                           />
+                          <button
+                            *ngIf="isSecretInput(field)"
+                            type="button"
+                            class="trigger-secret-toggle"
+                            (click)="toggleSecretVisibility(config.id, element.id + ':' + field.id)"
+                            [attr.aria-label]="isSecretRevealed(config.id, element.id + ':' + field.id) ? 'Hide value' : 'Show value'"
+                          >{{ isSecretRevealed(config.id, element.id + ':' + field.id) ? '🙈 Hide' : '👁 Show' }}</button>
                           <textarea
                             *ngIf="normalizeCustomInputMode(field.inputMode) === 'textarea' || normalizeCustomInputMode(field.inputMode) === 'richText'"
                             rows="3"
@@ -375,7 +395,7 @@
         <strong>{{ response(config.id)?.mode }}</strong>
       </p>
 
-      <button *ngIf="!previewOnly" class="trigger-action" type="button" [disabled]="busy() === config.id" (click)="execute(config)">
+      <button *ngIf="!previewOnly" class="trigger-action" type="button" [disabled]="busy() === config.id || !canExecute(config)" (click)="execute(config)">
         <span *ngIf="busy() !== config.id">Run Trigger</span>
         <span *ngIf="busy() === config.id">Running...</span>
       </button>

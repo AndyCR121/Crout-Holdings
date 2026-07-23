@@ -164,6 +164,6 @@ export class DevServicesComponent implements OnInit {
   }
 
   guideHref(userServiceId: number): string {
-    return `/dev/dev-services/guide/?userServiceId=${userServiceId}`;
+    return `/dev/dev-services/guide?userServiceId=${userServiceId}`;
   }
 }

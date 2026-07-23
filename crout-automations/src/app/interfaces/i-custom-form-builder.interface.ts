@@ -23,7 +23,7 @@ export interface CustomFormBaseElement {
 
 export interface CustomFormInputElement extends CustomFormBaseElement {
   type: 'input';
-  inputMode: 'text' | 'textarea' | 'richText' | 'number' | 'email' | 'hidden';
+  inputMode: 'text' | 'textarea' | 'richText' | 'number' | 'email' | 'password' | 'hidden';
   key: string;
   name?: string;
   label: string;
@@ -85,7 +85,7 @@ export interface CustomFormListItemBaseField {
 
 export interface CustomFormListItemInputField extends CustomFormListItemBaseField {
   type: 'input';
-  inputMode: 'text' | 'textarea' | 'number' | 'email' | 'hidden';
+  inputMode: 'text' | 'textarea' | 'number' | 'email' | 'password' | 'hidden';
   placeholder?: string;
   defaultValueText?: string;
   required?: boolean;

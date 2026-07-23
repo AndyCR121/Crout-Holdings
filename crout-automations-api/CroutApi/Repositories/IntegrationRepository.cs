@@ -19,6 +19,11 @@ public class IntegrationRepository(DbHelper db) : IIntegrationRepository
               company_id AS CompanyId,
               workflow_id AS WorkflowId,
               workflow_name AS WorkflowName,
+              template_workflow_id AS TemplateWorkflowId,
+              template_service_tag AS TemplateServiceTag,
+              template_version AS TemplateVersion,
+              template_snapshot_hash AS TemplateSnapshotHash,
+              template_resolved_at AS TemplateResolvedAt,
               custom_form_title AS CustomFormTitle,
               custom_form_webhook_url AS CustomFormWebhookUrl,
               status AS Status,
@@ -53,6 +58,11 @@ public class IntegrationRepository(DbHelper db) : IIntegrationRepository
               company_id AS CompanyId,
               workflow_id AS WorkflowId,
               workflow_name AS WorkflowName,
+              template_workflow_id AS TemplateWorkflowId,
+              template_service_tag AS TemplateServiceTag,
+              template_version AS TemplateVersion,
+              template_snapshot_hash AS TemplateSnapshotHash,
+              template_resolved_at AS TemplateResolvedAt,
               custom_form_title AS CustomFormTitle,
               custom_form_webhook_url AS CustomFormWebhookUrl,
               status AS Status,
@@ -173,7 +183,7 @@ public class IntegrationRepository(DbHelper db) : IIntegrationRepository
         }
     }
 
-    public async Task UpdateProvisioningAsync(int integrationId, string workflowId, string workflowDefinitionJson, string? nodeMappingsJson)
+    public async Task UpdateProvisioningAsync(int integrationId, string workflowId, string workflowDefinitionJson, string? nodeMappingsJson, string templateWorkflowId, string templateServiceTag, string templateVersion, string templateSnapshotHash, DateTime templateResolvedAt)
     {
         using var conn = db.GetConnection();
         await conn.ExecuteAsync(
@@ -182,10 +192,15 @@ public class IntegrationRepository(DbHelper db) : IIntegrationRepository
             SET workflow_id = @workflowId,
                 workflow_definition_json = @workflowDefinitionJson,
                 node_mappings_json = @nodeMappingsJson,
+                template_workflow_id = @templateWorkflowId,
+                template_service_tag = @templateServiceTag,
+                template_version = @templateVersion,
+                template_snapshot_hash = @templateSnapshotHash,
+                template_resolved_at = @templateResolvedAt,
                 last_error = NULL
             WHERE integration_id = @integrationId
             """,
-            new { integrationId, workflowId, workflowDefinitionJson, nodeMappingsJson });
+            new { integrationId, workflowId, workflowDefinitionJson, nodeMappingsJson, templateWorkflowId, templateServiceTag, templateVersion, templateSnapshotHash, templateResolvedAt });
     }
 
     public async Task UpdateWorkflowStateAsync(int integrationId, string status, string? lastError, int? publishedBy, DateTime? publishedDate, int? pausedBy, DateTime? pausedDate, string? workflowDefinitionJson, string? nodeMappingsJson)
