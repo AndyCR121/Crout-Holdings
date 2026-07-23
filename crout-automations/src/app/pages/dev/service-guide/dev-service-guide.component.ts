@@ -240,7 +240,7 @@ export class DevServiceGuideComponent implements OnInit {
 
   formBuilderHref(): string | null {
     const userServiceId = this.userServiceId();
-    return userServiceId ? `/dev/dev-services/guide/form-builder/?userServiceId=${userServiceId}` : null;
+    return userServiceId ? `/dev/dev-services/guide/form-builder?userServiceId=${userServiceId}` : null;
   }
 
   private parseUserServiceId(value: string | null): number | null {

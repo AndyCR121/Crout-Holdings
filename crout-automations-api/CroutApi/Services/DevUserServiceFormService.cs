@@ -7,8 +7,7 @@ namespace CroutApi.Services;
 
 public class DevUserServiceFormService(
     IIntegrationRepository integrations,
-    IUserServiceRepository userServices,
-    IIntegrationService integrationService) : IDevUserServiceFormService
+    IUserServiceRepository userServices) : IDevUserServiceFormService
 {
     public async Task<DevUserServiceFormDto?> GetAsync(int developerUserId, int userServiceId)
     {
@@ -69,7 +68,6 @@ public class DevUserServiceFormService(
 
     private async Task<CustomFormAccessContextDto> RequireDeveloperAccessAsync(int developerUserId, int userServiceId)
     {
-        await integrationService.EnsureProvisionedAsync(userServiceId);
         var context = await integrations.GetCustomFormContextByUserServiceIdAsync(userServiceId)
             ?? throw new KeyNotFoundException("User service not found.");
         if (!context.UserServiceActive)
