@@ -60,8 +60,12 @@ services:
       N8N_WORKSPACEID: ${N8N_WORKSPACEID:-}
       N8N_DEFAULTPROJECTID: ${N8N_DEFAULTPROJECTID:-}
     networks:
-      - public
-      - internal
+      public:
+        aliases:
+          - automations-api
+      internal:
+        aliases:
+          - automations-api
 
 networks:
   public:
