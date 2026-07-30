@@ -3,7 +3,9 @@ YOUR_DOMAIN_HERE, www.YOUR_DOMAIN_HERE {
 
     @api path /api/*
     handle @api {
-        reverse_proxy api:8080
+        reverse_proxy api:8080 {
+            header_up Host automations.crout-holdings.com:443
+        }
     }
 
     handle {

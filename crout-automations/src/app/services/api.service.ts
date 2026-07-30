@@ -11,7 +11,6 @@ import {
   IUser,
   ICompany,
   IUserService,
-  IServiceConfig,
   IPricingComponent,
   IDeveloperReferralOption,
 } from '../interfaces/i-service.interface';
@@ -235,14 +234,6 @@ export class ApiService {
         map(arr => arr.map(normalizeUserService)),
         catchError(err => throwError(() => err))
       );
-  }
-
-  // ─── Service Config ───────────────────────────────────────────────────────
-
-  getServiceConfig(companyId: number, serviceId: number): Observable<IServiceConfig | null> {
-    return this.http
-      .get<IServiceConfig>(`${this.base}/companies/${companyId}/services/${serviceId}/config`, { headers: this.authHeaders(), withCredentials: true })
-      .pipe(catchError(err => throwError(() => err)));
   }
 
   createUserServiceFromConfig(payload: {
