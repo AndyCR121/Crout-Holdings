@@ -17,7 +17,8 @@
     <div class="contact-body__inner">
 
       <!-- ===== FORM CARD ===== -->
-      <div class="contact-form-card">
+      <div class="contact-content">
+        <div class="contact-form-card">
 
         @switch (formState()) {
 
@@ -155,6 +156,15 @@
                 }
               </div>
 
+              <div class="consultation-choice">
+                <button type="button" class="btn btn--primary consultation-choice__button" (click)="openBookingDialog()">
+                  {{ consultation() ? 'Update Consultation' : 'Book Consultation' }}
+                </button>
+                @if (consultation()) {
+                  <p class="consultation-choice__summary"><strong>Consultation selected:</strong> {{ consultationLabel() }}</p>
+                }
+              </div>
+
               <!-- Message -->
               <div class="form-group" [class.form-group--error]="form.get('message')?.touched && form.get('message')?.invalid">
                 <div class="form-label-row">
@@ -187,7 +197,7 @@
                   <span class="btn__spinner" aria-hidden="true"></span>
                   Sending&hellip;
                 } @else {
-                  Book a Free Consultation
+                  Submit Email
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 }
               </button>
@@ -199,6 +209,7 @@
             </form>
           }
         }
+        </div>
       </div>
 
       <!-- ===== SIDEBAR ===== -->
@@ -252,3 +263,13 @@
   </section>
 
 </main>
+
+@if (bookingDialogOpen()) {
+  <div class="consultation-dialog" role="dialog" aria-modal="true" aria-label="Book a consultation">
+    <button type="button" class="consultation-dialog__backdrop" (click)="closeBookingDialog()" aria-label="Close booking calendar"></button>
+    <div class="consultation-dialog__content">
+      <button type="button" class="consultation-dialog__close" (click)="closeBookingDialog()" aria-label="Close">×</button>
+      <ca-book-consultation [bookingId]="consultation()?.bookingId ?? null" (booked)="setConsultation($event)" />
+    </div>
+  </div>
+}

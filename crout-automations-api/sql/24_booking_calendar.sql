@@ -1,6 +1,6 @@
 -- Website consultation booking calendar
 ALTER TABLE Users
-  ADD COLUMN IF NOT EXISTS marketing_opt_in TINYINT(1) NOT NULL DEFAULT 1 AFTER CellNumber;
+  ADD COLUMN marketing_opt_in TINYINT(1) NOT NULL DEFAULT 1 AFTER CellNumber;
 
 CREATE TABLE IF NOT EXISTS BookingAvailabilityBlocks (
   availability_block_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,

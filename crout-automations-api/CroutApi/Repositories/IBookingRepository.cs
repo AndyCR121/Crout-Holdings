@@ -5,7 +5,8 @@ namespace CroutApi.Repositories;
 public interface IBookingRepository
 {
     Task<bool> HasConflictAsync(DateTime startsAt, DateTime endsAt);
-    Task<int?> CreateBookingIfAvailableAsync(int userId, DateTime startsAt, DateTime endsAt);
+    Task<int?> CreateBookingIfAvailableAsync(int userId, DateTime startsAt, DateTime endsAt, string platform);
+    Task<bool> RescheduleBookingIfAvailableAsync(int bookingId, int userId, DateTime startsAt, DateTime endsAt, string platform);
     Task<BookingDto?> GetBookingAsync(int bookingId);
     Task<IEnumerable<BookingDto>> GetBookingsAsync(DateTime from, DateTime to);
     Task<IEnumerable<AvailabilityBlockDto>> GetBlocksAsync(DateTime from, DateTime to);

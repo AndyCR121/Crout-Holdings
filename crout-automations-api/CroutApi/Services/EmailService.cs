@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Mail;
-using System.Text;
 using CroutApi.Models;
 using CroutApi.DTOs;
 
@@ -43,8 +42,8 @@ public class EmailService(ILogger<EmailService> logger, IWebHostEnvironment env,
         {
             From = new MailAddress(from),
             Subject = $"Contact request: {request.Service}",
-            Body = BuildBody(request),
-            IsBodyHtml = false,
+            Body = BuildContactRequestEmail(request),
+            IsBodyHtml = true,
         };
         message.To.Add(to);
 
@@ -117,19 +116,21 @@ public class EmailService(ILogger<EmailService> logger, IWebHostEnvironment env,
         }
     }
 
-    public async Task<bool> SendBookingConfirmationAsync(BookingDto booking)
+    public async Task<bool> SendBookingConfirmationAsync(BookingDto booking, string? calendarEmail = null)
     {
         var host = GetSetting("SMTP_HOST", "Mail:Smtp:Host");
         var from = GetSetting("SMTP_FROM_EMAIL", "Mail:Smtp:FromEmail");
-        var owner = GetSetting("BOOKING_TO_EMAIL", "Mail:Booking:ToEmail") ?? GetSetting("CONTACT_TO_EMAIL", "Mail:Contact:ToEmail");
+        var owner = calendarEmail ?? GetSetting("BOOKING_TO_EMAIL", "Mail:Booking:ToEmail") ?? GetSetting("CONTACT_TO_EMAIL", "Mail:Contact:ToEmail");
         if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(from) || string.IsNullOrWhiteSpace(owner)) { logger.LogWarning("Booking emails skipped because SMTP or booking recipient settings are missing."); return false; }
         var local = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(booking.StartsAt, DateTimeKind.Utc), GetSouthAfricaTimeZone());
         var time = local.ToString("dddd, d MMMM yyyy 'at' HH:mm") + " SAST";
         try
         {
             using var client = BuildClient(host);
-            using var clientMessage = new MailMessage(from, booking.ClientEmail, "Your Crout Automations consultation is confirmed", $"Hi {booking.ClientName},\n\nYour free Crout Automations consultation is confirmed for {time}.\n\nWe look forward to speaking with you.") { IsBodyHtml = false };
+            using var clientMessage = new MailMessage(from, booking.ClientEmail, "Your Crout Automations consultation is confirmed", RenderTemplate("BookingClientConfirmation.html", ("clientName", booking.ClientName), ("appointmentTime", time), ("platform", booking.Platform))) { IsBodyHtml = true };
             using var ownerMessage = new MailMessage(from, owner, $"New consultation booking — {booking.ClientName}", $"New consultation booking\n\nClient: {booking.ClientName}\nEmail: {booking.ClientEmail}\nWhen: {time}") { IsBodyHtml = false };
+            ownerMessage.Body = RenderTemplate("BookingOwnerNotification.html", ("clientName", booking.ClientName), ("clientEmail", booking.ClientEmail), ("appointmentTime", time), ("platform", booking.Platform));
+            ownerMessage.IsBodyHtml = true;
             await SendWithTimeoutAsync(client, clientMessage);
             await SendWithTimeoutAsync(client, ownerMessage);
             return true;
@@ -137,32 +138,18 @@ public class EmailService(ILogger<EmailService> logger, IWebHostEnvironment env,
         catch (Exception ex) { logger.LogError(ex, "Booking confirmation email failed for booking {BookingId}", booking.BookingId); return false; }
     }
 
-    private static string BuildBody(ContactRequest request)
+    private string BuildContactRequestEmail(ContactRequest request)
     {
-        var body = new StringBuilder();
-        body.AppendLine("New Contact Request");
-        body.AppendLine("===================");
-        body.AppendLine($"Name: {request.Name}");
-        body.AppendLine($"Email: {request.Email}");
-        body.AppendLine($"Phone: {request.Phone ?? "Not provided"}");
-        body.AppendLine($"Business: {request.Business ?? "Not provided"}");
-        body.AppendLine($"Service: {request.Service}");
-        body.AppendLine($"Referral: {request.Referral ?? "Not provided"}");
-        body.AppendLine($"Source: {request.Source ?? "Website"}");
-        body.AppendLine();
-        body.AppendLine("Message");
-        body.AppendLine("-------");
-        body.AppendLine(request.Message);
+        var message = request.Message;
+        if (!string.IsNullOrWhiteSpace(request.ConfigJson)) message += $"\n\nSelected configuration:\n{request.ConfigJson}";
+        return RenderTemplate("ContactRequestNotification.html", ("name", request.Name), ("email", request.Email), ("phone", request.Phone ?? "Not provided"), ("business", request.Business ?? "Not provided"), ("service", request.Service), ("source", request.Source ?? "Website"), ("message", message), ("configuration", string.Empty));
+    }
 
-        if (!string.IsNullOrWhiteSpace(request.ConfigJson))
-        {
-            body.AppendLine();
-            body.AppendLine("Selected Configuration");
-            body.AppendLine("----------------------");
-            body.AppendLine(request.ConfigJson);
-        }
-
-        return body.ToString();
+    private string RenderTemplate(string templateName, params (string Key, string? Value)[] values)
+    {
+        var template = File.ReadAllText(Path.Combine(env.ContentRootPath, "Templates", templateName));
+        foreach (var (key, value) in values) template = template.Replace($"{{{{{key}}}}}", WebUtility.HtmlEncode(value ?? string.Empty));
+        return template;
     }
 
     private SmtpClient BuildClient(string host)

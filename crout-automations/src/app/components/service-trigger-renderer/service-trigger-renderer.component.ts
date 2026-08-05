@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject, signal } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnChanges, Output, SimpleChanges, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ServiceTriggerApiService } from '../../services/service-trigger-api.service';
@@ -42,6 +42,15 @@ export class ServiceTriggerRendererComponent implements OnChanges {
   readonly selectedConfigId = signal<number | null>(null);
   readonly activeTabs = signal<Record<number, string | null>>({});
   readonly revealedSecrets = signal<Record<string, boolean>>({});
+
+  /** Native date fields do not consistently open their picker when the text area is clicked. */
+  @HostListener('click', ['$event'])
+  openDatePicker(event: MouseEvent): void {
+    const input = event.target instanceof HTMLInputElement ? event.target : null;
+    if (!input || !['date', 'time', 'datetime-local'].includes(input.type)) return;
+    input.focus();
+    try { (input as HTMLInputElement & { showPicker?: () => void }).showPicker?.(); } catch { /* unsupported browser */ }
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['configs']) {

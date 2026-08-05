@@ -61,6 +61,7 @@ builder.Services.AddScoped<IIntegrationDefinitionRepository, IntegrationDefiniti
 builder.Services.AddScoped<IUserServiceCredentialRepository, UserServiceCredentialRepository>();
 builder.Services.AddScoped<IReleaseNoteRepository, ReleaseNoteRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<IBookingCalendarSettingsRepository, BookingCalendarSettingsRepository>();
 
 // -- Application Services -----------------------------------------------------
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -77,6 +78,7 @@ builder.Services.AddScoped<IIntegrationService, IntegrationService>();
 builder.Services.AddScoped<ISqlUpdaterService, SqlUpdaterService>();
 builder.Services.AddScoped<IReleaseNoteService, ReleaseNoteService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddScoped<IBookingCalendarSettingsService, BookingCalendarSettingsService>();
 builder.Services.Configure<DatabaseManagementOptions>(builder.Configuration.GetSection("DatabaseManagement"));
 builder.Services.AddScoped<IDatabaseManagementService, DatabaseManagementService>();
 builder.Services.AddScoped<ISchemaSyncPlanService, SchemaSyncPlanService>();

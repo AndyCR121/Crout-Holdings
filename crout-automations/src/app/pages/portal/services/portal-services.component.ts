@@ -95,7 +95,9 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: ({ svcs, companies, companyServices, addons }) => {
-        const allAddons: IAddon[] = (addons as IAddon[][]).flat();
+        const allAddons: IAddon[] = Array.from(
+          new Map((addons as IAddon[][]).flat().map(addon => [addon.addonId, addon])).values()
+        );
 
         const built: CompanyGroup[] = (companies as ICompany[]).map((company: ICompany, ci: number) => {
           const us: IUserService[] = (companyServices as IUserService[][])[ci] ?? [];
@@ -178,7 +180,7 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
     if (cfg) {
       try {
         const parsed = JSON.parse(cfg);
-        if (Array.isArray(parsed.addonIds)) return parsed.addonIds;
+        if (Array.isArray(parsed.addonIds)) return [...new Set(parsed.addonIds as number[])];
       } catch {
         // fall through
       }
@@ -338,7 +340,9 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
   }
 
   groupedAddons(row: ServiceRow, role: 'Trigger' | 'Action' | 'Output'): IAddon[] {
-    return row.addons.filter(addon => addon.type === role);
+    return Array.from(new Map(
+      row.addons.filter(addon => addon.type === role).map(addon => [addon.addonId, addon])
+    ).values());
   }
 
   isAddonSelected(row: ServiceRow, addonId: number): boolean {

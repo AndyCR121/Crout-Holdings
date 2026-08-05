@@ -194,6 +194,16 @@
   }
 }
 
+.contact-content { display: grid; gap: var(--space-8); }
+
+.consultation-choice { display: grid; justify-items: start; gap: var(--space-3); }
+.consultation-choice__button { min-height: 42px; }
+.consultation-choice__summary { margin: 0; color: var(--color-text-muted); font-size: var(--text-sm); }
+.consultation-dialog { position: fixed; z-index: 1200; inset: 0; display: grid; place-items: center; padding: 1rem; }
+.consultation-dialog__backdrop { position: absolute; inset: 0; border: 0; background: rgba(3, 12, 24, .72); cursor: default; }
+.consultation-dialog__content { position: relative; z-index: 1; width: min(920px, 100%); max-height: calc(100dvh - 2rem); overflow-y: auto; border-radius: var(--radius-2xl); box-shadow: var(--shadow-xl); }
+.consultation-dialog__close { position: sticky; z-index: 2; float: right; top: .75rem; right: .75rem; width: 2rem; height: 2rem; margin: .75rem .75rem -2.75rem 0; border: 0; border-radius: 999px; background: rgba(255,255,255,.15); color: #fff; font-size: 1.5rem; line-height: 1; cursor: pointer; }
+
 .form-textarea {
   resize: vertical;
   min-height: 140px;

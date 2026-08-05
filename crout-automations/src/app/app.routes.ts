@@ -262,8 +262,8 @@ export const routes: Routes = [
   },
   {
     path: 'book-consultation',
-    loadComponent: () => import('./pages/book-consultation/book-consultation.component').then(m => m.BookConsultationComponent),
-    data: { seo: { title: 'Book a Free Consultation - Crout Automations', description: 'Book a free automation consultation with Crout Automations.', canonical: '/book-consultation' } },
+    redirectTo: 'contact-us',
+    pathMatch: 'full',
   },
   {
     path: 'privacy-policy',

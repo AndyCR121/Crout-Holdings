@@ -1,11 +1,11 @@
-<main class="booking-page">
+<section class="booking-calendar" aria-label="Book a free consultation">
   <section class="booking-card">
     <p class="eyebrow">Free consultation</p><h1>Book a time to talk automation.</h1>
     <p class="intro">Choose a 30-minute consultation time that suits you. Times are shown in South Africa Standard Time (SAST).</p>
     @if (!loggedIn()) { <div class="login-note"><strong>Sign in to book.</strong> New here? Create a free account, then choose your time.</div> }
     @if (confirmation()) { <div class="success">You're booked for {{ confirmation() | date:'EEEE, d MMMM, HH:mm' }} SAST. We've sent confirmation emails to you and the Crout Automations team.</div> }
-    <div class="day-picker">@for (day of days(); track day.toISOString()) { <button type="button" [class.active]="selectedDate() === (day | date:'yyyy-MM-dd':'UTC')" (click)="selectDay(day)"><span>{{ day | date:'EEE' }}</span><strong>{{ day | date:'d MMM' }}</strong></button> }</div>
-    @if (loading()) { <p class="empty">Loading availability…</p> } @else { <div class="slots">@for (slot of slots(); track slot.start) { <button type="button" class="slot" [disabled]="submitting()" (click)="book(slot.start)">{{ slot.label }} @if (isMine(slot.start)) { <small>Booked by you</small> }</button> } @empty { <p class="empty">No times remain on this day. Try another date.</p> }</div> }
+    <div class="day-picker">@for (day of days(); track day.toISOString()) { <button type="button" [class.active]="selectedDate() === dateKey(day)" (click)="selectDay(day)"><span>{{ day | date:'EEE' }}</span><strong>{{ day | date:'d MMM' }}</strong></button> }</div>
+    @if (loading()) { <p class="empty">Loading availability...</p> } @else { <div class="time-picker"><label for="consultation-time">Available time<select id="consultation-time" [(ngModel)]="selectedSlot" [disabled]="submitting()"><option value="" disabled>Select a time...</option>@for (slot of slots(); track slot.start) { <option [value]="slot.start" [disabled]="slot.occupied">{{ slot.label }}{{ slot.occupied ? ' - Occupied' : '' }}</option> }</select></label><label for="consultation-platform">Consultation platform<select id="consultation-platform" [(ngModel)]="selectedPlatform" [disabled]="submitting()"><option value="" disabled>Select a platform...</option>@for (platform of platforms(); track platform) { <option [value]="platform">{{ platform }}</option> }</select></label><button type="button" class="book-slot" [disabled]="submitting() || !selectedSlot || !selectedPlatform" (click)="bookSelected()">{{ submitting() ? 'Booking...' : 'Book selected time' }}</button></div> @if (!slots().length) { <p class="empty">No consultation times are configured for this day. Try another date.</p> } }
   </section>
-</main>
+</section>
 @if (showAuth()) { <ca-auth-modal (close)="closeAuth()" /> }

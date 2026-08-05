@@ -6,13 +6,15 @@ import { ApiService } from '../../services/api.service';
 import { FormValidatorService } from '../../services/form-validator.service';
 import { ContactConfig, WebhookService } from '../../services/webhook.service';
 import { ToastService } from '../../services/toast.service';
+import { BookConsultationComponent } from '../book-consultation/book-consultation.component';
+import { IBooking } from '../../services/booking.service';
 
 type FormState = 'idle' | 'loading' | 'success' | 'error';
 
 @Component({
   selector: 'ca-contact',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, BookConsultationComponent],
   templateUrl: './contact.component.html',
   styleUrl: './contact.component.scss'
 })
@@ -29,6 +31,8 @@ export class ContactComponent implements OnInit {
   errorMessage = signal('');
   selectedConfig = signal<ContactConfig | null>(null);
   referral = signal('');
+  bookingDialogOpen = signal(false);
+  consultation = signal<IBooking | null>(null);
 
   readonly services = signal<string[]>([...this.staticServices]);
   public form = this.fb.group({
@@ -104,7 +108,7 @@ export class ContactComponent implements OnInit {
       phone:     v.phone    ?? '',
       business:  v.business ?? '',
       service:   v.service  ?? '',
-      message:   v.message  ?? '',
+      message:   this.messageWithConsultation(v.message ?? ''),
       referral:  this.referral(),
       config:    this.selectedConfig(),
       source:    'Crout Automations website',
@@ -126,6 +130,15 @@ export class ContactComponent implements OnInit {
     this.form.reset();
     this.formState.set('idle');
     this.errorMessage.set('');
+    this.consultation.set(null);
+  }
+
+  openBookingDialog(): void { this.bookingDialogOpen.set(true); }
+  closeBookingDialog(): void { this.bookingDialogOpen.set(false); }
+  setConsultation(booking: IBooking): void { this.consultation.set(booking); this.bookingDialogOpen.set(false); }
+  consultationLabel(): string {
+    const booking = this.consultation();
+    return booking ? `${new Intl.DateTimeFormat('en-ZA', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Africa/Johannesburg' }).format(new Date(booking.startsAt))} SAST via ${booking.platform}` : '';
   }
 
   private setServiceOptions(dynamicServices: string[]): void {
@@ -150,5 +163,9 @@ export class ContactComponent implements OnInit {
       `Selected add-ons: ${addons}`,
       `Estimated monthly amount: R${total.toLocaleString('en-ZA')}`
     ].join('\n');
+  }
+
+  private messageWithConsultation(message: string): string {
+    return this.consultation() ? `${message}\n\nConsultation booked: ${this.consultationLabel()}` : message;
   }
 }
