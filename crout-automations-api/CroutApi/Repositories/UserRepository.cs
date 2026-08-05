@@ -8,7 +8,7 @@ namespace CroutApi.Repositories;
 public class UserRepository(DbHelper db) : IUserRepository
 {
     private const string SelectCols =
-        "user_id AS UserId, Username, PasswordHash, token_version AS TokenVersion, FirstName, Surname, Email, CellNumber, Active, IsAdmin, isDev AS IsDev, referral AS Referral, CreatedAt, ProfilePicture";
+        "user_id AS UserId, Username, PasswordHash, token_version AS TokenVersion, FirstName, Surname, Email, CellNumber, marketing_opt_in AS MarketingOptIn, Active, IsAdmin, isDev AS IsDev, referral AS Referral, CreatedAt, ProfilePicture";
 
     public async Task<User?> GetByUsernameAsync(string username)
     {
@@ -107,7 +107,7 @@ public class UserRepository(DbHelper db) : IUserRepository
     {
         using var conn = db.GetConnection();
         return await conn.ExecuteScalarAsync<int>(
-            "INSERT INTO Users (Username, PasswordHash, FirstName, Surname, Email, CellNumber, Active, IsAdmin, isDev, referral) VALUES (@Username, @PasswordHash, @FirstName, @Surname, @Email, @CellNumber, @Active, @IsAdmin, @IsDev, @Referral); SELECT LAST_INSERT_ID();",
+            "INSERT INTO Users (Username, PasswordHash, FirstName, Surname, Email, CellNumber, marketing_opt_in, Active, IsAdmin, isDev, referral) VALUES (@Username, @PasswordHash, @FirstName, @Surname, @Email, @CellNumber, @MarketingOptIn, @Active, @IsAdmin, @IsDev, @Referral); SELECT LAST_INSERT_ID();",
             user);
     }
 

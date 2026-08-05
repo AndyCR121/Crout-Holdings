@@ -103,9 +103,14 @@
             </button>
           </div>
         </div>
+        <label class="ca-marketing-opt-in">
+          <input type="checkbox" [(ngModel)]="signupMarketingOptIn" name="marketingOptIn" />
+          <span>Keep me on the Crout Automations email list</span>
+        </label>
         <button type="submit" class="ca-btn-primary" [disabled]="loading()">
           {{ loading() ? 'Creating account...' : 'Create Account' }}
         </button>
+        <p class="ca-modal-hint">No spam—only valuable insights on the Automation and AI industry as it progresses over time.</p>
         <p class="ca-modal-hint">You can add your company/companies after signing up under <strong>Profile -> Companies</strong>.</p>
       </form>
     }

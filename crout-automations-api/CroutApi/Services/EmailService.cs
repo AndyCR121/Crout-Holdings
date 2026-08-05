@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Mail;
 using System.Text;
 using CroutApi.Models;
+using CroutApi.DTOs;
 
 namespace CroutApi.Services;
 
@@ -116,6 +117,26 @@ public class EmailService(ILogger<EmailService> logger, IWebHostEnvironment env,
         }
     }
 
+    public async Task<bool> SendBookingConfirmationAsync(BookingDto booking)
+    {
+        var host = GetSetting("SMTP_HOST", "Mail:Smtp:Host");
+        var from = GetSetting("SMTP_FROM_EMAIL", "Mail:Smtp:FromEmail");
+        var owner = GetSetting("BOOKING_TO_EMAIL", "Mail:Booking:ToEmail") ?? GetSetting("CONTACT_TO_EMAIL", "Mail:Contact:ToEmail");
+        if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(from) || string.IsNullOrWhiteSpace(owner)) { logger.LogWarning("Booking emails skipped because SMTP or booking recipient settings are missing."); return false; }
+        var local = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(booking.StartsAt, DateTimeKind.Utc), GetSouthAfricaTimeZone());
+        var time = local.ToString("dddd, d MMMM yyyy 'at' HH:mm") + " SAST";
+        try
+        {
+            using var client = BuildClient(host);
+            using var clientMessage = new MailMessage(from, booking.ClientEmail, "Your Crout Automations consultation is confirmed", $"Hi {booking.ClientName},\n\nYour free Crout Automations consultation is confirmed for {time}.\n\nWe look forward to speaking with you.") { IsBodyHtml = false };
+            using var ownerMessage = new MailMessage(from, owner, $"New consultation booking — {booking.ClientName}", $"New consultation booking\n\nClient: {booking.ClientName}\nEmail: {booking.ClientEmail}\nWhen: {time}") { IsBodyHtml = false };
+            await SendWithTimeoutAsync(client, clientMessage);
+            await SendWithTimeoutAsync(client, ownerMessage);
+            return true;
+        }
+        catch (Exception ex) { logger.LogError(ex, "Booking confirmation email failed for booking {BookingId}", booking.BookingId); return false; }
+    }
+
     private static string BuildBody(ContactRequest request)
     {
         var body = new StringBuilder();
@@ -185,5 +206,11 @@ public class EmailService(ILogger<EmailService> logger, IWebHostEnvironment env,
     {
         return Environment.GetEnvironmentVariable(environmentVariable)
             ?? config[configurationKey];
+    }
+
+    private static TimeZoneInfo GetSouthAfricaTimeZone()
+    {
+        try { return TimeZoneInfo.FindSystemTimeZoneById("South Africa Standard Time"); }
+        catch { return TimeZoneInfo.FindSystemTimeZoneById("Africa/Johannesburg"); }
     }
 }

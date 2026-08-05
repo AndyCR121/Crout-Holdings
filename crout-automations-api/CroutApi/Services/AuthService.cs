@@ -41,6 +41,7 @@ public class AuthService(
             Surname      = request.Surname,
             Email        = request.Email,
             CellNumber   = request.CellNumber,
+            MarketingOptIn = request.MarketingOptIn,
         };
         user.UserId = await users.CreateAsync(user);
         return BuildResponse(user);

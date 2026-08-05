@@ -49,6 +49,7 @@ export class AuthModalComponent {
   signupSurname = '';
   signupPwd = '';
   signupPwd2 = '';
+  signupMarketingOptIn = true;
 
   resetEmail = '';
   resetRequestId = '';
@@ -127,6 +128,7 @@ export class AuthModalComponent {
       firstName: this.signupFirstName,
       surname: this.signupSurname,
       password: this.signupPwd,
+      marketingOptIn: this.signupMarketingOptIn,
     }).subscribe({
       next: (user) => {
         this.loading.set(false);

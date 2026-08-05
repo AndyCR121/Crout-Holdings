@@ -10,6 +10,7 @@ public class User
     public string Surname { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string? CellNumber { get; set; }
+    public bool MarketingOptIn { get; set; } = true;
     public bool Active { get; set; } = true;
     public bool IsAdmin { get; set; }
     public bool IsDev { get; set; }

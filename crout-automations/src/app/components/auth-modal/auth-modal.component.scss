@@ -191,6 +191,9 @@
   color: rgb(201,199,199);
 }
 
+.ca-marketing-opt-in { display: flex; align-items: flex-start; gap: .65rem; color: rgb(225,225,225); font-size: .9rem; cursor: pointer; }
+.ca-marketing-opt-in input { width: auto; margin-top: .2rem; accent-color: #69bd91; }
+
 .ca-text-link {
   align-self: flex-start;
   padding: 0;

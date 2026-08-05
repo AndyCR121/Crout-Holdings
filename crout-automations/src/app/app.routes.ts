@@ -152,6 +152,10 @@ export const routes: Routes = [
           import('./pages/admin/release-notes/admin-release-notes.component').then(m => m.AdminReleaseNotesComponent),
       },
       {
+        path: 'bookings',
+        loadComponent: () => import('./pages/admin/bookings/admin-bookings.component').then(m => m.AdminBookingsComponent),
+      },
+      {
         path: 'addons',
         loadComponent: () =>
           import('./pages/admin/addons/admin-addons.component').then(m => m.AdminAddonsComponent),
@@ -255,6 +259,11 @@ export const routes: Routes = [
         canonical: '/contact-us',
       },
     },
+  },
+  {
+    path: 'book-consultation',
+    loadComponent: () => import('./pages/book-consultation/book-consultation.component').then(m => m.BookConsultationComponent),
+    data: { seo: { title: 'Book a Free Consultation - Crout Automations', description: 'Book a free automation consultation with Crout Automations.', canonical: '/book-consultation' } },
   },
   {
     path: 'privacy-policy',

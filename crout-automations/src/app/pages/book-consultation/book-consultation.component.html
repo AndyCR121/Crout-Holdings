@@ -1,0 +1,11 @@
+<main class="booking-page">
+  <section class="booking-card">
+    <p class="eyebrow">Free consultation</p><h1>Book a time to talk automation.</h1>
+    <p class="intro">Choose a 30-minute consultation time that suits you. Times are shown in South Africa Standard Time (SAST).</p>
+    @if (!loggedIn()) { <div class="login-note"><strong>Sign in to book.</strong> New here? Create a free account, then choose your time.</div> }
+    @if (confirmation()) { <div class="success">You're booked for {{ confirmation() | date:'EEEE, d MMMM, HH:mm' }} SAST. We've sent confirmation emails to you and the Crout Automations team.</div> }
+    <div class="day-picker">@for (day of days(); track day.toISOString()) { <button type="button" [class.active]="selectedDate() === (day | date:'yyyy-MM-dd':'UTC')" (click)="selectDay(day)"><span>{{ day | date:'EEE' }}</span><strong>{{ day | date:'d MMM' }}</strong></button> }</div>
+    @if (loading()) { <p class="empty">Loading availability…</p> } @else { <div class="slots">@for (slot of slots(); track slot.start) { <button type="button" class="slot" [disabled]="submitting()" (click)="book(slot.start)">{{ slot.label }} @if (isMine(slot.start)) { <small>Booked by you</small> }</button> } @empty { <p class="empty">No times remain on this day. Try another date.</p> }</div> }
+  </section>
+</main>
+@if (showAuth()) { <ca-auth-modal (close)="closeAuth()" /> }

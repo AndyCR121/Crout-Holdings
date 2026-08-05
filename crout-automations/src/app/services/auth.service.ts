@@ -10,6 +10,7 @@ export interface ILoginPayload { identifier: string; password: string; }
 export interface ISignupPayload {
   username: string; email: string; password: string;
   firstName: string; surname: string;
+  marketingOptIn: boolean;
 }
 export interface IAuthResponse { token: string; user: IUser; }
 export interface IPasswordResetSessionResponse { resetRequestId: string; }

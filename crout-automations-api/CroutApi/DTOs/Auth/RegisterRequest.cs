@@ -8,5 +8,6 @@ public record RegisterRequest(
     [Required] string FirstName,
     [Required] string Surname,
     [Required][EmailAddress] string Email,
-    string? CellNumber
+    string? CellNumber,
+    bool MarketingOptIn = true
 );
