@@ -21,6 +21,9 @@
             <button type="button" class="dfb-danger" (click)="deleteForm()" [disabled]="deleting() || formId() === null">
               {{ deleting() ? 'Deleting...' : 'Delete Form' }}
             </button>
+            <button type="button" class="dfb-secondary" (click)="toggleTestForm()">
+              {{ testFormOpen() ? 'Close Test Form' : 'Test Form' }}
+            </button>
             <button type="button" class="dfb-primary" (click)="save()" [disabled]="saving() || !hasConfirmedFormTrigger()">
               {{ saving() ? 'Saving...' : (formId() === null ? 'Create Form' : 'Save Form') }}
             </button>
@@ -32,6 +35,34 @@
       } @else if (!guide()) {
         <div class="dfb-empty">Assigned service was not found.</div>
       } @else {
+        @if (testFormOpen()) {
+          <section class="dfb-panel dfb-test-form">
+            <div class="dfb-panel-head">
+              <div>
+                <h2>Test Form</h2>
+                <span>This is the exact client-facing dynamic form. Submit it to an n8n test webhook before publishing.</span>
+              </div>
+            </div>
+            <label class="dfb-test-form__url">
+              <span>n8n Test URL</span>
+              <input
+                type="url"
+                [(ngModel)]="testWebhookUrl"
+                placeholder="https://your-n8n.example/webhook-test/..."
+                autocomplete="off"
+              />
+            </label>
+            @if (!testWebhookUrl.trim()) {
+              <p class="dfb-test-form__hint">Add an n8n test URL to enable a live submission. You can still inspect the form below.</p>
+            }
+            <ca-service-trigger-renderer
+              [configs]="[testFormConfig()]"
+              [companyId]="0"
+              [testWebhookUrl]="testWebhookUrl"
+              [previewOnly]="!testWebhookUrl.trim()"
+            ></ca-service-trigger-renderer>
+          </section>
+        }
         <div class="dfb-grid">
           <section class="dfb-panel dfb-canvas-panel">
             <div class="dfb-panel-head">

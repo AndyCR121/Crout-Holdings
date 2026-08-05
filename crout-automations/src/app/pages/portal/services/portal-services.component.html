@@ -70,8 +70,11 @@
           <!-- Card actions -->
           <div class="pservices__card-actions" *ngIf="!row.editing">
             <button class="pservices__btn pservices__btn--secondary" (click)="startEdit(row)">Request Config Change</button>
-            <button class="pservices__btn pservices__btn--secondary" type="button" (click)="openCredentials(row)">Update Credentials</button>
-            <button class="pservices__btn pservices__btn--ghost" (click)="openSidePanel(row, group.company)">View Details</button>
+            <button class="pservices__btn pservices__btn--secondary" type="button" (click)="viewDetails(row)">Update Credentials</button>
+            <button class="pservices__btn pservices__btn--ghost" type="button" (click)="viewDetails(row)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.12 2.12-.06-.06A1.7 1.7 0 0 0 15.74 18a1.7 1.7 0 0 0-1.03 1.55V20h-3v-.45A1.7 1.7 0 0 0 10.68 18a1.7 1.7 0 0 0-1.88.34l-.06.06-2.12-2.12.06-.06A1.7 1.7 0 0 0 7 14.34a1.7 1.7 0 0 0-1.55-1.03H5v-3h.45A1.7 1.7 0 0 0 7 9.28a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.12-2.12.06.06A1.7 1.7 0 0 0 10.66 5a1.7 1.7 0 0 0 1.03-1.55V3h3v.45A1.7 1.7 0 0 0 15.72 5a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.12 2.12-.06.06A1.7 1.7 0 0 0 19.4 8.66a1.7 1.7 0 0 0 1.55 1.03H21v3h-.45A1.7 1.7 0 0 0 19.4 15Z"/></svg>
+              View Details
+            </button>
           </div>
 
           <!-- Edit section -->

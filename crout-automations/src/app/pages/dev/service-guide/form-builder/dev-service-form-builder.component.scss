@@ -27,6 +27,39 @@
   align-items: start;
 }
 
+.dfb-test-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.dfb-test-form__url {
+  display: grid;
+  gap: 0.4rem;
+  color: var(--dfb-text);
+  font-size: 0.86rem;
+  font-weight: 800;
+
+  input {
+    min-height: 44px;
+    border: 1px solid var(--dfb-border-strong);
+    border-radius: 0.75rem;
+    background: rgba(4, 13, 28, 0.82);
+    color: #fff;
+    padding: 0.7rem 0.8rem;
+    font: inherit;
+  }
+}
+
+.dfb-test-form__hint {
+  margin: 0;
+  color: var(--dfb-muted);
+  font-size: 0.86rem;
+}
+
+.dfb-test-form ca-service-trigger-renderer {
+  display: block;
+}
+
 .dfb-side {
   display: grid;
   gap: 1rem;

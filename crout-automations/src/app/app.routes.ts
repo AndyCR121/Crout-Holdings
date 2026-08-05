@@ -40,8 +40,18 @@ export const routes: Routes = [
       },
       {
         path: 'services',
-        loadComponent: () =>
-          import('./pages/portal/services/portal-services.component').then(m => m.PortalServicesComponent),
+        children: [
+          {
+            path: ':userServiceId',
+            loadComponent: () =>
+              import('./pages/portal/services/service-details/portal-service-details.component').then(m => m.PortalServiceDetailsComponent),
+          },
+          {
+            path: '',
+            loadComponent: () =>
+              import('./pages/portal/services/portal-services.component').then(m => m.PortalServicesComponent),
+          },
+        ],
       },
       {
         path: 'video-editor',

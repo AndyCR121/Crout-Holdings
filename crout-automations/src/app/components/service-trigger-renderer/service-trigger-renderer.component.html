@@ -396,7 +396,7 @@
       </p>
 
       <button *ngIf="!previewOnly" class="trigger-action" type="button" [disabled]="busy() === config.id || !canExecute(config)" (click)="execute(config)">
-        <span *ngIf="busy() !== config.id">Run Trigger</span>
+        <span *ngIf="busy() !== config.id">{{ actionLabel() }}</span>
         <span *ngIf="busy() === config.id">Running...</span>
       </button>
     </article>

@@ -1,6 +1,7 @@
 import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { AuthService } from '../../../services/auth.service';
@@ -63,6 +64,7 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
   private readonly toast = inject(ToastService);
   private readonly triggersApi = inject(ServiceTriggerApiService);
   private readonly integrationStatus = inject(IntegrationStatusService);
+  private readonly router = inject(Router);
 
   readonly user = computed(() => this.auth.currentUser());
   readonly groups = signal<CompanyGroup[]>([]);
@@ -243,6 +245,12 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
     this.lockDrawerScroll();
     this.loadTriggers(row, company);
     this.groups.update(g => [...g]);
+  }
+
+  viewDetails(row: ServiceRow): void {
+    const userServiceId = row.userService.userServiceId;
+    if (userServiceId == null) return;
+    void this.router.navigate(['/client/services', userServiceId]);
   }
 
   closeSidePanel(row: ServiceRow): void {

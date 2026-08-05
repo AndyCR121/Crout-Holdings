@@ -139,6 +139,18 @@
   }
 }
 
+/* Native calendar glyphs are otherwise dark in Chromium's dark inputs. */
+.trigger-field input[type='date'],
+.trigger-field input[type='time'],
+.trigger-field input[type='datetime-local'] {
+  color-scheme: dark;
+
+  &::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    opacity: 1;
+  }
+}
+
 .trigger-field--wide {
   grid-column: 1 / -1;
 }

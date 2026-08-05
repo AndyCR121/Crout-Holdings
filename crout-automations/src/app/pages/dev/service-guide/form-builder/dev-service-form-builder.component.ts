@@ -28,10 +28,12 @@ import {
   DevUserServiceForm
 } from '../../../../interfaces/i-custom-form-builder.interface';
 import { DynamicFieldConfig, DynamicFieldOption } from '../../../../interfaces/i-service-trigger.interface';
+import { ServiceTriggerConfig } from '../../../../interfaces/i-service-trigger.interface';
 import { IDevPortalService } from '../../../../interfaces/i-service.interface';
 import { PendingChangesComponent } from '../../../../guards/pending-changes.guard';
 import { DevService } from '../../../../services/dev.service';
 import { ToastService } from '../../../../services/toast.service';
+import { ServiceTriggerRendererComponent } from '../../../../components/service-trigger-renderer/service-trigger-renderer.component';
 
 type SelectedTarget = 'form' | string;
 
@@ -44,7 +46,7 @@ interface CopySourceForm {
 @Component({
   selector: 'ca-dev-service-form-builder',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, MatCheckboxModule],
+  imports: [CommonModule, FormsModule, RouterModule, MatCheckboxModule, ServiceTriggerRendererComponent],
   templateUrl: './dev-service-form-builder.component.html',
   styleUrl: './dev-service-form-builder.component.scss'
 })
@@ -65,11 +67,13 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
   readonly selectedTarget = signal<SelectedTarget>('form');
   readonly hasConfirmedFormTrigger = signal(true);
   readonly copySourceForms = signal<CopySourceForm[]>([]);
+  readonly testFormOpen = signal(false);
 
   formLabel = '';
   formDescription = '';
   responseMode: CustomFormResponseMode = 'inline';
   productionWebhookUrl = '';
+  testWebhookUrl = '';
   payloadTemplateText = '{\n  "source": "custom-form"\n}';
   copySourceUserServiceId: number | null = null;
 
@@ -102,6 +106,18 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
         || element.tabId === activeTabId
       );
   });
+
+  readonly testFormConfig = computed<ServiceTriggerConfig>(() => ({
+    id: -1,
+    serviceId: this.guide()?.serviceId ?? 0,
+    triggerType: 'form',
+    label: this.formLabel.trim() || 'Test Form',
+    description: this.formDescription.trim() || 'A live preview of the client form.',
+    method: 'POST',
+    responseMode: this.responseMode,
+    payloadTemplate: this.tryParsePayloadTemplate() ?? {},
+    formSchema: { elements: this.elements().map(element => structuredClone(element)) }
+  }));
 
   ngOnInit(): void {
     this.route.queryParamMap
@@ -442,6 +458,10 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
   updatePayloadTemplateText(value: string): void {
     this.payloadTemplateText = value;
     this.touch();
+  }
+
+  toggleTestForm(): void {
+    this.testFormOpen.update(open => !open);
   }
 
   updateSelectedInputMode(value: CustomFormInputElement['inputMode']): void {

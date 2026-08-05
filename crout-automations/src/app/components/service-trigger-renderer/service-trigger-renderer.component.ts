@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { ServiceTriggerApiService } from '../../services/service-trigger-api.service';
 import { DynamicFieldConfig, ExecuteTriggerResponse, ServiceTriggerConfig } from '../../interfaces/i-service-trigger.interface';
 import {
@@ -23,11 +24,14 @@ import {
 })
 export class ServiceTriggerRendererComponent implements OnChanges {
   private readonly triggerApi = inject(ServiceTriggerApiService);
+  private readonly http = inject(HttpClient);
 
   @Input({ required: true }) configs: ServiceTriggerConfig[] = [];
   @Input({ required: true }) companyId!: number;
   @Input() userServiceId: number | null = null;
   @Input() previewOnly = false;
+  /** Sends the rendered form directly to an n8n test webhook when supplied. */
+  @Input() testWebhookUrl = '';
   @Output() executed = new EventEmitter<ExecuteTriggerResponse>();
 
   readonly values = signal<Record<number, Record<string, any>>>({});
@@ -130,10 +134,23 @@ export class ServiceTriggerRendererComponent implements OnChanges {
     this.busy.set(config.id);
     const payload = this.buildPayload(config);
     const selectedFiles = this.files()[config.id] ?? [];
-    this.triggerApi.execute(config.id, this.companyId, this.userServiceId, payload, selectedFiles).subscribe({
+    const request = this.testWebhookUrl.trim()
+      ? this.http.post<unknown>(this.testWebhookUrl.trim(), payload)
+      : this.triggerApi.execute(config.id, this.companyId, this.userServiceId, payload, selectedFiles);
+
+    request.subscribe({
       next: response => {
-        this.responses.update(current => ({ ...current, [config.id]: response }));
-        this.executed.emit(response);
+        const result: ExecuteTriggerResponse = this.testWebhookUrl.trim()
+          ? {
+              executionId: 0,
+              status: 'success',
+              mode: 'live',
+              message: 'Test submission sent to n8n.',
+              response: this.asResponseObject(response)
+            }
+          : response as ExecuteTriggerResponse;
+        this.responses.update(current => ({ ...current, [config.id]: result }));
+        this.executed.emit(result);
         this.busy.set(null);
       },
       error: err => {
@@ -223,6 +240,10 @@ export class ServiceTriggerRendererComponent implements OnChanges {
 
   canExecute(config: ServiceTriggerConfig): boolean {
     return this.validate(config) === null;
+  }
+
+  actionLabel(): string {
+    return this.testWebhookUrl.trim() ? 'Run Test Submission' : 'Run Trigger';
   }
 
   customDateTimeInputType(element: CustomFormDateTimeElement): string {
@@ -378,6 +399,12 @@ export class ServiceTriggerRendererComponent implements OnChanges {
       ...values,
       triggerLabel: config.label
     };
+  }
+
+  private asResponseObject(value: unknown): Record<string, unknown> | undefined {
+    return value !== null && typeof value === 'object' && !Array.isArray(value)
+      ? value as Record<string, unknown>
+      : undefined;
   }
 
   private validate(config: ServiceTriggerConfig): string | null {
