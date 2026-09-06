@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Wireframe: Globefurn Quote Sheet Mapping</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f5f5f5; --panel: #fff; --border: #ccc; --text: #111; --muted: #666;
+    --existing-bg: #eceff1; --existing-border: #b0bec5; --existing-text: #607080;
+    --new-bg: #eaf2ff; --new-border: #5b8def; --new-text: #1c4a9e;
+    --fix-bg: #fff3d6; --fix-border: #e0a72e; --fix-text: #8a5a00;
+    --grp-grey: #b0bec5; --grp-blue: #5b8def; --grp-yellow: #d8b400; --grp-green: #3f9e4d;
+    --code: #f0f0f0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1a1a1a; --panel: #232323; --border: #444; --text: #eee; --muted: #999;
+      --existing-bg: #2a2f32; --existing-border: #4a555b; --existing-text: #93a5ac;
+      --new-bg: #1b2a44; --new-border: #5b8def; --new-text: #9cc0ff;
+      --fix-bg: #3a2f10; --fix-border: #e0a72e; --fix-text: #f0c96a;
+      --code: #2c2c2c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { font: 13px/1.4 system-ui, sans-serif; margin: 0; padding: 20px; background: var(--bg); color: var(--text); }
+  header { margin-bottom: 16px; }
+  header h1 { font-size: 17px; margin: 0 0 4px; }
+  header p { margin: 0; color: var(--muted); font-size: 12.5px; max-width: 880px; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin: 10px 0 18px; font-size: 11.5px; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .sw { width: 11px; height: 11px; border-radius: 3px; display: inline-block; border: 1px solid rgba(0,0,0,.2); }
+  .sw.existing { background: var(--existing-bg); border-color: var(--existing-border); }
+  .sw.new { background: var(--new-bg); border-color: var(--new-border); }
+  .sw.fix { background: var(--fix-bg); border-color: var(--fix-border); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .dot.grey { background: var(--grp-grey); } .dot.blue { background: var(--grp-blue); }
+  .dot.yellow { background: var(--grp-yellow); } .dot.green { background: var(--grp-green); }
+
+  section { margin-bottom: 18px; }
+  section h2 { font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 8px; }
+
+  .canvas { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+
+  .chain { display: flex; align-items: center; gap: 2px; overflow-x: auto; padding-bottom: 6px; }
+  .arrow { color: var(--muted); font-size: 16px; flex: 0 0 auto; padding: 0 2px; }
+  .node { flex: 0 0 auto; border: 1.5px solid var(--existing-border); background: var(--existing-bg); color: var(--existing-text); border-radius: 6px; padding: 7px 10px; font-size: 11.5px; min-width: 92px; text-align: center; cursor: default; position: relative; }
+  .node .t { font-weight: 600; color: var(--text); font-size: 11.5px; }
+  .node .st { font-size: 9.5px; opacity: .8; }
+  .node.clickable { cursor: pointer; }
+  .node.clickable:hover { filter: brightness(1.05); transform: translateY(-1px); }
+  .node.clickable:focus-visible { outline: 2px solid var(--new-border); outline-offset: 2px; }
+  .node.selected { box-shadow: 0 0 0 2px var(--new-border); }
+  .node.fixnode { border-color: var(--fix-border); background: var(--fix-bg); color: var(--fix-text); }
+  .node.fixnode .t { color: var(--fix-text); }
+  .badge { position: absolute; top: -8px; right: -6px; font-size: 8.5px; font-weight: 700; padding: 1px 5px; border-radius: 8px; letter-spacing: .03em; }
+  .badge.new { background: var(--new-border); color: #fff; }
+  .badge.fix { background: var(--fix-border); color: #3a2600; }
+
+  .fanout { display: flex; align-items: center; justify-content: center; margin: 10px 0; color: var(--muted); font-size: 11px; gap: 8px; }
+  .fanout::before, .fanout::after { content: ""; flex: 1; border-top: 1px dashed var(--border); }
+
+  .branches { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .branch { display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
+  .branch .down { text-align: center; color: var(--muted); font-size: 14px; }
+  .branch .node { width: 100%; background: var(--new-bg); border-color: var(--new-border); color: var(--new-text); }
+  .branch .node .t { color: var(--new-text); }
+  .branch .node.sheetwrite { background: var(--new-bg); }
+  .branch h3 { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); text-align: center; margin: 0 0 4px; }
+
+  #detail { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; min-height: 90px; }
+  #detail .placeholder { color: var(--muted); font-size: 12.5px; }
+  #detail h3 { margin: 0 0 2px; font-size: 13.5px; }
+  #detail .meta { color: var(--muted); font-size: 11.5px; margin-bottom: 10px; }
+  table.map { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+  table.map th, table.map td { border: 1px solid var(--border); padding: 5px 7px; text-align: left; vertical-align: top; }
+  table.map th { background: var(--existing-bg); font-weight: 600; font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); }
+  table.map code { background: var(--code); padding: 1px 4px; border-radius: 3px; font-size: 11px; }
+  table.map td.grp { white-space: nowrap; }
+  .fixdiff { display: flex; gap: 10px; flex-wrap: wrap; }
+  .fixdiff .box { flex: 1; min-width: 260px; background: var(--code); border-radius: 6px; padding: 8px 10px; }
+  .fixdiff .box.before { border-left: 3px solid #c0392b; }
+  .fixdiff .box.after { border-left: 3px solid #2f9e44; }
+  .fixdiff .lbl { font-size: 10px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .fixdiff code { display: block; white-space: pre-wrap; font-size: 11px; }
+  .note { font-size: 11.5px; color: var(--muted); margin-top: 14px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Globefurn: new n8n nodes &amp; field mapping (R1&ndash;R8)</h1>
+  <p>This is the workflow-level solution, not a mockup of the sheet UI: the existing node chain (dimmed) ends at <code>Copy file</code>, which today goes nowhere. Three new branches (blue) pick up from there and write into the copied sheet. Click any blue or amber node to see exactly what it reads and where each field lands.</p>
+  <div class="legend">
+    <span><span class="sw existing"></span> Existing node (unchanged)</span>
+    <span><span class="sw fix"></span> Existing node &mdash; fix required (R1)</span>
+    <span><span class="sw new"></span> New node (this PRD)</span>
+    <span><span class="dot grey"></span> Grey column group</span>
+    <span><span class="dot blue"></span> Blue column group</span>
+    <span><span class="dot yellow"></span> Yellow (Leandre&nbsp;&mdash; never written)</span>
+    <span><span class="dot green"></span> Green (formula&nbsp;&mdash; never written)</span>
+  </div>
+</header>
+
+<section>
+  <h2>Existing chain (context)</h2>
+  <div class="canvas">
+    <div class="chain">
+      <div class="node"><div class="t">Webhook</div><div class="st">/ On Email Received</div></div>
+      <span class="arrow">&rarr;</span>
+      <div class="node"><div class="t">Normalize and<br>validate RFQ</div><div class="st">Code</div></div>
+      <span class="arrow">&rarr;</span>
+      <div class="node"><div class="t">Filter chain</div><div class="st">Series &rarr; Name &rarr; Material</div></div>
+      <span class="arrow">&rarr;</span>
+      <div class="node clickable fixnode" tabindex="0" data-node="createfolder"><span class="badge fix">FIX</span><div class="t">Create folder</div><div class="st">Google Drive</div></div>
+      <span class="arrow">&rarr;</span>
+      <div class="node clickable fixnode" tabindex="0" data-node="copyfile"><span class="badge fix">FIX</span><div class="t">Copy file</div><div class="st">Google Drive &mdash; copy</div></div>
+      <span class="arrow">&rarr;</span>
+      <div class="node" style="border-style:dashed; opacity:.6;"><div class="t">&#8709; dead end</div><div class="st">today: nothing</div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>New: three branches fan out from Copy file</h2>
+  <div class="canvas">
+    <div class="fanout">Copy file &rarr; fans out to 3 new branches, all writing into the one copied sheet</div>
+    <div class="branches">
+      <div class="branch">
+        <h3>RFQ Summary</h3>
+        <div class="node clickable" tabindex="0" data-node="buildsummary"><span class="badge new">NEW</span><div class="t">Build RFQ Summary Row</div><div class="st">Code &mdash; R2</div></div>
+        <div class="down">&darr;</div>
+        <div class="node clickable sheetwrite" tabindex="0" data-node="writesummary"><span class="badge new">NEW</span><div class="t">Write RFQ Summary</div><div class="st">Google Sheets &mdash; Update</div></div>
+      </div>
+      <div class="branch">
+        <h3>Quote Items</h3>
+        <div class="node clickable" tabindex="0" data-node="builditems"><span class="badge new">NEW</span><div class="t">Build Quote Items Rows</div><div class="st">Code &mdash; R3/R4/R5/R6</div></div>
+        <div class="down">&darr;</div>
+        <div class="node clickable sheetwrite" tabindex="0" data-node="writeitems"><span class="badge new">NEW</span><div class="t">Write Quote Items</div><div class="st">Google Sheets &mdash; Update, map by name</div></div>
+      </div>
+      <div class="branch">
+        <h3>Client Data</h3>
+        <div class="node clickable" tabindex="0" data-node="buildclientdata"><span class="badge new">NEW</span><div class="t">Build Client Data Row</div><div class="st">Code &mdash; R7</div></div>
+        <div class="down">&darr;</div>
+        <div class="node clickable sheetwrite" tabindex="0" data-node="writeclientdata"><span class="badge new">NEW</span><div class="t">Write Client Data</div><div class="st">Google Sheets &mdash; Update</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Field mapping detail</h2>
+  <div id="detail"><p class="placeholder">Click a highlighted node above (amber = fix, blue = new) to see its source&rarr;destination field mapping.</p></div>
+</section>
+
+<p class="note">Low-fidelity sketch of the workflow solution for PRD review &mdash; node positions/shapes are illustrative, not the literal n8n canvas layout. Exact Google Sheets node settings (matching column, range) depend on confirming the live template's headers first (PRD &sect;10).</p>
+
+<script>
+  const GROUP_LABEL = { grey: 'Grey', blue: 'Blue', yellow: 'Yellow (Leandre)', green: 'Green (formula)', none: '&mdash;' };
+
+  const DATA = {
+    createfolder: {
+      title: 'Create folder', kind: 'fix', meta: 'Google Drive &mdash; create folder &middot; R1',
+      diff: {
+        before: "name: {{ $('AI Agent').item.json.output.quote.business_name || ... }}\n// 'quote' key no longer exists on Normalize output",
+        after: "name: {{ $('Normalize and validate RFQ').item.json.rfq.client.business_name\n  || $('Normalize and validate RFQ').item.json.rfq.client.contact_person }}\n - {{ rfq.client.quote_ref || rfq.client.project_name || $now... }}"
+      },
+      rows: []
+    },
+    copyfile: {
+      title: 'Copy file', kind: 'fix', meta: 'Google Drive &mdash; copy template &middot; R1',
+      diff: {
+        before: "name: RFQ - {{ $('Webhook').item.json.quote... }}",
+        after: "name: RFQ - {{ $('Normalize and validate RFQ').item.json.rfq.client... }}\n// same rfq.client.* fields as Create folder, for both trigger paths"
+      },
+      rows: []
+    },
+    buildsummary: {
+      title: 'Build RFQ Summary Row', kind: 'new', meta: 'Code node &middot; reads Normalize and validate RFQ &middot; outputs one item for the header block &middot; R2',
+      rows: [
+        ['rfq.client.business_name', 'Business Name', 'grey', ''],
+        ['rfq.client.contact_person', 'Contact Person', 'grey', ''],
+        ['rfq.client.cell_number', 'Cell Number', 'grey', 'write as string'],
+        ['rfq.client.tel_number', 'Telephone Number', 'grey', 'write as string'],
+        ['rfq.client.email', 'Email', 'grey', ''],
+        ['rfq.client.sales_rep', 'Sales Representative', 'grey', ''],
+        ['rfq.client.project_name', 'Project Name', 'grey', ''],
+        ['rfq.client.quote_ref', 'Quotation Reference', 'grey', 'write as string'],
+        ['rfq.source', 'Submission Source', 'grey', ''],
+        ['rfq.client.quote_date', 'Quote Date', 'grey', ''],
+        ['&mdash; not written &mdash;', 'Overall Status', 'yellow', 'template formula'],
+      ]
+    },
+    writesummary: {
+      title: 'Write RFQ Summary', kind: 'new', meta: 'Google Sheets &middot; Update &middot; sheet = RFQ Summary &middot; header block only &middot; R2/R8',
+      rows: [
+        ['Build RFQ Summary Row output', 'RFQ Summary header cells (by header name)', 'grey', 'never touch per-item rows/totals below the header block — those are template formulas'],
+      ]
+    },
+    builditems: {
+      title: 'Build Quote Items Rows', kind: 'new', meta: 'Code node &middot; one output item per product in rfq.products &middot; also reads Filter on Material Type output &middot; R3/R4/R5/R6',
+      rows: [
+        ['index + 1', 'Line number', 'grey', ''],
+        ['rfq.source', 'Source channel', 'grey', ''],
+        ['product.original_item_text', 'Original item text', 'grey', ''],
+        ['product.description', 'Product description', 'grey', ''],
+        ['product.request_type', 'Product type', 'grey', ''],
+        ['product.category', 'Product category', 'grey', ''],
+        ['product.product_series', 'Product series', 'grey', ''],
+        ['product.product_name', 'Product name', 'grey', ''],
+        ['product.quantity', 'Quantity', 'grey', ''],
+        ['product.material', 'Material', 'grey', ''],
+        ['product.notes', 'Product notes', 'grey', ''],
+        ['derived from request_type + identified.length (R4)', 'Match status', 'blue', 'Matched / Needs Review / Unmatched / Custom'],
+        ['identified[0].* (only when status = Matched)', 'Product ID, catalogue series/name, product #, description, material', 'blue', 'blank when not Matched'],
+        ['identified[0].supplier fields (only when Matched)', 'Supplier name, contact, email, telephone, page', 'blue', 'blank when not Matched'],
+        ['identified[0..4] (only when status = Needs Review)', 'Candidate matches', 'blue', 'up to 5 entries'],
+        ['rfq.warnings (filtered to this line)', 'Warnings', 'blue', ''],
+        ['&mdash; not written (R6) &mdash;', 'Approved price, source, update date, approval status', 'blue', 'no price lookup exists upstream yet'],
+        ['&mdash; never written &mdash;', 'Supplier used, override price, discount %, markup %, courier, pricing notes', 'yellow', "Leandre's inputs"],
+        ['&mdash; never written &mdash;', 'Effective price, selling price, VAT, line total, gross profit', 'green', 'template formulas'],
+      ]
+    },
+    writeitems: {
+      title: 'Write Quote Items', kind: 'new', meta: 'Google Sheets &middot; Update &middot; sheet = Quote Items &middot; rows 2–101 &middot; map by header name, not column letter &middot; R8',
+      rows: [
+        ['Build Quote Items Rows output (1 item = 1 row)', 'Row = Line number + 1 (row 2 for line 1, etc.)', 'grey/blue', 'never exceeds row 101 — already bounded by the 1–100 product limit upstream'],
+        ['(none)', 'Any yellow or green column', '&mdash;', 'not included in this node’s column mapping at all'],
+      ]
+    },
+    buildclientdata: {
+      title: 'Build Client Data Row', kind: 'new', meta: 'Code node &middot; reads the full Normalize and validate RFQ output &middot; R7',
+      rows: [
+        ['rfq.submission_id, rfq.source, rfq.email_message_id', 'Client Data audit columns', 'grey', ''],
+        ['rfq.client.*', 'Client Data audit columns', 'grey', 'full client record, incl. fields not shown elsewhere'],
+        ['rfq.products[] (raw, incl. catalogue_id)', 'Client Data audit columns', 'grey', 'as-submitted, before any matching'],
+        ['rfq.warnings', 'Client Data audit columns', 'grey', ''],
+      ]
+    },
+    writeclientdata: {
+      title: 'Write Client Data', kind: 'new', meta: 'Google Sheets &middot; Update &middot; sheet = Client Data (protected) &middot; R7/R8',
+      rows: [
+        ['Build Client Data Row output', 'Client Data sheet (by header name)', 'grey', 'exact column layout unconfirmed against live template — see PRD §10'],
+      ]
+    },
+  };
+
+  function dot(g) {
+    if (!g || g === '—') return '';
+    return '<span class="dot ' + g + '" style="margin-right:5px;"></span>';
+  }
+
+  function render(id) {
+    const d = DATA[id];
+    const el = document.getElementById('detail');
+    if (!d) { el.innerHTML = '<p class="placeholder">Click a highlighted node above to see its field mapping.</p>'; return; }
+
+    let html = '<h3>' + d.title + '</h3><div class="meta">' + d.meta + '</div>';
+
+    if (d.kind === 'fix') {
+      html += '<div class="fixdiff">'
+        + '<div class="box before"><div class="lbl">Before (stale)</div><code>' + d.diff.before.replace(/</g,'&lt;') + '</code></div>'
+        + '<div class="box after"><div class="lbl">After (R1 fix)</div><code>' + d.diff.after.replace(/</g,'&lt;') + '</code></div>'
+        + '</div>';
+    }
+
+    if (d.rows && d.rows.length) {
+      html += '<table class="map"><thead><tr><th>Source (n8n expression)</th><th>Destination sheet column</th><th>Group</th><th>Note</th></tr></thead><tbody>';
+      d.rows.forEach(r => {
+        html += '<tr><td><code>' + r[0] + '</code></td><td>' + r[1] + '</td><td class="grp">' + dot(r[2]) + (GROUP_LABEL[r[2]] || r[2]) + '</td><td>' + r[3] + '</td></tr>';
+      });
+      html += '</tbody></table>';
+    }
+    el.innerHTML = html;
+  }
+
+  document.querySelectorAll('.node.clickable').forEach(node => {
+    node.addEventListener('click', () => {
+      document.querySelectorAll('.node.selected').forEach(n => n.classList.remove('selected'));
+      node.classList.add('selected');
+      render(node.getAttribute('data-node'));
+    });
+    node.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); node.click(); }
+    });
+  });
+</script>
+</body>
+</html>

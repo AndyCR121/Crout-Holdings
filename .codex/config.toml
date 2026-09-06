@@ -1,9 +1,0 @@
-# Minimal repository-local Codex configuration.
-# Model names are preserved exactly for verification if installed identifiers differ.
-
-
-[agents.context_mapper]
-config_file = "agents/context-mapper-agent.toml"
-
-[agents.code_reviewer]
-config_file = "agents/code-reviewer-agent.toml"

@@ -1,0 +1,79 @@
+{
+  "validWebsite": {
+    "submission_id": "web-20260901-0001",
+    "source": "website",
+    "client": {
+      "business_name": "Example Interiors",
+      "contact_person": "A. Customer",
+      "cell_number": "0820010020",
+      "tel_number": "0115550100",
+      "email": "buyer@example.test",
+      "sales_rep": "Leandre",
+      "quote_date": "",
+      "project_name": "Reception refresh",
+      "quote_ref": "RFQ-0001",
+      "notes": "Please confirm availability."
+    },
+    "products": [
+      {
+        "catalogue_id": "",
+        "product_series": "Axis",
+        "product_name": "Visitor Chair",
+        "original_item_text": "Axis visitor chair in black fabric",
+        "description": "Axis visitor chair in black fabric",
+        "category": "Seating",
+        "material": "Black fabric",
+        "quantity": "2",
+        "request_type": "Standard",
+        "notes": ""
+      }
+    ]
+  },
+  "validEmail": {
+    "source": "email",
+    "email_message_id": "<test-message-0001@example.test>",
+    "client": {
+      "business_name": "Example Interiors",
+      "contact_person": "A. Customer",
+      "cell_number": "",
+      "tel_number": "",
+      "email": "buyer@example.test",
+      "sales_rep": "",
+      "quote_date": "",
+      "project_name": "",
+      "quote_ref": "RFQ-EMAIL-1",
+      "notes": ""
+    },
+    "products": [
+      {
+        "catalogue_id": "",
+        "product_series": "",
+        "product_name": "",
+        "original_item_text": "Please quote 4 custom reception counters.",
+        "description": "custom reception counters",
+        "category": "Other",
+        "material": "",
+        "quantity": "4",
+        "request_type": "Custom",
+        "notes": "Custom dimensions to follow."
+      }
+    ]
+  },
+  "invalidQuantity": {
+    "submission_id": "web-20260901-invalid-qty",
+    "source": "website",
+    "client": { "business_name": "Example Interiors" },
+    "products": [
+      {
+        "original_item_text": "One desk",
+        "quantity": "1.5",
+        "request_type": "Standard"
+      }
+    ]
+  },
+  "invalidMalformed": {
+    "source": "website",
+    "client": {},
+    "products": "not-an-array"
+  }
+}
