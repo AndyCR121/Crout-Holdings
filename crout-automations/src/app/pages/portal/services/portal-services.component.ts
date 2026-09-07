@@ -14,6 +14,8 @@ import { DynamicFieldConfig, ServiceTriggerConfig } from '../../../interfaces/i-
 import { ServiceTriggerApiService } from '../../../services/service-trigger-api.service';
 import { IntegrationStatusBadgeComponent } from '../../../components/integration-status-badge/integration-status-badge.component';
 import { IntegrationStatusService } from '../../../services/integration-status.service';
+import { CustomFormSharePanelComponent } from '../../../components/custom-form-share-panel/custom-form-share-panel.component';
+import { hasConfirmedCustomFormTrigger } from '../../../shared/custom-form-eligibility.util';
 
 interface IntegrationItem {
   addonId: number;
@@ -54,7 +56,7 @@ interface CredentialFormOption {
 @Component({
   selector: 'ca-portal-services',
   standalone: true,
-  imports: [CommonModule, FormsModule, ServiceTriggerRendererComponent, MarketingWorkspaceComponent, IntegrationStatusBadgeComponent],
+  imports: [CommonModule, FormsModule, ServiceTriggerRendererComponent, MarketingWorkspaceComponent, IntegrationStatusBadgeComponent, CustomFormSharePanelComponent],
   templateUrl: './portal-services.component.html',
   styleUrls: ['./portal-services.component.scss'],
 })
@@ -71,6 +73,7 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
   readonly loading = signal(true);
   readonly saving = signal<number | null>(null);
   readonly savingCredentials = signal<number | null>(null);
+  readonly shareOpenRow = signal<ServiceRow | null>(null);
 
   ngOnInit(): void {
     const uid = this.user()?.userId;
@@ -316,6 +319,18 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
         this.toast.error(err?.error?.error ?? 'Credentials could not be submitted.');
       },
     });
+  }
+
+  isShareEligible(row: ServiceRow): boolean {
+    return hasConfirmedCustomFormTrigger(row.activeAddons);
+  }
+
+  openShare(row: ServiceRow): void {
+    this.shareOpenRow.set(row);
+  }
+
+  closeShare(): void {
+    this.shareOpenRow.set(null);
   }
 
   isMarketingSystem(row: ServiceRow): boolean {

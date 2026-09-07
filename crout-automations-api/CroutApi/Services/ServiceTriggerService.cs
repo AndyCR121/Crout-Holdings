@@ -508,45 +508,26 @@ public class ServiceTriggerService(
             ? "The webhook did not return an error message."
             : content.Length <= 240 ? content : content[..240];
 
-    private static bool HasConfirmedCustomFormTrigger(string? configJson)
-    {
-        if (string.IsNullOrWhiteSpace(configJson)) return false;
+    private static bool HasConfirmedCustomFormTrigger(string? configJson) =>
+        CustomFormTriggerEligibility.HasConfirmedCustomFormTrigger(configJson);
 
-        try
-        {
-            var config = JsonNode.Parse(configJson) as JsonObject;
-            if (config is null) return false;
+    /// <summary>
+    /// Public-share-link entry point into the same webhook-calling logic authenticated
+    /// submissions use. Deliberately takes no userId/ownership check — the public path's
+    /// "authorization" is already the caller having resolved a valid share token before
+    /// reaching here (see PublicFormAccessService). The execution is attributed to the
+    /// form's owning user (context.CompanyOwnerUserId) since ServiceTriggerExecution.UserId
+    /// is non-nullable and there is no existing "system/anonymous execution" convention to
+    /// reuse (design.md D3 open question — confirmed there is none); the share-link access
+    /// itself is what actually distinguishes a public submission from an authenticated one
+    /// (see CustomFormShareLinkAccess).
+    /// </summary>
+    public async Task<ExecuteTriggerResponseDto> ExecutePublicCustomFormAsync(
+        Integration integration,
+        CustomFormAccessContextDto context,
+        string? payloadJson) =>
+        await ExecuteCustomFormAsync(integration, context, context.CompanyId, context.CompanyOwnerUserId, payloadJson, []);
 
-            if (config["trigger"] is JsonArray triggerValues
-                && triggerValues.OfType<JsonValue>()
-                    .Select(value => value.TryGetValue<string>(out var raw) ? raw : null)
-                    .Any(IsCustomFormName))
-            {
-                return true;
-            }
-
-            if (config["confirmedAddons"] is JsonArray confirmedAddons)
-            {
-                foreach (var addon in confirmedAddons.OfType<JsonObject>())
-                {
-                    if (!string.Equals(addon["type"]?.GetValue<string>(), WorkflowRoles.Trigger, StringComparison.OrdinalIgnoreCase))
-                        continue;
-                    if (IsCustomFormName(addon["name"]?.GetValue<string>()))
-                        return true;
-                }
-            }
-        }
-        catch
-        {
-            return false;
-        }
-
-        return false;
-    }
-
-    private static bool IsCustomFormName(string? value)
-    {
-        var normalized = (value ?? string.Empty).Trim().ToLowerInvariant().Replace(" ", string.Empty).Replace("-", string.Empty).Replace("_", string.Empty);
-        return normalized is "websiteform" or "customform";
-    }
+    public ServiceTriggerConfigDto? BuildPublicCustomFormConfig(CustomFormAccessContextDto context) =>
+        BuildCustomFormTriggerConfig(context, context.ServiceId);
 }

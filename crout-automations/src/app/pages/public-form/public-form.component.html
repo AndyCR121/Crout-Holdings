@@ -1,0 +1,18 @@
+<main class="pf">
+  <div class="pf__loading" *ngIf="state() === 'loading'">Loading form&hellip;</div>
+
+  <div class="pf__unavailable" *ngIf="state() === 'unavailable'">
+    <h1>This link isn't available anymore.</h1>
+    <p>It may have expired, been revoked, or never existed. Please contact whoever shared it with you for a new link.</p>
+  </div>
+
+  <div class="pf__form" *ngIf="state() === 'ready' && config() as cfg">
+    <p class="pf__brand">{{ resolved()?.companyName }} &middot; {{ resolved()?.serviceName }}</p>
+    <ca-service-trigger-renderer
+      [configs]="[cfg]"
+      [companyId]="0"
+      [previewOnly]="false"
+      [executeOverride]="submitOverride"
+    ></ca-service-trigger-renderer>
+  </div>
+</main>

@@ -1,0 +1,52 @@
+<div class="cfsp__backdrop" *ngIf="open" (click)="close()"></div>
+<aside class="cfsp__panel" *ngIf="open" role="dialog" aria-label="Share link">
+  <button class="cfsp__close" type="button" (click)="close()" aria-label="Close">&times;</button>
+  <h3 class="cfsp__title">Share {{ serviceLabel }}</h3>
+  <p class="cfsp__subtitle">Let someone without a Crout Automations login fill in this form.</p>
+
+  <ng-container [ngSwitch]="state()">
+    <div *ngSwitchCase="'loading'" class="cfsp__state">Loading&hellip;</div>
+
+    <div *ngSwitchCase="'error'" class="cfsp__state cfsp__state--error">
+      {{ errorMessage() || 'Something went wrong.' }}
+      <button class="cfsp__btn" type="button" (click)="loadStatus()">Retry</button>
+    </div>
+
+    <div *ngSwitchCase="'not-owner'" class="cfsp__state">
+      A share link already exists for this form, managed by the portal user who generated it. Only they can view, revoke, or regenerate it.
+    </div>
+
+    <div *ngSwitchCase="'empty'" class="cfsp__state">
+      <p>No share link has been generated yet.</p>
+      <p *ngIf="errorMessage()" class="cfsp__error">{{ errorMessage() }}</p>
+      <button class="cfsp__btn cfsp__btn--primary" type="button" [disabled]="busy()" (click)="generate()">
+        {{ busy() ? 'Generating…' : 'Generate link' }}
+      </button>
+    </div>
+
+    <div *ngSwitchCase="'just-generated'" class="cfsp__state">
+      <div class="cfsp__url">{{ generated()?.url }}</div>
+      <p class="cfsp__note">Copy this now — it won't be shown again. If it's lost, use Regenerate to issue a new one.</p>
+      <button class="cfsp__btn cfsp__btn--primary" type="button" (click)="copyUrl()">{{ copied() ? 'Copied!' : 'Copy link' }}</button>
+    </div>
+
+    <div *ngSwitchCase="'active'" class="cfsp__state">
+      <dl class="cfsp__meta">
+        <dt>Created</dt>
+        <dd>{{ status()?.createdAtUtc | date:'medium' }}</dd>
+        <dt>Expires</dt>
+        <dd>{{ status()?.expiresAtUtc | date:'medium' }}</dd>
+        <dt>Last used</dt>
+        <dd>{{ status()?.lastUsedAtUtc ? (status()?.lastUsedAtUtc | date:'medium') : 'Never' }}</dd>
+        <dt>Submissions</dt>
+        <dd>{{ status()?.submissionCount ?? 0 }}</dd>
+      </dl>
+      <p class="cfsp__note">The link itself was only shown once, at generation time, and can't be redisplayed.</p>
+      <p *ngIf="errorMessage()" class="cfsp__error">{{ errorMessage() }}</p>
+      <div class="cfsp__actions">
+        <button class="cfsp__btn" type="button" [disabled]="busy()" (click)="regenerate()">Regenerate</button>
+        <button class="cfsp__btn cfsp__btn--danger" type="button" [disabled]="busy()" (click)="revoke()">Revoke</button>
+      </div>
+    </div>
+  </ng-container>
+</aside>

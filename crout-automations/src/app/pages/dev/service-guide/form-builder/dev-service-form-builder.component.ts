@@ -384,6 +384,12 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
     });
   }
 
+  updateListFieldHint(listElementId: string, fieldId: string, value: string): void {
+    this.updateListField(listElementId, fieldId, field => {
+      Object.assign(field, { hint: value });
+    });
+  }
+
   updateListSelectFieldMode(listElementId: string, fieldId: string, value: CustomFormListItemSelectField['selectMode']): void {
     this.updateListField(listElementId, fieldId, field => {
       if (field.type !== 'select') return;
@@ -468,8 +474,12 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
     this.updateSelectedInput({ inputMode: value, hidden: value === 'hidden' ? true : undefined });
   }
 
-  updateSelectedInputText(field: 'key' | 'name' | 'label' | 'placeholder' | 'defaultValueText', value: string): void {
+  updateSelectedInputText(field: 'key' | 'name' | 'label' | 'placeholder' | 'defaultValueText' | 'hint', value: string): void {
     this.updateSelectedInput({ [field]: value } as Partial<CustomFormInputElement>);
+  }
+
+  updateSelectedInputHint(value: string): void {
+    this.updateSelectedInputText('hint', value);
   }
 
   updateSelectedInputFormatter(value: CustomFormInputElement['formatter']): void {
@@ -511,8 +521,12 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
     this.updateSelectedSelect({ selectMode: value });
   }
 
-  updateSelectedSelectText(field: 'key' | 'name' | 'label' | 'placeholder', value: string): void {
+  updateSelectedSelectText(field: 'key' | 'name' | 'label' | 'placeholder' | 'hint', value: string): void {
     this.updateSelectedSelect({ [field]: value } as Partial<CustomFormSelectElement>);
+  }
+
+  updateSelectedSelectHint(value: string): void {
+    this.updateSelectedSelectText('hint', value);
   }
 
   updateSelectedSelectRequired(change: MatCheckboxChange): void {
@@ -534,10 +548,14 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
   }
 
   updateSelectedDateTimeText(
-    field: 'key' | 'name' | 'label' | 'minValue' | 'maxValue' | 'relativeMin' | 'relativeMax',
+    field: 'key' | 'name' | 'label' | 'minValue' | 'maxValue' | 'relativeMin' | 'relativeMax' | 'hint',
     value: string
   ): void {
     this.updateSelectedDateTime({ [field]: value } as Partial<CustomFormDateTimeElement>);
+  }
+
+  updateSelectedDateTimeHint(value: string): void {
+    this.updateSelectedDateTimeText('hint', value);
   }
 
   updateSelectedDateTimeRequired(change: MatCheckboxChange): void {
@@ -554,8 +572,12 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
     this.updateSelectedCheckbox({ checkboxMode: value });
   }
 
-  updateSelectedCheckboxText(field: 'key' | 'name' | 'label' | 'parentKey', value: string): void {
+  updateSelectedCheckboxText(field: 'key' | 'name' | 'label' | 'parentKey' | 'hint', value: string): void {
     this.updateSelectedCheckbox({ [field]: value } as Partial<CustomFormCheckboxElement>);
+  }
+
+  updateSelectedCheckboxHint(value: string): void {
+    this.updateSelectedCheckboxText('hint', value);
   }
 
   updateSelectedCheckboxRequired(change: MatCheckboxChange): void {

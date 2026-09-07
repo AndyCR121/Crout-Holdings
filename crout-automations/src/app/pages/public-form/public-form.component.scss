@@ -1,0 +1,33 @@
+.pf {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+  min-height: 100vh;
+  box-sizing: border-box;
+  font: 14px/1.5 system-ui, sans-serif;
+}
+
+.pf__loading {
+  color: #666;
+  text-align: center;
+  margin-top: 80px;
+}
+
+.pf__unavailable {
+  text-align: center;
+  margin-top: 80px;
+  color: #333;
+}
+
+.pf__unavailable h1 {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.pf__brand {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

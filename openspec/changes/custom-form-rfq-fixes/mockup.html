@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mockup: Custom Form RFQ Fixes</title>
+<style>
+  :root { color-scheme: dark light; }
+  body { font: 14px/1.4 system-ui, sans-serif; margin: 0; padding: 24px; background: #0b1626; color: #eef5ff; }
+  header { margin-bottom: 24px; }
+  header h1 { font-size: 18px; margin: 0 0 4px; color: #fff4dd; }
+  header p { margin: 0; color: #9fb0c8; font-size: 13px; }
+  .states { display: flex; gap: 16px; flex-wrap: wrap; }
+  .state { background: rgba(9, 22, 41, 0.9); border: 1px solid rgba(95, 126, 168, 0.34); border-radius: 8px; padding: 16px; min-width: 300px; flex: 1; }
+  .state h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: #ffb45f; margin: 0 0 12px; }
+
+  .tabbar { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .tab { border-radius: 999px; border: 1px solid rgba(121,150,190,0.3); background: rgba(13,29,53,0.8); color: #cfe1f5; font-size: 11px; font-weight: 700; padding: 6px 10px; }
+  .tab.active { border-color: rgba(255,176,32,0.7); background: linear-gradient(135deg, rgba(245,124,31,0.24), rgba(255,176,32,0.14)); color: #fff4dd; }
+
+  .sticky-note { position: sticky; top: 0; z-index: 2; padding-bottom: 6px; margin-bottom: 4px; background: rgba(9,22,41,0.9); border-bottom: 1px dashed rgba(255,176,32,0.5); }
+  .sticky-note::after { content: "\2191 stays pinned while scrolling"; display: block; font-size: 10px; color: #ffb45f; margin-top: 4px; }
+
+  .scrollbox { max-height: 150px; overflow-y: auto; border: 1px dashed rgba(121,150,190,0.3); border-radius: 6px; padding: 8px; }
+
+  .field { display: grid; gap: 4px; margin-bottom: 12px; }
+  .field span.label { font-size: 12px; font-weight: 700; color: #c4d0e1; }
+  .field input { min-height: 30px; border: 1px solid rgba(121,150,190,0.34); border-radius: 5px; background: rgba(4,13,28,0.82); color: #f4f8ff; padding: 4px 8px; font: inherit; }
+  .field input.invalid { border-color: #ff4c59; }
+  .hint { font-size: 11px; color: #9fb0c8; }
+  .error { font-size: 11px; color: #ff9aa3; }
+
+  .box { border: 1px dashed #5f7ea8; border-radius: 4px; padding: 10px; margin-bottom: 8px; background: rgba(6,18,34,0.6); font-size: 12px; color: #cfe1f5; }
+  .list-item { border: 1px solid rgba(121,150,190,0.2); border-radius: 6px; padding: 8px; margin-bottom: 6px; font-size: 12px; }
+  .add-btn { display: inline-block; border-radius: 999px; border: 1px solid rgba(121,150,190,0.3); background: rgba(13,29,53,0.82); color: #eef5ff; font-size: 11px; font-weight: 700; padding: 5px 10px; margin-top: 4px; }
+  .submit-btn { width: 100%; margin-top: 10px; border-radius: 6px; border: 0; background: linear-gradient(135deg, #f57c1f, #ffb020); color: #081323; font-weight: 900; padding: 8px; font-size: 12px; }
+
+  .note { font-size: 12px; color: #9fb0c8; margin-top: 20px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Custom Form RFQ Fixes: phone validation, required product list, sticky tabs, field hints</h1>
+  <p>Illustrates the custom-form-validation and custom-form-field-presentation capabilities in this change. The globefurn-rfq-intake-normalization capability (n8n node) has no UI and isn't shown here.</p>
+</header>
+
+<div class="states">
+  <div class="state">
+    <h2>State: Phone field — invalid</h2>
+    <div class="field">
+      <span class="label">Cell Number *</span>
+      <input class="invalid" value="123" />
+      <span class="hint">Enter your 10-digit SA mobile number, e.g. 082 123 4567</span>
+      <span class="error">Enter a valid South African mobile number.</span>
+    </div>
+    <div class="box">custom-form-validation: formatter "phone" now enforces the SA regex by default; a builder-authored regex overrides it. custom-form-field-presentation: hint text renders below the field, above the error.</div>
+  </div>
+
+  <div class="state">
+    <h2>State: Sticky tabs while scrolling</h2>
+    <div class="tabbar sticky-note">
+      <span class="tab active">Contact</span>
+      <span class="tab">Products</span>
+      <span class="tab">Notes</span>
+    </div>
+    <div class="scrollbox">
+      <div class="box">Field 1</div>
+      <div class="box">Field 2</div>
+      <div class="box">Field 3 (scrolled into view — tab bar above stays pinned)</div>
+      <div class="box">Field 4</div>
+    </div>
+    <div class="box">custom-form-field-presentation: <code>.trigger-form-tabs</code> gets <code>position: sticky; top: 0</code> inside the already-scrolling <code>.trigger-card__body</code>.</div>
+  </div>
+
+  <div class="state">
+    <h2>State: Required product list — empty (blocked)</h2>
+    <div class="box">Products <em>(minItems: 1)</em></div>
+    <div class="box">No items added yet.</div>
+    <span class="add-btn">+ Add Product</span>
+    <span class="error" style="display:block;margin-top:8px;">Add at least 1 product.</span>
+    <button class="submit-btn" disabled>Submit (blocked)</button>
+    <div class="box">custom-form-validation: validation now checks <code>items.length &lt; minItems</code>, not just each existing item's own fields.</div>
+  </div>
+
+  <div class="state">
+    <h2>State: Product list — valid (unblocked)</h2>
+    <div class="list-item">Product 1: Office Chair — Qty 4</div>
+    <span class="add-btn">+ Add Product</span>
+    <button class="submit-btn">Submit</button>
+    <div class="box">Once <code>items.length &gt;= minItems</code>, submission proceeds as today.</div>
+  </div>
+</div>
+
+<p class="note">Wireframe-level sketch for Phase 1 review only — not final visual design. Colors/spacing are taken from the renderer's existing live styles (<code>service-trigger-renderer.component.scss</code>) since no <code>.stitch/DESIGN.md</code> exists in this repo, to keep this consistent with the real component being changed.</p>
+</body>
+</html>

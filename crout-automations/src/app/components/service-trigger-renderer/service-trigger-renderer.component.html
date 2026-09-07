@@ -72,6 +72,7 @@
                   [ngModel]="customFieldValue(config.id, element.key)"
                   (ngModelChange)="setCustomFieldValue(config.id, element.key, $event)"
                 ></textarea>
+                <span class="trigger-field__hint" *ngIf="element.hint">{{ element.hint }}</span>
               </label>
 
               <label class="trigger-field" *ngIf="isSelectElement(element)">
@@ -93,6 +94,7 @@
                     {{ opt.label }}
                   </label>
                 </div>
+                <span class="trigger-field__hint" *ngIf="element.hint">{{ element.hint }}</span>
               </label>
 
               <label class="trigger-field" *ngIf="isDateTimeElement(element)">
@@ -121,6 +123,7 @@
                     />
                   </label>
                 </div>
+                <span class="trigger-field__hint" *ngIf="element.hint">{{ element.hint }}</span>
               </label>
 
               <label class="trigger-field" *ngIf="isCheckboxElement(element)">
@@ -146,6 +149,7 @@
                     {{ opt.label }}
                   </label>
                 </div>
+                <span class="trigger-field__hint" *ngIf="element.hint">{{ element.hint }}</span>
               </label>
 
               <div class="trigger-list" *ngIf="isListElement(element)">
@@ -198,6 +202,7 @@
                             [ngModel]="listFieldValue(config.id, element.key, itemIndex, field.key)"
                             (ngModelChange)="setListFieldValue(config.id, element.key, itemIndex, field.key, $event)"
                           ></textarea>
+                          <span class="trigger-field__hint" *ngIf="field.hint">{{ field.hint }}</span>
                         </label>
 
                         <label class="trigger-field" *ngIf="field.type === 'select'">
@@ -219,6 +224,7 @@
                               {{ opt.label }}
                             </label>
                           </div>
+                          <span class="trigger-field__hint" *ngIf="field.hint">{{ field.hint }}</span>
                         </label>
 
                         <label class="trigger-field" *ngIf="field.type === 'datetime'">
@@ -247,6 +253,7 @@
                               />
                             </label>
                           </div>
+                          <span class="trigger-field__hint" *ngIf="field.hint">{{ field.hint }}</span>
                         </label>
 
                         <label class="trigger-field" *ngIf="field.type === 'checkbox'">
@@ -272,6 +279,7 @@
                               {{ opt.label }}
                             </label>
                           </div>
+                          <span class="trigger-field__hint" *ngIf="field.hint">{{ field.hint }}</span>
                         </label>
                       </ng-container>
                     </div>

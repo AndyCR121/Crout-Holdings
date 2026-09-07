@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Wireframe: External Shareable Links for Custom Forms</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 14px/1.4 system-ui, sans-serif; margin: 0; padding: 24px; background: #f5f5f5; color: #111; }
+  header { margin-bottom: 24px; }
+  header h1 { font-size: 18px; margin: 0 0 4px; }
+  header p { margin: 0; color: #555; font-size: 13px; }
+  h2.section { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: #666; margin: 32px 0 12px; }
+  .states { display: flex; gap: 16px; flex-wrap: wrap; }
+  .state { background: #fff; border: 1px solid #ccc; border-radius: 6px; padding: 16px; min-width: 280px; flex: 1; }
+  .state h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: #666; margin: 0 0 12px; }
+  .box { border: 1px dashed #999; border-radius: 4px; padding: 10px; margin-bottom: 8px; background: #fafafa; font-size: 13px; }
+  .box small { display: block; color: #888; margin-top: 4px; }
+  .btn { display: inline-block; border: 1px solid #888; border-radius: 4px; padding: 4px 8px; font-size: 12px; background: #eee; margin: 2px 4px 2px 0; }
+  .btn--primary { background: #2a5db0; border-color: #2a5db0; color: #fff; }
+  .btn--danger { background: #b02a2a; border-color: #b02a2a; color: #fff; }
+  .field { border: 1px solid #ccc; border-radius: 4px; padding: 6px 8px; margin-bottom: 8px; background: #fff; font-size: 12px; color: #444; }
+  .field.err { border-color: #b02a2a; }
+  .field.err .errmsg { color: #b02a2a; font-size: 11px; margin-top: 2px; }
+  .tag { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 10px; background: #ddd; color: #333; margin-left: 6px; }
+  .url { font-family: monospace; font-size: 11px; background: #eef; border: 1px solid #ccd; border-radius: 4px; padding: 6px; word-break: break-all; margin-bottom: 8px; }
+  .note { font-size: 12px; color: #777; margin-top: 16px; }
+  .public-page { background: #fff; border: 2px solid #333; border-radius: 6px; padding: 16px; }
+  .public-page .brand { font-size: 11px; color: #888; margin-bottom: 8px; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #1a1a1a; color: #eee; }
+    .state, .public-page { background: #262626; border-color: #444; }
+    .box, .field { background: #2f2f2f; border-color: #555; color: #ddd; }
+    .url { background: #26304a; border-color: #445; }
+    .tag { background: #3a3a3a; color: #ddd; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>External Shareable Links for Custom Forms</h1>
+  <p>Rough sketch of the "Share" flow on the portal services page, the link-management panel, and the resulting public (unauthenticated) form page — including its invalid/expired state. Carried over from the PRD wireframe (<code>docs/prd/custom-form-share-links/custom-form-share-links-wireframe.html</code>) into this OpenSpec change; matches the change's resolved decisions: single active link per form, ~1-year fixed expiry, and Share-panel visibility/management restricted to the user who generated the link (not the whole company).</p>
+</header>
+
+<h2 class="section">1. Portal services page — Share action (in-portal, authenticated)</h2>
+<div class="states">
+  <div class="state">
+    <h3>Service card — eligible service</h3>
+    <div class="box"><strong>Globefurn RFQ Intake</strong><br><span class="tag">Custom Form confirmed</span>
+      <small>Card actions:</small>
+    </div>
+    <button class="btn">Request Config Change</button>
+    <button class="btn">Update Credentials</button>
+    <button class="btn">View Details</button>
+    <button class="btn btn--primary">Share</button>
+  </div>
+
+  <div class="state">
+    <h3>Service card — not eligible</h3>
+    <div class="box"><strong>WhatsApp Agent</strong><br><span class="tag">No Custom Form trigger</span></div>
+    <button class="btn">Request Config Change</button>
+    <button class="btn">Update Credentials</button>
+    <button class="btn">View Details</button>
+    <p class="note" style="margin-top:8px">No "Share" action — R1</p>
+  </div>
+</div>
+
+<h2 class="section">2. Share panel (opened from "Share")</h2>
+<div class="states">
+  <div class="state">
+    <h3>No link yet</h3>
+    <div class="box">Generate a secure link so someone without a Crout Automations login can fill in this form.
+      <br><br>
+      <button class="btn btn--primary">Generate link</button>
+    </div>
+  </div>
+
+  <div class="state">
+    <h3>Just generated (URL shown once)</h3>
+    <div class="url">https://automations.crout-holdings.com/forms/8f1c...a92e</div>
+    <div class="box">Copy this now — it won't be shown again. Regenerate if it's lost.<small>Token stored hashed only — unrecoverable after this screen</small></div>
+    <button class="btn btn--primary">Copy link</button>
+  </div>
+
+  <div class="state">
+    <h3>Active link (panel reopened later)</h3>
+    <div class="box">Created: 3 Sep 2026<br>Last used: 6 Sep 2026, 2 submissions<small>Audit trail — R11. URL itself is not shown again.</small></div>
+    <button class="btn">Regenerate</button>
+    <button class="btn btn--danger">Revoke</button>
+  </div>
+
+  <div class="state">
+    <h3>Revoke confirmation</h3>
+    <div class="box">Revoking this link immediately stops it from working. Anyone still holding the URL will see it as unavailable.<small>Independent of the owner's own login/session — R6/R7</small></div>
+    <button class="btn">Cancel</button>
+    <button class="btn btn--danger">Confirm revoke</button>
+  </div>
+</div>
+
+<h2 class="section">3. Public form page (no login, at the shared URL)</h2>
+<div class="states">
+  <div class="state">
+    <h3>Valid link — form loads</h3>
+    <div class="public-page">
+      <div class="brand">Globefurn RFQ Intake</div>
+      <div class="field">Contact name <em>(required)</em></div>
+      <div class="field">Mobile number <em>(required)</em><small>Hint: e.g. 082 123 4567</small></div>
+      <div class="box">Products <span class="tag">list, min 1</span>
+        <div class="field">Product name</div>
+        <div class="field">Quantity</div>
+        <button class="btn">+ Add product</button>
+      </div>
+      <button class="btn btn--primary">Submit</button>
+    </div>
+    <p class="note">Same fields/validation/tabs as the authenticated in-portal renderer — R3, R4</p>
+  </div>
+
+  <div class="state">
+    <h3>Validation error on submit</h3>
+    <div class="public-page">
+      <div class="field err">Mobile number <em>(required)</em><div class="errmsg">Mobile number must be a valid SA mobile number.</div></div>
+      <div class="box">Products <span class="tag">list, min 1</span>
+        <div class="errmsg" style="color:#b02a2a">Add at least 1 product.</div>
+        <button class="btn">+ Add product</button>
+      </div>
+      <button class="btn btn--primary">Submit</button>
+    </div>
+  </div>
+
+  <div class="state">
+    <h3>Successful submission</h3>
+    <div class="public-page">
+      <div class="brand">Globefurn RFQ Intake</div>
+      <div class="box">✓ Thanks — your submission has been received.<small>Response per the form's configured responseMode</small></div>
+    </div>
+  </div>
+
+  <div class="state">
+    <h3>Invalid / expired / revoked link</h3>
+    <div class="public-page">
+      <div class="box">This link isn't available anymore.<small>Same generic message whether the token never existed, expired, or was revoked — no company/service/form details leaked — R9</small></div>
+    </div>
+  </div>
+</div>
+
+<p class="note">This is a wireframe-level sketch to align understanding for PRD review, not final visual design. The public form page (section 3) intentionally omits all portal chrome (nav, account menu, other services) — it is a standalone page scoped to one form only.</p>
+</body>
+</html>

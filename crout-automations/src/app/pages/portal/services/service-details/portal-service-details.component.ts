@@ -13,6 +13,8 @@ import { DynamicFieldConfig } from '../../../../interfaces/i-service-trigger.int
 import { ServiceTriggerApiService } from '../../../../services/service-trigger-api.service';
 import { ServiceTriggerRendererComponent } from '../../../../components/service-trigger-renderer/service-trigger-renderer.component';
 import { IntegrationStatusBadgeComponent } from '../../../../components/integration-status-badge/integration-status-badge.component';
+import { CustomFormSharePanelComponent } from '../../../../components/custom-form-share-panel/custom-form-share-panel.component';
+import { hasConfirmedCustomFormTrigger } from '../../../../shared/custom-form-eligibility.util';
 
 interface WorkflowItem { addonId: number; name: string; confirmed: boolean; category: 'trigger' | 'action' | 'output'; }
 interface CredentialOption { key: string; label: string; fields: DynamicFieldConfig[]; integrationName: string; linked: boolean; }
@@ -20,7 +22,7 @@ interface CredentialOption { key: string; label: string; fields: DynamicFieldCon
 @Component({
   selector: 'ca-portal-service-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ServiceTriggerRendererComponent, IntegrationStatusBadgeComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ServiceTriggerRendererComponent, IntegrationStatusBadgeComponent, CustomFormSharePanelComponent],
   templateUrl: './portal-service-details.component.html',
   styleUrl: './portal-service-details.component.scss'
 })
@@ -45,6 +47,7 @@ export class PortalServiceDetailsComponent implements OnInit {
   readonly credentialSelectionKey = signal<string | null>(null);
   readonly credentialValues = signal<Record<string, string>>({});
   readonly savingCredentials = signal(false);
+  readonly shareOpen = signal(false);
 
   readonly credentialOptions = computed<CredentialOption[]>(() => {
     const confirmed = new Set(this.workflowItems().filter(item => item.confirmed).map(item => item.name.trim().toLowerCase()));
@@ -120,6 +123,13 @@ export class PortalServiceDetailsComponent implements OnInit {
       error: error => { this.savingCredentials.set(false); this.toast.error(error?.error?.error ?? 'Credentials could not be saved.'); }
     });
   }
+
+  isShareEligible(): boolean {
+    return hasConfirmedCustomFormTrigger(this.workflowItems());
+  }
+
+  openShare(): void { this.shareOpen.set(true); }
+  closeShare(): void { this.shareOpen.set(false); }
 
   statusLabel(): string { const item = this.userService(); return item ? this.integrationStatus.label(null, item.status) : ''; }
   workflowLabel(item: WorkflowItem): string { return item.category === 'trigger' ? 'Trigger' : item.category === 'output' ? 'Output' : 'Action'; }

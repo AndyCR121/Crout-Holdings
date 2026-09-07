@@ -5,10 +5,12 @@ using CroutApi.Services.SchemaSync;
 using Dapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json;
+using System.Threading.RateLimiting;
 
 var migrationExitCode = await SchemaUpdater.TryRunAsync(args);
 if (migrationExitCode.HasValue)
@@ -53,6 +55,7 @@ builder.Services.AddScoped<IPackageRepository, PackageRepository>();
 builder.Services.AddScoped<IAddonRepository, AddonRepository>();
 builder.Services.AddScoped<IServiceFeatureRepository, ServiceFeatureRepository>();
 builder.Services.AddScoped<IServiceTriggerRepository, ServiceTriggerRepository>();
+builder.Services.AddScoped<ICustomFormShareLinkRepository, CustomFormShareLinkRepository>();
 builder.Services.AddScoped<IVideoProjectRepository, VideoProjectRepository>();
 builder.Services.AddScoped<IDevServiceRepository, DevServiceRepository>();
 builder.Services.AddScoped<IDevPortalRepository, DevPortalRepository>();
@@ -69,6 +72,8 @@ builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IServiceCatalogService, ServiceCatalogService>();
 builder.Services.AddScoped<IServiceRequestService, ServiceRequestService>();
 builder.Services.AddScoped<IServiceTriggerService, ServiceTriggerService>();
+builder.Services.AddScoped<ICustomFormShareLinkService, CustomFormShareLinkService>();
+builder.Services.AddScoped<IPublicFormAccessService, PublicFormAccessService>();
 builder.Services.AddScoped<IDevUserServiceFormService, DevUserServiceFormService>();
 builder.Services.AddScoped<IIntegrationDefinitionService, IntegrationDefinitionService>();
 builder.Services.AddScoped<IVideoProjectService, VideoProjectService>();
@@ -95,6 +100,22 @@ builder.Services.Configure<N8nOptions>(options =>
 });
 builder.Services.AddHttpClient<IN8nWorkflowClient, N8nWorkflowClient>();
 builder.Services.AddScoped<N8nTemplateWorkflowService>();
+
+// -- Custom Form share links ---------------------------------------------------
+// AppBaseUrl defaults to the SPA's existing production origin — no new subdomain/DNS
+// is introduced by this feature (see openspec/changes/custom-form-share-links/design.md D7).
+builder.Services.Configure<CustomFormShareLinkOptions>(options =>
+{
+    options.AppBaseUrl = Environment.GetEnvironmentVariable("APP_BASE_URL") ?? options.AppBaseUrl;
+    var expiryDays = Environment.GetEnvironmentVariable("SHARE_LINK_EXPIRY_DAYS");
+    if (int.TryParse(expiryDays, out var parsedExpiryDays) && parsedExpiryDays > 0)
+        options.ExpiryDays = parsedExpiryDays;
+    // Defaults OFF everywhere, including production, until the R12 security review is done
+    // (see CustomFormShareLinkOptions and tasks.md 8.1/8.2). Set to "true" per-environment
+    // only after that review to actually expose the feature.
+    options.Enabled = string.Equals(
+        Environment.GetEnvironmentVariable("CUSTOM_FORM_SHARE_LINKS_ENABLED"), "true", StringComparison.OrdinalIgnoreCase);
+});
 
 // -- Paystack proxy -----------------------------------------------------------
 // Uses a named HttpClient scoped to the Paystack base URL.
@@ -178,6 +199,58 @@ builder.Services.AddCors(options =>
   });
 });
 
+// -- Rate limiting for the public Custom Form share-link endpoints ------------
+// No rate limiting exists anywhere else in this API today; this is scoped only to
+// /api/public/forms/** (design.md D4). A global limiter keyed by IP alone guards
+// against a single source hammering across tokens; the named per-action policies
+// below layer a token+IP composite limit on top, so neither dimension alone can be
+// starved by the other.
+builder.Services.AddRateLimiter(options =>
+{
+  options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+  options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+  {
+    if (!httpContext.Request.Path.StartsWithSegments("/api/public/forms"))
+      return RateLimitPartition.GetNoLimiter("not-public-forms");
+
+    var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+    return RateLimitPartition.GetFixedWindowLimiter(ip, _ => new FixedWindowRateLimiterOptions
+    {
+      PermitLimit = 120,
+      Window = TimeSpan.FromMinutes(1),
+      QueueLimit = 0
+    });
+  });
+
+  options.AddPolicy(RateLimiting.PublicFormsReadPolicy, httpContext =>
+    RateLimitPartition.GetSlidingWindowLimiter(PublicFormsPartitionKey(httpContext), _ => new SlidingWindowRateLimiterOptions
+    {
+      PermitLimit = 30,
+      Window = TimeSpan.FromMinutes(1),
+      SegmentsPerWindow = 6,
+      QueueLimit = 0
+    }));
+
+  options.AddPolicy(RateLimiting.PublicFormsSubmitPolicy, httpContext =>
+    RateLimitPartition.GetSlidingWindowLimiter(PublicFormsPartitionKey(httpContext), _ => new SlidingWindowRateLimiterOptions
+    {
+      PermitLimit = 5,
+      Window = TimeSpan.FromMinutes(1),
+      SegmentsPerWindow = 6,
+      QueueLimit = 0
+    }));
+});
+
+static string PublicFormsPartitionKey(HttpContext httpContext)
+{
+  var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+  var token = httpContext.Request.RouteValues.TryGetValue("token", out var routeToken)
+    ? routeToken?.ToString() ?? "no-token"
+    : "no-token";
+  return $"{ip}:{token}";
+}
+
 var app = builder.Build();
 
 // -- Global exception handler -------------------------------------------------
@@ -209,6 +282,7 @@ app.UseExceptionHandler(errApp =>
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.MapGet("/api/health", () => Results.Ok(new { status = "ok" })).AllowAnonymous();
 app.MapControllers();
 app.Run();

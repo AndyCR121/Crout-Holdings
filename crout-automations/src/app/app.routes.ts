@@ -271,6 +271,17 @@ export const routes: Routes = [
       import('./pages/privacy-policy/privacy-policy.page').then(m => m.PrivacyPolicyPageComponent),
   },
   {
+    // Deliberately outside authGuard and the 'client' route tree — this is the app's public,
+    // unauthenticated Custom Form share-link surface (custom-form-public-access spec). No
+    // portal chrome, no login. See docs/prd/custom-form-share-links.
+    path: 'forms/:token',
+    loadComponent: () =>
+      import('./pages/public-form/public-form.component').then(m => m.PublicFormComponent),
+    data: {
+      seo: { noindex: true },
+    },
+  },
+  {
     path: '**',
     loadComponent: () =>
       import('./pages/not-found/not-found.component').then(m => m.NotFoundComponent),

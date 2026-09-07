@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, HostListener, Input, OnChanges, Output, SimpleChanges, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { ServiceTriggerApiService } from '../../services/service-trigger-api.service';
 import { DynamicFieldConfig, ExecuteTriggerResponse, ServiceTriggerConfig } from '../../interfaces/i-service-trigger.interface';
 import {
@@ -32,6 +33,13 @@ export class ServiceTriggerRendererComponent implements OnChanges {
   @Input() previewOnly = false;
   /** Sends the rendered form directly to an n8n test webhook when supplied. */
   @Input() testWebhookUrl = '';
+  /**
+   * Overrides how a submission is executed, bypassing the authenticated triggerApi call
+   * entirely. Used by the public (unauthenticated) share-link form page so it can reuse
+   * this component's field rendering and validation verbatim while submitting through the
+   * public token-scoped endpoint instead — see custom-form-public-access spec.
+   */
+  @Input() executeOverride: ((config: ServiceTriggerConfig, payload: Record<string, unknown>, files: File[]) => Observable<ExecuteTriggerResponse>) | null = null;
   @Output() executed = new EventEmitter<ExecuteTriggerResponse>();
 
   readonly values = signal<Record<number, Record<string, any>>>({});
@@ -143,9 +151,11 @@ export class ServiceTriggerRendererComponent implements OnChanges {
     this.busy.set(config.id);
     const payload = this.buildPayload(config);
     const selectedFiles = this.files()[config.id] ?? [];
-    const request = this.testWebhookUrl.trim()
-      ? this.http.post<unknown>(this.testWebhookUrl.trim(), payload)
-      : this.triggerApi.execute(config.id, this.companyId, this.userServiceId, payload, selectedFiles);
+    const request = this.executeOverride
+      ? this.executeOverride(config, payload, selectedFiles)
+      : this.testWebhookUrl.trim()
+        ? this.http.post<unknown>(this.testWebhookUrl.trim(), payload)
+        : this.triggerApi.execute(config.id, this.companyId, this.userServiceId, payload, selectedFiles);
 
     request.subscribe({
       next: response => {
@@ -462,15 +472,20 @@ export class ServiceTriggerRendererComponent implements OnChanges {
       }
     }
     const rules = field.validation;
-    if (!rules) return null;
-    if (rules.maxLength && String(value).length > rules.maxLength) return `${field.label} is too long.`;
-    if (rules.regex) {
+    if (rules?.maxLength && String(value).length > rules.maxLength) return `${field.label} is too long.`;
+    if (rules?.regex) {
       try {
         if (!new RegExp(rules.regex).test(String(value))) return `${field.label} is invalid.`;
       } catch {
         return `${field.label} has an invalid validation pattern.`;
       }
+    } else if (field.formatter === 'phone') {
+      const cleaned = String(value).replace(/[\s\-()]/g, '');
+      if (!/^(\+27|0)[6-8][0-9]{8}$/.test(cleaned)) {
+        return `${field.label} must be a valid South African mobile number.`;
+      }
     }
+    if (!rules) return null;
     const numericValue = typeof value === 'number' ? value : (type === 'number' && value !== '' ? Number(value) : null);
     if (numericValue !== null && !Number.isNaN(numericValue)) {
       if (rules.min !== undefined && numericValue < rules.min) return `${field.label} is below the minimum.`;
@@ -487,6 +502,10 @@ export class ServiceTriggerRendererComponent implements OnChanges {
 
       if (element.type === 'list') {
         const items = this.listItems(config.id, element);
+        if (element.minItems && items.length < element.minItems) {
+          const noun = element.itemLabel || 'item';
+          return `Add at least ${element.minItems} ${noun}${element.minItems > 1 ? 's' : ''}.`;
+        }
         for (let itemIndex = 0; itemIndex < items.length; itemIndex += 1) {
           for (const field of element.fields) {
             const value = items[itemIndex]?.[field.key];
@@ -523,6 +542,7 @@ export class ServiceTriggerRendererComponent implements OnChanges {
         required: field.required,
         hidden: field.hidden,
         placeholder: field.placeholder,
+        formatter: field.formatter || undefined,
         validation: this.normalizeValidation(field.validation)
       };
     }

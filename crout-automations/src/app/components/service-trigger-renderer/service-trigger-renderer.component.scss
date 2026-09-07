@@ -92,6 +92,11 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  padding: 0.35rem 0 0.6rem;
+  background: rgba(9, 22, 41, 0.94);
 }
 
 .trigger-form-tab {
@@ -294,6 +299,15 @@
 .trigger-error {
   background: rgba(255, 76, 89, 0.14);
   color: #ff9aa3;
+}
+
+.trigger-field__hint {
+  display: block;
+  margin-top: 0.2rem;
+  color: #9fb0c8;
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 .trigger-response {

@@ -19,6 +19,7 @@ export interface CustomFormBaseElement {
   id: string;
   type: CustomFormElementType;
   tabId?: string | null;
+  hint?: string;
 }
 
 export interface CustomFormInputElement extends CustomFormBaseElement {
@@ -81,6 +82,7 @@ export interface CustomFormListItemBaseField {
   key: string;
   name?: string;
   label: string;
+  hint?: string;
 }
 
 export interface CustomFormListItemInputField extends CustomFormListItemBaseField {

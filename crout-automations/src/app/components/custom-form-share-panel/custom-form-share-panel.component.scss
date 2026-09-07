@@ -1,0 +1,120 @@
+.cfsp__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+}
+
+.cfsp__panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: min(380px, 100vw);
+  background: #fff;
+  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.15);
+  padding: 24px;
+  z-index: 1001;
+  overflow-y: auto;
+}
+
+.cfsp__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.cfsp__title {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.cfsp__subtitle {
+  margin: 0 0 20px;
+  font-size: 13px;
+  color: #666;
+}
+
+.cfsp__state {
+  font-size: 13px;
+}
+
+.cfsp__state--error {
+  color: #b02a2a;
+}
+
+.cfsp__url {
+  font-family: monospace;
+  font-size: 12px;
+  background: #eef;
+  border: 1px solid #ccd;
+  border-radius: 4px;
+  padding: 8px;
+  word-break: break-all;
+  margin-bottom: 8px;
+}
+
+.cfsp__note {
+  font-size: 12px;
+  color: #777;
+  margin: 8px 0;
+}
+
+.cfsp__error {
+  font-size: 12px;
+  color: #b02a2a;
+  margin: 8px 0;
+}
+
+.cfsp__meta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+
+.cfsp__meta dt {
+  color: #666;
+}
+
+.cfsp__meta dd {
+  margin: 0;
+}
+
+.cfsp__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.cfsp__btn {
+  border: 1px solid #888;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 13px;
+  background: #eee;
+  cursor: pointer;
+}
+
+.cfsp__btn--primary {
+  background: #2a5db0;
+  border-color: #2a5db0;
+  color: #fff;
+}
+
+.cfsp__btn--danger {
+  background: #b02a2a;
+  border-color: #b02a2a;
+  color: #fff;
+}
+
+.cfsp__btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

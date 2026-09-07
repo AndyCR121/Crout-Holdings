@@ -4,7 +4,7 @@
   @if (loading()) { <p class="service-details__empty">Loading service details...</p> }
   @else if (!service() || !userService() || !company()) { <p class="service-details__empty">This service is no longer available for your account.</p> }
   @else {
-    <header class="service-details__header"><div><p class="service-details__eyebrow">{{ company()!.companyName }}</p><h1>{{ service()!.serviceName }}</h1><p>{{ service()!.serviceDescription }}</p></div><ca-integration-status-badge [integrationStatus]="userService()!.integrationStatus" [legacyStatus]="userService()!.status" /></header>
+    <header class="service-details__header"><div><p class="service-details__eyebrow">{{ company()!.companyName }}</p><h1>{{ service()!.serviceName }}</h1><p>{{ service()!.serviceDescription }}</p></div><div><ca-integration-status-badge [integrationStatus]="userService()!.integrationStatus" [legacyStatus]="userService()!.status" />@if (isShareEligible()) { <button type="button" class="service-details__button" (click)="openShare()">Share</button> }</div></header>
     <div class="service-details__layout">
       <aside class="credentials-card"><h2>Credentials</h2><p>Connected integration accounts.</p>
         @for (credential of credentialOptions(); track credential.key) {
@@ -25,3 +25,13 @@
 
   @if (credentialsDialogOpen() && selectedCredential(); as credential) { <div class="credentials-dialog" role="dialog" aria-modal="true" aria-label="Update credentials"><div class="credentials-dialog__backdrop" (click)="closeCredentials()"></div><section class="credentials-dialog__content"><button type="button" class="credentials-dialog__close" (click)="closeCredentials()">×</button><h2>Update {{ credential.label }}</h2><p>Add the credentials for this integration. They are encrypted before being sent to n8n.</p><div class="credentials-dialog__fields">@for (field of credential.fields; track field.key) { <label><span>{{ field.label || field.key }}</span>@if (field.type === 'textarea') { <textarea [ngModel]="credentialValues()[field.key] || ''" (ngModelChange)="setCredentialField(field.key, $event)" [placeholder]="field.placeholder || ''"></textarea> } @else { <input [type]="credentialInputType(field)" [ngModel]="credentialValues()[field.key] || ''" (ngModelChange)="setCredentialField(field.key, $event)" [placeholder]="field.placeholder || ''" autocomplete="off" /> }</label> }</div><button type="button" class="service-details__button" (click)="submitCredentials()" [disabled]="savingCredentials()">{{ savingCredentials() ? 'Saving...' : 'Save credentials' }}</button></section></div> }
 </section>
+
+@if (userService(); as us) {
+  <ca-custom-form-share-panel
+    [open]="shareOpen()"
+    [companyId]="us.companyId"
+    [userServiceId]="us.userServiceId!"
+    [serviceLabel]="service()?.serviceName ?? 'this form'"
+    (closed)="closeShare()"
+  ></ca-custom-form-share-panel>
+}

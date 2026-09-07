@@ -242,6 +242,7 @@
                   <label><span>Label</span><input [ngModel]="inputElement.label" (ngModelChange)="updateSelectedInputText('label', $event)" /></label>
                   <label><span>Placeholder</span><input [ngModel]="inputElement.placeholder" (ngModelChange)="updateSelectedInputText('placeholder', $event)" /></label>
                   <label><span>Default Value</span><input [ngModel]="inputElement.defaultValueText" (ngModelChange)="updateSelectedInputText('defaultValueText', $event)" /></label>
+                  <label><span>Hint / Description</span><input [ngModel]="inputElement.hint || ''" (ngModelChange)="updateSelectedInputHint($event)" placeholder="Optional helper text shown below the field" /></label>
 
                   <label>
                     <span>Formatter</span>
@@ -293,6 +294,7 @@
                   <label><span>Name</span><input [ngModel]="selectElement.name" (ngModelChange)="updateSelectedSelectText('name', $event)" /></label>
                   <label><span>Label</span><input [ngModel]="selectElement.label" (ngModelChange)="updateSelectedSelectText('label', $event)" /></label>
                   <label><span>Placeholder</span><input [ngModel]="selectElement.placeholder" (ngModelChange)="updateSelectedSelectText('placeholder', $event)" /></label>
+                  <label><span>Hint / Description</span><input [ngModel]="selectElement.hint || ''" (ngModelChange)="updateSelectedSelectHint($event)" placeholder="Optional helper text shown below the field" /></label>
 
                   <label>
                     <span>Tab Assignment</span>
@@ -344,6 +346,7 @@
                   <label><span>Max</span><input [ngModel]="dateTimeElement.maxValue" (ngModelChange)="updateSelectedDateTimeText('maxValue', $event)" placeholder="2026-07-30" /></label>
                   <label><span>Relative Min</span><input [ngModel]="dateTimeElement.relativeMin" (ngModelChange)="updateSelectedDateTimeText('relativeMin', $event)" placeholder="today - 30 days" /></label>
                   <label><span>Relative Max</span><input [ngModel]="dateTimeElement.relativeMax" (ngModelChange)="updateSelectedDateTimeText('relativeMax', $event)" placeholder="today + 7 days" /></label>
+                  <label><span>Hint / Description</span><input [ngModel]="dateTimeElement.hint || ''" (ngModelChange)="updateSelectedDateTimeHint($event)" placeholder="Optional helper text shown below the field" /></label>
 
                   <label>
                     <span>Tab Assignment</span>
@@ -375,6 +378,7 @@
                   <label><span>Name</span><input [ngModel]="checkboxElement.name" (ngModelChange)="updateSelectedCheckboxText('name', $event)" /></label>
                   <label><span>Label</span><input [ngModel]="checkboxElement.label" (ngModelChange)="updateSelectedCheckboxText('label', $event)" /></label>
                   <label><span>Parent Key</span><input [ngModel]="checkboxElement.parentKey" (ngModelChange)="updateSelectedCheckboxText('parentKey', $event)" placeholder="Optional parent checkbox key" /></label>
+                  <label><span>Hint / Description</span><input [ngModel]="checkboxElement.hint || ''" (ngModelChange)="updateSelectedCheckboxHint($event)" placeholder="Optional helper text shown below the field" /></label>
 
                   <label>
                     <span>Tab Assignment</span>
@@ -502,6 +506,7 @@
                           <label><span>Key</span><input [ngModel]="field.key" (ngModelChange)="updateListFieldText(listElement.id, field.id, 'key', $event)" /></label>
                           <label><span>Name</span><input [ngModel]="field.name" (ngModelChange)="updateListFieldText(listElement.id, field.id, 'name', $event)" /></label>
                           <label><span>Label</span><input [ngModel]="field.label" (ngModelChange)="updateListFieldText(listElement.id, field.id, 'label', $event)" /></label>
+                          <label><span>Hint / Description</span><input [ngModel]="field.hint || ''" (ngModelChange)="updateListFieldHint(listElement.id, field.id, $event)" placeholder="Optional helper text shown below the field" /></label>
 
                           @if (field.type === 'input' || field.type === 'select' || field.type === 'datetime') {
                             <label><span>Placeholder</span><input [ngModel]="field.placeholder" (ngModelChange)="updateListFieldText(listElement.id, field.id, 'placeholder', $event)" /></label>
