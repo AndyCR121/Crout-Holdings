@@ -13,7 +13,7 @@ export class IntegrationStatusService {
 
   label(integrationStatus?: IntegrationLifecycleStatus | null, legacyStatus?: UserServiceStatus | number | null): string {
     const status = this.resolveStatus(integrationStatus, legacyStatus);
-    return status === 'Development' ? 'Development' : status;
+    return status === 'Development' ? 'In Development' : status;
   }
 
   cssClass(integrationStatus?: IntegrationLifecycleStatus | null, legacyStatus?: UserServiceStatus | number | null): string {

@@ -41,6 +41,18 @@
   resize: vertical;
 }
 
+.admin-status-override {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 4px;
+
+  select {
+    font-size: 12px;
+    padding: 3px 4px;
+  }
+}
+
 @media (max-width: 900px) {
   .admin-toolbar,
   .admin-edit-grid {

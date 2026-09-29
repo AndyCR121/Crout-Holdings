@@ -59,10 +59,8 @@ services:
       N8N_APIKEY: ${N8N_APIKEY}
       N8N_WORKSPACEID: ${N8N_WORKSPACEID:-}
       N8N_DEFAULTPROJECTID: ${N8N_DEFAULTPROJECTID:-}
-      # Public Custom Form share links are explicitly opt-in per environment.
+      # Public Custom Form share links — unconditionally enabled, no feature flag.
       APP_BASE_URL: ${APP_BASE_URL:-https://automations.crout-holdings.com}
-      SHARE_LINK_EXPIRY_DAYS: ${SHARE_LINK_EXPIRY_DAYS:-365}
-      CUSTOM_FORM_SHARE_LINKS_ENABLED: ${CUSTOM_FORM_SHARE_LINKS_ENABLED:-false}
     networks:
       public:
         aliases:

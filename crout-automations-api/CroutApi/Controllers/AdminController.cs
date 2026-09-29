@@ -24,6 +24,7 @@ public class AdminController(
     IUserServiceRepository userServices,
     IDevServiceRepository devServices,
     IIntegrationService integrationService,
+    ICustomFormShareLinkService shareLinks,
     EncryptionHelper enc) : ControllerBase
 {
     private int CallerId =>
@@ -541,6 +542,12 @@ public class AdminController(
             return BadRequest(new { error = "Package not found." });
 
         await userServices.AdminUpdateAsync(id, dto);
+        // Auto-invalidate any active Custom Form share link the moment this service is
+        // disabled or marked unpaid via this path (design.md D10 / spec's "Automatic
+        // invalidation..." requirement) — a share link must never outlive the service it's
+        // scoped to. No-op if no active link exists.
+        if (!dto.Active)
+            await shareLinks.InvalidateForDeactivatedServiceAsync(id);
         return Ok(await userServices.AdminGetRowByIdAsync(id));
     }
 
@@ -550,6 +557,8 @@ public class AdminController(
         if (!CallerIsAdmin) return Forbid();
         if (await userServices.GetByIdAsync(id) is null) return NotFound();
         await userServices.AdminDeactivateAsync(id);
+        // Same auto-invalidation as above — delete always deactivates (design.md D10).
+        await shareLinks.InvalidateForDeactivatedServiceAsync(id);
         return NoContent();
     }
 
@@ -568,6 +577,27 @@ public class AdminController(
         if (!CallerIsAdmin) return Forbid();
         if (await userServices.GetByIdAsync(id) is null) return NotFound();
         await integrationService.StartAsync(id, CallerId);
+        return Ok(await userServices.AdminGetRowByIdAsync(id));
+    }
+
+    /// <summary>
+    /// Directly overrides an integration's status (e.g. to unstick a Failed status caused by
+    /// an n8n call that can't succeed locally/right now) without going through a real n8n
+    /// Publish/Pause/Start round-trip. See IIntegrationService.SetStatusAsync.
+    /// </summary>
+    [HttpPost("client-services/{id:int}/integration/status")]
+    public async Task<IActionResult> SetClientServiceIntegrationStatus(int id, [FromBody] AdminSetIntegrationStatusDto dto)
+    {
+        if (!CallerIsAdmin) return Forbid();
+        if (await userServices.GetByIdAsync(id) is null) return NotFound();
+        try
+        {
+            await integrationService.SetStatusAsync(id, dto.Status, CallerId);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
         return Ok(await userServices.AdminGetRowByIdAsync(id));
     }
 

@@ -7,6 +7,14 @@
             @if (!hasConfirmedFormTrigger()) {
               <p class="dfb-error">Confirm a WebsiteForm or CustomForm trigger in the guide before saving this custom form.</p>
             }
+            @if (formId() !== null) {
+              <span class="dfb-publish-status" [class.dfb-publish-status--published]="isPublished()">
+                {{ isPublished() ? 'Published' : 'Draft — not published' }}
+              </span>
+              @if (!isPublished()) {
+                <p class="dfb-error">This form has never been published — clients can use it in-portal from the draft, but any Custom Form share link will 404 until you publish.</p>
+              }
+            }
           </div>
           <div class="dfb-actions">
             @if (copySourceForms().length) {
@@ -26,6 +34,9 @@
             </button>
             <button type="button" class="dfb-primary" (click)="save()" [disabled]="saving() || !hasConfirmedFormTrigger()">
               {{ saving() ? 'Saving...' : (formId() === null ? 'Create Form' : 'Save Form') }}
+            </button>
+            <button type="button" class="dfb-primary" (click)="publish()" [disabled]="publishing() || formId() === null" title="Promote the last saved draft to the published version that clients and share links use">
+              {{ publishing() ? 'Publishing...' : (isPublished() ? 'Republish' : 'Publish') }}
             </button>
           </div>
         </div>

@@ -1,59 +1,83 @@
+// Centered dialog matching the app's dark portal design system (see
+// portal-service-details.component.scss ".credentials-dialog" for the reference pattern) —
+// replaces the earlier light, right-side slide-out drawer.
+
 .cfsp__backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 1000;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 1100;
 }
 
-.cfsp__panel {
+.cfsp__dialog {
   position: fixed;
-  top: 0;
-  right: 0;
-  height: 100%;
-  width: min(380px, 100vw);
-  background: #fff;
-  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.15);
-  padding: 24px;
-  z-index: 1001;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(440px, calc(100vw - 2rem));
+  max-height: 86vh;
   overflow-y: auto;
+  z-index: 1101;
+  border: 1px solid rgba(121, 150, 190, 0.3);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(13, 31, 57, 0.97), rgba(8, 20, 38, 0.97));
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.52);
+  padding: 1.4rem;
+  color: #eef5ff;
 }
 
 .cfsp__close {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 0.75rem;
+  right: 0.85rem;
   border: none;
   background: transparent;
+  color: #eef5ff;
   font-size: 20px;
-  cursor: pointer;
   line-height: 1;
+  cursor: pointer;
 }
 
 .cfsp__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin: 0 0 4px;
-  font-size: 16px;
+  padding-right: 1.5rem;
+  font-size: 17px;
+  font-weight: 700;
+  color: #eef5ff;
+
+  mat-icon {
+    color: #ffb45f;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
 }
 
 .cfsp__subtitle {
   margin: 0 0 20px;
   font-size: 13px;
-  color: #666;
+  color: #a9bbd1;
 }
 
 .cfsp__state {
   font-size: 13px;
+  color: #cbd9ea;
 }
 
 .cfsp__state--error {
-  color: #b02a2a;
+  color: #ff8a8a;
 }
 
 .cfsp__url {
   font-family: monospace;
   font-size: 12px;
-  background: #eef;
-  border: 1px solid #ccd;
-  border-radius: 4px;
+  background: rgba(4, 13, 28, 0.82);
+  border: 1px solid rgba(121, 150, 190, 0.34);
+  border-radius: 6px;
+  color: #eef5ff;
   padding: 8px;
   word-break: break-all;
   margin-bottom: 8px;
@@ -61,13 +85,13 @@
 
 .cfsp__note {
   font-size: 12px;
-  color: #777;
+  color: #91a7c4;
   margin: 8px 0;
 }
 
 .cfsp__error {
   font-size: 12px;
-  color: #b02a2a;
+  color: #ff8a8a;
   margin: 8px 0;
 }
 
@@ -80,11 +104,12 @@
 }
 
 .cfsp__meta dt {
-  color: #666;
+  color: #91a7c4;
 }
 
 .cfsp__meta dd {
   margin: 0;
+  color: #eef5ff;
 }
 
 .cfsp__actions {
@@ -94,27 +119,157 @@
 }
 
 .cfsp__btn {
-  border: 1px solid #888;
-  border-radius: 4px;
-  padding: 6px 12px;
+  min-height: 38px;
+  border: 1px solid rgba(121, 150, 190, 0.34);
+  border-radius: 7px;
+  padding: 0.5rem 0.9rem;
+  font: inherit;
   font-size: 13px;
-  background: #eee;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.06);
+  color: #eef5ff;
   cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.11);
+  }
 }
 
 .cfsp__btn--primary {
-  background: #2a5db0;
-  border-color: #2a5db0;
-  color: #fff;
+  border: 0;
+  background: linear-gradient(135deg, #f57c1f, #ffb020);
+  color: #081323;
+  font-weight: 900;
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, #e06f18, #f0a318);
+  }
 }
 
 .cfsp__btn--danger {
-  background: #b02a2a;
-  border-color: #b02a2a;
-  color: #fff;
+  border-color: rgba(255, 90, 90, 0.4);
+  background: rgba(255, 90, 90, 0.12);
+  color: #ff8a8a;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 90, 90, 0.2);
+  }
 }
 
 .cfsp__btn:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+.cfsp__field {
+  margin-bottom: 18px;
+}
+
+.cfsp__label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #91a7c4;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 6px;
+}
+
+.cfsp__method-toggle {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.cfsp__toggle-btn {
+  flex: 1;
+  border: 1px solid rgba(121, 150, 190, 0.34);
+  border-radius: 7px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(4, 13, 28, 0.6);
+  color: #cbd9ea;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.cfsp__toggle-btn--active {
+  background: linear-gradient(135deg, #f57c1f, #ffb020);
+  border-color: transparent;
+  color: #081323;
+}
+
+.cfsp__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.cfsp__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(79, 163, 184, 0.15);
+  border: 1px solid rgba(79, 163, 184, 0.34);
+  border-radius: 999px;
+  color: #d7f6ff;
+  padding: 3px 6px 3px 10px;
+  font-size: 12px;
+}
+
+.cfsp__chip-remove {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  color: #a7e8f5;
+  padding: 0 2px;
+}
+
+.cfsp__input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(121, 150, 190, 0.34);
+  border-radius: 6px;
+  background: rgba(4, 13, 28, 0.82);
+  color: #eef5ff;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+
+  &:focus {
+    border-color: rgba(255, 176, 32, 0.55);
+  }
+
+  &::placeholder {
+    color: #6c7fa0;
+  }
+}
+
+.cfsp__days-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cfsp__input--number {
+  width: 90px;
+}
+
+.cfsp__recipient-list {
+  margin: 8px 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: #cbd9ea;
+}
+
+@media (max-width: 520px) {
+  .cfsp__dialog {
+    padding: 1.1rem;
+  }
 }

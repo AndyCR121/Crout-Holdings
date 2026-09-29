@@ -1,8 +1,8 @@
+using CroutApi.DTOs;
 using CroutApi.Helpers;
 using CroutApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 
 namespace CroutApi.Controllers;
 
@@ -10,12 +10,13 @@ namespace CroutApi.Controllers;
 /// Owner-facing Custom Form share-link lifecycle — [Authorize]'d, deliberately separate from
 /// PublicFormsController so the two surfaces stay trivially distinguishable for the R12
 /// security review (see design.md D2).
+///
+/// No longer gated by a feature flag — see PublicFormsController's own note on the
+/// CUSTOM_FORM_SHARE_LINKS_ENABLED removal.
 /// </summary>
 [ApiController]
 [Authorize]
-public class CustomFormShareLinksController(
-    ICustomFormShareLinkService shareLinks,
-    IOptions<CustomFormShareLinkOptions> options) : ControllerBase
+public class CustomFormShareLinksController(ICustomFormShareLinkService shareLinks) : ControllerBase
 {
     private int UserId => JwtHelper.GetUserId(User);
 
@@ -24,13 +25,16 @@ public class CustomFormShareLinksController(
         Ok(await shareLinks.GetStatusAsync(UserId, companyId, userServiceId));
 
     [HttpPost("api/companies/{companyId:int}/services/{userServiceId:int}/share-link/generate")]
-    public async Task<IActionResult> Generate(int companyId, int userServiceId)
+    public async Task<IActionResult> Generate(int companyId, int userServiceId, [FromBody] GenerateCustomFormShareLinkRequestDto request)
     {
-        // Blocked pre-R12-review (see PublicFormsController's own gate): no point minting a
-        // link that the public endpoint will refuse to serve anyway.
-        if (!options.Value.Enabled)
-            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Share links are not yet available." });
-        return Ok(await shareLinks.GenerateAsync(UserId, companyId, userServiceId));
+        try
+        {
+            return Ok(await shareLinks.GenerateAsync(UserId, companyId, userServiceId, request));
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     [HttpPost("api/companies/{companyId:int}/services/{userServiceId:int}/share-link/revoke")]

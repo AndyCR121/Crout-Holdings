@@ -1,7 +1,7 @@
 <div class="cfsp__backdrop" *ngIf="open" (click)="close()"></div>
-<aside class="cfsp__panel" *ngIf="open" role="dialog" aria-label="Share link">
+<section class="cfsp__dialog" *ngIf="open" role="dialog" aria-modal="true" aria-label="Share link">
   <button class="cfsp__close" type="button" (click)="close()" aria-label="Close">&times;</button>
-  <h3 class="cfsp__title">Share {{ serviceLabel }}</h3>
+  <h3 class="cfsp__title"><mat-icon>share</mat-icon> Share {{ serviceLabel }}</h3>
   <p class="cfsp__subtitle">Let someone without a Crout Automations login fill in this form.</p>
 
   <ng-container [ngSwitch]="state()">
@@ -19,19 +19,110 @@
     <div *ngSwitchCase="'empty'" class="cfsp__state">
       <p>No share link has been generated yet.</p>
       <p *ngIf="errorMessage()" class="cfsp__error">{{ errorMessage() }}</p>
-      <button class="cfsp__btn cfsp__btn--primary" type="button" [disabled]="busy()" (click)="generate()">
-        {{ busy() ? 'Generating…' : 'Generate link' }}
+      <button class="cfsp__btn cfsp__btn--primary" type="button" (click)="openSettings()">
+        Set up a link
       </button>
     </div>
 
+    <div *ngSwitchCase="'settings'" class="cfsp__state">
+      <div class="cfsp__field">
+        <div class="cfsp__label">Share method</div>
+        <div class="cfsp__method-toggle">
+          <button
+            type="button"
+            class="cfsp__toggle-btn"
+            [class.cfsp__toggle-btn--active]="shareMethod() === 'url'"
+            (click)="setShareMethod('url')"
+          >URL (copy link)</button>
+          <button
+            type="button"
+            class="cfsp__toggle-btn"
+            [class.cfsp__toggle-btn--active]="shareMethod() === 'email'"
+            (click)="setShareMethod('email')"
+          >Email</button>
+        </div>
+      </div>
+
+      <div class="cfsp__field" *ngIf="shareMethod() === 'email'">
+        <div class="cfsp__label">Recipients</div>
+        <div class="cfsp__chips">
+          <span class="cfsp__chip" *ngFor="let email of recipients()">
+            {{ email }}
+            <button type="button" class="cfsp__chip-remove" (click)="removeRecipient(email)" aria-label="Remove recipient">&times;</button>
+          </span>
+        </div>
+        <input
+          class="cfsp__input"
+          type="email"
+          placeholder="name@example.com"
+          [value]="recipientDraft()"
+          (input)="onRecipientDraftChange($any($event.target).value)"
+          (keydown.enter)="$event.preventDefault(); addRecipientFromDraft()"
+          (keydown.,)="$event.preventDefault(); addRecipientFromDraft()"
+          (blur)="addRecipientFromDraft()"
+        />
+        <p class="cfsp__note">Press Enter or comma to add an address. At least one is required.</p>
+        <p *ngIf="recipientError()" class="cfsp__error">{{ recipientError() }}</p>
+      </div>
+
+      <div class="cfsp__field">
+        <div class="cfsp__label">Validity</div>
+        <div class="cfsp__method-toggle">
+          <button
+            type="button"
+            class="cfsp__toggle-btn"
+            [class.cfsp__toggle-btn--active]="validityPreset() === 'oneYear'"
+            (click)="setValidityPreset('oneYear')"
+          >1 Year</button>
+          <button
+            type="button"
+            class="cfsp__toggle-btn"
+            [class.cfsp__toggle-btn--active]="validityPreset() === 'custom'"
+            (click)="setValidityPreset('custom')"
+          >Custom days</button>
+        </div>
+        <div class="cfsp__days-input" *ngIf="validityPreset() === 'custom'">
+          <input
+            class="cfsp__input cfsp__input--number"
+            type="number"
+            min="1"
+            [max]="maxValidityDays"
+            [value]="customDays()"
+            (input)="onCustomDaysChange($any($event.target).value)"
+          />
+          <span class="cfsp__note">days (max {{ maxValidityDays }})</span>
+        </div>
+      </div>
+
+      <p *ngIf="errorMessage()" class="cfsp__error">{{ errorMessage() }}</p>
+      <div class="cfsp__actions">
+        <button class="cfsp__btn cfsp__btn--primary" type="button" [disabled]="busy() || !canGenerate" (click)="confirmGenerate()">
+          {{ busy() ? 'Generating…' : (shareMethod() === 'email' ? 'Send link' : 'Generate link') }}
+        </button>
+      </div>
+    </div>
+
     <div *ngSwitchCase="'just-generated'" class="cfsp__state">
-      <div class="cfsp__url">{{ generated()?.url }}</div>
-      <p class="cfsp__note">Copy this now — it won't be shown again. If it's lost, use Regenerate to issue a new one.</p>
-      <button class="cfsp__btn cfsp__btn--primary" type="button" (click)="copyUrl()">{{ copied() ? 'Copied!' : 'Copy link' }}</button>
+      <ng-container *ngIf="generated()?.shareMethod === 'url'; else emailSentBlock">
+        <div class="cfsp__url">{{ generated()?.url }}</div>
+        <p class="cfsp__note">Copy this now — it won't be shown again. If it's lost, use Regenerate to issue a new one.</p>
+        <button class="cfsp__btn cfsp__btn--primary" type="button" (click)="copyUrl()">{{ copied() ? 'Copied!' : 'Copy link' }}</button>
+      </ng-container>
+      <ng-template #emailSentBlock>
+        <p>The link was sent to:</p>
+        <ul class="cfsp__recipient-list">
+          <li *ngFor="let email of generated()?.recipientEmails">{{ email }}</li>
+        </ul>
+        <p class="cfsp__note">The raw link itself isn't shown here — it went straight to those recipients. Use Regenerate to send a new one.</p>
+      </ng-template>
     </div>
 
     <div *ngSwitchCase="'active'" class="cfsp__state">
       <dl class="cfsp__meta">
+        <dt>Method</dt>
+        <dd>{{ status()?.shareMethod === 'email' ? 'Email' : 'URL' }}</dd>
+        <dt *ngIf="status()?.shareMethod === 'email'">Recipients</dt>
+        <dd *ngIf="status()?.shareMethod === 'email'">{{ (status()?.recipientEmails)?.join(', ') || '—' }}</dd>
         <dt>Created</dt>
         <dd>{{ status()?.createdAtUtc | date:'medium' }}</dd>
         <dt>Expires</dt>
@@ -49,4 +140,4 @@
       </div>
     </div>
   </ng-container>
-</aside>
+</section>

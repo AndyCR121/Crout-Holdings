@@ -9,6 +9,7 @@ public class CustomFormShareLink
     public DateTime CreatedAt { get; set; }
     public DateTime ExpiresAt { get; set; }
     public DateTime? RevokedAt { get; set; }
+    public string ShareMethod { get; set; } = CustomFormShareMethods.Url;
 
     public bool IsActive(DateTime utcNow) => RevokedAt is null && ExpiresAt > utcNow;
 }

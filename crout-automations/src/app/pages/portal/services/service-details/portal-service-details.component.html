@@ -4,7 +4,7 @@
   @if (loading()) { <p class="service-details__empty">Loading service details...</p> }
   @else if (!service() || !userService() || !company()) { <p class="service-details__empty">This service is no longer available for your account.</p> }
   @else {
-    <header class="service-details__header"><div><p class="service-details__eyebrow">{{ company()!.companyName }}</p><h1>{{ service()!.serviceName }}</h1><p>{{ service()!.serviceDescription }}</p></div><div><ca-integration-status-badge [integrationStatus]="userService()!.integrationStatus" [legacyStatus]="userService()!.status" />@if (isShareEligible()) { <button type="button" class="service-details__button" (click)="openShare()">Share</button> }</div></header>
+    <header class="service-details__header"><div><p class="service-details__eyebrow">{{ company()!.companyName }}</p><h1>{{ service()!.serviceName }}</h1><p>{{ service()!.serviceDescription }}</p></div><div><ca-integration-status-badge [integrationStatus]="userService()!.integrationStatus" [legacyStatus]="userService()!.status" /></div></header>
     <div class="service-details__layout">
       <aside class="credentials-card"><h2>Credentials</h2><p>Connected integration accounts.</p>
         @for (credential of credentialOptions(); track credential.key) {
@@ -13,7 +13,7 @@
           </article>
         } @empty { <p class="credentials-card__empty">No credentials are needed for the confirmed integrations yet.</p> }
       </aside>
-      <main class="service-details__controls"><h2>Service controls</h2><p>Run the workflow actions configured for this service.</p>
+      <main class="service-details__controls"><div class="service-details__controls-head"><h2>Service controls</h2>@if (isShareEligible()) { <button type="button" class="service-details__icon-btn" (click)="openShare()" title="Share" aria-label="Share"><mat-icon>share</mat-icon></button> }</div><p>Run the workflow actions configured for this service.</p>
         @if (triggerConfigs().length) { <ca-service-trigger-renderer [configs]="triggerConfigs()" [companyId]="company()!.companyId" [userServiceId]="userService()!.userServiceId ?? null" /> } @else { <p class="service-details__empty">No manual controls are configured yet.</p> }
       </main>
       <aside class="service-summary"><h2>Service details</h2><dl><div><dt>Company</dt><dd>{{ company()!.companyName }}</dd></div><div><dt>Status</dt><dd>{{ statusLabel() }}</dd></div>@if (userService()!.integrationWorkflowName) { <div><dt>Workflow</dt><dd>{{ userService()!.integrationWorkflowName }}</dd></div> }</dl>

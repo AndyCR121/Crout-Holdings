@@ -37,4 +37,8 @@ public static class IntegrationStatuses
     public const string Live = "Live";
     public const string Paused = "Paused";
     public const string Failed = "Failed";
+
+    /// <summary>Valid values for a direct admin status override (see IIntegrationService.SetStatusAsync).</summary>
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(
+        [Development, Live, Paused, Failed], StringComparer.OrdinalIgnoreCase);
 }

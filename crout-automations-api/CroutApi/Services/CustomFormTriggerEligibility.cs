@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using CroutApi.DTOs;
 using CroutApi.Models;
 
 namespace CroutApi.Services;
@@ -50,4 +51,28 @@ public static class CustomFormTriggerEligibility
         var normalized = (value ?? string.Empty).Trim().ToLowerInvariant().Replace(" ", string.Empty).Replace("-", string.Empty).Replace("_", string.Empty);
         return normalized is "websiteform" or "customform";
     }
+}
+
+/// <summary>
+/// Shared "does this integration have a usable Custom Form schema" check — extracted for the
+/// same reason as CustomFormTriggerEligibility above: the share-link generate path and the
+/// public resolve path must never drift on what counts as publishable.
+///
+/// A schema is usable either because it was explicitly published (PublishCustomFormAsync), or
+/// because the integration's n8n workflow is already Live: some integrations were wired up
+/// directly in n8n before this dev form builder existed (or without ever using its Publish
+/// step), and their form only ever has a draft row. Requiring an explicit publish for those
+/// would mean they could never have a working share link even though they're already serving
+/// real client traffic.
+/// </summary>
+public static class CustomFormPublishEligibility
+{
+    public static bool HasUsableSchema(CustomFormAccessContextDto context)
+    {
+        if (!string.IsNullOrWhiteSpace(context.PublishedSchemaJson)) return true;
+        return IsLive(context.Status) && !string.IsNullOrWhiteSpace(context.DraftSchemaJson);
+    }
+
+    private static bool IsLive(string? status) =>
+        string.Equals(status, IntegrationStatuses.Live, StringComparison.OrdinalIgnoreCase);
 }

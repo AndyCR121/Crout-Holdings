@@ -26,6 +26,7 @@ public class CustomFormAccessContextDto
     public int CompanyOwnerUserId { get; set; }
     public int? AssignedDeveloperUserId { get; set; }
     public bool UserServiceActive { get; set; }
+    public string? Status { get; set; }
     public string? Title { get; set; }
     public string? WebhookUrl { get; set; }
     public string? DraftSchemaJson { get; set; }

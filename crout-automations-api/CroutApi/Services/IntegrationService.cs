@@ -176,6 +176,30 @@ public class IntegrationService(
         return ToSummary(await ReloadAsync(userServiceId));
     }
 
+    public async Task<IntegrationSummaryDto> SetStatusAsync(int userServiceId, string status, int callerUserId, CancellationToken cancellationToken = default)
+    {
+        if (!IntegrationStatuses.All.Contains(status))
+            throw new ArgumentException($"'{status}' is not a valid integration status.");
+
+        await using var integrationLock = await AcquireLockAsync($"integration:{userServiceId}:status", cancellationToken);
+        var integration = await RequireWorkflowAsync(userServiceId);
+
+        var isPublish = string.Equals(status, IntegrationStatuses.Live, StringComparison.OrdinalIgnoreCase);
+        var isPause = string.Equals(status, IntegrationStatuses.Paused, StringComparison.OrdinalIgnoreCase);
+        await integrations.UpdateWorkflowStateAsync(
+            integration.IntegrationId,
+            status,
+            null, // an override clears any stale failure message
+            isPublish ? callerUserId : integration.PublishedBy,
+            isPublish ? DateTime.UtcNow : integration.PublishedDate,
+            isPause ? callerUserId : integration.PausedBy,
+            isPause ? DateTime.UtcNow : integration.PausedDate,
+            null,
+            integration.NodeMappingsJson);
+
+        return ToSummary(await ReloadAsync(userServiceId));
+    }
+
     private async Task<IntegrationSummaryDto> SynchronizeExistingWorkflowAsync(Integration integration, UserServiceIntegrationContextDto context, CancellationToken cancellationToken)
     {
         var remote = await workflowClient.GetWorkflowAsync(integration.WorkflowId!, cancellationToken);

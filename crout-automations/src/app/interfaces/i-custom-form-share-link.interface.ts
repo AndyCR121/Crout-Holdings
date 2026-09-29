@@ -1,5 +1,11 @@
 import { ServiceTriggerConfig } from './i-service-trigger.interface';
 
+/** 'url' = owner copies/distributes the link themselves; 'email' = the app sends it. */
+export type CustomFormShareMethod = 'url' | 'email';
+
+/** Owner-chosen validity cap — see design.md D9. No indefinite option. */
+export const SHARE_LINK_MAX_VALIDITY_DAYS = 365;
+
 /** Metadata-only view of a share link — never carries the URL/token (see design.md D1). */
 export interface CustomFormShareLinkStatus {
   exists: boolean;
@@ -9,11 +15,25 @@ export interface CustomFormShareLinkStatus {
   revokedAtUtc?: string | null;
   lastUsedAtUtc?: string | null;
   submissionCount?: number;
+  shareMethod?: CustomFormShareMethod | null;
+  recipientEmails?: string[] | null;
 }
 
-/** Returned only from generate/regenerate — the one and only time the raw URL is visible. */
+/** Request body for generate/regenerate — the settings step's output. */
+export interface GenerateCustomFormShareLinkRequest {
+  shareMethod: CustomFormShareMethod;
+  validityDays: number;
+  recipientEmails?: string[];
+}
+
+/**
+ * Returned only from generate/regenerate. For 'url', the one and only time the raw URL is
+ * visible. For 'email', url is absent — the link was sent directly to recipientEmails instead.
+ */
 export interface CustomFormShareLinkGenerated {
-  url: string;
+  shareMethod: CustomFormShareMethod;
+  url?: string | null;
+  recipientEmails?: string[] | null;
   createdAtUtc: string;
   expiresAtUtc: string;
 }

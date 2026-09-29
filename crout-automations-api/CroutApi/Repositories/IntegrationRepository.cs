@@ -106,6 +106,7 @@ public class IntegrationRepository(DbHelper db) : IIntegrationRepository
                 LIMIT 1
               ) AS AssignedDeveloperUserId,
               us.Active AS UserServiceActive,
+              i.status AS Status,
               i.custom_form_title AS Title,
               i.custom_form_webhook_url AS WebhookUrl,
               i.custom_form_draft_schema_json AS DraftSchemaJson,
@@ -141,6 +142,7 @@ public class IntegrationRepository(DbHelper db) : IIntegrationRepository
                 LIMIT 1
               ) AS AssignedDeveloperUserId,
               us.Active AS UserServiceActive,
+              i.status AS Status,
               i.custom_form_title AS Title,
               i.custom_form_webhook_url AS WebhookUrl,
               i.custom_form_draft_schema_json AS DraftSchemaJson,

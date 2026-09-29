@@ -14,7 +14,8 @@ import { ServiceTriggerApiService } from '../../../../services/service-trigger-a
 import { ServiceTriggerRendererComponent } from '../../../../components/service-trigger-renderer/service-trigger-renderer.component';
 import { IntegrationStatusBadgeComponent } from '../../../../components/integration-status-badge/integration-status-badge.component';
 import { CustomFormSharePanelComponent } from '../../../../components/custom-form-share-panel/custom-form-share-panel.component';
-import { hasConfirmedCustomFormTrigger } from '../../../../shared/custom-form-eligibility.util';
+import { MatIconModule } from '@angular/material/icon';
+import { hasConfirmedCustomFormTriggerInConfig } from '../../../../shared/custom-form-eligibility.util';
 
 interface WorkflowItem { addonId: number; name: string; confirmed: boolean; category: 'trigger' | 'action' | 'output'; }
 interface CredentialOption { key: string; label: string; fields: DynamicFieldConfig[]; integrationName: string; linked: boolean; }
@@ -22,7 +23,7 @@ interface CredentialOption { key: string; label: string; fields: DynamicFieldCon
 @Component({
   selector: 'ca-portal-service-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ServiceTriggerRendererComponent, IntegrationStatusBadgeComponent, CustomFormSharePanelComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ServiceTriggerRendererComponent, IntegrationStatusBadgeComponent, CustomFormSharePanelComponent, MatIconModule],
   templateUrl: './portal-service-details.component.html',
   styleUrl: './portal-service-details.component.scss'
 })
@@ -125,7 +126,7 @@ export class PortalServiceDetailsComponent implements OnInit {
   }
 
   isShareEligible(): boolean {
-    return hasConfirmedCustomFormTrigger(this.workflowItems());
+    return hasConfirmedCustomFormTriggerInConfig(this.userService()?.config);
   }
 
   openShare(): void { this.shareOpen.set(true); }

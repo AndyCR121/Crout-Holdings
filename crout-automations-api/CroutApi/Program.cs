@@ -107,14 +107,6 @@ builder.Services.AddScoped<N8nTemplateWorkflowService>();
 builder.Services.Configure<CustomFormShareLinkOptions>(options =>
 {
     options.AppBaseUrl = Environment.GetEnvironmentVariable("APP_BASE_URL") ?? options.AppBaseUrl;
-    var expiryDays = Environment.GetEnvironmentVariable("SHARE_LINK_EXPIRY_DAYS");
-    if (int.TryParse(expiryDays, out var parsedExpiryDays) && parsedExpiryDays > 0)
-        options.ExpiryDays = parsedExpiryDays;
-    // Defaults OFF everywhere, including production, until the R12 security review is done
-    // (see CustomFormShareLinkOptions and tasks.md 8.1/8.2). Set to "true" per-environment
-    // only after that review to actually expose the feature.
-    options.Enabled = string.Equals(
-        Environment.GetEnvironmentVariable("CUSTOM_FORM_SHARE_LINKS_ENABLED"), "true", StringComparison.OrdinalIgnoreCase);
 });
 
 // -- Paystack proxy -----------------------------------------------------------

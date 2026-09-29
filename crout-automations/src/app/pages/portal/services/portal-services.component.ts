@@ -14,8 +14,9 @@ import { DynamicFieldConfig, ServiceTriggerConfig } from '../../../interfaces/i-
 import { ServiceTriggerApiService } from '../../../services/service-trigger-api.service';
 import { IntegrationStatusBadgeComponent } from '../../../components/integration-status-badge/integration-status-badge.component';
 import { IntegrationStatusService } from '../../../services/integration-status.service';
+import { MatIconModule } from '@angular/material/icon';
 import { CustomFormSharePanelComponent } from '../../../components/custom-form-share-panel/custom-form-share-panel.component';
-import { hasConfirmedCustomFormTrigger } from '../../../shared/custom-form-eligibility.util';
+import { hasConfirmedCustomFormTriggerInConfig } from '../../../shared/custom-form-eligibility.util';
 
 interface IntegrationItem {
   addonId: number;
@@ -56,7 +57,7 @@ interface CredentialFormOption {
 @Component({
   selector: 'ca-portal-services',
   standalone: true,
-  imports: [CommonModule, FormsModule, ServiceTriggerRendererComponent, MarketingWorkspaceComponent, IntegrationStatusBadgeComponent, CustomFormSharePanelComponent],
+  imports: [CommonModule, FormsModule, ServiceTriggerRendererComponent, MarketingWorkspaceComponent, IntegrationStatusBadgeComponent, CustomFormSharePanelComponent, MatIconModule],
   templateUrl: './portal-services.component.html',
   styleUrls: ['./portal-services.component.scss'],
 })
@@ -322,7 +323,7 @@ export class PortalServicesComponent implements OnInit, OnDestroy {
   }
 
   isShareEligible(row: ServiceRow): boolean {
-    return hasConfirmedCustomFormTrigger(row.activeAddons);
+    return hasConfirmedCustomFormTriggerInConfig(row.userService.config);
   }
 
   openShare(row: ServiceRow): void {

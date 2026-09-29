@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Wireframe: Finalize Custom Form Share Links</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 14px/1.4 system-ui, sans-serif; margin: 0; padding: 24px; background: #f5f5f5; color: #111; }
+  header { margin-bottom: 24px; }
+  header h1 { font-size: 18px; margin: 0 0 4px; }
+  header p { margin: 0; color: #555; font-size: 13px; }
+  h2.section { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: #666; margin: 32px 0 12px; }
+  .states { display: flex; gap: 16px; flex-wrap: wrap; }
+  .state { background: #fff; border: 1px solid #ccc; border-radius: 6px; padding: 16px; min-width: 260px; flex: 1; }
+  .state h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: #666; margin: 0 0 12px; }
+  .box { border: 1px dashed #999; border-radius: 4px; padding: 10px; margin-bottom: 8px; background: #fafafa; font-size: 13px; }
+  .box small { display: block; color: #888; margin-top: 4px; }
+  .btn { display: inline-block; border: 1px solid #888; border-radius: 4px; padding: 4px 8px; font-size: 12px; background: #eee; margin: 2px 4px 2px 0; }
+  .btn--primary { background: #2a5db0; border-color: #2a5db0; color: #fff; }
+  .option-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .option { border: 1px solid #ccc; border-radius: 4px; padding: 6px 10px; font-size: 12px; background: #fff; }
+  .option--selected { border-color: #2a5db0; background: #e8f0fc; font-weight: 600; }
+  .field { border: 1px solid #ccc; border-radius: 4px; padding: 6px 8px; margin-bottom: 8px; background: #fff; font-size: 12px; color: #444; }
+  .tag { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 10px; background: #ddd; color: #333; margin-left: 6px; }
+  .tag--warn { background: #f3d9a4; color: #6b4a00; }
+  .url { font-family: monospace; font-size: 11px; background: #eef; border: 1px solid #ccd; border-radius: 4px; padding: 6px; word-break: break-all; margin-bottom: 8px; }
+  .note { font-size: 12px; color: #777; margin-top: 16px; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #1a1a1a; color: #eee; }
+    .state { background: #262626; border-color: #444; }
+    .box, .field { background: #2f2f2f; border-color: #555; color: #ddd; }
+    .option { background: #2f2f2f; border-color: #555; color: #ddd; }
+    .option--selected { background: #1f2a3d; border-color: #4a7fd6; }
+    .url { background: #26304a; border-color: #445; }
+    .tag { background: #3a3a3a; color: #ddd; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Finalize Custom Form External Share Links</h1>
+  <p>Sketches the new "validation settings" step added to link generation (share method + validity window), and how those settings surface on the persisted-link view. The base Share panel flow this extends already exists in <code>docs/prd/custom-form-share-links/custom-form-share-links-wireframe.html</code>.</p>
+</header>
+
+<h2 class="section">1. Generate link — new settings step (R2, R3)</h2>
+<div class="states">
+  <div class="state">
+    <h3>Step 1 — share method</h3>
+    <div class="box">How will you share this link?
+      <div class="option-row" style="margin-top:8px">
+        <div class="option option--selected">URL (copy link)</div>
+        <div class="option">Email</div>
+      </div>
+      <small>Open question: does "Email" send it for you, or just label your intent? See PRD §10.</small>
+    </div>
+  </div>
+
+  <div class="state">
+    <h3>Step 2 — validity window</h3>
+    <div class="box">How long should this link stay valid?
+      <div class="option-row" style="margin-top:8px">
+        <div class="option option--selected">Expires after</div>
+        <div class="option">Unlimited <span class="tag tag--warn">extra confirm?</span></div>
+      </div>
+      <div class="field">Days: <strong>30</strong></div>
+      <button class="btn btn--primary">Generate link</button>
+    </div>
+  </div>
+</div>
+
+<h2 class="section">2. Persisted link — settings now visible (R6)</h2>
+<div class="states">
+  <div class="state">
+    <h3>Active link, fixed expiry</h3>
+    <div class="url">https://app.croutautomations.co.za/forms/8f1c...a92e</div>
+    <div class="box">
+      Share method: <strong>URL</strong><br>
+      Validity: <strong>30 days</strong> &mdash; 22 remaining<br>
+      Created: 23 Sep 2026 &middot; Last used: 24 Sep 2026, 2 submissions
+      <small>Method + validity are new fields; created/last-used/usage already existed</small>
+    </div>
+    <button class="btn">Revoke</button>
+    <button class="btn">Regenerate</button>
+  </div>
+
+  <div class="state">
+    <h3>Active link, unlimited</h3>
+    <div class="box">
+      Share method: <strong>Email</strong><br>
+      Validity: <strong>Unlimited</strong> <span class="tag tag--warn">no expiry</span><br>
+      Created: 20 Sep 2026 &middot; Not yet used
+    </div>
+    <button class="btn">Revoke</button>
+    <button class="btn">Regenerate</button>
+  </div>
+
+  <div class="state">
+    <h3>Different workflow, independent settings (R5)</h3>
+    <div class="box">Service: <strong>Globefurn RFQ Intake</strong><br>
+      Share method: <strong>URL</strong> &middot; Validity: <strong>7 days</strong> — 1 remaining
+      <small>Unaffected by the other service's link above, even for the same owner</small>
+    </div>
+  </div>
+</div>
+
+<p class="note">Feature stays behind <code>CUSTOM_FORM_SHARE_LINKS_ENABLED</code> (currently <code>false</code> in production) until the security review in R1 is complete — this wireframe describes the UI to build now, not a statement that it's live.</p>
+</body>
+</html>

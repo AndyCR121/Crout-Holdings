@@ -18,4 +18,10 @@ public interface ICustomFormShareLinkRepository
     Task<int> CreateAccessAsync(CustomFormShareLinkAccess access);
 
     Task<(DateTime? LastUsedAtUtc, int SubmissionCount)> GetUsageAsync(int shareLinkId);
+
+    /// <summary>Persists the recipient list for a share_method='email' link (design.md D8).</summary>
+    Task AddRecipientsAsync(int shareLinkId, IEnumerable<string> emails);
+
+    /// <summary>The recipient list a link was sent to, for the owner-facing persisted-link view (R6). Empty for a 'url' link.</summary>
+    Task<IReadOnlyList<string>> GetRecipientEmailsAsync(int shareLinkId);
 }

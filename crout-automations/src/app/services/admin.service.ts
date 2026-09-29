@@ -15,6 +15,7 @@ import {
   IUpdateDevServiceAssignment,
   IAdminClientService,
   IAdminClientServiceUpsert,
+  IntegrationLifecycleStatus,
   IAdminPaystackMapping,
   IDatabaseManagementTarget,
   IDatabaseMigrationOperation,
@@ -305,6 +306,18 @@ export class AdminService {
 
   startClientServiceIntegration(id: number): Observable<IAdminClientService> {
     return this.http.post<IAdminClientService>(`${this.base}/client-services/${id}/integration/start`, {}, { headers: this.authHeaders(), withCredentials: true });
+  }
+
+  /**
+   * Directly overrides an integration's status (e.g. to unstick "Failed"), bypassing a real
+   * n8n Publish/Pause/Start round-trip. See IIntegrationService.SetStatusAsync.
+   */
+  setClientServiceIntegrationStatus(id: number, status: IntegrationLifecycleStatus): Observable<IAdminClientService> {
+    return this.http.post<IAdminClientService>(
+      `${this.base}/client-services/${id}/integration/status`,
+      { status },
+      { headers: this.authHeaders(), withCredentials: true }
+    );
   }
 
   getDatabaseManagementTargets(): Observable<IDatabaseManagementTarget[]> {

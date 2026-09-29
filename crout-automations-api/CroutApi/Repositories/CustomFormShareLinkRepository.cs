@@ -8,7 +8,8 @@ public class CustomFormShareLinkRepository(DbHelper db) : ICustomFormShareLinkRe
 {
     private const string SelectLink =
         "share_link_id AS ShareLinkId, user_service_id AS UserServiceId, created_by_user_id AS CreatedByUserId, " +
-        "token_hash AS TokenHash, created_at AS CreatedAt, expires_at AS ExpiresAt, revoked_at AS RevokedAt";
+        "token_hash AS TokenHash, created_at AS CreatedAt, expires_at AS ExpiresAt, revoked_at AS RevokedAt, " +
+        "share_method AS ShareMethod";
 
     public async Task<CustomFormShareLink?> GetActiveByUserServiceIdAsync(int userServiceId)
     {
@@ -47,9 +48,9 @@ public class CustomFormShareLinkRepository(DbHelper db) : ICustomFormShareLinkRe
         return await conn.ExecuteScalarAsync<int>(
             """
             INSERT INTO CustomFormShareLinks
-              (user_service_id, created_by_user_id, token_hash, created_at, expires_at)
+              (user_service_id, created_by_user_id, token_hash, created_at, expires_at, share_method)
             VALUES
-              (@UserServiceId, @CreatedByUserId, @TokenHash, @CreatedAt, @ExpiresAt);
+              (@UserServiceId, @CreatedByUserId, @TokenHash, @CreatedAt, @ExpiresAt, @ShareMethod);
             SELECT LAST_INSERT_ID();
             """,
             link);
@@ -95,5 +96,30 @@ public class CustomFormShareLinkRepository(DbHelper db) : ICustomFormShareLinkRe
             """,
             new { shareLinkId });
         return row;
+    }
+
+    public async Task AddRecipientsAsync(int shareLinkId, IEnumerable<string> emails)
+    {
+        using var conn = db.GetConnection();
+        await conn.ExecuteAsync(
+            """
+            INSERT INTO CustomFormShareLinkRecipients (share_link_id, email)
+            VALUES (@ShareLinkId, @Email)
+            """,
+            emails.Select(email => new { ShareLinkId = shareLinkId, Email = email }));
+    }
+
+    public async Task<IReadOnlyList<string>> GetRecipientEmailsAsync(int shareLinkId)
+    {
+        using var conn = db.GetConnection();
+        var emails = await conn.QueryAsync<string>(
+            """
+            SELECT email
+            FROM CustomFormShareLinkRecipients
+            WHERE share_link_id = @shareLinkId
+            ORDER BY recipient_id
+            """,
+            new { shareLinkId });
+        return emails.ToList();
     }
 }

@@ -61,6 +61,8 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly deleting = signal(false);
+  readonly publishing = signal(false);
+  readonly isPublished = signal(false);
   readonly formId = signal<number | null>(null);
   readonly validationError = signal<string | null>(null);
   readonly elements = signal<CustomFormElement[]>([]);
@@ -709,6 +711,30 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
     });
   }
 
+  publish(): void {
+    const userServiceId = this.userServiceId;
+    if (userServiceId === null || this.formId() === null) return;
+
+    if (this.hasPendingChanges()) {
+      const message = 'Save your changes before publishing — publish promotes the last saved draft.';
+      this.toast.error(message);
+      return;
+    }
+
+    this.publishing.set(true);
+    this.dev.publishForm(userServiceId).subscribe({
+      next: form => {
+        this.hydrateForm(form);
+        this.publishing.set(false);
+        this.toast.success('Custom form published — it is now live for clients and any share link.');
+      },
+      error: err => {
+        this.publishing.set(false);
+        this.toast.error(err?.error?.error ?? 'Custom form could not be published.');
+      }
+    });
+  }
+
   deleteForm(): void {
     const userServiceId = this.userServiceId;
     if (userServiceId === null || this.formId() === null || !window.confirm('Delete this custom form?')) return;
@@ -904,6 +930,7 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
   private hydrateForm(form: DevUserServiceForm): void {
     const elements = this.extractLoadedElements(form);
     this.formId.set(form.formId);
+    this.isPublished.set(form.isPublished ?? false);
     this.formLabel = form.label;
     this.formDescription = form.description ?? '';
     this.responseMode = form.responseMode;
@@ -918,6 +945,7 @@ export class DevServiceFormBuilderComponent implements OnInit, PendingChangesCom
 
   private resetEmptyState(serviceName = this.guide()?.serviceName ?? 'Service'): void {
     this.formId.set(null);
+    this.isPublished.set(false);
     this.formLabel = `${serviceName} Form`;
     this.formDescription = '';
     this.responseMode = 'inline';

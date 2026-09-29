@@ -31,6 +31,34 @@ public class DevUserServiceFormService(
         await integrations.DeleteCustomFormAsync(context.IntegrationId);
     }
 
+    /// <summary>
+    /// Promotes the current draft to the published schema that PublicFormAccessService (share
+    /// links) and the "no confirmed draft" gate in CustomFormShareLinkService.GenerateAsync
+    /// require — until this runs, custom_form_published_schema_json stays null forever, since
+    /// nothing else in the app writes it (Create/UpdateAsync above only ever save a draft).
+    /// </summary>
+    public async Task<DevUserServiceFormDto> PublishAsync(int developerUserId, int userServiceId)
+    {
+        var context = await RequireDeveloperAccessAsync(developerUserId, userServiceId);
+        if (string.IsNullOrWhiteSpace(context.DraftSchemaJson))
+            throw new ArgumentException("Save the form before publishing — there is no draft to publish.");
+        if (string.IsNullOrWhiteSpace(context.WebhookUrl))
+            throw new ArgumentException("A production webhook URL is required before publishing.");
+
+        await integrations.PublishCustomFormAsync(
+            context.IntegrationId,
+            context.Title ?? string.Empty,
+            context.WebhookUrl,
+            context.DraftSchemaJson,
+            context.Version + 1,
+            developerUserId,
+            DateTime.UtcNow);
+
+        var updated = await integrations.GetCustomFormContextByUserServiceIdAsync(userServiceId)
+            ?? throw new KeyNotFoundException("Custom form could not be reloaded.");
+        return ToDto(updated) ?? throw new InvalidOperationException("Custom form could not be mapped.");
+    }
+
     private async Task<DevUserServiceFormDto> UpsertAsync(int developerUserId, int userServiceId, UpsertDevUserServiceFormDto dto)
     {
         ValidateFormDto(dto);
@@ -107,7 +135,9 @@ public class DevUserServiceFormService(
                 : JsonDocument.Parse("{\"elements\":[]}").RootElement.Clone(),
             SchemaVersion = root.TryGetProperty("schemaVersion", out var version) && version.TryGetInt32(out var parsedVersion) ? parsedVersion : 2,
             ProductionWebhookUrl = context.WebhookUrl,
-            UpdatedAtUtc = context.PublishedAtUtc ?? DateTime.UtcNow
+            UpdatedAtUtc = context.PublishedAtUtc ?? DateTime.UtcNow,
+            IsPublished = CustomFormPublishEligibility.HasUsableSchema(context),
+            PublishedAtUtc = context.PublishedAtUtc
         };
     }
 

@@ -68,7 +68,7 @@ public class PublicFormAccessService(
         if (link is null) return null;
 
         var context = await integrations.GetCustomFormContextByUserServiceIdAsync(link.UserServiceId);
-        if (context is null || string.IsNullOrWhiteSpace(context.PublishedSchemaJson))
+        if (context is null || !CustomFormPublishEligibility.HasUsableSchema(context))
             return null;
 
         var integration = await integrations.GetByIntegrationIdAsync(context.IntegrationId);

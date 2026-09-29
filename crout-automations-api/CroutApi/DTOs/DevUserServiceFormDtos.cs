@@ -24,4 +24,6 @@ public class DevUserServiceFormDto
     public int SchemaVersion { get; set; } = 2;
     public string? ProductionWebhookUrl { get; set; }
     public DateTime? UpdatedAtUtc { get; set; }
+    public bool IsPublished { get; set; }
+    public DateTime? PublishedAtUtc { get; set; }
 }

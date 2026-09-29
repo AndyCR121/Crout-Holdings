@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { EnvironmentService } from './environment.service';
-import { CustomFormShareLinkGenerated, CustomFormShareLinkStatus } from '../interfaces/i-custom-form-share-link.interface';
+import { CustomFormShareLinkGenerated, CustomFormShareLinkStatus, GenerateCustomFormShareLinkRequest } from '../interfaces/i-custom-form-share-link.interface';
 
 /**
  * Owner-facing, authenticated share-link management calls (generate/revoke/status).
@@ -21,10 +21,10 @@ export class CustomFormShareLinkApiService {
     );
   }
 
-  generate(companyId: number, userServiceId: number): Observable<CustomFormShareLinkGenerated> {
+  generate(companyId: number, userServiceId: number, request: GenerateCustomFormShareLinkRequest): Observable<CustomFormShareLinkGenerated> {
     return this.http.post<CustomFormShareLinkGenerated>(
       `${this.base}/companies/${companyId}/services/${userServiceId}/share-link/generate`,
-      {},
+      request,
       { headers: this.authHeaders(), withCredentials: true }
     );
   }

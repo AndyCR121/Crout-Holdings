@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Observable } from 'rxjs';
 import { PublicFormApiService } from '../../services/public-form-api.service';
 import { ServiceTriggerRendererComponent } from '../../components/service-trigger-renderer/service-trigger-renderer.component';
@@ -18,7 +18,7 @@ type PageState = 'loading' | 'ready' | 'unavailable';
 @Component({
   selector: 'ca-public-form',
   standalone: true,
-  imports: [CommonModule, ServiceTriggerRendererComponent],
+  imports: [CommonModule, RouterModule, ServiceTriggerRendererComponent],
   templateUrl: './public-form.component.html',
   styleUrl: './public-form.component.scss',
 })

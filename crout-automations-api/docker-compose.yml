@@ -66,6 +66,8 @@ services:
       N8N_APIKEY: ${N8N_APIKEY}
       N8N_WORKSPACEID: ${N8N_WORKSPACEID:-}
       N8N_DEFAULTPROJECTID: ${N8N_DEFAULTPROJECTID:-}
+
+      APP_BASE_URL: ${APP_BASE_URL:-}
     ports:
       - '5000:8080'   # exposed to host only — host Nginx proxies this
 

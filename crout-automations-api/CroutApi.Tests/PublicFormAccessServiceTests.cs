@@ -157,6 +157,10 @@ public class PublicFormAccessServiceTests
         }
 
         public Task<(DateTime? LastUsedAtUtc, int SubmissionCount)> GetUsageAsync(int shareLinkId) => throw new NotImplementedException();
+
+        public Task AddRecipientsAsync(int shareLinkId, IEnumerable<string> emails) => throw new NotImplementedException();
+
+        public Task<IReadOnlyList<string>> GetRecipientEmailsAsync(int shareLinkId) => throw new NotImplementedException();
     }
 
     private class FakeIntegrationRepository(CustomFormAccessContextDto context) : IIntegrationRepository

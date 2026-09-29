@@ -487,6 +487,13 @@ $radius-sm:    8px;
     border:        1px solid transparent;
     transition:    background 140ms ease, border-color 140ms ease, color 140ms ease;
 
+    mat-icon {
+      font-size: 16px;
+      width:     16px;
+      height:    16px;
+      line-height: 16px;
+    }
+
     &--primary {
       background:   $accent;
       color:        #fff;

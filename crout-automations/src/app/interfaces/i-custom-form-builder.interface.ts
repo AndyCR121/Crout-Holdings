@@ -199,4 +199,6 @@ export interface DevUserServiceForm {
   schema: CustomFormSchema;
   schemaVersion: number;
   updatedAtUtc?: string | null;
+  isPublished?: boolean;
+  publishedAtUtc?: string | null;
 }

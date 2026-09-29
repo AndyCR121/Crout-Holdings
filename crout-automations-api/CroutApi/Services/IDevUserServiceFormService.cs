@@ -8,4 +8,5 @@ public interface IDevUserServiceFormService
     Task<DevUserServiceFormDto> CreateAsync(int developerUserId, int userServiceId, UpsertDevUserServiceFormDto dto);
     Task<DevUserServiceFormDto> UpdateAsync(int developerUserId, int userServiceId, UpsertDevUserServiceFormDto dto);
     Task DeleteAsync(int developerUserId, int userServiceId);
+    Task<DevUserServiceFormDto> PublishAsync(int developerUserId, int userServiceId);
 }

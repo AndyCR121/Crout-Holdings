@@ -16,30 +16,61 @@ The system SHALL show a "Share" action for a service row/detail view only when t
 - **THEN** a "Share" action is available in the card/detail actions for that service
 
 ### Requirement: Generating a share link
-The system SHALL let the service owner generate a share link for an eligible service's Custom Form from the "Share" action, returning a full URL the user can copy, without requiring the user to handle the underlying token separately from the URL. Each Custom Form SHALL have at most one active share link at a time; generating a new link while one exists replaces (invalidates) the prior one. The system SHALL store the token such that it cannot be recovered or redisplayed after generation — the full URL is shown to the owner only at the moment of generation.
+The system SHALL let the service owner generate a share link for an eligible service's Custom Form from the "Share" action, choosing a share method (URL or Email) and a validity period (see the "Link validity" requirement below), without requiring the user to handle the underlying token separately from the URL. Each Custom Form SHALL have at most one active share link at a time; generating a new link while one exists replaces (invalidates) the prior one. The system SHALL store the token such that it cannot be recovered or redisplayed after generation. For the URL method, the full URL is shown to the owner only at the moment of generation. For the Email method, the owner SHALL enter one or more recipient email addresses as chips, each validated as a well-formed email address before being accepted, and the system SHALL send the share link to every recipient instead of displaying the raw URL to the owner.
 
-#### Scenario: First-time link generation
-- **WHEN** the user clicks "Share" on an eligible service that has no existing share link and confirms generation
+#### Scenario: First-time link generation via URL
+- **WHEN** the user clicks "Share" on an eligible service that has no existing share link, selects "URL", and confirms generation
 - **THEN** the system creates a new share credential scoped to that service's Custom Form and returns a full shareable URL
 
+#### Scenario: First-time link generation via Email
+- **WHEN** the user clicks "Share", selects "Email", adds one or more valid recipient email chips, and confirms generation
+- **THEN** the system creates a new share credential scoped to that service's Custom Form and sends the share link to every recipient chip
+
+#### Scenario: Invalid recipient address is rejected
+- **WHEN** the owner is entering a recipient chip for the Email method and types an address that is not a well-formed email
+- **THEN** the system refuses to add it as a chip and shows an inline validation error, without discarding previously-added valid chips
+
 #### Scenario: Reopening the Share panel does not reveal the URL again
-- **WHEN** the owner reopens the Share panel for a service with an existing active share link, after having already seen the URL at generation time
-- **THEN** the panel shows the link's metadata (created time, last-used time/usage count) but does not display or reconstruct the full URL or token; the owner must regenerate to get a new copyable URL if the original was lost
+- **WHEN** the owner reopens the Share panel for a service with an existing active share link, after having already seen the URL (or sent the email) at generation time
+- **THEN** the panel shows the link's metadata (created time, share method, recipients if Email, validity/remaining time, last-used time/usage count) but does not display or reconstruct the full URL or token; the owner must regenerate to get a new copyable URL or resend if the original was lost
 
 #### Scenario: Generating a new link replaces the old one
 - **WHEN** the user generates a new share link for a Custom Form that already has an active share link
 - **THEN** the prior link's token stops resolving to the form, and only the newly generated link is active
 
-### Requirement: Link expiry, independent of the owner's login
-The system SHALL assign each generated share link a fixed, long-lived expiry (on the order of one year) rather than making it valid indefinitely, and SHALL keep it valid independently of the owning user's own login state — the owner logging out, their session expiring, or their `token_version` being bumped (e.g. on password change) SHALL NOT invalidate an active share link.
+### Requirement: Link validity, independent of the owner's login
+The system SHALL let the owner choose the share link's validity at generation time: either a specific number of days from 1 to 365 inclusive, or a "1 Year" preset equal to 365 days — there is no indefinite/"never expires" option. The system SHALL validate the chosen day count against the 1–365 range on both client and server. The system SHALL keep the link valid independently of the owning user's own login state — the owner logging out, their session expiring, or their `token_version` being bumped (e.g. on password change) SHALL NOT invalidate an active share link.
 
 #### Scenario: Share link outlives the owner's session
 - **WHEN** a recipient uses a still-valid share link after the owner has logged out or their session has expired
 - **THEN** the form still loads and can be submitted
 
-#### Scenario: Share link expires after its fixed window
-- **WHEN** a share link's fixed expiry window has elapsed
+#### Scenario: Share link expires after its chosen window
+- **WHEN** a share link's chosen validity window has elapsed
 - **THEN** the link stops resolving to the form and the owner must generate a new one to restore access
+
+#### Scenario: Owner selects the 1 Year preset
+- **WHEN** the owner selects "1 Year" validity instead of entering a custom day count
+- **THEN** the link expires exactly 365 days after generation, identically to entering 365 as a custom value
+
+#### Scenario: Day count over the cap is rejected
+- **WHEN** the owner enters a custom day count greater than 365
+- **THEN** the system rejects the value on both client and server and does not generate a link with that value
+
+### Requirement: Automatic invalidation when the service is disabled, deleted, or unpaid
+The system SHALL automatically revoke a Custom Form's active share link, without requiring owner action, the moment the underlying service's active state transitions to inactive (disabled, deleted, or marked unpaid). The system SHALL NOT automatically restore a revoked link when the service becomes active again — the owner must generate a new one.
+
+#### Scenario: Service deleted revokes its share link
+- **WHEN** an admin deletes a service that has an active share link
+- **THEN** the share link is immediately revoked and subsequent public requests using its token are treated as invalid
+
+#### Scenario: Service disabled or marked unpaid revokes its share link
+- **WHEN** a service's active state is set to inactive through any existing admin path (disable, mark unpaid, etc.) while it has an active share link
+- **THEN** the share link is immediately revoked the same way
+
+#### Scenario: Reactivating the service does not restore the link
+- **WHEN** a service whose share link was auto-revoked becomes active again
+- **THEN** no share link is automatically restored; the owner must generate a new one to resume sharing
 
 ### Requirement: Only the generating user can manage the link
 The system SHALL restrict viewing, revoking, and regenerating a service's share link to the specific portal user who generated it (not the broader set of users with access to that service's company).

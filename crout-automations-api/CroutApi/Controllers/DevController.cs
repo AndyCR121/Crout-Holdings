@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using CroutApi.DTOs;
 using CroutApi.Helpers;
+using CroutApi.Models;
 using CroutApi.Repositories;
 using CroutApi.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -82,7 +83,24 @@ public class DevController(
     {
         if (!await IsDeveloperAsync()) return Forbid();
         var guide = await devPortal.UpdateMaintenanceAsync(CallerId, userServiceId, dto.IsMaintenance);
-        return guide is null ? NotFound(new { error = "Assigned service was not found." }) : Ok(guide);
+        if (guide is null) return NotFound(new { error = "Assigned service was not found." });
+
+        // Taking a service into maintenance also unsticks its integration status (most
+        // commonly out of "Failed") by setting it to Development/"In Development" directly —
+        // no n8n round-trip required. Best-effort: a service with no provisioned integration
+        // yet has nothing to set, so that case is silently skipped rather than failing the
+        // maintenance toggle itself.
+        if (dto.IsMaintenance)
+        {
+            try
+            {
+                await integrationService.SetStatusAsync(userServiceId, IntegrationStatuses.Development, CallerId);
+            }
+            catch (KeyNotFoundException) { }
+            catch (InvalidOperationException) { }
+        }
+
+        return Ok(guide);
     }
 
     [HttpPost("services/{userServiceId:int}/claim")]
@@ -138,6 +156,13 @@ public class DevController(
         if (!await IsDeveloperAsync()) return Forbid();
         await forms.DeleteAsync(CallerId, userServiceId);
         return NoContent();
+    }
+
+    [HttpPost("user-services/{userServiceId:int}/form/publish")]
+    public async Task<IActionResult> PublishForm(int userServiceId)
+    {
+        if (!await IsDeveloperAsync()) return Forbid();
+        return Ok(await forms.PublishAsync(CallerId, userServiceId));
     }
 
     private async Task<bool> IsDeveloperAsync()

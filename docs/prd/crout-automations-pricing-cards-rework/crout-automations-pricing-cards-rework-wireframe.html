@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Wireframe: Homepage Service & Bundle Card Redesign</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 14px/1.4 system-ui, sans-serif; margin: 0; padding: 24px; background: #f5f5f5; color: #111; }
+  header { margin-bottom: 24px; }
+  header h1 { font-size: 18px; margin: 0 0 4px; }
+  header p { margin: 0; color: #555; font-size: 13px; }
+  h2.section { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: #666; margin: 32px 0 12px; }
+  .viewport { border: 1px dashed #999; border-radius: 6px; padding: 16px; margin-bottom: 16px; background: #fafafa; }
+  .viewport-label { font-size: 11px; color: #888; margin-bottom: 10px; }
+
+  /* Bundle card: today (broken) vs proposed (bounded) */
+  .bundle { border: 1px solid #ccc; border-radius: 6px; background: #fff; display: grid; }
+  .bundle--broken { grid-template-columns: 1fr 140px; }
+  .bundle--fixed { grid-template-columns: minmax(0,560px) 220px; max-width: 780px; }
+  .bundle-left { padding: 14px; border-right: 1px solid #eee; }
+  .bundle-right { padding: 14px; background: #f0f4fa; }
+  .addon-row { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; border-bottom: 1px dashed #ddd; }
+  .price-block { font-size: 12px; color: #333; }
+  .price-amount { font-size: 18px; font-weight: 600; margin: 4px 0; }
+  .btn { display: inline-block; border: 1px solid #888; border-radius: 4px; padding: 4px 10px; font-size: 12px; background: #eee; margin-top: 8px; }
+  .btn--primary { background: #2a5db0; border-color: #2a5db0; color: #fff; }
+  .gap-flag { font-size: 11px; color: #b02a2a; margin-top: 6px; }
+
+  /* Service cards */
+  .cards { display: flex; gap: 16px; flex-wrap: wrap; }
+  .card { border: 1px solid #ccc; border-radius: 6px; background: #fff; padding: 14px; flex: 1; min-width: 200px; }
+  .card--today { justify-content: flex-start; }
+  .card h3 { font-size: 13px; margin: 0 0 4px; }
+  .card .tagline { font-size: 11px; color: #777; margin-bottom: 10px; }
+  .card .price { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .card .addon { font-size: 11px; display: flex; justify-content: space-between; padding: 2px 0; }
+  .note { font-size: 12px; color: #777; margin-top: 16px; }
+  .tag { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 10px; background: #ddd; color: #333; margin-left: 6px; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #1a1a1a; color: #eee; }
+    .viewport, .bundle, .card { background: #262626; border-color: #444; }
+    .bundle-left { border-color: #3a3a3a; }
+    .bundle-right { background: #1f2a3d; }
+    .addon-row { border-color: #3a3a3a; }
+    .tag { background: #3a3a3a; color: #ddd; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Homepage Service & Bundle Card Redesign</h1>
+  <p>Contrasts today's unbounded bundle-card layout (large white space between add-ons and price/actions on wide viewports) against a bounded, proportional alternative, and sketches a denser service-card treatment. Not final visual design — exact spacing/breakpoints are for R1/R2 to work out.</p>
+</header>
+
+<h2 class="section">1. Bundle card — today vs. proposed, at a 1920px+ viewport</h2>
+<div class="viewport">
+  <div class="viewport-label">Today: .pricing__suite-inner { grid-template-columns: 1fr 280px } — left column grows unbounded</div>
+  <div class="bundle bundle--broken">
+    <div class="bundle-left">
+      <strong>Retail Automation Bundle</strong> <span class="tag">15% off</span>
+      <div class="addon-row"><span>Order Sync (base)</span><span>R3,200</span></div>
+      <div class="addon-row"><span>Inventory Alerts</span><span>+ R650</span></div>
+      <div class="addon-row"><span>Returns Handling</span><span>+ R480</span></div>
+      <div class="gap-flag">&larr; huge empty space grows here as viewport widens &rarr;</div>
+    </div>
+    <div class="bundle-right">
+      <div class="price-block">Bundle price</div>
+      <div class="price-amount">R3,690</div>
+      <div class="btn btn--primary">Get this Package</div>
+    </div>
+  </div>
+
+  <div class="viewport-label" style="margin-top:16px">Proposed: bounded content column, gap stays proportional regardless of viewport width</div>
+  <div class="bundle bundle--fixed">
+    <div class="bundle-left">
+      <strong>Retail Automation Bundle</strong> <span class="tag">15% off</span>
+      <div class="addon-row"><span>Order Sync (base)</span><span>R3,200</span></div>
+      <div class="addon-row"><span>Inventory Alerts</span><span>+ R650</span></div>
+      <div class="addon-row"><span>Returns Handling</span><span>+ R480</span></div>
+    </div>
+    <div class="bundle-right">
+      <div class="price-block">Bundle price</div>
+      <div class="price-amount">R3,690</div>
+      <div class="btn btn--primary">Get this Package</div>
+    </div>
+  </div>
+</div>
+
+<h2 class="section">2. Service cards — denser treatment at wide viewports</h2>
+<div class="viewport">
+  <div class="viewport-label">Cards keep a designed max width and internal density instead of stretching/looking sparse</div>
+  <div class="cards">
+    <div class="card">
+      <h3>Order Sync</h3>
+      <div class="tagline">Keep stock levels in sync across channels</div>
+      <div class="price">from R3,200 / mo</div>
+      <div class="addon"><span>Base cost</span><span>R3,200</span></div>
+      <div class="addon"><span>Token cost</span><span>R400</span></div>
+      <div class="btn btn--primary">Choose Plan</div>
+    </div>
+    <div class="card">
+      <h3>Invoice Automation</h3>
+      <div class="tagline">Auto-generate and send invoices</div>
+      <div class="price">from R2,900 / mo</div>
+      <div class="addon"><span>Base cost</span><span>R2,900</span></div>
+      <div class="addon"><span>Token cost</span><span>R350</span></div>
+      <div class="btn btn--primary">Choose Plan</div>
+    </div>
+    <div class="card">
+      <h3>Logistics Dispatch</h3>
+      <div class="tagline">Route and assign deliveries automatically</div>
+      <div class="price">from R3,600 / mo</div>
+      <div class="addon"><span>Base cost</span><span>R3,600</span></div>
+      <div class="addon"><span>Token cost</span><span>R450</span></div>
+      <div class="btn btn--primary">Choose Plan</div>
+    </div>
+  </div>
+</div>
+
+<p class="note">Pricing figures shown are illustrative placeholders only — the actual base/token/add-on figures are the subject of R3's pricing-model audit, not fixed by this wireframe.</p>
+</body>
+</html>

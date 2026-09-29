@@ -138,6 +138,37 @@ public class EmailService(ILogger<EmailService> logger, IWebHostEnvironment env,
         catch (Exception ex) { logger.LogError(ex, "Booking confirmation email failed for booking {BookingId}", booking.BookingId); return false; }
     }
 
+    public async Task<bool> SendFormShareLinkAsync(string recipientEmail, string shareUrl, string companyName, string serviceName)
+    {
+        var host = GetSetting("SMTP_HOST", "Mail:Smtp:Host");
+        var from = GetSetting("SMTP_FROM_EMAIL", "Mail:Smtp:FromEmail");
+        if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(from))
+        {
+            logger.LogWarning("Form share-link email skipped because SMTP_HOST or SMTP_FROM_EMAIL is not configured.");
+            return false;
+        }
+
+        try
+        {
+            using var client = BuildClient(host);
+            using var message = new MailMessage(from, recipientEmail, $"{companyName} shared a form with you", RenderTemplate(
+                "FormShareLinkNotification.html",
+                ("companyName", companyName),
+                ("serviceName", serviceName),
+                ("shareUrl", shareUrl)))
+            { IsBodyHtml = true };
+            // Deliberately not logged: the rendered body/subject contain the raw share URL,
+            // which must never reach application logs (see design.md D8 risk note).
+            await SendWithTimeoutAsync(client, message);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Form share-link email failed for service {ServiceName}", serviceName);
+            return false;
+        }
+    }
+
     private string BuildContactRequestEmail(ContactRequest request)
     {
         var message = request.Message;
@@ -148,6 +179,12 @@ public class EmailService(ILogger<EmailService> logger, IWebHostEnvironment env,
     private string RenderTemplate(string templateName, params (string Key, string? Value)[] values)
     {
         var template = File.ReadAllText(Path.Combine(env.ContentRootPath, "Templates", templateName));
+        return SubstitutePlaceholders(template, values);
+    }
+
+    /// <summary>Pure substitution step of <see cref="RenderTemplate"/>, split out so it's unit-testable without touching disk/SMTP.</summary>
+    internal static string SubstitutePlaceholders(string template, params (string Key, string? Value)[] values)
+    {
         foreach (var (key, value) in values) template = template.Replace($"{{{{{key}}}}}", WebUtility.HtmlEncode(value ?? string.Empty));
         return template;
     }

@@ -106,4 +106,8 @@ export class DevService {
   deleteForm(userServiceId: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/user-services/${userServiceId}/form`, { headers: this.authHeaders(), withCredentials: true });
   }
+
+  publishForm(userServiceId: number): Observable<DevUserServiceForm> {
+    return this.http.post<DevUserServiceForm>(`${this.base}/user-services/${userServiceId}/form/publish`, {}, { headers: this.authHeaders(), withCredentials: true });
+  }
 }

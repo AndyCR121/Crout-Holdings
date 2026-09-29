@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { AdminService } from '../../../services/admin.service';
-import { IAdminClientService, IAdminClientServiceUpsert, ICompany, IService, UserServiceStatus } from '../../../interfaces/i-service.interface';
+import { IAdminClientService, IAdminClientServiceUpsert, ICompany, IntegrationLifecycleStatus, IService, UserServiceStatus } from '../../../interfaces/i-service.interface';
 import { IntegrationStatusBadgeComponent } from '../../../components/integration-status-badge/integration-status-badge.component';
 import { IntegrationStatusService } from '../../../services/integration-status.service';
 
@@ -27,7 +27,9 @@ export class AdminClientServicesComponent implements OnInit {
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly lifecycleLoadingId = signal<number | null>(null);
-  readonly lifecycleAction = signal<'pause' | 'start' | null>(null);
+  readonly lifecycleAction = signal<'pause' | 'start' | 'status' | null>(null);
+  readonly statusOverride = signal<Record<number, IntegrationLifecycleStatus>>({});
+  readonly integrationStatusOptions: IntegrationLifecycleStatus[] = ['Development', 'Live', 'Paused', 'Failed'];
   readonly error = signal<string | null>(null);
   readonly page = signal(1);
   readonly total = signal(0);
@@ -199,6 +201,38 @@ export class AdminClientServicesComponent implements OnInit {
 
   statusLabel(status: number): string {
     return this.integrationStatus.label(null, status);
+  }
+
+  statusOverrideFor(row: IAdminClientService): IntegrationLifecycleStatus {
+    return this.statusOverride()[row.userServiceId] ?? (row.integrationStatus ?? 'Development');
+  }
+
+  setStatusOverride(row: IAdminClientService, status: IntegrationLifecycleStatus): void {
+    this.statusOverride.update(map => ({ ...map, [row.userServiceId]: status }));
+  }
+
+  /**
+   * Directly overrides the integration status shown for this row, bypassing a real n8n
+   * round-trip — the escape hatch for a status (most commonly "Failed") that a real
+   * Pause/Start action can't currently resolve, e.g. when n8n is unreachable or missing
+   * credentials in a local/dev setup.
+   */
+  applyStatusOverride(row: IAdminClientService): void {
+    const status = this.statusOverrideFor(row);
+    this.lifecycleLoadingId.set(row.userServiceId);
+    this.lifecycleAction.set('status');
+    this.admin.setClientServiceIntegrationStatus(row.userServiceId, status).subscribe({
+      next: updated => {
+        this.items.update(items => items.map(item => item.userServiceId === updated.userServiceId ? updated : item));
+        this.lifecycleLoadingId.set(null);
+        this.lifecycleAction.set(null);
+      },
+      error: err => {
+        this.error.set(err?.error?.error ?? 'Failed to set integration status.');
+        this.lifecycleLoadingId.set(null);
+        this.lifecycleAction.set(null);
+      }
+    });
   }
 
   private toDateInput(value?: string): string | null {

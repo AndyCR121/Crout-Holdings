@@ -3,7 +3,6 @@ using CroutApi.Helpers;
 using CroutApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.Extensions.Options;
 
 namespace CroutApi.Controllers;
 
@@ -16,15 +15,13 @@ namespace CroutApi.Controllers;
 /// Every invalid-token path (never existed, expired, revoked, or unpublished form) returns
 /// the exact same 404 shape via NotFound() below — never distinguish why (R9).
 ///
-/// Gated by CustomFormShareLinkOptions.Enabled (CUSTOM_FORM_SHARE_LINKS_ENABLED env var,
-/// defaults false everywhere) until the R12 security review is complete — see tasks.md 8.1/8.2.
-/// While disabled, every route here 404s identically to an invalid token, so the feature's
-/// code can deploy to production without being reachable there.
+/// No longer gated by a feature flag — CUSTOM_FORM_SHARE_LINKS_ENABLED and its check were
+/// removed per explicit instruction during local testing (see design.md's note on this).
+/// The R12 security review (tasks.md 8.2) is still owed but is now a process gate only:
+/// nothing in code stops this from being reachable in any environment, production included.
 /// </summary>
 [ApiController]
-public class PublicFormsController(
-    IPublicFormAccessService publicForms,
-    IOptions<CustomFormShareLinkOptions> options) : ControllerBase
+public class PublicFormsController(IPublicFormAccessService publicForms) : ControllerBase
 {
     private const string UnavailableMessage = "This link is no longer available.";
 
@@ -32,7 +29,6 @@ public class PublicFormsController(
     [EnableRateLimiting(RateLimiting.PublicFormsReadPolicy)]
     public async Task<IActionResult> Resolve(string token)
     {
-        if (!options.Value.Enabled) return NotFound(new { error = UnavailableMessage });
         var form = await publicForms.ResolveAsync(token);
         return form is null ? NotFound(new { error = UnavailableMessage }) : Ok(form);
     }
@@ -42,7 +38,6 @@ public class PublicFormsController(
     [RequestSizeLimit(2_000_000)]
     public async Task<IActionResult> Submit(string token, [FromBody] JsonElement payload)
     {
-        if (!options.Value.Enabled) return NotFound(new { error = UnavailableMessage });
         var payloadJson = payload.ValueKind == JsonValueKind.Undefined ? "{}" : payload.GetRawText();
         var result = await publicForms.SubmitAsync(token, payloadJson);
         return result is null ? NotFound(new { error = UnavailableMessage }) : Ok(result);

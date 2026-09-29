@@ -50,6 +50,9 @@ public record AdminUpdateClientServiceConfigDto(
     DateTime? PaymentDate,
     DateTime? DueDate);
 
+/// <summary>Direct override of an Integration's lifecycle status — see IIntegrationService.SetStatusAsync.</summary>
+public record AdminSetIntegrationStatusDto(string Status);
+
 public class AdminPaystackMappingRowDto
 {
     public int UserServiceId { get; set; }
