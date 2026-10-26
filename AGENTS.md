@@ -2,11 +2,11 @@
 
 ## Durable Memory
 
-Andrew's Vault `AIOS Memory\` folder (`C:\Users\User\Desktop\Andrew's Vault\AIOS Memory`) is the single authoritative durable-memory location, shared between Claude Code and Codex — a note either agent writes there is available to the other. Do not write AIOS Memory directly; when durable facts arise, delegate curation to the `memory-curator` agent (invoked via the Skill/Agent tool as `memory-curator` in Claude Code, or `C:\Users\User\.codex\agents\memory-curator.md` in Codex) with a concise, evidence-based session summary, not a raw transcript. The memory-curator agent owns durable-memory classification, writes, and Graphify refreshes. Never use the retired `C:\Users\User\Desktop\Crout Automations` vault or store credentials, tokens, passwords, private keys, or other secrets in memory.
+Andrew's Vault `AIOS Memory\` folder (`C:\Users\User\Desktop\Andrew's Vault\AIOS Memory`) is the single authoritative durable-memory location, shared between Claude Code and Codex — a note either agent writes there is available to the other. Do not write AIOS Memory directly; when durable facts arise, delegate curation to the `memory-curator` agent (invoked via the Skill/Agent tool as `memory-curator` in Claude Code, or `C:\Users\User\.codex\agents\memory-curator.md` in Codex) with a concise, evidence-based session summary, not a raw transcript. The memory-curator agent owns durable-memory classification, writes, and ContextGraph refreshes. Never use the retired `C:\Users\User\Desktop\Crout Automations` vault or store credentials, tokens, passwords, private keys, or other secrets in memory.
 
 ## Context Mapping
 
-Use Graphify as the first step when locating relevant files, symbols, or content — in this repository or in Andrew's Vault — before broad `rg`/grep sweeps or speculative file reads. In Claude Code this is the `graphify` skill; in Codex it is the `context_mapper` agent. Query the existing graph with a narrow question first; build or refresh `graphify-out/` only when a graph is missing and the target scope is clear.
+Use the installed contextgraph skill (or context_mapper specialist) before broad source exploration. Select this registered repository explicitly, use a narrow bounded query, and verify evidence in source. Register/update only a clear task-authorized root. AIOS retrieval uses the canonical contextgraph-query wrapper; historical graphify-out is not freshness evidence.
 
 ## Project Structure & Module Organization
 
